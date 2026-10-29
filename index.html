@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>悅遇 YUEYU｜重視隱私的成人交友平台</title>
+<meta name="description" content="悅遇 YUEYU 是一個重視隱私與真實的成人交友平台。所有會員檔案與照片皆經人工審核，讓你安心認識值得認識的人。">
+<meta name="robots" content="index,follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14111a; --bg2:#1d1925; --card:#241f2e; --line:#352e42;
+  --text:#f1ecf4; --muted:#a79fb3; --dim:#6f6680;
+  --gold:#d9b46a; --gold2:#f0d79a; --rose:#d6708a; --ok:#6cc08b; --warn:#e0a84e; --bad:#e36b6b;
+  --r:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Noto Sans TC",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--gold);text-decoration:none}
+h1,h2,h3,.serif{font-family:"Noto Serif TC","Noto Sans TC",serif;font-weight:700;letter-spacing:.02em}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+textarea{min-height:120px;resize:vertical}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+.hidden{display:none!important}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .small{font-size:13px} .tiny{font-size:12px}
+.gold{color:var(--gold)} .rose{color:var(--rose)} .ok{color:var(--ok)} .bad{color:var(--bad)}
+.center{text-align:center}
+.row{display:flex;gap:10px;align-items:center} .row.wrap{flex-wrap:wrap} .grow{flex:1}
+.mt{margin-top:16px} .mt2{margin-top:28px} .mb{margin-bottom:16px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:999px;font-weight:500;font-size:15px;transition:.15s;border:1px solid transparent;white-space:nowrap}
+.btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#2a2214}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:var(--line);color:var(--text)} .btn.ghost:hover{border-color:var(--gold)}
+.btn.rose{background:var(--rose);color:#fff}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn.sm{padding:8px 14px;font-size:13px} .btn.block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.topbar{position:sticky;top:0;z-index:50;background:rgba(20,17,26,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar .in{max-width:1080px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:16px}
+.logo{font-family:"Noto Serif TC",serif;font-size:22px;font-weight:700;letter-spacing:.08em;color:var(--gold2)}
+.logo small{font-family:"Noto Sans TC";font-size:11px;letter-spacing:.3em;color:var(--muted);margin-left:8px;font-weight:400}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{padding:8px 12px;border-radius:999px;color:var(--muted);font-size:14px}
+.nav a.active,.nav a:hover{color:var(--text);background:var(--bg2)}
+.nav .badge{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--rose);color:#fff;font-size:11px;text-align:center;padding:0 5px;margin-left:4px}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 18px 100px}
+.narrow{max-width:520px;margin:0 auto}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.banner{border-radius:12px;padding:12px 16px;font-size:14px;margin-bottom:18px;border:1px solid}
+.banner.info{background:rgba(217,180,106,.08);border-color:rgba(217,180,106,.4)}
+.banner.warn{background:rgba(224,168,78,.1);border-color:rgba(224,168,78,.5)}
+.banner.bad{background:rgba(227,107,107,.1);border-color:rgba(227,107,107,.5)}
+
+/* landing */
+.hero{padding:70px 0 40px;text-align:center}
+.hero h1{font-size:clamp(30px,6vw,52px);line-height:1.2;color:var(--gold2)}
+.hero p.lead{max-width:600px;margin:18px auto 30px;color:var(--muted);font-size:17px}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:40px}
+.feat .card h3{font-size:18px;color:var(--gold2);margin-bottom:8px}
+.feat .card p{color:var(--muted);font-size:14px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px}
+.steps .n{font-family:"Noto Serif TC";font-size:36px;color:var(--gold);line-height:1}
+
+/* cards grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+@media(min-width:720px){.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:.15s;position:relative}
+.pcard:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:var(--shadow)}
+.pcard .ph{aspect-ratio:3/4;background:var(--bg2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:40px}
+.pcard .info{padding:10px 12px}
+.pcard .name{font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.pcard .meta{font-size:12px;color:var(--muted)}
+.pcard .liked{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);border-radius:999px;padding:3px 8px;font-size:12px;color:var(--rose)}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.filters label{margin:0 0 4px}
+.filters input,.filters select{padding:9px 12px;font-size:14px}
+
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--bg2) center/cover;flex:none;display:flex;align-items:center;justify-content:center;color:var(--dim)}
+.avatar.lg{width:120px;height:120px;font-size:40px}
+.list .item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.list .item:last-child{border-bottom:0}
+.list .item .t{font-weight:500} .list .item .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.tag.on{border-color:var(--gold);color:var(--gold)}
+.chip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg2);color:var(--muted)}
+.chip.ok{color:var(--ok)} .chip.warn{color:var(--warn)} .chip.bad{color:var(--bad)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:0}
+@media(min-width:720px){.modal{align-items:center;padding:20px}}
+.modal .box{background:var(--card);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:22px}
+@media(min-width:720px){.modal .box{border-radius:20px}}
+.modal .x{position:sticky;top:0;float:right;background:var(--bg2);border-radius:50%;width:34px;height:34px;font-size:18px;line-height:34px;text-align:center}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.gallery .g{aspect-ratio:1;border-radius:10px;background:var(--bg2) center/cover;position:relative;overflow:hidden}
+.gallery .g.lock{display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:24px}
+.gallery .g .st{position:absolute;left:6px;bottom:6px}
+.gallery .g .del{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border-radius:50%;width:24px;height:24px;line-height:24px;text-align:center;font-size:12px}
+.photo-big{width:100%;aspect-ratio:3/4;border-radius:14px;background:var(--bg2) center/cover}
+
+/* chat */
+.chat{display:flex;flex-direction:column;height:calc(100vh - 140px);min-height:420px}
+.chat .msgs{flex:1;overflow:auto;padding:10px 4px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:78%;padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.5;word-break:break-word}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,#6a4f2a,#8a6a3a);border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;background:var(--bg2);border-bottom-left-radius:4px}
+.msg .time{display:block;font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;text-align:right}
+.chat form{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.chat form input{flex:1}
+
+/* tabs */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow:auto}
+.tabs button{padding:10px 14px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--gold);border-color:var(--gold)}
+
+/* bottom nav (mobile) */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,17,26,.95);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:49;padding-bottom:env(safe-area-inset-bottom)}
+.bnav a{flex:1;text-align:center;padding:10px 0 8px;font-size:11px;color:var(--muted)}
+.bnav a .i{font-size:20px;display:block;line-height:1.2}
+.bnav a.active{color:var(--gold)}
+@media(min-width:720px){.bnav{display:none}}
+@media(max-width:719px){.nav{display:none}}
+
+.gate{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate .box{max-width:420px;text-align:center}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#2e2740;border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:999px;font-size:14px;z-index:300;box-shadow:var(--shadow);transition:.2s;opacity:0;pointer-events:none}
+.toast.show{opacity:1}
+.doc{max-width:760px;margin:0 auto;font-size:15px}
+.doc h2{font-size:26px;color:var(--gold2);margin-bottom:6px} .doc h3{font-size:17px;color:var(--gold);margin:26px 0 8px}
+.doc p,.doc li{color:#d9d3e0;margin-bottom:8px} .doc ol,.doc ul{padding-left:22px}
+footer{border-top:1px solid var(--line);padding:26px 18px;text-align:center;font-size:12px;color:var(--dim)}
+footer a{color:var(--muted);margin:0 8px}
+.spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;margin:40px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.table{width:100%;border-collapse:collapse;font-size:14px}
+.table td,.table th{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:6px 10px;font-size:14px}
+.kv dt{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- 18+ 閘門 -->
+<div id="gate" class="gate hidden">
+  <div class="box">
+    <div class="logo">悅遇<small>YUEYU</small></div>
+    <h2 style="margin:20px 0 10px;font-size:22px">本網站僅限年滿 18 歲之成年人使用</h2>
+    <p class="muted small">進入即表示你已年滿 18 歲（或你所在地之法定成年年齡），並同意本站<a href="#/terms">使用條款</a>與<a href="#/privacy">隱私政策</a>。本站為成人交友平台，禁止任何形式之金錢交易與色情服務招攬。</p>
+    <div class="row mt2" style="justify-content:center">
+      <button class="btn primary" id="gateYes">我已年滿 18 歲，進入</button>
+      <a class="btn ghost" href="https://www.google.com">離開</a>
+    </div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="in">
+    <a href="#/" class="logo">悅遇<small>YUEYU</small></a>
+    <nav class="nav" id="nav"></nav>
+  </div>
+</div>
+
+<main class="wrap" id="app"><div class="spinner"></div></main>
+
+<nav class="bnav hidden" id="bnav"></nav>
+
+<footer>
+  <div><a href="#/terms">使用條款</a>·<a href="#/privacy">隱私政策</a>·<a href="#/guidelines">社群守則</a>·<a href="#/safety">安全須知</a></div>
+  <div class="mt" style="margin-top:10px">© 2026 悅遇 YUEYU · 僅限 18 歲以上成年人使用 · <span id="ver"></span></div>
+</footer>
+
+<div id="modal"></div>
+<div id="toast" class="toast"></div>
+
+<script type="module">
+/* =====================================================================
+   悅遇 YUEYU  前端  build v0.1.0
+   ===================================================================== */
+const BUILD = 'v0.1.0';
+const CONFIG = {
+  SUPABASE_URL:  'https://YOUR-PROJECT.supabase.co',   // ← 換成你的 Supabase Project URL
+  SUPABASE_ANON: 'YOUR-ANON-KEY',                      // ← 換成你的 anon public key
+  SITE_NAME: '悅遇 YUEYU',
+};
+document.getElementById('ver').textContent = BUILD;
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON);
+
+/* ---------- 常數 ---------- */
+const CITIES = ['台北市','新北市','桃園市','新竹','台中市','彰化','雲林','嘉義','台南市','高雄市','屏東','基隆','宜蘭','花蓮','台東','南投','苗栗','澎湖','金門','海外'];
+const TAGS = ['美食','旅行','咖啡','紅酒','健身','電影','音樂','閱讀','藝術','攝影','高爾夫','登山','游泳','烹飪','寵物','時尚','品茶','露營','瑜伽','投資理財'];
+const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'色情產業招攬', minor:'疑似未成年', other:'其他' };
+const STATUS_TXT = { incomplete:'尚未完成建檔', pending:'審核中', approved:'已上架', rejected:'未通過審核', suspended:'已停權' };
+const BAD_WORDS = ['包養','援交','援助交際','約炮','外送茶','茶莊','出場','買春','賣春','性交易','嫖','陪睡','包夜','全套','半套','魚訊','代聊','乾爹','乾女兒','sugar daddy','sugar baby','月付','周付','零用金','贊助金'];
+
+/* ---------- 狀態 ---------- */
+let session = null, me = null;
+const urlCache = new Map();
+
+/* ---------- 小工具 ---------- */
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const age = y => y ? (new Date().getFullYear() - y) : '';
+const fmtTime = t => { const d = new Date(t); const now = new Date();
+  return d.toDateString()===now.toDateString() ? d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}); };
+function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), ms); }
+function containsBadWords(s){ const l=(s||'').toLowerCase(); return BAD_WORDS.filter(w=>l.includes(w.toLowerCase())); }
+async function signed(path){
+  if(!path) return null;
+  if(urlCache.has(path)) return urlCache.get(path);
+  const { data } = await sb.storage.from('photos').createSignedUrl(path, 3600);
+  const u = data?.signedUrl || null; urlCache.set(path, u); return u;
+}
+async function compressImage(file, max=1080, q=.85){
+  const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=URL.createObjectURL(file); });
+  const s = Math.min(1, max/Math.max(img.width,img.height));
+  const c = document.createElement('canvas'); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  return new Promise(res=>c.toBlob(res,'image/jpeg',q));
+}
+function modal(html){ $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx">×</button>${html}</div></div>`;
+  $('#mx').onclick = closeModal; $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); }; }
+function closeModal(){ $('#modal').innerHTML=''; }
+
+/* ---------- 18+ 閘門 ---------- */
+if(!localStorage.getItem('yy_age_ok')){ $('#gate').classList.remove('hidden'); }
+$('#gateYes').onclick = () => { localStorage.setItem('yy_age_ok','1'); $('#gate').classList.add('hidden'); };
+
+/* ---------- Auth ---------- */
+async function loadMe(){
+  const { data: { session: s } } = await sb.auth.getSession();
+  session = s;
+  if(!session){ me=null; return; }
+  const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+  me = data;
+  if(me) sb.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', me.id).then(()=>{});
+}
+sb.auth.onAuthStateChange(async (ev)=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT'||ev==='USER_UPDATED'){ await loadMe(); route(); } });
+
+/* ---------- 導覽 ---------- */
+function renderNav(){
+  const h = location.hash || '#/';
+  const link = (href, txt, badge='') => `<a href="${href}" class="${h.startsWith(href)&&href!=='#/'||h===href?'active':''}">${txt}${badge}</a>`;
+  if(!me){
+    $('#nav').innerHTML = link('#/about','關於悅遇') + link('#/auth','登入／註冊');
+    $('#bnav').classList.add('hidden'); return;
+  }
+  const admin = me.is_admin ? link('#/admin','後台') : '';
+  $('#nav').innerHTML = link('#/browse','探索') + link('#/likes','喜歡') + link('#/matches','訊息') + link('#/me','我的') + admin;
+  const bl = (href, i, txt) => `<a href="${href}" class="${h.startsWith(href)?'active':''}"><span class="i">${i}</span>${txt}</a>`;
+  $('#bnav').innerHTML = bl('#/browse','✦','探索') + bl('#/likes','♡','喜歡') + bl('#/matches','✉','訊息') + bl('#/me','◉','我的') + (me.is_admin? bl('#/admin','⚙','後台'):'');
+  $('#bnav').classList.remove('hidden');
+}
+
+/* ---------- 路由 ---------- */
+const routes = {
+  '': viewLanding, 'about': viewLanding, 'auth': viewAuth, 'onboarding': viewOnboarding,
+  'browse': viewBrowse, 'likes': viewLikes, 'matches': viewMatches, 'chat': viewChat, 'me': viewMe,
+  'admin': viewAdmin, 'terms': ()=>viewDoc('terms'), 'privacy': ()=>viewDoc('privacy'),
+  'guidelines': ()=>viewDoc('guidelines'), 'safety': ()=>viewDoc('safety'),
+};
+let chatChannel = null;
+async function route(){
+  if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; }
+  const [path, arg] = (location.hash.replace(/^#\//,'')||'').split('/');
+  renderNav();
+  const app = $('#app'); app.innerHTML = '<div class="spinner"></div>';
+  const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding'];
+  if(protectedPages.includes(path) && !me){ location.hash='#/auth'; return; }
+  if(me && me.status==='incomplete' && ['browse','likes','matches','chat'].includes(path)){ location.hash='#/onboarding'; return; }
+  const fn = routes[path] || viewLanding;
+  try { await fn(arg); } catch(e){ console.error(e); app.innerHTML = `<div class="banner bad">載入失敗：${esc(e.message||e)}</div>`; }
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- 狀態提示列 ---------- */
+function statusBanner(){
+  if(!me) return '';
+  if(me.status==='pending') return `<div class="banner info">⏳ 你的檔案正在審核中。通過後其他會員才看得到你，你也才能按讚與傳訊息。通常在 24 小時內完成。</div>`;
+  if(me.status==='rejected') return `<div class="banner warn">✎ 你的檔案未通過審核${me.review_note?`：${esc(me.review_note)}`:''}。請到「我的」修改後重新送審。</div>`;
+  if(me.status==='suspended') return `<div class="banner bad">⛔ 你的帳號已被停權。如有疑問請聯絡客服。</div>`;
+  return '';
+}
+
+/* =====================================================================
+   頁面：首頁
+   ===================================================================== */
+async function viewLanding(){
+  $('#app').innerHTML = `
+  <section class="hero">
+    <h1>認真、私密、彼此尊重的<br>成人交友</h1>
+    <p class="lead">悅遇是一個為成熟成年人設計的交友平台。每一位會員的檔案與照片都經過人工審核，沒有機器人、沒有廣告帳號，只有真的想認識你的人。</p>
+    <div class="row" style="justify-content:center;flex-wrap:wrap">
+      ${me ? `<a class="btn primary" href="#/browse">開始探索</a>` : `<a class="btn primary" href="#/auth">免費加入</a><a class="btn ghost" href="#/auth?mode=login">已有帳號，登入</a>`}
+    </div>
+    <p class="tiny dim mt">註冊與建立檔案完全免費 · 僅限 18 歲以上</p>
+  </section>
+  <section class="feat">
+    <div class="card"><h3>人工審核，杜絕假帳號</h3><p>每張照片、每段自介都由真人審核後才公開。我們寧可慢一點，也要確保你遇到的是真實的人。</p></div>
+    <div class="card"><h3>私密照由你決定</h3><p>私密相簿只有你授權的對象才能查看，你可以隨時收回授權。</p></div>
+    <div class="card"><h3>配對後才能對話</h3><p>只有彼此都按下喜歡，才會開啟對話。你不會收到不想要的訊息。</p></div>
+    <div class="card"><h3>一鍵封鎖與檢舉</h3><p>任何讓你不舒服的互動都可以立即封鎖、檢舉，我們會在 24 小時內處理。</p></div>
+  </section>
+  <section class="mt2">
+    <h2 class="center" style="font-size:24px;color:var(--gold2)">三步驟開始</h2>
+    <div class="steps">
+      <div class="card"><div class="n">1</div><h3 style="font-size:16px;margin:8px 0 4px">建立檔案</h3><p class="muted small">上傳一張清楚的照片，寫下你是誰、想認識怎樣的人。</p></div>
+      <div class="card"><div class="n">2</div><h3 style="font-size:16px;margin:8px 0 4px">等待審核</h3><p class="muted small">我們會在 24 小時內審核你的檔案，通過後即上架。</p></div>
+      <div class="card"><div class="n">3</div><h3 style="font-size:16px;margin:8px 0 4px">探索與配對</h3><p class="muted small">瀏覽會員、按下喜歡，彼此有意就能開始聊天。</p></div>
+    </div>
+  </section>
+  <section class="card mt2" style="border-color:rgba(217,180,106,.4)">
+    <h3 style="font-size:16px;color:var(--gold2)">我們的原則</h3>
+    <p class="muted small mt" style="margin-top:8px">悅遇是交友平台，不是任何形式的交易平台。平台不經手、不媒介、不允許會員之間的金錢往來，也嚴禁色情產業相關人士在站內招攬。違反者將直接停權並保留法律追訴權。詳見<a href="#/guidelines">社群守則</a>。</p>
+  </section>`;
+}
+
+/* =====================================================================
+   頁面：登入／註冊
+   ===================================================================== */
+async function viewAuth(){
+  if(me){ location.hash = me.status==='incomplete' ? '#/onboarding' : '#/browse'; return; }
+  let mode = (location.hash.includes('mode=login')) ? 'login' : 'register';
+  const draw = () => {
+    $('#app').innerHTML = `<div class="narrow"><div class="card">
+      <div class="tabs"><button class="${mode==='register'?'on':''}" data-m="register">免費註冊</button><button class="${mode==='login'?'on':''}" data-m="login">登入</button></div>
+      <form id="authForm">
+        <label>Email</label><input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+        <label>密碼</label><input type="password" name="password" required minlength="8" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="至少 8 碼">
+        ${mode==='register' ? `
+        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--text);font-size:14px"><input type="checkbox" name="age" required style="width:auto;margin-top:4px"><span>我確認已年滿 18 歲（或所在地法定成年年齡）</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--text);font-size:14px"><input type="checkbox" name="terms" required style="width:auto;margin-top:4px"><span>我已閱讀並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>，並了解本站禁止任何金錢交易與色情招攬</span></label>` : ''}
+        <button class="btn primary block mt2" type="submit">${mode==='register'?'建立帳號':'登入'}</button>
+        ${mode==='login' ? `<button class="btn ghost block mt" type="button" id="forgot">忘記密碼</button>`:''}
+        <p class="small bad mt" id="authErr"></p>
+      </form></div></div>`;
+    document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ mode=b.dataset.m; draw(); });
+    $('#authForm').onsubmit = async e => {
+      e.preventDefault(); const f = new FormData(e.target); const email=f.get('email').trim(), password=f.get('password');
+      const btn = e.target.querySelector('button[type=submit]'); btn.disabled=true;
+      let err;
+      if(mode==='register'){
+        const r = await sb.auth.signUp({ email, password });
+        err = r.error;
+        if(!err){
+          if(r.data.session){ toast('註冊成功！'); }
+          else { $('#app').innerHTML = `<div class="narrow card center"><h3 style="color:var(--gold2)">請到信箱收驗證信</h3><p class="muted mt">我們已寄一封驗證信到 <b>${esc(email)}</b>。點擊信中連結後即可登入並開始建立檔案。</p></div>`; return; }
+        }
+      } else {
+        const r = await sb.auth.signInWithPassword({ email, password }); err = r.error;
+      }
+      btn.disabled=false;
+      if(err) $('#authErr').textContent = ({'Invalid login credentials':'Email 或密碼錯誤','User already registered':'這個 Email 已經註冊過了','Email not confirmed':'請先到信箱點擊驗證連結'})[err.message] || err.message;
+    };
+    const fg = $('#forgot'); if(fg) fg.onclick = async ()=>{ const email = $('input[name=email]').value.trim(); if(!email) return toast('請先輸入 Email');
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname + '#/me' }); toast(error?error.message:'重設密碼信已寄出'); };
+  };
+  draw();
+}
+
+/* =====================================================================
+   頁面：建立檔案（Onboarding）＋ 共用表單
+   ===================================================================== */
+function profileFormHtml(p={}){
+  const years = []; const y0 = new Date().getFullYear()-18; for(let y=y0;y>=y0-62;y--) years.push(y);
+  return `
+    <label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字">
+    <div class="row">
+      <div class="grow"><label>我是 *</label><select name="gender" required><option value="">請選擇</option><option value="male" ${p.gender==='male'?'selected':''}>男性</option><option value="female" ${p.gender==='female'?'selected':''}>女性</option></select></div>
+      <div class="grow"><label>想認識 *</label><select name="looking_for" required><option value="">請選擇</option><option value="female" ${p.looking_for==='female'?'selected':''}>女性</option><option value="male" ${p.looking_for==='male'?'selected':''}>男性</option><option value="any" ${p.looking_for==='any'?'selected':''}>不限</option></select></div>
+    </div>
+    <div class="row">
+      <div class="grow"><label>出生年 *</label><select name="birth_year" required><option value="">請選擇</option>${years.map(y=>`<option value="${y}" ${p.birth_year==y?'selected':''}>${y}（${age(y)} 歲）</option>`).join('')}</select></div>
+      <div class="grow"><label>所在地 *</label><select name="city" required><option value="">請選擇</option>${CITIES.map(c=>`<option ${p.city===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="row">
+      <div class="grow"><label>身高（cm）</label><input name="height_cm" type="number" min="100" max="250" value="${esc(p.height_cm||'')}"></div>
+      <div class="grow"><label>職業</label><input name="occupation" maxlength="30" value="${esc(p.occupation||'')}" placeholder="例如：外商主管、設計師"></div>
+    </div>
+    <label>興趣（最多 8 個）</label>
+    <div class="tags" id="tagPick">${TAGS.map(t=>`<button type="button" class="tag ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
+    <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。請勿留聯絡方式、勿提及任何金錢條件。">${esc(p.bio||'')}</textarea>
+    <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）或金錢相關字眼，將無法通過審核。</p>`;
+}
+function bindTagPick(){ $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
+  if(!b.classList.contains('on') && $('#tagPick').querySelectorAll('.on').length>=8) return toast('最多 8 個興趣'); b.classList.toggle('on'); }); }
+function readProfileForm(form){
+  const f = new FormData(form); const tags=[...$('#tagPick').querySelectorAll('.on')].map(b=>b.dataset.t);
+  const bio = f.get('bio').trim();
+  const bad = containsBadWords(bio + ' ' + f.get('nickname') + ' ' + f.get('occupation'));
+  if(bad.length) { toast(`自介含不允許的字眼：${bad.join('、')}`); return null; }
+  if(/line|ig\b|instagram|telegram|wechat|微信|\d{8,}/i.test(bio)) { toast('自介請勿留下聯絡方式'); return null; }
+  return { nickname:f.get('nickname').trim(), gender:f.get('gender'), looking_for:f.get('looking_for'), birth_year:+f.get('birth_year'),
+    city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
+}
+async function uploadPhoto(file){
+  const blob = await compressImage(file);
+  const path = `${me.id}/${Date.now()}.jpg`;
+  const { error } = await sb.storage.from('photos').upload(path, blob, { contentType:'image/jpeg', upsert:false });
+  if(error) throw error; return path;
+}
+
+async function viewOnboarding(){
+  if(me.status!=='incomplete'){ location.hash='#/me'; return; }
+  $('#app').innerHTML = `<div class="narrow">
+    <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
+    <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
+    <form id="obForm" class="card">
+      <label>頭像照片 *</label>
+      <div class="row"><div class="avatar lg" id="avPrev">＋</div><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><input type="file" accept="image/*" id="avFile" style="margin-top:8px"></div></div>
+      ${profileFormHtml()}
+      <button class="btn primary block mt2" type="submit">送出審核</button>
+      <p class="tiny dim mt center">送出即表示你再次確認已年滿 18 歲並同意<a href="#/terms" target="_blank">使用條款</a></p>
+    </form></div>`;
+  bindTagPick();
+  let avatarFile=null;
+  $('#avFile').onchange = e => { avatarFile = e.target.files[0]; if(avatarFile){ $('#avPrev').style.backgroundImage=`url(${URL.createObjectURL(avatarFile)})`; $('#avPrev').textContent=''; } };
+  $('#obForm').onsubmit = async e => {
+    e.preventDefault(); const p = readProfileForm(e.target); if(!p) return;
+    if(!avatarFile) return toast('請上傳頭像照片');
+    const btn = e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='上傳中…';
+    try{
+      const path = await uploadPhoto(avatarFile);
+      const { error } = await sb.from('profiles').update({ ...p, avatar_path: path, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id);
+      if(error) throw error;
+      await loadMe(); toast('已送出審核'); location.hash='#/browse';
+    }catch(err){ toast('失敗：'+err.message); btn.disabled=false; btn.textContent='送出審核'; }
+  };
+}
+
+/* =====================================================================
+   頁面：探索
+   ===================================================================== */
+const browseState = { gender: null, city:'', amin:'', amax:'' };
+async function viewBrowse(){
+  if(browseState.gender===null) browseState.gender = me.looking_for==='any' ? '' : (me.looking_for || '');
+  $('#app').innerHTML = `${statusBanner()}
+    <div class="filters">
+      <div><label>性別</label><select id="fGender"><option value="">不限</option><option value="female" ${browseState.gender==='female'?'selected':''}>女性</option><option value="male" ${browseState.gender==='male'?'selected':''}>男性</option></select></div>
+      <div><label>地區</label><select id="fCity"><option value="">不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>年齡從</label><input id="fMin" type="number" min="18" max="99" placeholder="18" value="${browseState.amin}"></div>
+      <div><label>到</label><input id="fMax" type="number" min="18" max="99" placeholder="99" value="${browseState.amax}"></div>
+    </div>
+    <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
+  const reload = async () => {
+    browseState.gender=$('#fGender').value; browseState.city=$('#fCity').value; browseState.amin=$('#fMin').value; browseState.amax=$('#fMax').value;
+    const y = new Date().getFullYear();
+    let q = sb.from('profiles').select('id,nickname,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).order('last_active_at',{ascending:false}).limit(60);
+    if(browseState.gender) q = q.eq('gender', browseState.gender);
+    if(browseState.city) q = q.eq('city', browseState.city);
+    if(browseState.amin) q = q.lte('birth_year', y - +browseState.amin);
+    if(browseState.amax) q = q.gte('birth_year', y - +browseState.amax);
+    const [{ data: rows, error }, { data: myLikes }] = await Promise.all([q, sb.from('likes').select('to_id').eq('from_id', me.id)]);
+    if(error) throw error;
+    const liked = new Set((myLikes||[]).map(l=>l.to_id));
+    if(!rows.length){ $('#grid').innerHTML = `<p class="muted center" style="grid-column:1/-1;padding:40px 0">目前沒有符合條件的會員，換個條件試試。</p>`; return; }
+    $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
+        <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已喜歡</span>':''}
+        <div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div></div></div>`).join('');
+    $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
+    $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.textContent=''; } });
+  };
+  ['#fGender','#fCity','#fMin','#fMax'].forEach(s=>$(s).onchange=reload);
+  await reload();
+}
+
+/* ---------- 會員檔案視窗 ---------- */
+async function openProfile(id){
+  modal('<div class="spinner"></div>');
+  const [{ data: p, error }, { data: photos }, { data: myLike }, { data: theirLike }, { data: grant }, { data: req }] = await Promise.all([
+    sb.from('profiles').select('*').eq('id', id).single(),
+    sb.from('photos').select('*').eq('user_id', id).eq('status','approved').order('created_at'),
+    sb.from('likes').select('to_id').eq('from_id', me.id).eq('to_id', id).maybeSingle(),
+    sb.from('likes').select('to_id').eq('from_id', id).eq('to_id', me.id).maybeSingle(),
+    sb.from('photo_grants').select('owner_id').eq('owner_id', id).eq('viewer_id', me.id).maybeSingle(),
+    sb.from('photo_requests').select('status').eq('requester_id', me.id).eq('owner_id', id).maybeSingle(),
+  ]);
+  if(error || !p){ modal('<p class="muted">找不到這位會員，可能已下架。</p>'); return; }
+  const canAct = me.status==='approved';
+  const pubPhotos = (photos||[]).filter(x=>!x.is_private);
+  const privCount = (photos||[]).filter(x=>x.is_private).length;
+  const body = `
+    <div class="photo-big" id="bigPh"></div>
+    <div class="row mt" style="justify-content:space-between;align-items:flex-start">
+      <div><h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
+        <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}</div></div>
+      ${theirLike?'<span class="chip ok">對方喜歡你</span>':''}
+    </div>
+    ${(p.tags||[]).length?`<div class="tags mt">${p.tags.map(t=>`<span class="tag on">${esc(t)}</span>`).join('')}</div>`:''}
+    <p class="mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
+    ${pubPhotos.length?`<div class="gallery">${pubPhotos.map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}
+    ${privCount?`<div class="mt small muted">🔒 ${privCount} 張私密照 · ${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?'對方未同意':`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
+      ${grant?`<div class="gallery">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}`:''}
+    <div class="row mt2" style="justify-content:space-between">
+      <button class="btn ${myLike?'ghost':'rose'}" id="likeBtn" ${canAct?'':'disabled'}>${myLike?'取消喜歡':'♥ 喜歡'}</button>
+      <div class="row"><button class="btn sm ghost" id="blockBtn">封鎖</button><button class="btn sm ghost" id="reportBtn">檢舉</button></div>
+    </div>
+    ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能按喜歡或傳訊息</p>'}`;
+  modal(body);
+  signed(p.avatar_path).then(u=>{ if(u) $('#bigPh').style.backgroundImage=`url(${u})`; });
+  $('#modal').querySelectorAll('.gallery .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
+  $('#likeBtn').onclick = async ()=>{
+    if(myLike){ await sb.from('likes').delete().eq('from_id',me.id).eq('to_id',id); toast('已取消'); }
+    else { const { error } = await sb.from('likes').insert({ from_id:me.id, to_id:id }); if(error) return toast(error.message);
+      if(theirLike){ toast('🎉 配對成功！可以開始聊天了'); closeModal(); location.hash='#/matches'; return; } toast('已送出喜歡'); }
+    openProfile(id);
+  };
+  $('#reqPriv') && ($('#reqPriv').onclick = async ()=>{ const { error } = await sb.from('photo_requests').insert({ requester_id:me.id, owner_id:id }); toast(error?error.message:'已送出索取'); openProfile(id); });
+  $('#blockBtn').onclick = async ()=>{ if(!confirm(`封鎖 ${p.nickname}？對方將無法再看到你或傳訊息給你。`)) return;
+    await sb.from('blocks').insert({ blocker_id:me.id, blocked_id:id }); toast('已封鎖'); closeModal(); route(); };
+  $('#reportBtn').onclick = ()=>openReport(id, p.nickname);
+}
+function openReport(id, name){
+  modal(`<h3 style="font-size:18px">檢舉 ${esc(name)}</h3>
+    <form id="rpForm"><label>原因</label><select name="reason" required>${Object.entries(REPORT_REASONS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+    <label>說明（選填）</label><textarea name="detail" maxlength="500" placeholder="發生了什麼事？"></textarea>
+    <label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="checkbox" name="blk" checked style="width:auto">同時封鎖對方</label>
+    <button class="btn primary block mt" type="submit">送出檢舉</button></form>`);
+  $('#rpForm').onsubmit = async e=>{ e.preventDefault(); const f=new FormData(e.target);
+    const { error } = await sb.from('reports').insert({ reporter_id:me.id, reported_id:id, reason:f.get('reason'), detail:f.get('detail')||null });
+    if(error) return toast(error.message);
+    if(f.get('blk')) await sb.from('blocks').upsert({ blocker_id:me.id, blocked_id:id });
+    toast('已收到檢舉，我們會盡快處理'); closeModal(); route(); };
+}
+
+/* =====================================================================
+   頁面：喜歡
+   ===================================================================== */
+async function viewLikes(){
+  const [{ data: toMe }, { data: fromMe }] = await Promise.all([
+    sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,birth_year,city,avatar_path,status)').eq('to_id', me.id).order('created_at',{ascending:false}),
+    sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,birth_year,city,avatar_path,status)').eq('from_id', me.id).order('created_at',{ascending:false}),
+  ]);
+  const list = (rows, key) => rows && rows.length ? `<div class="list">${rows.filter(r=>r.p&&r.p.status==='approved').map(r=>`<div class="item" data-id="${r.p.id}">
+      <div class="avatar" data-ph="${esc(r.p.avatar_path||'')}"></div><div class="grow"><div class="t">${esc(r.p.nickname)} <span class="muted small">${age(r.p.birth_year)}</span></div><div class="s">${esc(r.p.city||'')}</div></div><span class="tiny dim">${fmtTime(r.created_at)}</span></div>`).join('')}</div>` : `<p class="muted center" style="padding:30px 0">還沒有</p>`;
+  $('#app').innerHTML = `${statusBanner()}<div class="tabs"><button class="on" data-t="a">喜歡我的（${(toMe||[]).length}）</button><button data-t="b">我喜歡的（${(fromMe||[]).length}）</button></div>
+    <div id="ta">${list(toMe)}</div><div id="tb" class="hidden">${list(fromMe)}</div>`;
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); });
+  $('#app').querySelectorAll('.item').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
+  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url(${u})`; });
+}
+
+/* =====================================================================
+   頁面：訊息列表 / 聊天
+   ===================================================================== */
+async function viewMatches(){
+  const { data: ms } = await sb.from('matches').select('*').or(`user_a.eq.${me.id},user_b.eq.${me.id}`).order('last_message_at',{ascending:false,nullsFirst:false});
+  if(!ms || !ms.length){ $('#app').innerHTML = `${statusBanner()}<p class="muted center" style="padding:60px 0">還沒有配對。到「探索」按下喜歡，彼此都有意就能開始聊天。</p>`; return; }
+  const ids = ms.map(m=> m.user_a===me.id ? m.user_b : m.user_a);
+  const { data: ps } = await sb.from('profiles').select('id,nickname,avatar_path,status').in('id', ids);
+  const pm = Object.fromEntries((ps||[]).map(p=>[p.id,p]));
+  const { data: unread } = await sb.from('messages').select('match_id').is('read_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id));
+  const uc = {}; (unread||[]).forEach(u=>uc[u.match_id]=(uc[u.match_id]||0)+1);
+  $('#app').innerHTML = `${statusBanner()}<div class="list">${ms.map(m=>{ const o=pm[m.user_a===me.id?m.user_b:m.user_a]; if(!o) return '';
+    return `<div class="item" data-id="${m.id}"><div class="avatar" data-ph="${esc(o.avatar_path||'')}"></div>
+      <div class="grow"><div class="t">${esc(o.nickname)} ${uc[m.id]?`<span class="chip" style="background:var(--rose);color:#fff">${uc[m.id]}</span>`:''}</div><div class="s">${m.last_message?esc(m.last_message):'<i>配對成功，打個招呼吧</i>'}</div></div>
+      <span class="tiny dim">${m.last_message_at?fmtTime(m.last_message_at):''}</span></div>`; }).join('')}</div>`;
+  $('#app').querySelectorAll('.item').forEach(el=>el.onclick=()=>location.hash='#/chat/'+el.dataset.id);
+  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url(${u})`; });
+}
+
+async function viewChat(matchId){
+  const { data: m } = await sb.from('matches').select('*').eq('id', matchId).single();
+  if(!m){ $('#app').innerHTML='<p class="muted">找不到這個對話</p>'; return; }
+  const oid = m.user_a===me.id ? m.user_b : m.user_a;
+  const { data: o } = await sb.from('profiles').select('id,nickname,avatar_path').eq('id', oid).maybeSingle();
+  const { data: msgs } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at').limit(300);
+  $('#app').innerHTML = `<div class="chat">
+    <div class="row" style="padding-bottom:10px;border-bottom:1px solid var(--line)"><a href="#/matches" class="btn sm ghost">‹</a>
+      <div class="avatar" id="chAv" style="width:36px;height:36px"></div><div class="grow t" style="font-weight:500">${o?esc(o.nickname):'（已下架）'}</div>
+      ${o?`<button class="btn sm ghost" id="chProf">檔案</button><button class="btn sm ghost" id="chUnmatch">解除配對</button>`:''}</div>
+    <div class="msgs" id="msgs"></div>
+    <form id="chForm"><input id="chIn" maxlength="2000" placeholder="輸入訊息…" autocomplete="off" ${me.status==='approved'?'':'disabled'}><button class="btn primary" ${me.status==='approved'?'':'disabled'}>送出</button></form>
+    <p class="tiny dim center" style="padding-top:6px">請勿在對話中要求或提供任何金錢。遇到不當內容請封鎖並檢舉。</p></div>`;
+  if(o) signed(o.avatar_path).then(u=>{ if(u) $('#chAv').style.backgroundImage=`url(${u})`; });
+  const box = $('#msgs');
+  const add = (x) => { box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${fmtTime(x.created_at)}</span></div>`); box.scrollTop = box.scrollHeight; };
+  (msgs||[]).forEach(add);
+  sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>{});
+  chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
+    if(payload.new.sender_id!==me.id){ add(payload.new); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
+  }).subscribe();
+  $('#chForm').onsubmit = async e => { e.preventDefault(); const body=$('#chIn').value.trim(); if(!body) return;
+    const bad = containsBadWords(body); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);
+    $('#chIn').value='';
+    const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body }).select().single();
+    if(error) return toast(error.message); add(data); };
+  $('#chProf') && ($('#chProf').onclick=()=>openProfile(oid));
+  $('#chUnmatch') && ($('#chUnmatch').onclick=async()=>{ if(!confirm('解除配對後對話將刪除，確定？')) return; await sb.from('matches').delete().eq('id',matchId); location.hash='#/matches'; });
+}
+
+/* =====================================================================
+   頁面：我的
+   ===================================================================== */
+async function viewMe(){
+  await loadMe();
+  const [{ data: photos }, { data: reqs }, { data: grants }, { data: blocks }] = await Promise.all([
+    sb.from('photos').select('*').eq('user_id', me.id).order('created_at'),
+    sb.from('photo_requests').select('*, p:profiles!photo_requests_requester_id_fkey(id,nickname,avatar_path)').eq('owner_id', me.id).eq('status','pending'),
+    sb.from('photo_grants').select('*, p:profiles!photo_grants_viewer_id_fkey(id,nickname)').eq('owner_id', me.id),
+    sb.from('blocks').select('blocked_id, p:profiles!blocks_blocked_id_fkey(id,nickname)').eq('blocker_id', me.id),
+  ]);
+  const st = { incomplete:'warn', pending:'warn', approved:'ok', rejected:'bad', suspended:'bad' }[me.status];
+  $('#app').innerHTML = `${statusBanner()}<div class="narrow">
+    <div class="card">
+      <div class="row"><div class="avatar lg" id="meAv"></div><div class="grow"><h2 style="font-size:22px">${esc(me.nickname||'（未命名）')}</h2><span class="chip ${st}">${STATUS_TXT[me.status]}</span>
+        <div class="mt"><label class="btn sm ghost" style="margin:0">更換頭像<input type="file" accept="image/*" id="meAvFile" class="hidden"></label></div></div></div>
+    </div>
+    <div class="card mt"><h3 style="font-size:17px;margin-bottom:6px">相簿</h3><p class="tiny dim">公開照所有會員可見；私密照需你授權。每張照片都需審核。</p>
+      <div class="gallery" id="meGal">${(photos||[]).map(x=>`<div class="g" data-ph="${esc(x.path)}"><span class="st chip ${x.status==='approved'?'ok':x.status==='rejected'?'bad':'warn'}">${x.is_private?'🔒 ':''}${({pending:'審核中',approved:'已通過',rejected:'未通過'})[x.status]}</span><button class="del" data-id="${x.id}" data-path="${esc(x.path)}">✕</button></div>`).join('')}</div>
+      <div class="row mt wrap"><label class="btn sm ghost" style="margin:0">＋ 公開照<input type="file" accept="image/*" data-priv="0" class="hidden mePh"></label><label class="btn sm ghost" style="margin:0">＋ 私密照<input type="file" accept="image/*" data-priv="1" class="hidden mePh"></label></div>
+    </div>
+    ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${esc(r.p?.nickname||'')}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
+    ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${esc(g.p?.nickname||'')}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
+    <form class="card mt" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改暱稱、自介、職業或興趣後會重新送審，期間檔案暫時下架。</p>
+      ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存並送審</button></form>
+    ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${esc(b.p?.nickname||'')}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
+    <div class="card mt"><h3 style="font-size:17px">帳號</h3><p class="small muted">${esc(session.user.email)}</p>
+      <div class="row mt wrap"><button class="btn sm ghost" id="pwBtn">更改密碼</button><button class="btn sm ghost" id="logoutBtn">登出</button><button class="btn sm danger" id="delBtn">刪除帳號</button></div></div>
+  </div>`;
+  bindTagPick();
+  signed(me.avatar_path).then(u=>{ if(u) $('#meAv').style.backgroundImage=`url(${u})`; });
+  $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url(${u})`; });
+  $('#meAvFile').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; toast('上傳中…');
+    try{ const path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error; toast('頭像已更新，重新送審'); viewMe(); }catch(err){ toast(err.message); } };
+  document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=9) return toast('相簿最多 9 張'); toast('上傳中…');
+    try{ const path=await uploadPhoto(f); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1' }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }catch(err){ toast(err.message); } });
+  $('#meGal').querySelectorAll('.del').forEach(b=>b.onclick=async()=>{ if(!confirm('刪除這張照片？')) return; await sb.from('photos').delete().eq('id',b.dataset.id); await sb.storage.from('photos').remove([b.dataset.path]); viewMe(); });
+  document.querySelectorAll('.grantBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_grants').upsert({ owner_id:me.id, viewer_id:b.dataset.id }); await sb.from('photo_requests').update({ status:'granted' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id); toast('已授權'); viewMe(); });
+  document.querySelectorAll('.denyBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id); viewMe(); });
+  document.querySelectorAll('.revokeBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_grants').delete().eq('owner_id',me.id).eq('viewer_id',b.dataset.id); await sb.from('photo_requests').delete().eq('owner_id',me.id).eq('requester_id',b.dataset.id); toast('已收回'); viewMe(); });
+  document.querySelectorAll('.unblockBtn').forEach(b=>b.onclick=async()=>{ await sb.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',b.dataset.id); viewMe(); });
+  $('#meForm').onsubmit = async e=>{ e.preventDefault(); const p=readProfileForm(e.target); if(!p) return;
+    const { error } = await sb.from('profiles').update(p).eq('id',me.id); if(error) return toast(error.message); toast('已儲存'); viewMe(); };
+  $('#pwBtn').onclick = async ()=>{ const pw = prompt('輸入新密碼（至少 8 碼）'); if(!pw||pw.length<8) return; const { error } = await sb.auth.updateUser({ password:pw }); toast(error?error.message:'密碼已更新'); };
+  $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.hash='#/'; };
+  $('#delBtn').onclick = ()=>{ modal(`<h3 style="font-size:18px">刪除帳號</h3><p class="muted small mt">為保障安全，刪除帳號需由客服處理。請用你的註冊信箱寄信至 <b>support@yueyu.example</b>，主旨「刪除帳號」，我們會在 7 個工作天內刪除你的所有資料。你也可以先把檔案下架：到「編輯檔案」清空自介後送出，即不會被其他會員看到。</p>`); };
+}
+
+/* =====================================================================
+   頁面：管理後台
+   ===================================================================== */
+async function viewAdmin(){
+  if(!me.is_admin){ location.hash='#/browse'; return; }
+  let tab = 'profiles';
+  const draw = async ()=>{
+    $('#app').innerHTML = `<div class="tabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button></div><div id="adm"><div class="spinner"></div></div>`;
+    document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
+    const box = $('#adm');
+    if(tab==='profiles'){
+      const { data: rows } = await sb.from('profiles').select('*').eq('status','pending').order('updated_at');
+      if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審會員 ✓</p>'; return; }
+      box.innerHTML = rows.map(p=>`<div class="card mb" data-id="${p.id}">
+        <div class="row" style="align-items:flex-start"><div class="avatar lg" data-ph="${esc(p.avatar_path||'')}"></div>
+          <div class="grow"><b>${esc(p.nickname)}</b> <span class="muted small">${p.gender==='male'?'男':'女'} · ${age(p.birth_year)} 歲 · ${esc(p.city||'')} · 找${({male:'男',female:'女',any:'不限'})[p.looking_for]||''}</span>
+            <div class="small muted">${esc(p.occupation||'')} ${p.height_cm?p.height_cm+'cm':''}</div>
+            <p class="small mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
+            ${containsBadWords(p.bio+' '+p.nickname).length?`<p class="tiny bad">⚠ 含敏感字：${containsBadWords(p.bio+' '+p.nickname).join('、')}</p>`:''}
+            <div class="tags mt">${(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div></div>
+        <div class="row mt wrap"><button class="btn sm primary ap" data-id="${p.id}">✓ 通過</button><input class="grow note" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px"><button class="btn sm ghost rj" data-id="${p.id}">退件</button><button class="btn sm danger sp" data-id="${p.id}">停權</button></div></div>`).join('');
+      box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
+      box.querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id); toast('已通過'); draw(); });
+      box.querySelectorAll('.rj').forEach(b=>b.onclick=async()=>{ const note=b.closest('.card').querySelector('.note').value||'請修改後重新送審'; await sb.from('profiles').update({ status:'rejected', review_note:note }).eq('id',b.dataset.id); toast('已退件'); draw(); });
+      box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('確定停權？')) return; await sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id); draw(); });
+    }
+    if(tab==='photos'){
+      const { data: rows } = await sb.from('photos').select('*, p:profiles(nickname)').eq('status','pending').order('created_at');
+      if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審照片 ✓</p>'; return; }
+      box.innerHTML = `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
+        <div class="row mt" style="gap:6px"><button class="btn sm primary pa" data-id="${x.id}">通過</button><button class="btn sm ghost pr" data-id="${x.id}">退件</button></div></div></div>`).join('')}</div>`;
+      box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
+      box.querySelectorAll('.pa').forEach(b=>b.onclick=async()=>{ await sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id); draw(); });
+      box.querySelectorAll('.pr').forEach(b=>b.onclick=async()=>{ await sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id); draw(); });
+    }
+    if(tab==='reports'){
+      const { data: rows } = await sb.from('reports').select('*, r:profiles!reports_reporter_id_fkey(nickname), t:profiles!reports_reported_id_fkey(id,nickname,status)').eq('status','open').order('created_at');
+      if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有未處理檢舉 ✓</p>'; return; }
+      box.innerHTML = `<table class="table"><tr><th>時間</th><th>檢舉人</th><th>被檢舉</th><th>原因</th><th>說明</th><th></th></tr>${rows.map(r=>`<tr><td class="tiny">${fmtTime(r.created_at)}</td><td>${esc(r.r?.nickname||'')}</td><td>${esc(r.t?.nickname||'')} <span class="chip">${STATUS_TXT[r.t?.status]||''}</span></td><td>${REPORT_REASONS[r.reason]}</td><td class="small">${esc(r.detail||'')}</td>
+        <td><div class="row wrap" style="gap:4px"><button class="btn sm ghost msgs" data-id="${r.t?.id}">看訊息</button><button class="btn sm danger sp" data-id="${r.t?.id}" data-r="${r.id}">停權</button><button class="btn sm ghost rs" data-r="${r.id}">結案</button><button class="btn sm ghost dm" data-r="${r.id}">駁回</button></div></td></tr>`).join('')}</table>`;
+      box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權此會員？')) return; await sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id); await sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r); draw(); });
+      box.querySelectorAll('.rs').forEach(b=>b.onclick=async()=>{ await sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r); draw(); });
+      box.querySelectorAll('.dm').forEach(b=>b.onclick=async()=>{ await sb.from('reports').update({ status:'dismissed' }).eq('id',b.dataset.r); draw(); });
+      box.querySelectorAll('.msgs').forEach(b=>b.onclick=async()=>{ const { data: ms } = await sb.from('messages').select('body,created_at,sender_id').eq('sender_id',b.dataset.id).order('created_at',{ascending:false}).limit(50);
+        modal(`<h3 style="font-size:16px">最近 50 則訊息</h3>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--line);padding:6px 0"><span class="tiny dim">${fmtTime(x.created_at)}</span> ${esc(x.body)}</p>`).join('')||'<p class="muted">無</p>'}`); });
+    }
+    if(tab==='members'){
+      box.innerHTML = `<div class="row mb"><input id="q" placeholder="暱稱關鍵字" style="padding:9px 12px"><select id="qs" style="width:auto;padding:9px 12px"><option value="">所有狀態</option>${Object.entries(STATUS_TXT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><button class="btn sm primary" id="qb">搜尋</button></div><div id="qr"></div>`;
+      const run = async ()=>{ let q = sb.from('profiles').select('id,nickname,gender,birth_year,city,status,is_admin,created_at,last_active_at').order('created_at',{ascending:false}).limit(100);
+        if($('#q').value.trim()) q=q.ilike('nickname',`%${$('#q').value.trim()}%`); if($('#qs').value) q=q.eq('status',$('#qs').value);
+        const { data: rows } = await q;
+        $('#qr').innerHTML = `<table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny">${fmtTime(p.created_at)}</td>
+          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${p.status!=='approved'&&p.nickname?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table>`;
+        $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id); run(); });
+        $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ await sb.from('profiles').update({ status:'approved' }).eq('id',b.dataset.id); run(); });
+        $('#qr').querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id); run(); });
+      };
+      $('#qb').onclick=run; run();
+    }
+  };
+  await draw();
+}
+
+/* =====================================================================
+   文件頁：條款 / 隱私 / 守則 / 安全
+   ===================================================================== */
+const DOCS = {
+terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
+<h3>第一條　契約主體與服務性質</h3><p>本條款為悅遇 YUEYU（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友與社交媒合服務。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
+<h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
+<h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。</p>
+<h3>第四條　禁止行為</h3><p>你同意不得於本平台從事以下行為，違者本平台得逕行停權、刪除內容，並保留法律追訴權：</p><ol>
+<li>上傳非本人、冒用他人、或未經授權之照片或資料。</li>
+<li>以任何形式向其他會員要求、提供、約定或暗示金錢、財物或其他對價，包括但不限於借貸、贈與、贊助、生活費、約會費用之預先給付等。</li>
+<li>以任何形式媒介、招攬、宣傳或暗示性交易或色情服務。</li>
+<li>情色產業相關人士（含但不限於應召、陪侍、代聊、經紀、按摩店、酒店從業人員）於本平台從事招攬、宣傳或引流。</li>
+<li>騷擾、威脅、歧視、辱罵或散布他人私人資訊。</li>
+<li>上傳裸露、猥褻、暴力或違法之內容。</li>
+<li>於公開檔案中留下任何站外聯絡方式，或引導會員至其他平台。</li>
+<li>使用機器人、自動化程式或多重帳號。</li>
+<li>其他違反中華民國法律或公序良俗之行為。</li></ol>
+<h3>第五條　內容審核</h3><p>你上傳之檔案、照片與自我介紹須經本平台審核後始得公開。本平台得基於任何理由拒絕、下架或修改你的內容，且無須說明理由。本平台得保留會員間之訊息紀錄以供處理檢舉與配合司法機關調查。</p>
+<h3>第六條　會員間互動與責任</h3><p>本平台不對任何會員之身分、陳述、意圖或行為做任何擔保。你與其他會員之線上或線下互動，其風險由你自行承擔。因會員間互動產生之任何爭議、損失或損害，本平台一律不負責任。請詳閱<a href="#/safety">安全須知</a>。</p>
+<h3>第七條　付費服務</h3><p>註冊與建立檔案免費。本平台未來得提供付費會籍或加值功能，其內容、價格與退費規定將於購買頁面另行公告。付費服務僅提供平台功能，不保證任何配對結果。</p>
+<h3>第八條　智慧財產與授權</h3><p>你保證對上傳之內容擁有合法權利，並授權本平台於提供服務之必要範圍內使用、重製與展示。本平台之名稱、標識、介面與程式碼為本平台所有。</p>
+<h3>第九條　服務之變更與終止</h3><p>本平台得隨時修改、暫停或終止全部或部分服務。你得隨時聯絡客服要求刪除帳號。本平台得因你違反本條款而終止服務，且不退還任何已支付之費用。</p>
+<h3>第十條　免責聲明與責任限制</h3><p>本服務依「現狀」及「現有」基礎提供，本平台不保證服務不中斷、無錯誤或絕對安全。於法律允許之最大範圍內，本平台對任何間接、附隨、衍生或懲罰性損害不負賠償責任，且對你之累計賠償責任總額以新臺幣壹仟元為限。</p>
+<h3>第十一條　準據法與管轄</h3><p>本條款以中華民國法律為準據法。因本條款所生之爭議，雙方同意以臺灣臺北地方法院為第一審管轄法院，但不排除法律規定之專屬管轄。</p>
+<h3>第十二條　條款修改</h3><p>本平台得隨時修改本條款，修改後將公告於本頁；你於修改後繼續使用服務即視為同意修改後之條款。</p>`,
+
+privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
+<h3>蒐集之資料</h3><ul><li>帳號資料：Email、密碼（加密儲存）。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：按讚、配對、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
+<h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
+<h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方與處理檢舉之管理人員。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
+<h3>資料儲存</h3><p>資料儲存於 Supabase 雲端服務。照片以私有儲存空間存放，透過限時簽章連結讀取。</p>
+<h3>你的權利</h3><p>你得隨時查詢、更正、下架或要求刪除你的個人資料。請以註冊信箱來信客服，我們將於 7 個工作天內處理。</p>
+<h3>Cookie 與本機儲存</h3><p>本平台使用瀏覽器本機儲存以維持登入狀態與年齡確認紀錄，不使用第三方廣告追蹤。</p>`,
+
+guidelines: `<h2>社群守則</h2><p>悅遇希望成為一個讓成熟成年人可以安心、坦誠認識彼此的地方。以下是我們對每一位會員的要求。</p>
+<h3>做自己</h3><p>使用本人近期的照片，誠實描述自己。冒用他人照片或虛構身分將立即停權。</p>
+<h3>尊重</h3><p>對方沒有回應不代表邀請你再傳十次。任何騷擾、辱罵、威脅或散布他人資訊的行為，一經檢舉查證即停權。</p>
+<h3>這裡不談錢</h3><p>悅遇是交友平台，不是交易平台。無論以什麼名義——贊助、生活費、車馬費、禮物承諾——要求或提供金錢，都違反守則。我們也嚴禁色情產業相關人士在站內招攬。看到這類內容請立即檢舉。</p>
+<h3>不留站外聯絡方式</h3><p>公開檔案不得出現 LINE、電話、IG 等聯絡方式。請先在站內認識彼此，等雙方都覺得合適再交換。</p>
+<h3>照片規範</h3><p>清楚、正面、近期。不接受裸露、猥褻、暴力、含文字或聯絡方式、明星或網路圖片。私密照同樣需審核，且不得含有裸露內容。</p>
+<h3>檢舉會被認真看待</h3><p>每一件檢舉都會由真人在 24 小時內處理。惡意或不實檢舉同樣會被處理。</p>`,
+
+safety: `<h2>安全須知</h2><p>線上認識的人，請用線下的謹慎對待。以下建議來自我們與許多會員的經驗。</p>
+<h3>見面前</h3><ul><li>先在站內多聊幾次，再考慮交換其他聯絡方式。</li><li>可以要求視訊通話，確認對方與照片相符。</li><li>任何在見面前就談到錢的人，請直接封鎖並檢舉。</li></ul>
+<h3>第一次見面</h3><ul><li>選擇公開、人多的場所，例如餐廳、咖啡廳。</li><li>自己安排交通，不要讓對方接送。</li><li>告訴信任的朋友你的行程與對方的資訊。</li><li>保持清醒，自己看著自己的飲料。</li></ul>
+<h3>保護個資</h3><ul><li>不要過早透露住址、公司、全名或財務狀況。</li><li>不要傳送可能被用來勒索的照片或影片。</li></ul>
+<h3>遇到問題</h3><p>任何讓你不舒服的互動，請立即封鎖並檢舉。若涉及威脅、勒索或人身安全，請報警（110），並保留對話紀錄。</p>`
+};
+function viewDoc(k){ $('#app').innerHTML = `<div class="doc card">${DOCS[k]}</div>`; }
+
+/* ---------- 啟動 ---------- */
+(async ()=>{ await loadMe(); route(); })();
+</script>
+</body>
+</html>
