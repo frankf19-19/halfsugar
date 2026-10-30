@@ -177,6 +177,16 @@ br.d{display:none}
 .list .item .t .muted{font-family:"Noto Sans TC";font-size:13px}
 .list .item .s{font-size:13px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58vw}
 
+.roles{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+@media(min-width:560px){.roles{grid-template-columns:repeat(3,1fr)}}
+.roles .rl{margin:0;cursor:pointer}
+.roles .rl input{position:absolute;opacity:0;pointer-events:none}
+.roles .rl span{display:block;height:100%;border:1px solid var(--rule);padding:14px 16px;transition:border-color .2s}
+.roles .rl b{display:block;font-family:"Noto Serif TC",serif;font-weight:400;font-size:17px;letter-spacing:.06em;color:var(--ink)}
+.roles .rl small{display:block;font-size:12px;letter-spacing:.02em;color:var(--grey);margin-top:4px;line-height:1.6}
+.roles .rl input:checked+span{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.roles .rl input:focus-visible+span{outline:1px solid var(--ink);outline-offset:3px}
+.rtag{display:inline-block;font-size:11px;letter-spacing:.08em;color:var(--wine);margin-right:8px}
 .tags{display:flex;flex-wrap:wrap;gap:8px}
 .tag{font-size:12px;letter-spacing:.08em;padding:5px 13px;border:1px solid var(--rule);color:var(--grey)}
 .tag.on{border-color:var(--ink);color:var(--ink)}
@@ -283,9 +293,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   悅遇 YUEYU  前端  build v0.8.1
+   悅遇 YUEYU  前端  build v0.9.0
    ===================================================================== */
-const BUILD = 'v0.8.1';
+const BUILD = 'v0.9.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -299,6 +309,8 @@ const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON);
 /* ---------- 常數 ---------- */
 const CITIES = ['台北市','新北市','桃園市','新竹','台中市','彰化','雲林','嘉義','台南市','高雄市','屏東','基隆','宜蘭','花蓮','台東','南投','苗栗','澎湖','金門','海外'];
 const TAGS = ['美食','旅行','咖啡','紅酒','健身','電影','音樂','閱讀','藝術','攝影','高爾夫','登山','游泳','烹飪','寵物','時尚','品茶','露營','瑜伽','投資理財'];
+const ROLES = { daddy:'Sugar Daddy', mommy:'Sugar Mommy', baby:'甜心' };
+const ROLE_DESC = { daddy:'事業有成，願意照顧對方的男性', mommy:'事業有成，願意照顧對方的女性', baby:'希望認識成熟、穩定對象的甜心' };
 const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'色情產業招攬', minor:'疑似未成年', other:'其他' };
 const STATUS_TXT = { incomplete:'尚未完成建檔', pending:'審核中', approved:'已上架', rejected:'未通過審核', suspended:'已停權' };
 const BAD_WORDS = ['援交','援助交際','約炮','外送茶','茶莊','魚訊','出場','買春','賣春','性交易','嫖','陪睡','包夜','全套','半套','定點','價碼','一次多少','一晚多少','代聊','line id','加賴'];
@@ -539,6 +551,8 @@ async function viewAuth(){
 function profileFormHtml(p={}){
   const years = []; const y0 = new Date().getFullYear()-18; for(let y=y0;y>=y0-62;y--) years.push(y);
   return `
+    <label>我的身分 *</label>
+    <div class="roles">${Object.entries(ROLES).map(([k,v])=>`<label class="rl"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div>
     <label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字">
     <div class="row">
       <div class="grow"><label>我是 *</label><select name="gender" required><option value="">請選擇</option><option value="male" ${p.gender==='male'?'selected':''}>男性</option><option value="female" ${p.gender==='female'?'selected':''}>女性</option></select></div>
@@ -565,7 +579,8 @@ function readProfileForm(form){
   const bad = containsBadWords(bio + ' ' + f.get('nickname') + ' ' + f.get('occupation'));
   if(bad.length) { toast(`自介含不允許的字眼：${bad.join('、')}`); return null; }
   if(/line|ig\b|instagram|telegram|wechat|微信|\d{8,}/i.test(bio)) { toast('自介請勿留下聯絡方式'); return null; }
-  return { nickname:f.get('nickname').trim(), gender:f.get('gender'), looking_for:f.get('looking_for'), birth_year:+f.get('birth_year'),
+  if(!f.get('role')) { toast('請選擇你的身分'); return null; }
+  return { role:f.get('role'), nickname:f.get('nickname').trim(), gender:f.get('gender'), looking_for:f.get('looking_for'), birth_year:+f.get('birth_year'),
     city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
 }
 async function uploadPhoto(file){
@@ -606,20 +621,22 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { gender: null, city:'', amin:'', amax:'' };
+const browseState = { role: null, gender: '', city:'', amin:'', amax:'' };
 async function viewBrowse(){
-  if(browseState.gender===null) browseState.gender = me.looking_for==='any' ? '' : (me.looking_for || '');
+  if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); browseState.gender = me.looking_for==='any' ? '' : (me.looking_for || ''); }
   $('#app').innerHTML = `${statusBanner()}
     <div class="filters">
+      <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
       <select id="fGender" aria-label="性別"><option value="">性別不限</option><option value="female" ${browseState.gender==='female'?'selected':''}>女性</option><option value="male" ${browseState.gender==='male'?'selected':''}>男性</option></select>
       <select id="fCity" aria-label="地區"><option value="">地區不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select>
       <select id="fAge" aria-label="年齡"><option value="">年齡不限</option>${[['18','25'],['26','30'],['31','35'],['36','40'],['41','50'],['51','99']].map(([a,b])=>`<option value="${a}-${b}" ${browseState.amin===a?'selected':''}>${b==='99'?a+' 歲以上':a+'–'+b+' 歲'}</option>`).join('')}</select>
     </div>
     <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
   const reload = async () => {
-    browseState.gender=$('#fGender').value; browseState.city=$('#fCity').value; const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
+    browseState.role=$('#fRole').value; browseState.gender=$('#fGender').value; browseState.city=$('#fCity').value; const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
     const y = new Date().getFullYear();
-    let q = sb.from('profiles').select('id,nickname,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).order('last_active_at',{ascending:false}).limit(60);
+    let q = sb.from('profiles').select('id,nickname,role,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).order('last_active_at',{ascending:false}).limit(60);
+    if(browseState.role==='baby') q = q.eq('role','baby'); else if(browseState.role==='sugar') q = q.in('role',['daddy','mommy']);
     if(browseState.gender) q = q.eq('gender', browseState.gender);
     if(browseState.city) q = q.eq('city', browseState.city);
     if(browseState.amin) q = q.lte('birth_year', y - +browseState.amin);
@@ -630,11 +647,11 @@ async function viewBrowse(){
     if(!rows.length){ $('#grid').innerHTML = `<p class="muted center" style="grid-column:1/-1;padding:40px 0">目前沒有符合條件的會員，換個條件試試。</p>`; return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已喜歡</span>':''}
-        <div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div></div></div>`).join('');
+        <div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div></div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.textContent=''; } });
   };
-  ['#fGender','#fCity','#fAge'].forEach(s=>$(s).onchange=reload);
+  ['#fRole','#fGender','#fCity','#fAge'].forEach(s=>$(s).onchange=reload);
   await reload();
 }
 
@@ -656,7 +673,7 @@ async function openProfile(id){
   const body = `
     <div class="photo-big" id="bigPh"></div>
     <div class="row mt" style="justify-content:space-between;align-items:flex-start">
-      <div><h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
+      <div>${p.role?`<div class="rtag" style="margin-bottom:4px">${ROLES[p.role]}</div>`:''}<h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
         <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}</div></div>
       ${theirLike?'<span class="chip ok">對方喜歡你</span>':''}
     </div>
@@ -832,7 +849,7 @@ async function viewAdmin(){
       if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審會員 ✓</p>'; return; }
       box.innerHTML = rows.map(p=>`<div class="card mb" data-id="${p.id}">
         <div class="row" style="align-items:flex-start"><div class="avatar lg" data-ph="${esc(p.avatar_path||'')}"></div>
-          <div class="grow"><b>${esc(p.nickname)}</b> <span class="muted small">${p.gender==='male'?'男':'女'} · ${age(p.birth_year)} 歲 · ${esc(p.city||'')} · 找${({male:'男',female:'女',any:'不限'})[p.looking_for]||''}</span>
+          <div class="grow"><b>${esc(p.nickname)}</b> <span class="rtag">${ROLES[p.role]||'未選身分'}</span><span class="muted small">${p.gender==='male'?'男':'女'} · ${age(p.birth_year)} 歲 · ${esc(p.city||'')} · 找${({male:'男',female:'女',any:'不限'})[p.looking_for]||''}</span>
             <div class="small muted">${esc(p.occupation||'')} ${p.height_cm?p.height_cm+'cm':''}</div>
             <p class="small mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
             ${containsBadWords(p.bio+' '+p.nickname).length?`<p class="tiny bad">⚠ 含敏感字：${containsBadWords(p.bio+' '+p.nickname).join('、')}</p>`:''}

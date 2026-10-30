@@ -1,5 +1,5 @@
 -- =====================================================================
--- 悅遇 YUEYU — Supabase 資料庫結構  (schema v0.1.0)
+-- 悅遇 YUEYU — Supabase 資料庫結構  (schema v0.2.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -23,6 +23,7 @@ create table if not exists public.profiles (
   nickname        text,
   gender          text check (gender in ('male','female')),
   looking_for     text check (looking_for in ('male','female','any')),
+  role            text check (role in ('daddy','mommy','baby')),   -- Sugar Daddy / Sugar Mommy / 甜心
   birth_year      int  check (birth_year between 1900 and 2100),
   city            text,
   height_cm       int  check (height_cm between 100 and 250),
@@ -41,6 +42,7 @@ create table if not exists public.profiles (
   updated_at      timestamptz not null default now()
 );
 create index if not exists profiles_browse_idx on public.profiles(status, gender, city, last_active_at desc);
+alter table public.profiles add column if not exists role text check (role in ('daddy','mommy','baby'));
 
 -- 新使用者註冊時自動建立 profile
 create or replace function public.handle_new_user()
@@ -68,8 +70,8 @@ begin
       return new;
     end if;
     -- 公開欄位有變動 → 退回待審
-    if (new.nickname, new.bio, new.avatar_path, new.occupation, new.tags)
-       is distinct from (old.nickname, old.bio, old.avatar_path, old.occupation, old.tags) then
+    if (new.nickname, new.bio, new.avatar_path, new.occupation, new.tags, new.role)
+       is distinct from (old.nickname, old.bio, old.avatar_path, old.occupation, old.tags, old.role) then
       new.status := 'pending';
     else
       new.status := old.status;
@@ -77,7 +79,7 @@ begin
     -- 首次送審：資料齊全才能從 incomplete 進 pending
     if old.status = 'incomplete' and new.nickname is not null and new.gender is not null
        and new.birth_year is not null and new.city is not null and new.avatar_path is not null
-       and new.age_confirmed and new.agreed_terms_at is not null then
+       and new.role is not null and new.age_confirmed and new.agreed_terms_at is not null then
       new.status := 'pending';
     end if;
   end if;
