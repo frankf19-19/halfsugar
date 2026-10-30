@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.13.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.14.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -657,10 +657,34 @@ begin
      limit least(coalesce(p_limit, 100), 500);
 end $$;
 
--- 傳第一則訊息（直接開啟對話）：每天最多主動開啟 10 個新對話
+-- 主動開啟新對話的紀錄（額度計算用；刪帳號時一併刪除）
+create table if not exists public.conversation_starts (
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+create index if not exists conversation_starts_idx on public.conversation_starts(user_id, created_at);
+alter table public.conversation_starts enable row level security;
+revoke all on public.conversation_starts from anon, authenticated;
+
+-- 主動開新對話的額度：前 10 個隨時可用；用完後每天（台灣時間）只能再開 1 個
+create or replace function public.my_start_quota()
+returns int language plpgsql stable security definer set search_path = public as $$
+declare total int; today_n int; today timestamptz;
+begin
+  if auth.uid() is null then return 0; end if;
+  today := (date_trunc('day', now() at time zone 'Asia/Taipei')) at time zone 'Asia/Taipei';
+  select count(*), count(*) filter (where created_at >= today) into total, today_n
+    from public.conversation_starts where user_id = auth.uid();
+  if total < 10 then return 10 - total; end if;
+  return greatest(0, 1 - today_n);
+end $$;
+revoke execute on function public.my_start_quota() from anon, public;
+grant execute on function public.my_start_quota() to authenticated;
+
+-- 傳第一則訊息（直接開啟對話）
 create or replace function public.send_first_message(other uuid, body text)
 returns uuid language plpgsql security definer set search_path = public as $$
-declare me uuid := auth.uid(); m public.matches; mid uuid; today timestamptz;
+declare me uuid := auth.uid(); m public.matches; mid uuid;
 begin
   if me is null then raise exception '請先登入'; end if;
   if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能傳訊息'; end if;
@@ -678,10 +702,10 @@ begin
     insert into public.messages (match_id, sender_id, body) values (m.id, me, body);
     return m.id;
   end if;
-  today := (date_trunc('day', now() at time zone 'Asia/Taipei')) at time zone 'Asia/Taipei';
-  if (select count(*) from public.matches where initiator = me and coalesce(reopened_at, created_at) >= today) >= 10 then
-    raise exception '今天主動開啟的新對話已達 10 個，明天再來吧';
+  if public.my_start_quota() <= 0 then
+    raise exception '前 10 個新對話已經用完，之後每天可以再開啟 1 個，明天再來吧';
   end if;
+  insert into public.conversation_starts (user_id) values (me);
   if found then
     update public.matches set closed_at = null, reopened_at = now(), initiator = me, last_message = null, last_message_at = null
      where id = m.id returning id into mid;

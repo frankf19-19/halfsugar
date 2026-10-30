@@ -288,7 +288,7 @@ begin
       end if;
       if i = 11 then out := array_append(out, '21b 第 11 個新對話：沒被擋 ✗'::text); end if;
     exception when others then
-      if i = 11 then out := array_append(out, ('21b 每天最多 10 個新對話 ✓ '||sqlerrm)::text);
+      if i = 11 then out := array_append(out, ('21b 前 10 個用完後當天被擋 ✓ '||sqlerrm)::text);
       else out := array_append(out, ('21x 第 '||i||' 個對話失敗 ✗ '||sqlerrm)::text); end if;
     end;
     execute 'reset role';
@@ -309,6 +309,24 @@ begin
       perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
     end if;
   end loop;
+  -- 隔天只再開放 1 個
+  update public.conversation_starts set created_at = created_at - interval '1 day' where user_id = K;
+  for i in 1..2 loop
+    T := gen_random_uuid();
+    insert into auth.users (id, email, aud, role) values (T, 'e2e-u'||i||'@test.invalid','authenticated','authenticated');
+    update public.profiles set nickname='U'||i, gender='female', looking_for='male', role='baby', birth_year=1998, city='台北市', status='approved' where id=T;
+    perform set_config('request.jwt.claims', json_build_object('sub',K,'role','authenticated')::text, true);
+    perform set_config('request.jwt.claim.sub', K::text, true);
+    execute 'set local role authenticated';
+    begin perform public.send_first_message(T, '你好');
+      out := array_append(out, (case when i=1 then '21e 隔天可以再開 1 個 ✓' else '21f 隔天第 2 個：沒被擋 ✗' end)::text);
+    exception when others then
+      out := array_append(out, (case when i=1 then '21e 隔天第 1 個被擋 ✗ '||sqlerrm else '21f 隔天只能開 1 個 ✓' end)::text);
+    end;
+    execute 'reset role';
+    perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  end loop;
+
   -- 未審核帳號不能主動傳
   perform set_config('request.jwt.claims', json_build_object('sub',C,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', C::text, true);
