@@ -3,7 +3,7 @@ do $t$
 declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
-  F uuid := gen_random_uuid();
+  F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
 begin
   perform set_config('storage.allow_delete_query','true',true);
@@ -235,6 +235,42 @@ begin
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   delete from auth.users where id=A;
   select count(*) into n from public.reports where reported_id=F; out := array_append(out, ('19e 檢舉人刪帳號後檢舉仍保留 = '||n||' (應為1)')::text);
+
+  -- 20 審核中聊天、檢舉證據、重新送審、年齡、停權關閉配對
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into auth.users (id, email, aud, role) values (G,'e2e-g@test.invalid','authenticated','authenticated'),(H,'e2e-h@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='G', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市', status='approved' where id=G;
+  update public.profiles set nickname='H', gender='female', looking_for='male', role='baby', birth_year=1999, city='台北市', status='approved' where id=H;
+  insert into public.matches (user_a, user_b) values (least(G,H), greatest(G,H)) returning id into mid;
+  insert into public.messages (match_id, sender_id, body) values (mid, G, '你好'), (mid, H, '嗨');
+  perform set_config('request.jwt.claims', json_build_object('sub',H,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', H::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set bio='改了自介' where id=H;
+  select status into v from public.profiles where id=H; out := array_append(out, ('20 改自介後狀態 = '||v||' (應為pending)')::text);
+  begin insert into public.messages (match_id, sender_id, body) values (mid, H, '審核中也能聊'); out := array_append(out, '20b 審核中可以和已配對的人聊天 ✓'::text);
+  exception when others then out := array_append(out, ('20b 審核中不能聊天 ✗ '||sqlerrm)::text); end;
+  begin update public.profiles set birth_year = extract(year from now())::int - 17 where id=H; out := array_append(out, '20c 改成未滿 18 歲：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '20c 未滿 18 歲被擋 ✓'::text); end;
+  insert into public.reports (reporter_id, reported_id, reason) values (H, G, 'harass') returning id into rid;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',G,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', G::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.profiles where id=H; out := array_append(out, ('20d 對方審核中仍看得到檔案 = '||n||' (應為1)')::text);
+  select count(*) into n from public.report_evidence; out := array_append(out, ('20e 一般會員讀到檢舉證據 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from public.report_evidence where report_id=rid; out := array_append(out, ('20f 檢舉時備份的對話 = '||n||' 則 (應為3)')::text);
+  update public.profiles set status='suspended' where id=G;
+  select count(*) into n from public.matches where id=mid and closed_at is null; out := array_append(out, ('20g 停權後配對仍開著 = '||n||' (應為0)')::text);
+  update public.profiles set status='rejected' where id=H;
+  perform set_config('request.jwt.claims', json_build_object('sub',H,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', H::text, true);
+  execute 'set local role authenticated';
+  perform public.resubmit_profile();
+  select status into v from public.profiles where id=H; out := array_append(out, ('20h 退件後重新送審 = '||v||' (應為pending)')::text);
+  execute 'reset role';
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

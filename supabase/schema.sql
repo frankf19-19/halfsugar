@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.11.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.12.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -58,6 +58,7 @@ create table if not exists public.profiles (
 alter table public.profiles add column if not exists role text check (role in ('daddy','mommy','baby'));
 alter table public.profiles add column if not exists hidden boolean not null default false;
 alter table public.profiles add column if not exists show_online boolean not null default true;
+alter table public.profiles add column if not exists submitted_at timestamptz;   -- 最近一次送審時間（待審名單排序用）
 create index if not exists profiles_browse_idx on public.profiles(status, gender, city, last_active_at desc);
 alter table public.profiles drop constraint if exists profiles_looking_for_check;
 alter table public.profiles drop constraint if exists profiles_city_check;
@@ -85,6 +86,9 @@ begin
   -- SQL Editor / 後端服務（沒有登入者）與管理員：不限制
   if auth.uid() is null or public.is_admin() then return new; end if;
   if current_setting('halfsugar.deleting', true) = '1' then return new; end if;   -- 刪除帳號流程中
+  if new.birth_year is not null and new.birth_year > extract(year from now())::int - 18 then
+    raise exception '必須年滿 18 歲才能使用本站';
+  end if;
 
   new.id          := old.id;
   new.is_admin    := old.is_admin;
@@ -123,13 +127,24 @@ begin
      is distinct from (old.nickname, old.bio, old.avatar_path, old.occupation, old.tags, old.role, old.birth_year, old.gender) then
     new.status := 'pending';
   elsif old.status = 'rejected'
-     and (new.city, new.looking_for, new.height_cm) is distinct from (old.city, old.looking_for, old.height_cm) then
+     and ((new.city, new.looking_for, new.height_cm) is distinct from (old.city, old.looking_for, old.height_cm)
+          or current_setting('halfsugar.resubmit', true) = '1') then
     new.status := 'pending';
   else
     new.status := old.status;
   end if;
   return new;
 end $$;
+create or replace function public.profiles_submitted_at()
+returns trigger language plpgsql as $$
+begin
+  if new.status = 'pending' and old.status is distinct from 'pending' then new.submitted_at := now(); end if;
+  return new;
+end $$;
+drop trigger if exists profiles_zz_submitted_trg on public.profiles;
+create trigger profiles_zz_submitted_trg before update on public.profiles
+  for each row execute function public.profiles_submitted_at();
+
 drop trigger if exists profiles_guard_trg on public.profiles;
 create trigger profiles_guard_trg before update on public.profiles
   for each row execute function public.profiles_guard();
@@ -305,6 +320,13 @@ drop trigger if exists messages_guard_trg on public.messages;
 create trigger messages_guard_trg before insert or update on public.messages
   for each row execute function public.messages_guard();
 
+-- 我和某人之間是否有未解除的配對
+create or replace function private.has_open_match(other uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.matches m where m.closed_at is null
+                 and m.user_a = least(auth.uid(), other) and m.user_b = greatest(auth.uid(), other));
+$$;
+
 -- 雙方方向是否吻合（我想認識的性別 = 對方性別，且對方想認識的性別 = 我的性別）
 create or replace function private.is_compatible(other uuid)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -316,10 +338,14 @@ $$;
 -- 私密照數量（看不到私密照的人也能知道對方有幾張，才能索取）
 create or replace function public.private_photo_count(uid uuid)
 returns int language sql stable security definer set search_path = public as $$
-  select case when private.is_blocked_with(uid)
+  select case when private.is_blocked_with(uid) or public.my_status() not in ('pending','approved')
+              or not private.is_compatible(uid)
               or not exists (select 1 from public.profiles where id = uid and status = 'approved') then 0
          else (select count(*)::int from public.photos where user_id = uid and is_private and status = 'approved') end;
 $$;
+
+revoke execute on function public.private_photo_count(uuid) from anon, public;
+grant execute on function public.private_photo_count(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------
 -- 4. reports  檢舉
@@ -357,6 +383,9 @@ create or replace function public.profiles_ban_phone()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare ph text;
 begin
+  if new.status = 'suspended' and old.status is distinct from 'suspended' then
+    update public.matches set closed_at = now() where (user_a = new.id or user_b = new.id) and closed_at is null;
+  end if;
   select phone into ph from auth.users where id = new.id;
   if ph is null or ph = '' then return new; end if;
   if new.status = 'suspended' and old.status is distinct from 'suspended' then
@@ -388,13 +417,14 @@ drop policy if exists "profiles_select" on public.profiles;
 create policy "profiles_select" on public.profiles for select to authenticated
   using (
     id = auth.uid() or public.is_admin()
-    or (status = 'approved' and public.my_status() in ('pending','approved')
+    or (public.my_status() in ('pending','approved')
         and private.is_compatible(id)          -- 只看得到方向互相吻合的會員（保護同志會員隱私）
         and not private.is_blocked_with(id)
-        and (not hidden
-             or exists (select 1 from public.likes l where l.from_id = profiles.id and l.to_id = auth.uid())
-             or exists (select 1 from public.matches m where m.closed_at is null and
-                          ((m.user_a = profiles.id and m.user_b = auth.uid()) or (m.user_b = profiles.id and m.user_a = auth.uid())))))
+        and ((status = 'approved'
+              and (not hidden
+                   or exists (select 1 from public.likes l where l.from_id = profiles.id and l.to_id = auth.uid())
+                   or private.has_open_match(profiles.id)))
+             or (status = 'pending' and private.has_open_match(profiles.id))))   -- 已配對的人重新審核中仍看得到
   );
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles for update to authenticated
@@ -414,7 +444,7 @@ create policy "photos_select" on public.photos for select to authenticated
 drop policy if exists "photos_insert_own" on public.photos;
 create policy "photos_insert_own" on public.photos for insert to authenticated
   with check (user_id = auth.uid() and path ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
-              and public.my_status() in ('pending','approved'));
+              and public.my_status() in ('pending','approved','rejected'));
 drop policy if exists "photos_update" on public.photos;
 create policy "photos_update" on public.photos for update to authenticated
   using (user_id = auth.uid() or public.is_admin())
@@ -486,7 +516,7 @@ drop policy if exists "messages_insert" on public.messages;
 create policy "messages_insert" on public.messages for insert to authenticated
   with check (
     sender_id = auth.uid()
-    and public.my_status() = 'approved'
+    and public.my_status() in ('approved','pending')   -- 重新審核中仍可和已配對的人聊天（未曾上架者不會有配對）
     and exists (select 1 from public.matches m where m.id = match_id and m.closed_at is null
                 and (m.user_a = auth.uid() or m.user_b = auth.uid())
                 and not private.is_blocked_with(case when m.user_a = auth.uid() then m.user_b else m.user_a end))
@@ -522,10 +552,16 @@ returns boolean language sql stable security definer set search_path = public as
       or exists (select 1 from public.profiles where avatar_path = p);
 $$;
 
+create or replace function private.my_file_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%';
+$$;
+
 drop policy if exists "photos_storage_insert" on storage.objects;
 create policy "photos_storage_insert" on storage.objects for insert to authenticated
   with check (bucket_id = 'photos' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
-              and exists (select 1 from public.profiles where id = auth.uid())
+              and exists (select 1 from public.profiles where id = auth.uid() and status <> 'suspended')
+              and private.my_file_count() < 15            -- 每人最多 15 個檔案（相簿 9 + 頭像與更換的餘裕）
               and not private.photo_path_in_use(name));   -- 不可用同檔名覆蓋已登記的照片
 
 drop policy if exists "photos_storage_delete" on storage.objects;
@@ -603,7 +639,7 @@ begin
     select * from public.profiles p
      where (p_status is null or p.status = p_status)
        and (p_q is null or p_q = '' or p.nickname ilike '%' || replace(replace(p_q, '%', '\%'), '_', '\_') || '%')
-     order by case when p_status = 'pending' then p.updated_at end asc nulls last, p.created_at desc
+     order by case when p_status = 'pending' then coalesce(p.submitted_at, p.updated_at) end asc nulls last, p.created_at desc
      limit least(coalesce(p_limit, 100), 500);
 end $$;
 
@@ -651,6 +687,46 @@ grant execute on all functions in schema private to authenticated;
 drop function if exists public.is_blocked_with(uuid);
 drop function if exists public.is_compatible(uuid);
 drop function if exists public.photo_path_in_use(text);
+
+-- 檢舉證據：送出檢舉時，自動備份雙方之間的對話（只有管理員看得到），之後解除配對或刪帳號也不會消失
+create table if not exists public.report_evidence (
+  id         bigint generated always as identity primary key,
+  report_id  uuid not null references public.reports(id) on delete cascade,
+  sender_id  uuid,
+  body       text not null,
+  created_at timestamptz not null
+);
+create index if not exists report_evidence_idx on public.report_evidence(report_id, created_at);
+alter table public.report_evidence enable row level security;
+drop policy if exists "evidence_admin" on public.report_evidence;
+create policy "evidence_admin" on public.report_evidence for select to authenticated using (public.is_admin());
+
+create or replace function public.handle_report()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.report_evidence (report_id, sender_id, body, created_at)
+  select new.id, x.sender_id, x.body, x.created_at from (
+    select ms.sender_id, ms.body, ms.created_at from public.messages ms
+      join public.matches m on m.id = ms.match_id
+     where m.user_a = least(new.reporter_id, new.reported_id) and m.user_b = greatest(new.reporter_id, new.reported_id)
+     order by ms.created_at desc limit 500) x;
+  return new;
+end $$;
+drop trigger if exists reports_evidence_trg on public.reports;
+create trigger reports_evidence_trg after insert on public.reports
+  for each row execute function public.handle_report();
+
+-- 被退件後重新送審（內容不一定有改）
+create or replace function public.resubmit_profile()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if public.my_status() <> 'rejected' then return; end if;
+  perform set_config('halfsugar.resubmit', '1', true);
+  update public.profiles set updated_at = now() where id = auth.uid();
+  perform set_config('halfsugar.resubmit', '0', true);
+end $$;
+revoke execute on function public.resubmit_profile() from anon, public;
+grant execute on function public.resubmit_profile() to authenticated;
 
 -- 管理員刪除帳號（用於已停權帳號）：手機若在黑名單中仍保留指紋，之後不能再註冊
 create or replace function public.admin_delete_account(target uuid)
