@@ -126,19 +126,22 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 br.d{display:none}
 @media(min-width:760px){br.d{display:inline}}
 .hero .sub{margin:-18px 0 34px;font-size:14px;line-height:2;color:rgba(255,255,255,.85);letter-spacing:.08em}
-.faq{max-width:1320px;margin:0 auto;padding:130px 30px;display:grid;grid-template-columns:1fr;gap:48px;border-top:1px solid var(--rule)}
-@media(min-width:900px){.faq{grid-template-columns:5fr 7fr;gap:90px}}
-.faq h2{font-size:clamp(28px,3.2vw,46px);line-height:1.5}
-.faq .l p{margin:24px 0 20px;color:var(--grey);font-size:15px;line-height:2;max-width:420px}
-.faq .l a{font-size:14px;letter-spacing:.12em}
-.faq details{border-bottom:1px solid var(--rule)}
-.faq details:first-child{border-top:1px solid var(--rule)}
-.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:26px 2px;font-family:"Noto Serif TC",serif;font-size:clamp(17px,1.5vw,21px);letter-spacing:.04em}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"";flex:none;width:14px;height:14px;background:linear-gradient(var(--ink),var(--ink)) center/14px 1px no-repeat,linear-gradient(var(--ink),var(--ink)) center/1px 14px no-repeat;transition:transform .3s}
-.faq details[open] summary::after{transform:rotate(45deg)}
-.faq details p{padding:0 40px 28px 2px;color:var(--grey);font-size:15px;line-height:2.05}
-@media(max-width:719px){.faq{padding:90px 22px}}
+.lex{background:var(--paper);padding:130px 30px}
+.lex>*{max-width:1320px;margin-left:auto;margin-right:auto}
+.lex .hd{text-align:center;margin-bottom:70px}
+.lex .hd h2{font-size:clamp(28px,3.2vw,44px);letter-spacing:.2em;padding-left:.2em}
+.lex .hd p{margin-top:14px;color:var(--grey);font-size:14px;letter-spacing:.14em}
+.lex dl{display:grid;grid-template-columns:1fr;gap:0}
+@media(min-width:760px){.lex dl{grid-template-columns:repeat(2,1fr);column-gap:60px}}
+@media(min-width:1100px){.lex dl{grid-template-columns:repeat(3,1fr)}}
+.lex .e{padding:34px 0 38px;border-top:1px solid var(--ink)}
+.lex dt{font-family:"Noto Serif TC",serif;font-weight:300;font-size:clamp(26px,2.4vw,34px);line-height:1.35;letter-spacing:.08em}
+.lex dd.pos{margin:10px 0 14px;font-size:12px;letter-spacing:.16em;color:var(--grey);font-style:italic}
+.lex dd{font-size:15px;line-height:2;color:#3A3A3A}
+.lex .e.no dt{text-decoration:line-through;text-decoration-thickness:1px;color:var(--grey)}
+.lex .e.no dd.pos{color:var(--wine)}
+.lex .ft{text-align:center;margin-top:50px;font-size:13px;letter-spacing:.16em}
+@media(max-width:719px){.lex{padding:90px 22px}.lex .hd{margin-bottom:40px}}
 .credit{font-size:11px;letter-spacing:.12em;color:var(--grey2);text-align:center;padding:18px}
 
 /* ===== 登入 ===== */
@@ -280,9 +283,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   悅遇 YUEYU  前端  build v0.8.0
+   悅遇 YUEYU  前端  build v0.8.1
    ===================================================================== */
-const BUILD = 'v0.8.0';
+const BUILD = 'v0.8.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -461,9 +464,17 @@ async function viewLanding(){
     </div>
   </section>
 
-  <section class="faq">
-    <div class="l"><h2>使用之前，<br>你可能想知道</h2><p>從 Sugar Dating 的定義、甜心與 Sugar Daddy 的意思，到安全與法律界線，一次說清楚。</p><a href="#/guidelines">閱讀社群守則</a></div>
-    <div class="r"><details><summary>Sugar Dating 和一般交友 App 有什麼不同？</summary><p>一般交友 App 常常要聊很久，才知道對方想要什麼。Sugar Dating 鼓勵雙方在一開始就坦誠彼此的期待——生活節奏、相處方式、見面頻率——讓真正合適的人更快找到彼此。悅遇另外加上真人審核，過濾假帳號與業者。</p></details><details><summary>甜心／Sugar Baby 是什麼意思？</summary><p>甜心（Sugar Baby）通常是年輕、有自己生活與目標的成年人，希望認識成熟、穩定、懂得照顧人的對象。在悅遇，甜心不分性別。</p></details><details><summary>Sugar Daddy（糖爹）、Sugar Mommy 是什麼意思？</summary><p>Sugar Daddy／Sugar Mommy 通常是事業有成、生活穩定的成年人，願意把時間與心力放在一段讓彼此都舒服的關係裡，在生活上給予對方照顧與支持。</p></details><details><summary>Sugar Dating 等於性交易嗎？</summary><p>不是。Sugar Dating 是兩個成年人自願、彼此尊重的交往關係。任何以金錢或財物交換性行為的要求或暗示，都違反中華民國法律與本站守則，一經查證立即停權，必要時配合司法機關調查。</p></details><details><summary>平台會經手會員之間的錢嗎？</summary><p>不會。悅遇只提供認識彼此的空間，不代收、不轉交、不抽成任何會員之間的款項。任何人以「平台擔保」「先付訂金」等名義要你匯款，都是詐騙，請立即檢舉。</p></details><details><summary>怎麼保護自己？</summary><p>見面前先在站內多聊、可以視訊確認本人；第一次見面約在公開場所、自己安排交通；見面前就要求匯款、借錢或投資的，一律封鎖並檢舉。更多建議請看安全須知。</p></details><details><summary>需要幾歲才能加入？</summary><p>必須年滿 18 歲（或你所在地的法定成年年齡）。發現或合理懷疑未成年使用者，我們會立即停權並視情況通報主管機關。</p></details></div>
+  <section class="lex">
+    <div class="hd"><h2>悅遇小辭典</h2><p>在這裡，有幾個詞你會常常看到。</p></div>
+    <dl>
+      <div class="e"><dt>甜心</dt><dd class="pos">名詞　亦作 Sugar Baby</dd><dd>有自己的生活與追求，希望認識成熟、穩定、懂得照顧人的對象。不分性別。</dd></div>
+      <div class="e"><dt>Sugar Daddy<br>Sugar Mommy</dt><dd class="pos">名詞</dd><dd>事業與生活都已穩定，願意把時間和心力，放在一段讓彼此都舒服的關係裡。</dd></div>
+      <div class="e"><dt>坦誠</dt><dd class="pos">形容詞</dd><dd>悅遇最重要的一個詞。見面之前，先把彼此期待的相處方式、見面節奏說清楚；不合適，就不必勉強。</dd></div>
+      <div class="e"><dt>界線</dt><dd class="pos">名詞</dd><dd>每個人都有，也都該被尊重。對方說不，就是不。封鎖一次，對方就再也看不到你。</dd></div>
+      <div class="e"><dt>審核</dt><dd class="pos">動詞</dd><dd>每一張照片、每一段自介，都由真人看過才公開。業者、假照片、留聯絡方式的，到不了這裡。</dd></div>
+      <div class="e no"><dt>性交易</dt><dd class="pos">名詞　悅遇不使用的詞</dd><dd>以金錢或財物交換性行為，違法，也違反本站守則。出現就停權，必要時配合司法調查。平台不代收、不轉交會員之間的任何款項。</dd></div>
+    </dl>
+    <div class="ft"><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a>　<a href="#/terms">使用條款</a></div>
   </section>
 
   <section class="cta" style="background-image:url('${IMG.cta}')">
