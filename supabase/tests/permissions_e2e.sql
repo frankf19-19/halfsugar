@@ -137,6 +137,8 @@ begin
   perform set_config('request.jwt.claim.sub', F::text, true);
   execute 'set local role authenticated';
   update public.profiles set bio='hi' where id=F;
+  select status into v from public.profiles where id=F; out := array_append(out, ('14a 沒填身材就送審 = '||v||' (應為incomplete)')::text);
+  update public.profiles set body_type='fit' where id=F;
   select status into v from public.profiles where id=F; out := array_append(out, ('14b 驗證手機後送審狀態 = '||v||' (應為pending)')::text);
   execute 'reset role';
   -- 15 一支手機只能綁一個帳號
@@ -507,6 +509,15 @@ begin
   execute 'set local role authenticated';
   select count(*) into n from public.support_tickets; out := array_append(out, ('30b 別人看到客服留言 = '||n||' (應為0)')::text);
   execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 31 暱稱送審後不能改
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set nickname='改名了' where id=Q;
+  execute 'reset role';
+  select nickname into v from public.profiles where id=Q; out := array_append(out, ('31 上架後改暱稱 = '||v||' (應為Q)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');

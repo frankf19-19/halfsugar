@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.22.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.23.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -116,6 +116,8 @@ begin
   -- 性別與想認識的對象：第一次設定後不可更改
   if old.gender is not null then new.gender := old.gender; end if;
   if old.looking_for is not null then new.looking_for := old.looking_for; end if;
+  -- 暱稱：送出審核後就不能改（只有被退件時可以修改）
+  if old.nickname is not null and old.status not in ('incomplete','rejected') then new.nickname := old.nickname; end if;
   if new.role = 'baby' then new.budget := null; else new.expect_budget := null; end if;
   if new.gender = 'male' then new.cup := null; end if;
   if new.role in ('daddy','mommy') and new.budget is null and old.status <> 'incomplete' then
@@ -135,8 +137,9 @@ begin
                where u.id = new.id and u.phone is not null and u.phone <> '') then
       raise exception '這支手機號碼無法在本站註冊。如有疑問請聯絡客服。';
     end if;
-    if new.nickname is not null and new.gender is not null and new.looking_for is not null and new.role is not null
+    if nullif(btrim(new.nickname),'') is not null and new.gender is not null and new.looking_for is not null and new.role is not null
        and new.birth_year is not null and new.city is not null and new.avatar_path is not null
+       and new.body_type is not null and nullif(btrim(new.bio),'') is not null
        and new.age_confirmed and new.agreed_terms_at is not null
        and (new.role = 'baby' or new.budget is not null)
        and exists (select 1 from auth.users u where u.id = new.id and u.phone is not null and u.phone_confirmed_at is not null) then
