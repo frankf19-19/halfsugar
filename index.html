@@ -183,9 +183,9 @@ br.d{display:none}
 /* ===== 探索 ===== */
 .filters{display:flex;gap:10px;margin-bottom:30px;overflow-x:auto;scrollbar-width:none}
 .filters::-webkit-scrollbar{display:none}
-@media(max-width:719px){.filters{display:grid;grid-template-columns:1.25fr 1fr 1fr;overflow:visible;gap:8px}.filters select{min-width:0;width:100%;padding:10px 22px 10px 10px;letter-spacing:.04em;background-position:right 8px center;text-overflow:ellipsis}}
 @media(max-width:719px){#adm .note{flex:1 1 100%;order:-1;margin-bottom:4px}}
 .filters select{flex:0 0 auto;width:auto;min-width:118px;border:1px solid var(--rule);padding:10px 30px 10px 14px;font-size:13px;letter-spacing:.1em;background-position:right 12px center}
+@media(max-width:719px){.filters{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);overflow:visible;gap:8px}.filters select{min-width:0;width:100%;box-sizing:border-box;padding:10px 22px 10px 10px;letter-spacing:.04em;background-position:right 8px center;text-overflow:ellipsis}}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px 12px}
 @media(min-width:760px){.grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:40px 22px}}
 .pcard{cursor:pointer;position:relative}
@@ -362,9 +362,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SUGAR  前端  build v1.8.0
+   半糖 HALF SUGAR  前端  build v1.9.0
    ===================================================================== */
-const BUILD = 'v1.8.0';
+const BUILD = 'v1.9.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -401,6 +401,7 @@ const seen = t => { if(!t) return ''; const m=(Date.now()-new Date(t))/60000;
 const wmText = () => `半糖 · ${(me?.id||'').slice(0,8)}`;
 function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), ms); }
 function containsBadWords(s){ const l=(s||'').toLowerCase(); return BAD_WORDS.filter(w=>l.includes(w.toLowerCase())); }
+const cssu = u => String(u).replace(/["\\\n\r()]/g, c=>encodeURIComponent(c));
 async function signed(path){
   if(!path) return null;
   const c = urlCache.get(path);
@@ -411,15 +412,17 @@ async function signed(path){
   return u;
 }
 async function compressImage(file, max=1080, q=.85){
-  const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=URL.createObjectURL(file); });
+  const src = URL.createObjectURL(file);
+  const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('無法讀取這張照片，請改用 JPG 或 PNG')); i.src=src; }).finally(()=>setTimeout(()=>URL.revokeObjectURL(src), 0));
   const s = Math.min(1, max/Math.max(img.width,img.height));
   const c = document.createElement('canvas'); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
   c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   return new Promise(res=>c.toBlob(res,'image/jpeg',q));
 }
+let recovering = false, lastUid;
 function modal(html){ $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx">×</button>${html}</div></div>`;
   $('#mx').onclick = closeModal; $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); }; }
-function closeModal(){ $('#modal').innerHTML=''; }
+function closeModal(){ $('#modal').innerHTML=''; recovering=false; }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('#modal').innerHTML) closeModal(); });
 
 /* ---------- 18+ 閘門 ---------- */
@@ -431,12 +434,13 @@ async function loadMe(){
   const { data: { session: s } } = await sb.auth.getSession();
   session = s;
   lastUid = session?.user?.id || null;
-  if(!session){ me=null; return; }
+  if(!session){ me=null; authUser=null; return; }
+  const { data: gu } = await sb.auth.getUser(); authUser = gu?.user || session.user;
   const { data } = await sb.rpc('get_me').maybeSingle();
   me = data;
   if(me && me.show_online!==false) sb.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', me.id).then(()=>{});
 }
-let recovering = false, lastUid = undefined;
+lastUid = undefined;
 sb.auth.onAuthStateChange(async (ev, s)=>{
   if(ev==='PASSWORD_RECOVERY'){ recovering = true; lastUid = s?.user?.id; setTimeout(openPasswordReset, 300); return; }
   if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; }
@@ -499,9 +503,11 @@ const routes = {
   'browse': viewBrowse, 'likes': viewLikes, 'matches': viewMatches, 'chat': viewChat, 'me': viewMe,
   'admin': viewAdmin, 'terms': ()=>viewDoc('terms'), 'privacy': ()=>viewDoc('privacy'),
   'guidelines': ()=>viewDoc('guidelines'), 'safety': ()=>viewDoc('safety'), 'plans': viewPlans,
+  'bye': ()=>{ $('#app').innerHTML = `<div class="narrow center" style="padding:80px 0"><h2>帳號已刪除</h2><p class="muted mt">你的檔案、照片、對話與手機號碼都已永久刪除。<br class="d">謝謝你曾經來過半糖。</p><a class="btn mt2" href="#/">回到首頁</a></div>`; },
 };
-let chatChannel = null;
+let chatChannel = null, routeSeq = 0;
 async function route(){
+  routeSeq++;
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; }
   if(!recovering) closeModal();
   const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
@@ -728,7 +734,8 @@ async function uploadPhoto(file){
 
 const PUB_COLS = 'id,nickname,gender,looking_for,role,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
-const phoneOk = () => !!session?.user?.phone_confirmed_at && !!session?.user?.phone;
+let authUser = null;
+const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
 const maskPhone = ph => { const d=String(ph||'').replace(/^886/,'0'); return d.length>=10 ? d.slice(0,4)+'-***-'+d.slice(-3) : d; };
 function smsErr(e){
   const m = (e?.code||'')+' '+(e?.message||'');
@@ -745,7 +752,7 @@ function viewPhoneVerify(){
     <p class="muted small mt mb">每個帳號都要綁定一支手機，一支手機只能綁定一個帳號，用來確認你是真人、減少假帳號。號碼不會顯示給任何會員，刪除帳號時一併刪除。</p>
     <form id="phForm" class="card">
       <label>手機號碼</label>
-      <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="10" required></div>
+      <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="12" required></div>
       <p class="tiny dim mt">目前僅支援台灣手機門號。</p>
       <button class="btn primary block mt2" id="phSend" type="submit">傳送驗證碼</button>
     </form>
@@ -760,9 +767,10 @@ function viewPhoneVerify(){
   const cool = () => { let t=60; const b=$('#otpResend'); b.disabled=true; clearInterval(timer);
     timer=setInterval(()=>{ if(!document.body.contains(b)) return clearInterval(timer); t--; b.textContent = t>0?`重新傳送（${t}）`:'重新傳送'; if(t<=0){ b.disabled=false; clearInterval(timer); } },1000); };
   const send = async () => {
-    const { error } = await sb.auth.updateUser({ phone });
+    const { data, error } = await sb.auth.updateUser({ phone });
     if(error){ toast(smsErr(error)); return false; }
-    $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，10 分鐘內有效。`;
+    if(data?.user?.phone_confirmed_at && data.user.phone===phone.replace('+','')){ await loadMe(); toast('這支手機已經驗證過了'); route(); return true; }
+    $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，請在幾分鐘內輸入。`;
     $('#otpIn').focus(); cool(); return true;
   };
   $('#phForm').onsubmit = async e => { e.preventDefault();
@@ -788,7 +796,7 @@ async function viewOnboarding(){
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
     <div class="banner">「想認識的對象」與「性別」送出後就<b>無法修改</b>，探索時只會看到方向和你互相吻合的會員。請先確認再送出。</div>
     <form id="obForm" class="card">
-      ${profileFormHtml()}
+      ${profileFormHtml(me)}
       <label>頭像照片 *</label>
       <div class="row"><div class="avatar lg" id="avPrev">＋</div><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><input type="file" accept="image/*" id="avFile" style="margin-top:8px"></div></div>
       <button class="btn primary block mt2" type="submit">送出審核</button>
@@ -815,8 +823,9 @@ async function viewOnboarding(){
     const btn = e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='上傳中…';
     try{
       const path = await uploadPhoto(avatarFile);
-      const { error } = await sb.from('profiles').update({ ...p, avatar_path: path, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id);
+      const { data: upd, error } = await sb.from('profiles').update({ ...p, avatar_path: path, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id).select('status').maybeSingle();
       if(error) throw error;
+      if(upd && upd.status==='incomplete'){ await loadMe(); throw new Error(phoneOk()?'資料還不完整，請檢查每個必填欄位':'請先完成手機驗證'); }
       await loadMe(); toast('已送出審核'); location.hash='#/browse';
     }catch(err){ toast('失敗：'+err.message); btn.disabled=false; btn.textContent='送出審核'; }
   };
@@ -853,7 +862,7 @@ async function viewBrowse(){
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已喜歡</span>':''}
         ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div></div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
-    $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.textContent=''; } });
+    $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.textContent=''; } });
   };
   ['#fRole','#fCity','#fAge'].forEach(s=>$(s).onchange=reload);
   await reload();
@@ -894,8 +903,8 @@ async function openProfile(id){
     </div>
     ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能按喜歡或傳訊息</p>'}`;
   modal(body);
-  signed(p.avatar_path).then(u=>{ if(u) $('#bigPh').style.backgroundImage=`url(${u})`; });
-  $('#modal').querySelectorAll('.gallery .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
+  signed(p.avatar_path).then(u=>{ if(u) $('#bigPh').style.backgroundImage=`url("${cssu(u)}")`; });
+  $('#modal').querySelectorAll('.gallery .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
   $('#likeBtn').onclick = async ()=>{
     if(matched){ if(!confirm(`解除和 ${p.nickname} 的配對？你們的對話會關閉，要重新互相喜歡才會再配對。`)) return;
       const { data: mt } = await sb.from('matches').select('id').or(`and(user_a.eq.${me.id},user_b.eq.${id}),and(user_a.eq.${id},user_b.eq.${me.id})`).maybeSingle();
@@ -940,7 +949,7 @@ async function viewLikes(){
     <div id="ta">${list(toMe)}</div><div id="tb" class="hidden">${list(fromMe)}</div>`;
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); });
   $('#app').querySelectorAll('.item').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
-  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url(${u})`; });
+  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
 }
 
 /* =====================================================================
@@ -954,29 +963,31 @@ async function viewMatches(){
   const pm = Object.fromEntries((ps||[]).map(p=>[p.id,p]));
   const { data: unread } = await sb.from('messages').select('match_id').is('read_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id));
   const uc = {}; (unread||[]).forEach(u=>uc[u.match_id]=(uc[u.match_id]||0)+1);
-  $('#app').innerHTML = `${statusBanner()}<div class="list">${ms.map(m=>{ const o=pm[m.user_a===me.id?m.user_b:m.user_a]; if(!o) return '';
+  $('#app').innerHTML = `${statusBanner()}<div class="list">${ms.map(m=>{ const o=pm[m.user_a===me.id?m.user_b:m.user_a] || { nickname:'對方檔案審核中', avatar_path:'' };
     return `<div class="item" data-id="${m.id}"><div class="avatar" data-ph="${esc(o.avatar_path||'')}"></div>
       <div class="grow"><div class="t">${esc(o.nickname)} ${uc[m.id]?`<span class="chip" style="background:var(--rose);color:#fff">${uc[m.id]}</span>`:''}</div><div class="s">${m.last_message?esc(m.last_message):'<i>配對成功，打個招呼吧</i>'}</div></div>
       <span class="tiny dim">${m.last_message_at?fmtTime(m.last_message_at):''}</span></div>`; }).join('')}</div>`;
   $('#app').querySelectorAll('.item').forEach(el=>el.onclick=()=>location.hash='#/chat/'+el.dataset.id);
-  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url(${u})`; });
+  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
 }
 
 async function viewChat(matchId){
+  const my = routeSeq;
   const { data: m } = await sb.from('matches').select('*').eq('id', matchId).single();
   if(!m){ $('#app').innerHTML='<p class="muted">找不到這個對話</p>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
   const { data: o } = await sb.from('profiles').select('id,nickname,avatar_path').eq('id', oid).maybeSingle();
   const { data: last } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at',{ascending:false}).limit(300);
   const msgs = (last||[]).reverse();
+  if(my!==routeSeq) return;   // 使用者已經離開這個對話
   $('#app').innerHTML = `<div class="chat">
     <div class="hd"><a href="#/matches" class="ib" aria-label="返回">‹</a>
-      <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${o?esc(o.nickname):'（已下架）'}</div>
-      ${o?`<button class="ib" id="chMore" aria-label="更多">⋯</button>`:''}</div>
+      <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${o?esc(o.nickname):'<span class="muted">對方檔案審核中</span>'}</div>
+      <button class="ib" id="chMore" aria-label="更多">⋯</button></div>
     <div class="msgs" id="msgs"></div>
     <form id="chForm"><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off" ${me.status==='approved'?'':'disabled'}><button class="btn primary" ${me.status==='approved'?'':'disabled'}>送出</button></form>
 </div>`;
-  if(o) signed(o.avatar_path).then(u=>{ if(u) $('#chAv').style.backgroundImage=`url(${u})`; });
+  if(o) signed(o.avatar_path).then(u=>{ if(u) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
   let lastDay='';
   const add = (x) => { const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); } box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${fmtTime(x.created_at)}</span></div>`); box.scrollTop = box.scrollHeight; };
@@ -991,12 +1002,12 @@ async function viewChat(matchId){
     const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body }).select().single();
     if(error){ if(!$('#chIn').value) $('#chIn').value=body; return toast('沒有送出：'+error.message); } add(data); };
   $('#chMore') && ($('#chMore').onclick=()=>{ modal(`<div class="sheet">
-      <button class="it" id="shProf">查看檔案</button>
+      ${o?'<button class="it" id="shProf">查看檔案</button>':''}
       <button class="it" id="shReport">檢舉</button>
       <button class="it bad" id="shUnmatch">解除配對</button>
       <p class="tiny dim" style="padding:14px 4px 0">請勿在對話中要求或提供任何金錢。遇到不當內容請封鎖並檢舉。</p></div>`);
-    $('#shProf').onclick=()=>openProfile(oid);
-    $('#shReport').onclick=()=>openReport(oid, o.nickname);
+    $('#shProf') && ($('#shProf').onclick=()=>openProfile(oid));
+    $('#shReport').onclick=()=>openReport(oid, o?.nickname||'這位會員');
     $('#shUnmatch').onclick=async()=>{ if(!confirm('解除配對後，你們將無法再看到這段對話，也要重新互相喜歡才會再配對。確定？')) return; const { error } = await sb.rpc('unmatch', { mid: matchId }); if(error) return toast(error.message); closeModal(); location.hash='#/matches'; }; });
 }
 
@@ -1034,12 +1045,12 @@ async function viewMe(){
     <form class="card mt" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改暱稱、自介、職業或興趣後會重新送審，期間檔案暫時下架。</p>
       ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存並送審</button></form>
     ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(b.blocked_id)}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
-    <div class="card mt"><h3 style="font-size:17px">帳號</h3><p class="small muted">${esc(session.user.email)}<br>手機　${phoneOk()?esc(maskPhone(session.user.phone))+'（已驗證）':'尚未驗證'}</p>
+    <div class="card mt"><h3 style="font-size:17px">帳號</h3><p class="small muted">${esc(session.user.email)}<br>手機　${phoneOk()?esc(maskPhone(authUser.phone))+'（已驗證）':'尚未驗證'}</p>
       <div class="row mt flexwrap"><button class="btn sm ghost" id="pwBtn">更改密碼</button><button class="btn sm ghost" id="logoutBtn">登出</button><button class="btn sm danger" id="delBtn">刪除帳號</button></div></div>
   </div>`;
   bindTagPick();
-  signed(me.avatar_path).then(u=>{ if(u) $('#meAv').style.backgroundImage=`url(${u})`; });
-  $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url(${u})`; });
+  signed(me.avatar_path).then(u=>{ if(u) $('#meAv').style.backgroundImage=`url("${cssu(u)}")`; });
+  $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
   $('#meAvFile').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; toast('上傳中…');
     try{ const path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error; toast('頭像已更新，重新送審'); viewMe(); }catch(err){ toast(err.message); } };
   document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=9) return toast('相簿最多 9 張'); toast('上傳中…');
@@ -1070,15 +1081,14 @@ async function viewMe(){
     $('#delYes').onclick = async ()=>{ const b=$('#delYes'); b.disabled=true; b.textContent='刪除中…';
       try{
         // 1. 先解除照片登記，才能刪掉檔案
-        let r = await sb.from('photos').delete().eq('user_id', me.id); if(r.error) throw r.error;
-        if(me.avatar_path){ r = await sb.from('profiles').update({ avatar_path:null }).eq('id', me.id); if(r.error) throw r.error; }
+        let r = await sb.rpc('begin_account_deletion'); if(r.error) throw r.error;
         // 2. 刪掉自己資料夾裡的所有檔案
-        for(;;){ const { data: files, error } = await sb.storage.from('photos').list(me.id, { limit:100 }); if(error) throw error;
-          if(!files?.length) break; const { error: e2 } = await sb.storage.from('photos').remove(files.map(f=>`${me.id}/${f.name}`)); if(e2) throw e2; if(files.length<100) break; }
+        for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from('photos').list(me.id, { limit:100 }); if(error) throw error;
+          const names = (files||[]).filter(f=>f.id).map(f=>`${me.id}/${f.name}`); if(!names.length) break;
+          const { error: e2 } = await sb.storage.from('photos').remove(names); if(e2) throw e2; if(names.length<100) break; }
         // 3. 刪除帳號（含手機、信箱與所有資料）
         r = await sb.rpc('delete_my_account'); if(r.error) throw r.error;
-        await sb.auth.signOut({ scope:'local' }).catch(()=>{}); me=null; session=null; closeModal(); location.hash='#/';
-        modal(`<h2>帳號已刪除</h2><p class="muted mt">你的所有資料都已永久刪除。謝謝你曾經來過半糖。</p>`);
+        await sb.auth.signOut({ scope:'local' }).catch(()=>{}); me=null; session=null; authUser=null; closeModal(); location.hash='#/bye';
       }catch(err){ b.disabled=false; b.textContent='永久刪除我的帳號'; toast('刪除沒有完成：'+(err.message||err)+'，請再試一次'); }
     }; };
 }
@@ -1105,7 +1115,7 @@ async function viewAdmin(){
             ${containsBadWords(p.bio+' '+p.nickname).length?`<p class="tiny bad">⚠ 含敏感字：${containsBadWords(p.bio+' '+p.nickname).join('、')}</p>`:''}
             <div class="tags mt">${(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div></div>
         <div class="row mt flexwrap"><button class="btn sm primary ap" data-id="${p.id}">✓ 通過</button><input class="grow note" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px"><button class="btn sm ghost rj" data-id="${p.id}">退件</button><button class="btn sm danger sp" data-id="${p.id}">停權</button></div></div>`).join('');
-      box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
+      box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
       box.querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await adm(sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id)); toast('已通過'); draw(); });
       box.querySelectorAll('.rj').forEach(b=>b.onclick=async()=>{ const note=b.closest('.card').querySelector('.note').value||'請修改後重新送審'; await adm(sb.from('profiles').update({ status:'rejected', review_note:note }).eq('id',b.dataset.id)); toast('已退件'); draw(); });
       box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('確定停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); draw(); });
@@ -1115,7 +1125,7 @@ async function viewAdmin(){
       if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審照片 ✓</p>'; return; }
       box.innerHTML = `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
         <div class="row mt" style="gap:6px"><button class="btn sm primary pa" data-id="${x.id}">通過</button><button class="btn sm ghost pr" data-id="${x.id}">退件</button></div></div></div>`).join('')}</div>`;
-      box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
+      box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
       box.querySelectorAll('.pa').forEach(b=>b.onclick=async()=>{ await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id)); draw(); });
       box.querySelectorAll('.pr').forEach(b=>b.onclick=async()=>{ await adm(sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id)); draw(); });
     }
@@ -1135,7 +1145,7 @@ async function viewAdmin(){
       const run = async ()=>{ const { data: rows, error } = await sb.rpc('admin_profiles', { p_status: $('#qs').value||null, p_q: $('#q').value.trim()||null });
         if(error) return toast(error.message);
         $('#qr').innerHTML = `<table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny">${fmtTime(p.created_at)}</td>
-          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${p.status!=='approved'&&p.nickname?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table>`;
+          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table>`;
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
         $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id))) toast('已解除停權，檔案回到待審，請重新審核'); run(); });
         $('#qr').querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await adm(sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id)); run(); });

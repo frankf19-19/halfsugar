@@ -151,6 +151,12 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub',B,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', B::text, true);
   execute 'set local role authenticated';
+  begin perform public.delete_my_account(); out := array_append(out, '16g 檔案沒刪就刪帳號：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '16g 檔案沒刪完不能刪帳號 ✓'::text); end;
+  perform public.begin_account_deletion();
+  execute 'reset role';
+  delete from storage.objects where name like B::text || '/%';
+  execute 'set local role authenticated';
   perform public.delete_my_account();
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
@@ -173,6 +179,25 @@ begin
   begin perform * from public.admin_profiles(); out := array_append(out, '17c 一般會員用管理員查詢：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '17c 一般會員用管理員查詢被擋 ✓'::text); end;
   select count(*) into n from public.profiles where id=E; out := array_append(out, ('17d 方向不合的會員檔案可見 = '||n||' (應為0)')::text);
+  execute 'reset role';
+
+  -- 18 其他新規則
+  perform set_config('request.jwt.claims', json_build_object('sub',C,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', C::text, true);
+  execute 'set local role authenticated';
+  begin insert into public.photos (user_id, path) values (C, C||'/123.jpg'); out := array_append(out, '18 未完成註冊上傳照片：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '18 未完成註冊不能上傳照片 ✓'::text); end;
+  begin update public.profiles set city='加LINE abc' where id=C; out := array_append(out, '18b 地區亂填：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '18b 地區只能選清單內 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',E,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', E::text, true);
+  execute 'set local role authenticated';
+  insert into public.blocks (blocker_id, blocked_id) values (E, D);
+  update public.blocks set blocked_id = A where blocker_id = E; get diagnostics n = row_count;
+  out := array_append(out, ('18c 修改封鎖對象 = '||n||' 筆 (應為0)')::text);
+  begin perform private.is_compatible(A); out := array_append(out, '18d 內部函式（從資料庫內）可用 ✓'::text);
+  exception when others then out := array_append(out, ('18d 內部函式不能用 ✗ '||sqlerrm)::text); end;
   execute 'reset role';
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
