@@ -434,5 +434,16 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 26 篩選欄位
+  perform set_config('request.jwt.claims', json_build_object('sub',P,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', P::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set body_type='athletic', cup='D', relation_types=array['dinner','travel'], meet_freq='monthly' where id=P;
+  select coalesce(cup,'無') into v from public.profiles where id=P; out := array_append(out, ('26 男性罩杯 = '||v||' (應為無)')::text);
+  begin update public.profiles set relation_types=array['sex'] where id=P; out := array_append(out, '26b 相處方式亂填：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '26b 相處方式只能選清單 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

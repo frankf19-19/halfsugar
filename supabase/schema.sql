@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.18.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.19.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -61,6 +61,14 @@ alter table public.profiles add column if not exists show_online boolean not nul
 alter table public.profiles add column if not exists submitted_at timestamptz;
 alter table public.profiles add column if not exists approved_at timestamptz;
 alter table public.profiles add column if not exists wealth_verified_at timestamptz;   -- 財力認證通過時間
+-- 身材、罩杯（選填、只限女性）、相處方式、見面頻率、甜心期望預算
+alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
+alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
+alter table public.profiles add column if not exists relation_types text[] not null default '{}'
+  check (relation_types <@ array['long','short','dinner','travel','companion']);
+alter table public.profiles add column if not exists meet_freq text check (meet_freq in ('weekly','twomonth','monthly','flexible'));
+alter table public.profiles add column if not exists expect_budget text
+  check (expect_budget in ('negotiable','lt30k','30to50k','50to80k','80to120k','gt120k'));
 -- 每月相處預算（Sugar Daddy／Mommy 必填；甜心不填）
 alter table public.profiles add column if not exists budget text
   check (budget in ('negotiable','lt30k','30to50k','50to80k','80to120k','gt120k'));
@@ -104,7 +112,8 @@ begin
   -- 性別與想認識的對象：第一次設定後不可更改
   if old.gender is not null then new.gender := old.gender; end if;
   if old.looking_for is not null then new.looking_for := old.looking_for; end if;
-  if new.role = 'baby' then new.budget := null; end if;
+  if new.role = 'baby' then new.budget := null; else new.expect_budget := null; end if;
+  if new.gender = 'male' then new.cup := null; end if;
   if new.role in ('daddy','mommy') and new.budget is null and old.status <> 'incomplete' then
     raise exception 'Sugar Daddy／Mommy 請選擇每月相處預算';
   end if;
@@ -699,7 +708,7 @@ $$;
 
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
-grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, birth_year, city, height_cm, occupation, bio, tags,
+grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
               avatar_path, status, hidden, last_active_at, created_at, updated_at) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
