@@ -362,9 +362,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SUGAR  前端  build v1.9.0
+   半糖 HALF SUGAR  前端  build v1.10.0
    ===================================================================== */
-const BUILD = 'v1.9.0';
+const BUILD = 'v1.10.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -1074,6 +1074,7 @@ async function viewMe(){
       <p class="small">以下資料會全部永久刪除：</p>
       <ul class="delwarn"><li>你的檔案、頭像、公開照與私密照</li><li>所有喜歡、配對與對話（對方那邊也會一起消失）</li><li>私密照授權、索取與封鎖名單</li><li>綁定的手機號碼與登入信箱</li></ul>
       <p class="small muted mt">如果只是想暫時休息，可以改用「隱私設定 → 不出現在探索」。</p>
+      <p class="tiny dim">帳號被停權或有處理中的檢舉時，需等處理完才能刪除。</p>
       <label class="mt2">請輸入「刪除」兩個字確認</label><input id="delIn" autocomplete="off">
       <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="delNo">取消</button><button class="btn danger" id="delYes" disabled>永久刪除我的帳號</button></div>`);
     $('#delIn').oninput = ()=>{ $('#delYes').disabled = $('#delIn').value.trim()!=='刪除'; };
@@ -1145,9 +1146,17 @@ async function viewAdmin(){
       const run = async ()=>{ const { data: rows, error } = await sb.rpc('admin_profiles', { p_status: $('#qs').value||null, p_q: $('#q').value.trim()||null });
         if(error) return toast(error.message);
         $('#qr').innerHTML = `<table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny">${fmtTime(p.created_at)}</td>
-          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table>`;
+          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table>`;
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
         $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id))) toast('已解除停權，檔案回到待審，請重新審核'); run(); });
+        $('#qr').querySelectorAll('.dl').forEach(b=>b.onclick=async()=>{
+          if(!confirm(`永久刪除「${b.dataset.n}」的帳號？\n檔案、照片、對話都會刪除，這支手機之後不能再註冊。無法復原。`)) return;
+          try{ const uid=b.dataset.id;
+            for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from('photos').list(uid,{limit:100}); if(error) throw error;
+              const names=(files||[]).filter(f=>f.id).map(f=>`${uid}/${f.name}`); if(!names.length) break;
+              const { error:e2 } = await sb.storage.from('photos').remove(names); if(e2) throw e2; if(names.length<100) break; }
+            const { error } = await sb.rpc('admin_delete_account',{ target: uid }); if(error) throw error; toast('已刪除帳號'); run();
+          }catch(err){ toast('沒有完成：'+(err.message||err)); } });
         $('#qr').querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await adm(sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id)); run(); });
       };
       $('#qb').onclick=run; run();
@@ -1178,7 +1187,7 @@ terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 
 <h3>第六條　會員間互動與責任</h3><p>本平台不對任何會員之身分、陳述、意圖或行為做任何擔保。你與其他會員之線上或線下互動，其風險由你自行承擔。因會員間互動產生之任何爭議、損失或損害，本平台一律不負責任。請詳閱<a href="#/safety">安全須知</a>。</p>
 <h3>第七條　付費服務</h3><p>註冊與建立檔案免費。本平台未來得提供付費會籍或加值功能，其內容、價格與退費規定將於購買頁面另行公告。付費服務僅提供平台功能，不保證任何配對結果。</p>
 <h3>第八條　智慧財產與授權</h3><p>你保證對上傳之內容擁有合法權利，並授權本平台於提供服務之必要範圍內使用、重製與展示。本平台之名稱、標識、介面與程式碼為本平台所有。</p>
-<h3>第九條　服務之變更與終止</h3><p>本平台得隨時修改、暫停或終止全部或部分服務。你得隨時於「我的」頁面自行刪除帳號，刪除後所有資料立即永久刪除且無法復原。本平台得因你違反本條款而終止服務，且不退還任何已支付之費用。</p>
+<h3>第九條　服務之變更與終止</h3><p>本平台得隨時修改、暫停或終止全部或部分服務。你得隨時於「我的」頁面自行刪除帳號，刪除後所有資料立即永久刪除且無法復原；但帳號遭停權或有處理中的檢舉時，須待處理完成後方得刪除。因違規遭停權之帳號，其綁定之手機號碼不得再於本平台註冊。你檢舉他人的紀錄，於你刪除帳號後仍會保留以供處理。本平台得因你違反本條款而終止服務，且不退還任何已支付之費用。</p>
 <h3>第十條　免責聲明與責任限制</h3><p>本服務依「現狀」及「現有」基礎提供，本平台不保證服務不中斷、無錯誤或絕對安全。於法律允許之最大範圍內，本平台對任何間接、附隨、衍生或懲罰性損害不負賠償責任，且對你之累計賠償責任總額以新臺幣壹仟元為限。</p>
 <h3>第十一條　準據法與管轄</h3><p>本條款以中華民國法律為準據法。因本條款所生之爭議，雙方同意以臺灣臺北地方法院為第一審管轄法院，但不排除法律規定之專屬管轄。</p>
 <h3>第十二條　條款修改</h3><p>本平台得隨時修改本條款，修改後將公告於本頁；你於修改後繼續使用服務即視為同意修改後之條款。</p>`,

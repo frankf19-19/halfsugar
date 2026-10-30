@@ -200,5 +200,41 @@ begin
   exception when others then out := array_append(out, ('18d 內部函式不能用 ✗ '||sqlerrm)::text); end;
   execute 'reset role';
 
+  -- 19 停權與手機黑名單
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update auth.users set phone='886900000009', phone_confirmed_at=now() where id=E;
+  update public.profiles set status='suspended' where id=E;
+  perform set_config('request.jwt.claims', json_build_object('sub',E,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', E::text, true);
+  execute 'set local role authenticated';
+  begin perform public.begin_account_deletion(); out := array_append(out, '19 停權帳號自己刪除：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '19 停權帳號不能自己刪除 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  delete from auth.users where id=E;   -- 模擬管理員刪除
+  -- 用同一支手機重新註冊
+  update auth.users set phone='886900000009', phone_confirmed_at=now() where id=C;
+  update public.profiles set nickname='C', role='baby', birth_year=1999, city='台北市', avatar_path=C||'/1.jpg', age_confirmed=true, agreed_terms_at=now(), status='incomplete' where id=C;
+  perform set_config('request.jwt.claims', json_build_object('sub',C,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', C::text, true);
+  execute 'set local role authenticated';
+  begin update public.profiles set bio='hi' where id=C; select status into v from public.profiles where id=C;
+    out := array_append(out, ('19b 停權手機重新註冊：沒被擋 ✗ '||v)::text);
+  exception when others then out := array_append(out, ('19b 停權手機不能重新註冊 ✓ '||sqlerrm)::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from public.banned_phones where phone_hash like '%886900000009%'; out := array_append(out, ('19c 黑名單存明碼 = '||n||' (應為0)')::text);
+  -- 被檢舉中不能自刪
+  insert into public.reports (reporter_id, reported_id, reason) values (A, F, 'harass');
+  perform set_config('request.jwt.claims', json_build_object('sub',F,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', F::text, true);
+  execute 'set local role authenticated';
+  begin perform public.begin_account_deletion(); out := array_append(out, '19d 被檢舉中自己刪除：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '19d 被檢舉中不能自己刪除 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  delete from auth.users where id=A;
+  select count(*) into n from public.reports where reported_id=F; out := array_append(out, ('19e 檢舉人刪帳號後檢舉仍保留 = '||n||' (應為1)')::text);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

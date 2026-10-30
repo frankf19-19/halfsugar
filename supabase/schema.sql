@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.10.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.11.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -104,6 +104,10 @@ begin
   if old.status = 'suspended' then new.status := 'suspended'; return new; end if;
 
   if old.status = 'incomplete' then
+    if exists (select 1 from auth.users u join public.banned_phones b on b.phone_hash = private.phone_hash(u.phone)
+               where u.id = new.id and u.phone is not null and u.phone <> '') then
+      raise exception '這支手機號碼無法在本站註冊。如有疑問請聯絡客服。';
+    end if;
     if new.nickname is not null and new.gender is not null and new.looking_for is not null and new.role is not null
        and new.birth_year is not null and new.city is not null and new.avatar_path is not null
        and new.age_confirmed and new.agreed_terms_at is not null
@@ -329,6 +333,42 @@ create table if not exists public.reports (
   status      text not null default 'open' check (status in ('open','resolved','dismissed')),
   created_at  timestamptz not null default now()
 );
+-- 檢舉人刪除帳號時保留檢舉紀錄（檢舉人欄位清空），避免證據消失
+alter table public.reports alter column reporter_id drop not null;
+alter table public.reports drop constraint if exists reports_reporter_id_fkey;
+alter table public.reports add constraint reports_reporter_id_fkey
+  foreign key (reporter_id) references public.profiles(id) on delete set null;
+
+-- 停權手機黑名單：只存手機號碼的加密指紋（看不出原號碼），任何會員都讀不到
+create table if not exists public.banned_phones (
+  phone_hash text primary key,
+  created_at timestamptz not null default now()
+);
+alter table public.banned_phones enable row level security;
+revoke all on public.banned_phones from anon, authenticated;
+
+create or replace function private.phone_hash(ph text)
+returns text language sql immutable set search_path = public, extensions as $$
+  select encode(digest('halfsugar:' || regexp_replace(coalesce(ph,''), '\D', '', 'g'), 'sha256'), 'hex');
+$$;
+
+-- 停權時把手機列入黑名單；解除停權時移除
+create or replace function public.profiles_ban_phone()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare ph text;
+begin
+  select phone into ph from auth.users where id = new.id;
+  if ph is null or ph = '' then return new; end if;
+  if new.status = 'suspended' and old.status is distinct from 'suspended' then
+    insert into public.banned_phones (phone_hash) values (private.phone_hash(ph)) on conflict do nothing;
+  elsif old.status = 'suspended' and new.status <> 'suspended' then
+    delete from public.banned_phones where phone_hash = private.phone_hash(ph);
+  end if;
+  return new;
+end $$;
+drop trigger if exists profiles_ban_phone_trg on public.profiles;
+create trigger profiles_ban_phone_trg after update of status on public.profiles
+  for each row execute function public.profiles_ban_phone();
 
 -- ---------------------------------------------------------------------
 -- 5. RLS  權限規則
@@ -575,6 +615,10 @@ returns void language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid();
 begin
   if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() = 'suspended'
+     or exists (select 1 from public.reports where reported_id = uid and status = 'open') then
+    raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
+  end if;
   perform set_config('halfsugar.deleting', '1', true);
   update public.profiles set hidden = true, avatar_path = null where id = uid;
   delete from public.photos where user_id = uid;
@@ -588,6 +632,10 @@ returns void language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid();
 begin
   if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() = 'suspended'
+     or exists (select 1 from public.reports where reported_id = uid and status = 'open') then
+    raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
+  end if;
   if exists (select 1 from storage.objects where bucket_id = 'photos' and name like uid::text || '/%') then
     raise exception '照片檔案還沒刪完，請再按一次刪除';
   end if;
@@ -602,6 +650,22 @@ grant execute on all functions in schema private to authenticated;
 drop function if exists public.is_blocked_with(uuid);
 drop function if exists public.is_compatible(uuid);
 drop function if exists public.photo_path_in_use(text);
+
+-- 管理員刪除帳號（用於已停權帳號）：手機若在黑名單中仍保留指紋，之後不能再註冊
+create or replace function public.admin_delete_account(target uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  if target = auth.uid() then raise exception '不能刪除自己的管理員帳號'; end if;
+  if exists (select 1 from storage.objects where bucket_id = 'photos' and name like target::text || '/%') then
+    raise exception '這位會員的照片檔案還沒刪完';
+  end if;
+  update public.reports set status = 'resolved' where reported_id = target and status = 'open';
+  delete from public.photos where user_id = target;
+  delete from auth.users where id = target;
+end $$;
+revoke execute on function public.admin_delete_account(uuid) from anon, public;
+grant execute on function public.admin_delete_account(uuid) to authenticated;
 
 -- 舊函式（可查詢任意兩人之間的封鎖）移除
 drop function if exists public.is_blocked_between(uuid, uuid);
