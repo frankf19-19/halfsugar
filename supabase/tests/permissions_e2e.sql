@@ -163,5 +163,17 @@ begin
   begin perform public.delete_my_account(); out := array_append(out, '16f 沒登入也能刪除：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '16f 沒登入呼叫刪除被擋 ✓'::text); end;
 
+  -- 17 欄位權限
+  perform set_config('request.jwt.claims', json_build_object('sub',A,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', A::text, true);
+  execute 'set local role authenticated';
+  begin select count(*) into n from (select is_admin, review_note from public.profiles) x; out := array_append(out, '17 會員讀到管理員/退件欄位：沒被擋 ✗'::text);
+  exception when insufficient_privilege then out := array_append(out, '17 會員讀不到管理員/退件欄位 ✓'::text); end;
+  select count(*) into n from public.get_me(); out := array_append(out, ('17b 讀自己的完整資料 = '||n||' 筆 (應為1)')::text);
+  begin perform * from public.admin_profiles(); out := array_append(out, '17c 一般會員用管理員查詢：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '17c 一般會員用管理員查詢被擋 ✓'::text); end;
+  select count(*) into n from public.profiles where id=E; out := array_append(out, ('17d 方向不合的會員檔案可見 = '||n||' (應為0)')::text);
+  execute 'reset role';
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

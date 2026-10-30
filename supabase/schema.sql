@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.8.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.9.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -340,6 +340,7 @@ create policy "profiles_select" on public.profiles for select to authenticated
   using (
     id = auth.uid() or public.is_admin()
     or (status = 'approved' and public.my_status() in ('pending','approved')
+        and public.is_compatible(id)          -- 只看得到方向互相吻合的會員（保護同志會員隱私）
         and not public.is_blocked_with(id)
         and (not hidden
              or exists (select 1 from public.likes l where l.from_id = profiles.id and l.to_id = auth.uid())
@@ -526,6 +527,30 @@ returns table (id uuid, nickname text) language sql stable security definer set 
        or exists (select 1 from public.photo_grants where owner_id = auth.uid() and viewer_id = p.id)
        or exists (select 1 from public.photo_requests where owner_id = auth.uid() and requester_id = p.id));
 $$;
+
+-- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
+revoke select on public.profiles from anon, authenticated;
+grant select (id, nickname, gender, looking_for, role, birth_year, city, height_cm, occupation, bio, tags,
+              avatar_path, status, hidden, last_active_at, created_at, updated_at) on public.profiles to authenticated;
+
+-- 讀自己的完整資料
+create or replace function public.get_me()
+returns setof public.profiles language sql stable security definer set search_path = public as $$
+  select * from public.profiles where id = auth.uid();
+$$;
+
+-- 管理員讀會員完整資料
+create or replace function public.admin_profiles(p_status text default null, p_q text default null, p_limit int default 100)
+returns setof public.profiles language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query
+    select * from public.profiles p
+     where (p_status is null or p.status = p_status)
+       and (p_q is null or p_q = '' or p.nickname ilike '%' || replace(replace(p_q, '%', '\%'), '_', '\_') || '%')
+     order by case when p_status = 'pending' then p.updated_at end asc nulls last, p.created_at desc
+     limit least(coalesce(p_limit, 100), 500);
+end $$;
 
 -- 會員自行刪除帳號：刪除 auth.users（連同手機、信箱），其餘資料經由外鍵一併刪除
 -- 前端會先刪掉照片登記與 storage 檔案，再呼叫這個函式
