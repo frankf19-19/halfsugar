@@ -194,8 +194,8 @@ br.d{display:none}
 
 .roles{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
 @media(min-width:560px){.roles{grid-template-columns:repeat(3,1fr)}}
-.roles .rl{margin:0;cursor:pointer}
-.roles .rl input{position:absolute;opacity:0;pointer-events:none}
+.roles .rl{margin:0;cursor:pointer;position:relative}
+.roles .rl input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
 .roles .rl span{display:block;height:100%;border:1px solid var(--rule);padding:14px 16px;transition:border-color .2s}
 .roles .rl b{display:block;font-family:"Noto Serif TC",serif;font-weight:400;font-size:17px;letter-spacing:.06em;color:var(--ink)}
 .roles .rl small{display:block;font-size:12px;letter-spacing:.02em;color:var(--grey);margin-top:4px;line-height:1.6}
@@ -349,9 +349,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SUGAR  前端  build v1.5.0
+   半糖 HALF SUGAR  前端  build v1.6.0
    ===================================================================== */
-const BUILD = 'v1.5.0';
+const BUILD = 'v1.6.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -417,15 +417,19 @@ $('#gateYes').onclick = () => { localStorage.setItem('yy_age_ok','1'); $('#gate'
 async function loadMe(){
   const { data: { session: s } } = await sb.auth.getSession();
   session = s;
+  lastUid = session?.user?.id || null;
   if(!session){ me=null; return; }
   const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   me = data;
   if(me && me.show_online!==false) sb.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', me.id).then(()=>{});
 }
-sb.auth.onAuthStateChange(async (ev)=>{
-  if(ev==='PASSWORD_RECOVERY'){ setTimeout(openPasswordReset, 300); return; }
+let recovering = false, lastUid = undefined;
+sb.auth.onAuthStateChange(async (ev, s)=>{
+  if(ev==='PASSWORD_RECOVERY'){ recovering = true; lastUid = s?.user?.id; setTimeout(openPasswordReset, 300); return; }
   if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; }
-  if(ev==='SIGNED_IN'||ev==='SIGNED_OUT'||ev==='USER_UPDATED'){ setTimeout(async ()=>{ await loadMe(); route(); }, 0); }
+  // 切回分頁、選照片時 supabase 會再發 SIGNED_IN；同一個人就不重畫，避免正在填的表單被清掉
+  const uid = s?.user?.id || null;
+  if((ev==='SIGNED_IN'||ev==='SIGNED_OUT') && uid!==lastUid){ lastUid = uid; setTimeout(async ()=>{ await loadMe(); route(); }, 0); }
 });
 function openPasswordReset(){
   modal(`<h2>設定新密碼</h2><p class="muted small mt">請輸入新的密碼，至少 8 碼。</p>
@@ -436,7 +440,7 @@ function openPasswordReset(){
     if(f.get('pw')!==f.get('pw2')) { $('#pwErr').textContent='兩次輸入的密碼不一樣'; return; }
     const { error } = await sb.auth.updateUser({ password: f.get('pw') });
     if(error){ $('#pwErr').textContent = error.message; return; }
-    closeModal(); toast('密碼已更新'); location.hash='#/me'; };
+    recovering = false; closeModal(); toast('密碼已更新'); location.hash='#/me'; };
 }
 
 /* ---------- 導覽 ---------- */
@@ -465,9 +469,10 @@ function renderNav(){
 async function refreshUnread(){
   if(!me || me.status!=='approved') return;
   const { data: ms } = await sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`);
-  if(!ms || !ms.length) return;
+  const setBadge = n => document.querySelectorAll('a[href="#/matches"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(n>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${n>99?'99+':n}</span>`); });
+  if(!ms || !ms.length) return setBadge(0);
   const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id));
-  document.querySelectorAll('a[href="#/matches"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(count>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${count>99?'99+':count}</span>`); });
+  setBadge(count||0);
 }
 setInterval(()=>{ if(document.visibilityState==='visible') refreshUnread(); }, 60000);
 
@@ -481,7 +486,7 @@ const routes = {
 let chatChannel = null;
 async function route(){
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; }
-  closeModal();
+  if(!recovering) closeModal();
   const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
   renderNav();
   document.body.classList.toggle('home', !path || path==='about');
@@ -762,7 +767,7 @@ async function viewBrowse(){
   const reload = async () => {
     browseState.role=$('#fRole').value; browseState.city=$('#fCity').value; const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
     const y = new Date().getFullYear();
-    let q = sb.from('profiles').select('id,nickname,role,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).order('last_active_at',{ascending:false}).limit(60);
+    let q = sb.from('profiles').select('id,nickname,role,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
     if(browseState.role==='baby') q = q.eq('role','baby'); else if(browseState.role==='sugar') q = q.in('role',['daddy','mommy']);
     q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
     if(browseState.city) q = q.eq('city', browseState.city);
@@ -796,6 +801,7 @@ async function openProfile(id){
   ]);
   if(error || !p){ modal('<p class="muted">找不到這位會員，可能已下架。</p>'); return; }
   const canAct = me.status==='approved';
+  const matched = !!(myLike && theirLike);
   const pubPhotos = (photos||[]).filter(x=>!x.is_private);
   const privCount = typeof privN==='number' ? privN : (photos||[]).filter(x=>x.is_private).length;
   const body = `
@@ -811,7 +817,7 @@ async function openProfile(id){
     ${privCount?`<div class="mt small muted">🔒 ${privCount} 張私密照 · ${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?`對方這次沒有同意 <button class="btn sm ghost" id="reqPriv" data-again="1" ${canAct?'':'disabled'}>再問一次</button>`:`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
       ${grant?`<div class="gallery wmg" data-wm="${wmText()}">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}`:''}
     <div class="row mt2" style="justify-content:space-between">
-      <button class="btn ${myLike?'ghost':'rose'}" id="likeBtn" ${canAct?'':'disabled'}>${myLike?'取消喜歡':'♥ 喜歡'}</button>
+      <button class="btn ${myLike?'ghost':'rose'}" id="likeBtn" ${canAct?'':'disabled'}>${matched?'已配對 · 解除':myLike?'取消喜歡':'♥ 喜歡'}</button>
       <div class="row"><button class="btn sm ghost" id="blockBtn">封鎖</button><button class="btn sm ghost" id="reportBtn">檢舉</button></div>
     </div>
     ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能按喜歡或傳訊息</p>'}`;
@@ -819,14 +825,19 @@ async function openProfile(id){
   signed(p.avatar_path).then(u=>{ if(u) $('#bigPh').style.backgroundImage=`url(${u})`; });
   $('#modal').querySelectorAll('.gallery .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
   $('#likeBtn').onclick = async ()=>{
-    if(myLike){ await sb.from('likes').delete().eq('from_id',me.id).eq('to_id',id); toast('已取消'); }
+    if(matched){ if(!confirm(`解除和 ${p.nickname} 的配對？你們的對話會關閉，要重新互相喜歡才會再配對。`)) return;
+      const { data: mt } = await sb.from('matches').select('id').or(`and(user_a.eq.${me.id},user_b.eq.${id}),and(user_a.eq.${id},user_b.eq.${me.id})`).maybeSingle();
+      const { error } = mt ? await sb.rpc('unmatch',{ mid: mt.id }) : await sb.from('likes').delete().eq('from_id',me.id).eq('to_id',id);
+      if(error) return toast(error.message); toast('已解除配對'); }
+    else if(myLike){ const { error } = await sb.from('likes').delete().eq('from_id',me.id).eq('to_id',id); if(error) return toast(error.message); toast('已取消'); }
     else { const { error } = await sb.from('likes').insert({ from_id:me.id, to_id:id }); if(error) return toast(error.message);
       if(theirLike){ toast('🎉 配對成功！可以開始聊天了'); closeModal(); location.hash='#/matches'; return; } toast('已送出喜歡'); }
     openProfile(id);
   };
-  $('#reqPriv') && ($('#reqPriv').onclick = async ()=>{ if($('#reqPriv').dataset.again) await sb.from('photo_requests').delete().eq('requester_id',me.id).eq('owner_id',id); const { error } = await sb.from('photo_requests').insert({ requester_id:me.id, owner_id:id }); toast(error?error.message:'已送出索取'); openProfile(id); });
+  $('#reqPriv') && ($('#reqPriv').onclick = async ()=>{ const { error } = await sb.rpc('request_private_photos', { owner:id }); toast(error?error.message:'已送出索取'); if(!error) openProfile(id); });
   $('#blockBtn').onclick = async ()=>{ if(!confirm(`封鎖 ${p.nickname}？對方將無法再看到你或傳訊息給你。`)) return;
-    await sb.from('blocks').insert({ blocker_id:me.id, blocked_id:id }); toast('已封鎖'); closeModal(); route(); };
+    const { error } = await sb.from('blocks').insert({ blocker_id:me.id, blocked_id:id }); if(error && error.code!=='23505') return toast(error.message);
+    toast('已封鎖'); closeModal(); if(location.hash.startsWith('#/chat/')) location.hash='#/matches'; else route(); };
   $('#reportBtn').onclick = ()=>openReport(id, p.nickname);
 }
 function openReport(id, name){
@@ -839,7 +850,7 @@ function openReport(id, name){
     const { error } = await sb.from('reports').insert({ reporter_id:me.id, reported_id:id, reason:f.get('reason'), detail:f.get('detail')||null });
     if(error) return toast(error.message);
     if(f.get('blk')) await sb.from('blocks').upsert({ blocker_id:me.id, blocked_id:id });
-    toast('已收到檢舉，我們會盡快處理'); closeModal(); route(); };
+    toast('已收到檢舉，我們會盡快處理'); closeModal(); if(f.get('blk') && location.hash.startsWith('#/chat/')) location.hash='#/matches'; else route(); };
 }
 
 /* =====================================================================
@@ -898,7 +909,7 @@ async function viewChat(matchId){
   let lastDay='';
   const add = (x) => { const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); } box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${fmtTime(x.created_at)}</span></div>`); box.scrollTop = box.scrollHeight; };
   (msgs||[]).forEach(add);
-  sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>{});
+  sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread());
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     if(payload.new.sender_id!==me.id){ add(payload.new); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
   }).subscribe();
@@ -906,7 +917,7 @@ async function viewChat(matchId){
     const bad = containsBadWords(body); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);
     $('#chIn').value='';
     const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body }).select().single();
-    if(error) return toast(error.message); add(data); };
+    if(error){ if(!$('#chIn').value) $('#chIn').value=body; return toast('沒有送出：'+error.message); } add(data); };
   $('#chMore') && ($('#chMore').onclick=()=>{ modal(`<div class="sheet">
       <button class="it" id="shProf">查看檔案</button>
       <button class="it" id="shReport">檢舉</button>
@@ -924,10 +935,14 @@ async function viewMe(){
   await loadMe();
   const [{ data: photos }, { data: reqs }, { data: grants }, { data: blocks }] = await Promise.all([
     sb.from('photos').select('*').eq('user_id', me.id).order('created_at'),
-    sb.from('photo_requests').select('*, p:profiles!photo_requests_requester_id_fkey(id,nickname,avatar_path)').eq('owner_id', me.id).eq('status','pending'),
-    sb.from('photo_grants').select('*, p:profiles!photo_grants_viewer_id_fkey(id,nickname)').eq('owner_id', me.id),
-    sb.from('blocks').select('blocked_id, p:profiles!blocks_blocked_id_fkey(id,nickname)').eq('blocker_id', me.id),
+    sb.from('photo_requests').select('requester_id').eq('owner_id', me.id).eq('status','pending'),
+    sb.from('photo_grants').select('viewer_id').eq('owner_id', me.id),
+    sb.from('blocks').select('blocked_id').eq('blocker_id', me.id),
   ]);
+  const ids = [...(reqs||[]).map(r=>r.requester_id), ...(grants||[]).map(g=>g.viewer_id), ...(blocks||[]).map(b=>b.blocked_id)];
+  const names = {};
+  if(ids.length){ const { data: nm } = await sb.rpc('related_names', { ids }); (Array.isArray(nm)?nm:[]).forEach(n=>names[n.id]=n.nickname); }
+  const nameOf = id => esc(names[id] || '已離開的會員');
   const st = { incomplete:'warn', pending:'warn', approved:'ok', rejected:'bad', suspended:'bad' }[me.status];
   $('#app').innerHTML = `${statusBanner()}<div class="narrow">
     <div class="card">
@@ -938,15 +953,15 @@ async function viewMe(){
       <div class="gallery" id="meGal">${(photos||[]).map(x=>`<div class="g" data-ph="${esc(x.path)}"><span class="st chip ${x.status==='approved'?'ok':x.status==='rejected'?'bad':'warn'}">${x.is_private?'🔒 ':''}${({pending:'審核中',approved:'已通過',rejected:'未通過'})[x.status]}</span><button class="del" data-id="${x.id}" data-path="${esc(x.path)}">✕</button></div>`).join('')}</div>
       <div class="row mt flexwrap"><label class="btn sm ghost" style="margin:0">＋ 公開照<input type="file" accept="image/*" data-priv="0" class="hidden mePh"></label><label class="btn sm ghost" style="margin:0">＋ 私密照<input type="file" accept="image/*" data-priv="1" class="hidden mePh"></label></div>
     </div>
-    ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${esc(r.p?.nickname||'')}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
-    ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${esc(g.p?.nickname||'')}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
+    ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(r.requester_id)}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
+    ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(g.viewer_id)}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
     <div class="card mt"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
       <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你按過喜歡的人、或已配對的人看得到你。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvOnline" ${me.show_online===false?'':'checked'}><span><b>顯示上線狀態</b><small>關閉後，別人看不到你「在線上」或「今天上線」。</small></span></label>
     </div>
     <form class="card mt" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改暱稱、自介、職業或興趣後會重新送審，期間檔案暫時下架。</p>
       ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存並送審</button></form>
-    ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${esc(b.p?.nickname||'')}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
+    ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(b.blocked_id)}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
     <div class="card mt"><h3 style="font-size:17px">帳號</h3><p class="small muted">${esc(session.user.email)}</p>
       <div class="row mt flexwrap"><button class="btn sm ghost" id="pwBtn">更改密碼</button><button class="btn sm ghost" id="logoutBtn">登出</button><button class="btn sm danger" id="delBtn">刪除帳號</button></div></div>
   </div>`;
@@ -957,11 +972,13 @@ async function viewMe(){
     try{ const path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error; toast('頭像已更新，重新送審'); viewMe(); }catch(err){ toast(err.message); } };
   document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=9) return toast('相簿最多 9 張'); toast('上傳中…');
     try{ const path=await uploadPhoto(f); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1' }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }catch(err){ toast(err.message); } });
-  $('#meGal').querySelectorAll('.del').forEach(b=>b.onclick=async()=>{ if(!confirm('刪除這張照片？')) return; await sb.from('photos').delete().eq('id',b.dataset.id); await sb.storage.from('photos').remove([b.dataset.path]); viewMe(); });
-  document.querySelectorAll('.grantBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_grants').upsert({ owner_id:me.id, viewer_id:b.dataset.id }); await sb.from('photo_requests').update({ status:'granted' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id); toast('已授權'); viewMe(); });
-  document.querySelectorAll('.denyBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id); viewMe(); });
-  document.querySelectorAll('.revokeBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_grants').delete().eq('owner_id',me.id).eq('viewer_id',b.dataset.id); await sb.from('photo_requests').delete().eq('owner_id',me.id).eq('requester_id',b.dataset.id); toast('已收回'); viewMe(); });
-  document.querySelectorAll('.unblockBtn').forEach(b=>b.onclick=async()=>{ await sb.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',b.dataset.id); viewMe(); });
+  const act = async (fn, ok) => { const r = await fn(); if(r && r.error){ toast('沒有完成：'+r.error.message); return false; } if(ok) toast(ok); return true; };
+  $('#meGal').querySelectorAll('.del').forEach(b=>b.onclick=async()=>{ if(!confirm('刪除這張照片？')) return;
+    if(await act(()=>sb.from('photos').delete().eq('id',b.dataset.id))){ await sb.storage.from('photos').remove([b.dataset.path]); toast('已刪除'); } viewMe(); });
+  document.querySelectorAll('.grantBtn').forEach(b=>b.onclick=async()=>{ if(await act(()=>sb.from('photo_grants').upsert({ owner_id:me.id, viewer_id:b.dataset.id }))) await act(()=>sb.from('photo_requests').update({ status:'granted' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已授權'); viewMe(); });
+  document.querySelectorAll('.denyBtn').forEach(b=>b.onclick=async()=>{ await act(()=>sb.from('photo_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已婉拒'); viewMe(); });
+  document.querySelectorAll('.revokeBtn').forEach(b=>b.onclick=async()=>{ if(await act(()=>sb.from('photo_grants').delete().eq('owner_id',me.id).eq('viewer_id',b.dataset.id))) await act(()=>sb.from('photo_requests').delete().eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已收回'); viewMe(); });
+  document.querySelectorAll('.unblockBtn').forEach(b=>b.onclick=async()=>{ await act(()=>sb.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',b.dataset.id), '已解除封鎖'); viewMe(); });
   const pv = async (patch, msg) => { const { error } = await sb.from('profiles').update(patch).eq('id', me.id); if(error) return toast(error.message); Object.assign(me, patch); toast(msg); };
   $('#pvHidden').onchange = e => pv({ hidden: e.target.checked }, e.target.checked ? '已隱藏，你不會出現在探索' : '已恢復出現在探索');
   $('#pvOnline').onchange = e => pv({ show_online: e.target.checked }, e.target.checked ? '已開啟上線狀態' : '已隱藏上線狀態');
@@ -978,6 +995,7 @@ async function viewMe(){
 async function viewAdmin(){
   if(!me.is_admin){ location.hash='#/browse'; return; }
   let tab = 'profiles';
+  const adm = async q => { const { error } = await q; if(error) toast('沒有完成：'+error.message); return !error; };
   const draw = async ()=>{
     $('#app').innerHTML = `<div class="tabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button></div><div id="adm"><div class="spinner"></div></div>`;
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
@@ -994,9 +1012,9 @@ async function viewAdmin(){
             <div class="tags mt">${(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div></div>
         <div class="row mt flexwrap"><button class="btn sm primary ap" data-id="${p.id}">✓ 通過</button><input class="grow note" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px"><button class="btn sm ghost rj" data-id="${p.id}">退件</button><button class="btn sm danger sp" data-id="${p.id}">停權</button></div></div>`).join('');
       box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
-      box.querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id); toast('已通過'); draw(); });
-      box.querySelectorAll('.rj').forEach(b=>b.onclick=async()=>{ const note=b.closest('.card').querySelector('.note').value||'請修改後重新送審'; await sb.from('profiles').update({ status:'rejected', review_note:note }).eq('id',b.dataset.id); toast('已退件'); draw(); });
-      box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('確定停權？')) return; await sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id); draw(); });
+      box.querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await adm(sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id)); toast('已通過'); draw(); });
+      box.querySelectorAll('.rj').forEach(b=>b.onclick=async()=>{ const note=b.closest('.card').querySelector('.note').value||'請修改後重新送審'; await adm(sb.from('profiles').update({ status:'rejected', review_note:note }).eq('id',b.dataset.id)); toast('已退件'); draw(); });
+      box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('確定停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); draw(); });
     }
     if(tab==='photos'){
       const { data: rows } = await sb.from('photos').select('*, p:profiles(nickname)').eq('status','pending').order('created_at');
@@ -1004,17 +1022,17 @@ async function viewAdmin(){
       box.innerHTML = `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
         <div class="row mt" style="gap:6px"><button class="btn sm primary pa" data-id="${x.id}">通過</button><button class="btn sm ghost pr" data-id="${x.id}">退件</button></div></div></div>`).join('')}</div>`;
       box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.onclick=()=>window.open(u,'_blank'); } });
-      box.querySelectorAll('.pa').forEach(b=>b.onclick=async()=>{ await sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id); draw(); });
-      box.querySelectorAll('.pr').forEach(b=>b.onclick=async()=>{ await sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id); draw(); });
+      box.querySelectorAll('.pa').forEach(b=>b.onclick=async()=>{ await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id)); draw(); });
+      box.querySelectorAll('.pr').forEach(b=>b.onclick=async()=>{ await adm(sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id)); draw(); });
     }
     if(tab==='reports'){
       const { data: rows } = await sb.from('reports').select('*, r:profiles!reports_reporter_id_fkey(nickname), t:profiles!reports_reported_id_fkey(id,nickname,status)').eq('status','open').order('created_at');
       if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有未處理檢舉 ✓</p>'; return; }
       box.innerHTML = `<table class="table"><tr><th>時間</th><th>檢舉人</th><th>被檢舉</th><th>原因</th><th>說明</th><th></th></tr>${rows.map(r=>`<tr><td class="tiny">${fmtTime(r.created_at)}</td><td>${esc(r.r?.nickname||'')}</td><td>${esc(r.t?.nickname||'')} <span class="chip">${STATUS_TXT[r.t?.status]||''}</span></td><td>${REPORT_REASONS[r.reason]}</td><td class="small">${esc(r.detail||'')}</td>
         <td><div class="row flexwrap" style="gap:4px"><button class="btn sm ghost msgs" data-id="${r.t?.id}">看訊息</button><button class="btn sm danger sp" data-id="${r.t?.id}" data-r="${r.id}">停權</button><button class="btn sm ghost rs" data-r="${r.id}">結案</button><button class="btn sm ghost dm" data-r="${r.id}">駁回</button></div></td></tr>`).join('')}</table>`;
-      box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權此會員？')) return; await sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id); await sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r); draw(); });
-      box.querySelectorAll('.rs').forEach(b=>b.onclick=async()=>{ await sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r); draw(); });
-      box.querySelectorAll('.dm').forEach(b=>b.onclick=async()=>{ await sb.from('reports').update({ status:'dismissed' }).eq('id',b.dataset.r); draw(); });
+      box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權此會員？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); await adm(sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r)); draw(); });
+      box.querySelectorAll('.rs').forEach(b=>b.onclick=async()=>{ await adm(sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r)); draw(); });
+      box.querySelectorAll('.dm').forEach(b=>b.onclick=async()=>{ await adm(sb.from('reports').update({ status:'dismissed' }).eq('id',b.dataset.r)); draw(); });
       box.querySelectorAll('.msgs').forEach(b=>b.onclick=async()=>{ const { data: ms } = await sb.from('messages').select('body,created_at,sender_id').eq('sender_id',b.dataset.id).order('created_at',{ascending:false}).limit(50);
         modal(`<h3 style="font-size:16px">最近 50 則訊息</h3>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--line);padding:6px 0"><span class="tiny dim">${fmtTime(x.created_at)}</span> ${esc(x.body)}</p>`).join('')||'<p class="muted">無</p>'}`); });
     }
@@ -1025,9 +1043,9 @@ async function viewAdmin(){
         const { data: rows } = await q;
         $('#qr').innerHTML = `<table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny">${fmtTime(p.created_at)}</td>
           <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${p.status!=='approved'&&p.nickname?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table>`;
-        $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id); run(); });
-        $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ await sb.from('profiles').update({ status:'approved' }).eq('id',b.dataset.id); run(); });
-        $('#qr').querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id); run(); });
+        $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
+        $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ const { error } = await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id)); toast(error?error.message:'已解除停權，檔案回到待審，請重新審核'); run(); });
+        $('#qr').querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ await adm(sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id)); run(); });
       };
       $('#qb').onclick=run; run();
     }
@@ -1096,10 +1114,11 @@ function viewPlans(){
         <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>每天 5 個喜歡</li><li>配對後可對話</li><li class="no">看誰喜歡我</li><li class="no">優先曝光</li></ul>${join}</div>
       <div class="plan hl"><div class="who">Sugar Daddy／Mommy</div><h3>半糖會員</h3><div class="price">NT$1,680<small>／月</small></div><div class="alt">三個月 NT$3,980（每月約 NT$1,327）</div>
         <ul><li>基本會員全部功能</li><li>無限喜歡、無限對話</li><li>看誰喜歡我</li><li>探索結果優先曝光</li><li>不出現在探索、隱藏上線狀態</li><li>審核優先處理</li></ul>
-        <button class="btn primary block" onclick="toast('付費功能即將開放，正式開放時會先通知你')">即將開放</button></div>
+        <button class="btn primary block" id="planSoon">即將開放</button></div>
     </div>
-    <p class="tiny dim center mt2">價格為規劃中的定價，正式開放前可能調整。訂閱可隨時取消，取消後於當期結束時停止續扣。</p>
+    <p class="tiny dim center mt2">開站期間所有功能免費開放。價格為規劃中的定價，正式開放前可能調整；訂閱可隨時取消，取消後於當期結束時停止續扣。</p>
   </div>`;
+  $('#planSoon').onclick = () => toast('付費功能即將開放，開站期間所有功能免費使用');
 }
 
 function viewDoc(k){ $('#app').innerHTML = `<div class="doc card">${DOCS[k]}</div>`; }

@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.6.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.7.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -96,7 +96,7 @@ begin
   if old.status = 'suspended' then new.status := 'suspended'; return new; end if;
 
   if old.status = 'incomplete' then
-    if new.nickname is not null and new.gender is not null and new.role is not null
+    if new.nickname is not null and new.gender is not null and new.looking_for is not null and new.role is not null
        and new.birth_year is not null and new.city is not null and new.avatar_path is not null
        and new.age_confirmed and new.agreed_terms_at is not null then
       new.status := 'pending';
@@ -145,6 +145,8 @@ begin
   else
     new.user_id := old.user_id; new.path := old.path; new.status := old.status;
     new.review_note := old.review_note; new.created_at := old.created_at;
+    -- 私密照改成公開照：重新審核
+    if old.is_private and not new.is_private then new.status := 'pending'; end if;
   end if;
   return new;
 end $$;
@@ -184,6 +186,21 @@ returns boolean language sql stable security definer set search_path = public as
                  where (blocker_id = auth.uid() and blocked_id = other) or (blocker_id = other and blocked_id = auth.uid()));
 $$;
 
+-- 封鎖後：關閉配對、清掉雙方的喜歡、私密照授權與索取
+create or replace function public.handle_block()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare a uuid := least(new.blocker_id, new.blocked_id); b uuid := greatest(new.blocker_id, new.blocked_id);
+begin
+  update public.matches set closed_at = now() where user_a = a and user_b = b and closed_at is null;
+  delete from public.likes where (from_id = a and to_id = b) or (from_id = b and to_id = a);
+  delete from public.photo_grants where (owner_id = a and viewer_id = b) or (owner_id = b and viewer_id = a);
+  delete from public.photo_requests where (requester_id = a and owner_id = b) or (requester_id = b and owner_id = a);
+  return new;
+end $$;
+drop trigger if exists blocks_after_trg on public.blocks;
+create trigger blocks_after_trg after insert on public.blocks
+  for each row execute function public.handle_block();
+
 create table if not exists public.likes (
   from_id    uuid not null references public.profiles(id) on delete cascade,
   to_id      uuid not null references public.profiles(id) on delete cascade,
@@ -205,14 +222,19 @@ create table if not exists public.matches (
   check (user_a < user_b)
 );
 alter table public.matches add column if not exists closed_at timestamptz;
+alter table public.matches add column if not exists reopened_at timestamptz;  -- 重新配對：只看得到這之後的訊息
 
 create or replace function public.handle_like()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if exists (select 1 from public.likes where from_id = new.to_id and to_id = new.from_id) then
-    insert into public.matches (user_a, user_b)
+    insert into public.matches as m (user_a, user_b)
     values (least(new.from_id, new.to_id), greatest(new.from_id, new.to_id))
-    on conflict (user_a, user_b) do update set closed_at = null;
+    on conflict (user_a, user_b) do update
+      set closed_at = null,
+          reopened_at = case when m.closed_at is not null then now() else m.reopened_at end,
+          last_message = case when m.closed_at is not null then null else m.last_message end,
+          last_message_at = case when m.closed_at is not null then null else m.last_message_at end;
   end if;
   return new;
 end $$;
@@ -333,7 +355,8 @@ drop policy if exists "photos_select" on public.photos;
 create policy "photos_select" on public.photos for select to authenticated
   using (
     user_id = auth.uid() or public.is_admin()
-    or (status = 'approved' and not public.is_blocked_with(user_id)
+    or (status = 'approved' and public.my_status() in ('pending','approved')
+        and exists (select 1 from public.profiles p where p.id = photos.user_id)   -- 套用 profiles_select（上架、隱身、封鎖）
         and (not is_private or exists (select 1 from public.photo_grants g
                                        where g.owner_id = user_id and g.viewer_id = auth.uid())))
   );
@@ -358,13 +381,16 @@ create policy "requests_select" on public.photo_requests for select to authentic
   using (requester_id = auth.uid() or owner_id = auth.uid());
 drop policy if exists "requests_insert" on public.photo_requests;
 create policy "requests_insert" on public.photo_requests for insert to authenticated
-  with check (requester_id = auth.uid() and status = 'pending' and not public.is_blocked_with(owner_id));
+  with check (requester_id = auth.uid() and status = 'pending'
+              and public.my_status() = 'approved' and public.is_compatible(owner_id)
+              and exists (select 1 from public.profiles p where p.id = owner_id and p.status = 'approved')
+              and not public.is_blocked_with(owner_id));
 drop policy if exists "requests_update_owner" on public.photo_requests;
 create policy "requests_update_owner" on public.photo_requests for update to authenticated
   using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 drop policy if exists "requests_delete" on public.photo_requests;
 create policy "requests_delete" on public.photo_requests for delete to authenticated
-  using (requester_id = auth.uid() or owner_id = auth.uid());
+  using (owner_id = auth.uid() or (requester_id = auth.uid() and status = 'pending'));
 
 -- blocks
 drop policy if exists "blocks_rw" on public.blocks;
@@ -398,7 +424,8 @@ drop policy if exists "matches_delete" on public.matches;
 drop policy if exists "messages_select" on public.messages;
 create policy "messages_select" on public.messages for select to authenticated
   using (exists (select 1 from public.matches m where m.id = match_id and m.closed_at is null
-                 and (m.user_a = auth.uid() or m.user_b = auth.uid())) or public.is_admin());
+                 and (m.user_a = auth.uid() or m.user_b = auth.uid())
+                 and (m.reopened_at is null or messages.created_at >= m.reopened_at)) or public.is_admin());
 drop policy if exists "messages_insert" on public.messages;
 create policy "messages_insert" on public.messages for insert to authenticated
   with check (
@@ -432,13 +459,22 @@ values ('photos', 'photos', false, 5242880, array['image/jpeg','image/png','imag
 on conflict (id) do update set public = false, file_size_limit = 5242880,
   allowed_mime_types = array['image/jpeg','image/png','image/webp'];
 
+-- 檔名是否已登記為照片或頭像（登記後檔案不能刪除再用同檔名重傳）
+create or replace function public.photo_path_in_use(p text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.photos where path = p)
+      or exists (select 1 from public.profiles where avatar_path = p);
+$$;
+
 drop policy if exists "photos_storage_insert" on storage.objects;
 create policy "photos_storage_insert" on storage.objects for insert to authenticated
-  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text
+              and not public.photo_path_in_use(name));   -- 不可用同檔名覆蓋已登記的照片
 
 drop policy if exists "photos_storage_delete" on storage.objects;
 create policy "photos_storage_delete" on storage.objects for delete to authenticated
-  using (bucket_id = 'photos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+  using (bucket_id = 'photos' and (public.is_admin()
+         or ((storage.foldername(name))[1] = auth.uid()::text and not public.photo_path_in_use(name))));
 
 drop policy if exists "photos_storage_select" on storage.objects;
 create policy "photos_storage_select" on storage.objects for select to authenticated
@@ -458,6 +494,37 @@ create policy "photos_storage_select" on storage.objects for select to authentic
                                                      where g.owner_id = ph.user_id and g.viewer_id = auth.uid())))
     )
   );
+
+-- 索取私密照（被婉拒後 3 天才能再問）
+create or replace function public.request_private_photos(owner uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare r public.photo_requests;
+begin
+  if public.my_status() <> 'approved' then raise exception '資料審核通過後才能索取'; end if;
+  if owner = auth.uid() or public.is_blocked_with(owner) or not public.is_compatible(owner)
+     or not exists (select 1 from public.profiles where id = owner and status = 'approved') then
+    raise exception '無法向這位會員索取';
+  end if;
+  select * into r from public.photo_requests where requester_id = auth.uid() and owner_id = owner;
+  if found then
+    if r.status = 'pending' then raise exception '已送出索取，等待對方同意'; end if;
+    if r.status = 'granted' and exists (select 1 from public.photo_grants where owner_id = owner and viewer_id = auth.uid()) then return; end if;
+    if r.status = 'denied' and r.created_at > now() - interval '3 days' then raise exception '對方剛婉拒，3 天後才能再問一次'; end if;
+    update public.photo_requests set status = 'pending', created_at = now() where requester_id = auth.uid() and owner_id = owner;
+  else
+    insert into public.photo_requests (requester_id, owner_id) values (auth.uid(), owner);
+  end if;
+end $$;
+
+-- 名單顯示用：只回傳和我有關（封鎖、授權、索取）的人的暱稱
+create or replace function public.related_names(ids uuid[])
+returns table (id uuid, nickname text) language sql stable security definer set search_path = public as $$
+  select p.id, p.nickname from public.profiles p
+   where p.id = any(ids)
+     and (exists (select 1 from public.blocks where blocker_id = auth.uid() and blocked_id = p.id)
+       or exists (select 1 from public.photo_grants where owner_id = auth.uid() and viewer_id = p.id)
+       or exists (select 1 from public.photo_requests where owner_id = auth.uid() and requester_id = p.id));
+$$;
 
 -- 舊函式（可查詢任意兩人之間的封鎖）移除
 drop function if exists public.is_blocked_between(uuid, uuid);
