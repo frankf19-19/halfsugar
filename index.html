@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>悅遇 YUEYU｜重視隱私的成人交友平台</title>
-<meta name="description" content="悅遇 YUEYU 是一個重視隱私與真實的成人交友平台。所有會員檔案與照片皆經人工審核，讓你安心認識值得認識的人。">
+<title>悅遇 YUEYU｜台灣甜心交友・Sugar Dating 真人審核平台</title>
+<meta name="description" content="悅遇是重視隱私的台灣甜心交友（Sugar Dating）平台。Sugar Daddy、Sugar Mommy 與甜心在真人審核的環境中，坦誠彼此期待、認真認識彼此。">
 <meta name="robots" content="index,follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;400&display=swap" rel="stylesheet">
@@ -125,6 +125,20 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 .cta .row{justify-content:center;gap:14px}
 br.d{display:none}
 @media(min-width:760px){br.d{display:inline}}
+.hero .sub{margin:-18px 0 34px;font-size:14px;line-height:2;color:rgba(255,255,255,.85);letter-spacing:.08em}
+.faq{max-width:1320px;margin:0 auto;padding:130px 30px;display:grid;grid-template-columns:1fr;gap:48px;border-top:1px solid var(--rule)}
+@media(min-width:900px){.faq{grid-template-columns:5fr 7fr;gap:90px}}
+.faq h2{font-size:clamp(28px,3.2vw,46px);line-height:1.5}
+.faq .l p{margin:24px 0 20px;color:var(--grey);font-size:15px;line-height:2;max-width:420px}
+.faq .l a{font-size:14px;letter-spacing:.12em}
+.faq details{border-bottom:1px solid var(--rule)}
+.faq details:first-child{border-top:1px solid var(--rule)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:26px 2px;font-family:"Noto Serif TC",serif;font-size:clamp(17px,1.5vw,21px);letter-spacing:.04em}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";flex:none;width:14px;height:14px;background:linear-gradient(var(--ink),var(--ink)) center/14px 1px no-repeat,linear-gradient(var(--ink),var(--ink)) center/1px 14px no-repeat;transition:transform .3s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{padding:0 40px 28px 2px;color:var(--grey);font-size:15px;line-height:2.05}
+@media(max-width:719px){.faq{padding:90px 22px}}
 .credit{font-size:11px;letter-spacing:.12em;color:var(--grey2);text-align:center;padding:18px}
 
 /* ===== 登入 ===== */
@@ -266,9 +280,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   悅遇 YUEYU  前端  build v0.7.1
+   悅遇 YUEYU  前端  build v0.8.0
    ===================================================================== */
-const BUILD = 'v0.7.1';
+const BUILD = 'v0.8.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -284,7 +298,7 @@ const CITIES = ['台北市','新北市','桃園市','新竹','台中市','彰化
 const TAGS = ['美食','旅行','咖啡','紅酒','健身','電影','音樂','閱讀','藝術','攝影','高爾夫','登山','游泳','烹飪','寵物','時尚','品茶','露營','瑜伽','投資理財'];
 const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'色情產業招攬', minor:'疑似未成年', other:'其他' };
 const STATUS_TXT = { incomplete:'尚未完成建檔', pending:'審核中', approved:'已上架', rejected:'未通過審核', suspended:'已停權' };
-const BAD_WORDS = ['包養','援交','援助交際','約炮','外送茶','茶莊','出場','買春','賣春','性交易','嫖','陪睡','包夜','全套','半套','魚訊','代聊','乾爹','乾女兒','sugar daddy','sugar baby','月付','周付','零用金','贊助金'];
+const BAD_WORDS = ['援交','援助交際','約炮','外送茶','茶莊','魚訊','出場','買春','賣春','性交易','嫖','陪睡','包夜','全套','半套','定點','價碼','一次多少','一晚多少','代聊','line id','加賴'];
 
 /* ---------- 狀態 ---------- */
 let session = null, me = null;
@@ -410,23 +424,23 @@ async function viewLanding(){
     <div class="pn" style="background-image:url('${IMG.h3}')"></div>
     <div class="over">
       <div class="mark">悅遇</div>
-      <div class="tagline">為成熟的人，留一個安靜的相遇</div>
+      <div class="tagline">Sugar Dating　台灣甜心交友</div><div class="sub">事業有成的你，與值得被照顧的甜心，<br class="d">在真人審核的空間裡，坦誠地認識彼此。</div>
       <div class="row flexwrap">${two(true)}</div>
     </div>
   </section>
 
   <section class="intro">
-    <h2>認識一個人，<br>不必急。</h2>
-    <p>悅遇是為成熟成年人設計的私人交友空間。<br class="d">我們不追求會員數字，只在意每一次認識是否從尊重開始。<br>每一位會員都經過真人審核，<br class="d">每一段對話都從彼此有意開始。</p>
+    <h2>什麼是 Sugar Dating？</h2>
+    <p>Sugar Dating 是成年人之間，以坦誠為前提的交往方式。<br class="d">一方事業有成、願意在生活中照顧對方；另一方年輕、有自己的節奏與追求。<br>彼此在認識之初就把期待說清楚，<br class="d">省去猜測，也少一點失望。</p>
   </section>
 
   <section class="chapter">
     <div class="img" style="background-image:url('${IMG.c1}')"></div>
-    <div class="txt"><div class="no">第一章</div><h3>每一位會員，<br>都經過真人審核。</h3><p>照片與自我介紹都由真人看過才公開。假照片、網路圖片、留下聯絡方式的檔案，不會出現在這裡。通常在 24 小時內完成。</p></div>
+    <div class="txt"><div class="no">第一章</div><h3>每一位會員，<br>都經過真人審核。</h3><p>Sugar Daddy、Sugar Mommy 與甜心的照片和自我介紹，都由真人看過才公開。假照片、網路圖片、留下聯絡方式的檔案，以及茶莊、代聊等業者，不會出現在這裡。</p></div>
   </section>
   <section class="chapter rev">
     <div class="img" style="background-image:url('${IMG.c2}')"></div>
-    <div class="txt"><div class="no">第二章</div><h3>彼此有意，<br>對話才會開始。</h3><p>只有你們都按下喜歡，對話才會開啟。你不會收到任何不想要的訊息，也不需要回覆任何你不想回覆的人。</p></div>
+    <div class="txt"><div class="no">第二章</div><h3>先把期待說清楚，<br>再決定要不要見面。</h3><p>只有你們都按下喜歡，對話才會開啟。見面頻率、相處方式、彼此的界線，都可以在見面前先聊清楚；不合適，就不必勉強。</p></div>
   </section>
   <section class="chapter">
     <div class="img" style="background-image:url('${IMG.c3}')"></div>
@@ -434,7 +448,7 @@ async function viewLanding(){
   </section>
 
   <section class="pledge">
-    <blockquote>悅遇是交友平台，不是交易平台。<br>我們不經手、不媒介，<br class="d">也不允許會員之間的任何金錢往來；<br>色情產業相關人士，不得在此招攬。</blockquote>
+    <blockquote>Sugar Dating 不是性交易。<br>平台不經手、不媒介會員之間的任何金錢，<br class="d">以金錢交換性行為的要求，<br>與色情產業的招攬，一律停權。</blockquote>
     <div class="who">違反者將直接停權，並保留法律追訴權。<br><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a></div>
   </section>
 
@@ -447,9 +461,14 @@ async function viewLanding(){
     </div>
   </section>
 
+  <section class="faq">
+    <div class="l"><h2>使用之前，<br>你可能想知道</h2><p>從 Sugar Dating 的定義、甜心與 Sugar Daddy 的意思，到安全與法律界線，一次說清楚。</p><a href="#/guidelines">閱讀社群守則</a></div>
+    <div class="r"><details><summary>Sugar Dating 和一般交友 App 有什麼不同？</summary><p>一般交友 App 常常要聊很久，才知道對方想要什麼。Sugar Dating 鼓勵雙方在一開始就坦誠彼此的期待——生活節奏、相處方式、見面頻率——讓真正合適的人更快找到彼此。悅遇另外加上真人審核，過濾假帳號與業者。</p></details><details><summary>甜心／Sugar Baby 是什麼意思？</summary><p>甜心（Sugar Baby）通常是年輕、有自己生活與目標的成年人，希望認識成熟、穩定、懂得照顧人的對象。在悅遇，甜心不分性別。</p></details><details><summary>Sugar Daddy（糖爹）、Sugar Mommy 是什麼意思？</summary><p>Sugar Daddy／Sugar Mommy 通常是事業有成、生活穩定的成年人，願意把時間與心力放在一段讓彼此都舒服的關係裡，在生活上給予對方照顧與支持。</p></details><details><summary>Sugar Dating 等於性交易嗎？</summary><p>不是。Sugar Dating 是兩個成年人自願、彼此尊重的交往關係。任何以金錢或財物交換性行為的要求或暗示，都違反中華民國法律與本站守則，一經查證立即停權，必要時配合司法機關調查。</p></details><details><summary>平台會經手會員之間的錢嗎？</summary><p>不會。悅遇只提供認識彼此的空間，不代收、不轉交、不抽成任何會員之間的款項。任何人以「平台擔保」「先付訂金」等名義要你匯款，都是詐騙，請立即檢舉。</p></details><details><summary>怎麼保護自己？</summary><p>見面前先在站內多聊、可以視訊確認本人；第一次見面約在公開場所、自己安排交通；見面前就要求匯款、借錢或投資的，一律封鎖並檢舉。更多建議請看安全須知。</p></details><details><summary>需要幾歲才能加入？</summary><p>必須年滿 18 歲（或你所在地的法定成年年齡）。發現或合理懷疑未成年使用者，我們會立即停權並視情況通報主管機關。</p></details></div>
+  </section>
+
   <section class="cta" style="background-image:url('${IMG.cta}')">
     <div class="in">
-      <h2>你值得一段<br>被認真對待的相遇。</h2>
+      <h2>坦誠的關係，<br>從真人審核開始。</h2>
       <p>建立檔案免費　僅限年滿 18 歲</p>
       <div class="row flexwrap">${two(true)}</div>
     </div>
@@ -524,8 +543,8 @@ function profileFormHtml(p={}){
     </div>
     <label>興趣（最多 8 個）</label>
     <div class="tags" id="tagPick">${TAGS.map(t=>`<button type="button" class="tag ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
-    <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。請勿留聯絡方式、勿提及任何金錢條件。">${esc(p.bio||'')}</textarea>
-    <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）或金錢相關字眼，將無法通過審核。</p>`;
+    <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額或價碼。">${esc(p.bio||'')}</textarea>
+    <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額價碼或性交易相關字眼，將無法通過審核。</p>`;
 }
 function bindTagPick(){ $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
   if(!b.classList.contains('on') && $('#tagPick').querySelectorAll('.on').length>=8) return toast('最多 8 個興趣'); b.classList.toggle('on'); }); }
@@ -855,12 +874,12 @@ async function viewAdmin(){
    ===================================================================== */
 const DOCS = {
 terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
-<h3>第一條　契約主體與服務性質</h3><p>本條款為悅遇 YUEYU（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友與社交媒合服務。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
+<h3>第一條　契約主體與服務性質</h3><p>本條款為悅遇 YUEYU（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友服務（包括 Sugar Dating 甜心交友）。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
 <h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
 <h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。</p>
 <h3>第四條　禁止行為</h3><p>你同意不得於本平台從事以下行為，違者本平台得逕行停權、刪除內容，並保留法律追訴權：</p><ol>
 <li>上傳非本人、冒用他人、或未經授權之照片或資料。</li>
-<li>以任何形式向其他會員要求、提供、約定或暗示金錢、財物或其他對價，包括但不限於借貸、贈與、贊助、生活費、約會費用之預先給付等。</li>
+<li>以金錢、財物或其他對價交換性交或猥褻行為，或以任何方式要求、提供、暗示此類交換。</li><li>於見面前以任何名義向其他會員要求匯款、借貸、投資、訂金或保證金。</li>
 <li>以任何形式媒介、招攬、宣傳或暗示性交易或色情服務。</li>
 <li>情色產業相關人士（含但不限於應召、陪侍、代聊、經紀、按摩店、酒店從業人員）於本平台從事招攬、宣傳或引流。</li>
 <li>騷擾、威脅、歧視、辱罵或散布他人私人資訊。</li>
@@ -888,7 +907,7 @@ privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 �
 guidelines: `<h2>社群守則</h2><p>悅遇希望成為一個讓成熟成年人可以安心、坦誠認識彼此的地方。以下是我們對每一位會員的要求。</p>
 <h3>做自己</h3><p>使用本人近期的照片，誠實描述自己。冒用他人照片或虛構身分將立即停權。</p>
 <h3>尊重</h3><p>對方沒有回應不代表邀請你再傳十次。任何騷擾、辱罵、威脅或散布他人資訊的行為，一經檢舉查證即停權。</p>
-<h3>這裡不談錢</h3><p>悅遇是交友平台，不是交易平台。無論以什麼名義——贊助、生活費、車馬費、禮物承諾——要求或提供金錢，都違反守則。我們也嚴禁色情產業相關人士在站內招攬。看到這類內容請立即檢舉。</p>
+<h3>Sugar Dating，不是性交易</h3><p>悅遇歡迎成年人坦誠彼此的期待與相處方式。但任何以金錢或財物交換性行為的要求、暗示或報價，都違反法律與本守則，一經查證立即停權。平台不經手、不媒介會員之間的任何款項；見面前要求匯款、借貸、投資、預付「車馬費」或「訂金」的，多半是詐騙，請直接檢舉。色情產業相關人士（茶莊、代聊、經紀、應召）不得在此招攬。</p>
 <h3>不留站外聯絡方式</h3><p>公開檔案不得出現 LINE、電話、IG 等聯絡方式。請先在站內認識彼此，等雙方都覺得合適再交換。</p>
 <h3>照片規範</h3><p>清楚、正面、近期。不接受裸露、猥褻、暴力、含文字或聯絡方式、明星或網路圖片。私密照同樣需審核，且不得含有裸露內容。</p>
 <h3>檢舉會被認真看待</h3><p>每一件檢舉都會由真人在 24 小時內處理。惡意或不實檢舉同樣會被處理。</p>`,
