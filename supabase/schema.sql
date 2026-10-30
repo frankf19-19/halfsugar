@@ -394,6 +394,15 @@ grant execute on function public.private_photo_count(uuid) to authenticated;
 -- ---------------------------------------------------------------------
 -- 4. reports  檢舉
 -- ---------------------------------------------------------------------
+-- 財力文件查看申請（詳細規則見後面「財力認證」段落；先建表，名單函式會用到）
+create table if not exists public.wealth_requests (
+  requester_id uuid not null references public.profiles(id) on delete cascade,
+  owner_id     uuid not null references public.profiles(id) on delete cascade,
+  status       text not null default 'pending' check (status in ('pending','granted','denied')),
+  created_at   timestamptz not null default now(),
+  primary key (requester_id, owner_id)
+);
+
 create table if not exists public.reports (
   id          uuid primary key default gen_random_uuid(),
   reporter_id uuid not null references public.profiles(id) on delete cascade,
