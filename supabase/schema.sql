@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.21.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.22.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -110,6 +110,8 @@ begin
   new.wealth_verified_at := old.wealth_verified_at;
   new.person_verified_at := old.person_verified_at;   -- 真人認證只有管理員能設定   -- 財力認證只有管理員能設定
   new.created_at  := old.created_at;
+  new.approved_at  := old.approved_at;    -- 只能由審核流程設定（下一個 trigger 處理）
+  new.submitted_at := old.submitted_at;
   if new.last_active_at is not null then new.last_active_at := least(new.last_active_at, now()); end if;
   -- 性別與想認識的對象：第一次設定後不可更改
   if old.gender is not null then new.gender := old.gender; end if;
@@ -671,10 +673,12 @@ create policy "photos_storage_select" on storage.objects for select to authentic
       or exists (select 1 from public.profiles p
                  where p.avatar_path = name and (p.status = 'approved' or (p.status = 'pending' and private.has_open_match(p.id)))
                    and (storage.foldername(name))[1] = p.id::text
+                   and private.can_browse() and private.is_compatible(p.id)
                    and not private.is_blocked_with(p.id))
       or exists (select 1 from public.photos ph
                  where ph.path = name and ph.status = 'approved'
                    and (storage.foldername(name))[1] = ph.user_id::text
+                   and private.can_browse() and private.is_compatible(ph.user_id)
                    and not private.is_blocked_with(ph.user_id)
                    and (not ph.is_private or exists (select 1 from public.photo_grants g
                                                      where g.owner_id = ph.user_id and g.viewer_id = auth.uid())))
@@ -1085,8 +1089,8 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
   if target = auth.uid() then raise exception '不能刪除自己的管理員帳號'; end if;
-  if exists (select 1 from storage.objects where bucket_id = 'photos' and name like target::text || '/%') then
-    raise exception '這位會員的照片檔案還沒刪完';
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person') and name like target::text || '/%') then
+    raise exception '這位會員的照片或認證檔案還沒刪完';
   end if;
   update public.reports set status = 'resolved' where reported_id = target and status = 'open';
   delete from public.photos where user_id = target;
@@ -1097,6 +1101,48 @@ grant execute on function public.admin_delete_account(uuid) to authenticated;
 
 -- 舊函式（可查詢任意兩人之間的封鎖）移除
 drop function if exists public.is_blocked_between(uuid, uuid);
+
+-- ---------------------------------------------------------------------
+-- 6c. 客服留言（還沒有客服信箱前，會員在站內留言，管理員在後台看）
+-- ---------------------------------------------------------------------
+create table if not exists public.support_tickets (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references auth.users(id) on delete set null,
+  email      text,
+  body       text not null check (char_length(body) between 5 and 1000),
+  status     text not null default 'open' check (status in ('open','done')),
+  created_at timestamptz not null default now()
+);
+alter table public.support_tickets enable row level security;
+
+create or replace function private.my_ticket_count_today()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from public.support_tickets where user_id = auth.uid() and created_at > now() - interval '1 day';
+$$;
+grant execute on function private.my_ticket_count_today() to authenticated;
+
+create or replace function public.support_tickets_fill()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.user_id := auth.uid();
+  new.email := (select email from auth.users where id = auth.uid());
+  new.status := 'open';
+  new.created_at := now();
+  return new;
+end $$;
+drop trigger if exists support_tickets_fill_trg on public.support_tickets;
+create trigger support_tickets_fill_trg before insert on public.support_tickets
+  for each row execute function public.support_tickets_fill();
+
+drop policy if exists "support_insert" on public.support_tickets;
+create policy "support_insert" on public.support_tickets for insert to authenticated
+  with check (user_id = auth.uid() and private.my_ticket_count_today() < 5);
+drop policy if exists "support_select" on public.support_tickets;
+create policy "support_select" on public.support_tickets for select to authenticated
+  using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "support_update" on public.support_tickets;
+create policy "support_update" on public.support_tickets for update to authenticated
+  using (public.is_admin()) with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
 -- 7. Realtime

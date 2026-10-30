@@ -3,7 +3,7 @@ do $t$
 declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
-  Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
+  Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
 begin
   perform set_config('storage.allow_delete_query','true',true);
@@ -480,6 +480,32 @@ begin
   perform set_config('request.jwt.claim.sub', R::text, true);
   execute 'set local role authenticated';
   select count(*) into n from public.person_verifications; out := array_append(out, ('28d 別人看到真人認證資料 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 29 新會員不能自己把 approved_at 填上來跳過審核
+  insert into auth.users (id, email, aud, role) values (Y,'e2e-y@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='Y', gender='female', looking_for='male', role='baby', birth_year=1999, city='台北市', status='pending' where id=Y;
+  perform set_config('request.jwt.claims', json_build_object('sub',Y,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Y::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set approved_at = now(), submitted_at = '2000-01-01' where id=Y;
+  select count(*) into n from public.profiles where id=Y and (approved_at is not null or submitted_at < '2001-01-01'); out := array_append(out, ('29 自己填 approved_at / submitted_at = '||n||' (應為0)')::text);
+  select count(*) into n from public.profiles where id=P; out := array_append(out, ('29b 自己改完後看到其他會員 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 30 客服留言：只有自己和管理員看得到，不能冒名
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  insert into public.support_tickets (user_id, email, body, status) values (R, 'fake@x.com', '我需要協助處理帳號', 'done');
+  select count(*) into n from public.support_tickets where user_id=Q and email='e2e-q@test.invalid' and status='open'; out := array_append(out, ('30 客服留言自動帶入本人資料 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',R,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', R::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.support_tickets; out := array_append(out, ('30b 別人看到客服留言 = '||n||' (應為0)')::text);
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
