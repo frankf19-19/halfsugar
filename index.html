@@ -95,6 +95,8 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .pcard .budget{font-size:12px;letter-spacing:.06em;color:var(--wine);margin-top:4px}
 .budget{color:var(--wine);letter-spacing:.06em}
 .wbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid #9C7A3C;color:#7A5B22;background:#FBF6EC;margin-top:5px;font-family:"Noto Sans TC";font-weight:500;white-space:nowrap}
+.pbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid var(--ink);color:var(--ink);background:#fff;margin-top:5px;margin-right:4px;font-family:"Noto Sans TC";font-weight:500;white-space:nowrap}
+.pbadge.big{font-size:13px;padding:3px 10px;margin-top:0}
 .wbadge.big{font-size:13px;padding:3px 10px;margin-top:0}
 .pfacts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--grey)}
 .tag.rel{border-color:var(--wine);color:var(--wine)}
@@ -106,6 +108,11 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .aphb{position:absolute;left:0;right:0;bottom:0;display:flex}
 .aphb button{flex:1;padding:8px 0;border:0;font-size:15px;color:#fff;cursor:pointer}
 .aphb .pok{background:rgba(26,26,26,.82)}.aphb .pno{background:rgba(176,74,98,.88)}
+.pvstep{padding:14px 0;border-top:1px solid var(--rule)}.pvstep p{font-size:14px;margin:6px 0 10px;line-height:1.8}
+.pvtask{color:var(--wine);font-weight:500}
+.pvgrid{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:760px){.pvgrid{grid-template-columns:1fr 1fr 1.2fr}}
+.pvimg{display:block;aspect-ratio:3/4;background:#ECEAE6 center/contain no-repeat;margin-top:4px}
+.pvvid{width:100%;aspect-ratio:3/4;background:#111;margin-top:4px}
 .obsteps{display:flex;gap:28px;margin:0 0 22px;font-size:13px;letter-spacing:.12em;color:var(--grey)}
 .obsteps span{padding-bottom:6px;border-bottom:1px solid transparent}
 .obsteps span.on{color:var(--ink);border-bottom-color:var(--ink)}
@@ -180,7 +187,7 @@ br.d{display:none}
 .dcards{display:grid;grid-template-columns:1fr;gap:34px;max-width:420px;margin:0 auto}
 @media(min-width:860px){.dcards{grid-template-columns:repeat(3,1fr);max-width:none;gap:28px}}
 .dcard{border:1px solid var(--rule);background:#fff;text-align:left}
-.dph{position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.dph{position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#ECEAE6 center/cover no-repeat}
 .dph.a{background:#2B2B2E}.dph.b{background:#E9DCDD}.dph.c{background:#D9D4CC}
 .dph .mono{font-family:"Noto Serif TC",serif;font-weight:300;font-size:64px;letter-spacing:.1em;color:rgba(255,255,255,.85)}
 .dph.b .mono,.dph.c .mono{color:rgba(26,26,26,.55)}
@@ -415,9 +422,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   微糖 SUGAR 30  前端  build v1.20.0
+   微糖 SUGAR 30  前端  build v1.21.0
    ===================================================================== */
-const BUILD = 'v1.20.0';
+const BUILD = 'v1.21.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -646,6 +653,9 @@ const IMG = {
   c4:     'https://images.unsplash.com/photo-1558222218-b7b54eede3f3?auto=format&fit=crop&w=1600&q=80',
   cta:    'https://images.unsplash.com/photo-1765870972591-31948b3cdcab?auto=format&fit=crop&w=2200&q=80',
   auth:   'https://images.unsplash.com/photo-1762740960551-653b0a780adc?auto=format&fit=crop&w=1400&q=80',
+  d1:     'https://images.unsplash.com/photo-1722627462546-7feb0ecbe625?auto=format&fit=crop&w=900&h=675&q=80',
+  d2:     'https://images.unsplash.com/photo-1520099940286-947795ff7b42?auto=format&fit=crop&w=900&h=675&q=80',
+  d3:     'https://images.unsplash.com/photo-1767510533241-d7c86c88d097?auto=format&fit=crop&w=900&h=675&q=80',
 };
 async function viewLanding(){
   const two = (light) => me ? `<a class="btn ${light?'light primary':'primary'}" href="#/browse">開始探索</a>`
@@ -709,17 +719,17 @@ async function viewLanding(){
   </section>
 
   <section class="demo" aria-label="會員檔案示意">
-    <div class="hd"><h2>會員檔案長這樣</h2><p>加入之前，先看看裡面是什麼樣子。<br class="d">以下為<b>示意檔案</b>，並非真實會員。</p></div>
+    <div class="hd"><h2>會員檔案長這樣</h2><p>加入之前，先看看裡面是什麼樣子。<br class="d">以下為<b>示意檔案</b>，照片為形象示意圖，並非真實會員。</p></div>
     <div class="dcards">
-      <div class="dcard"><div class="dph a"><span class="stamp">示意</span><span class="seen on">在線上</span><span class="mono">W</span></div>
+      <div class="dcard"><div class="dph" style="background-image:url('${IMG.d1}')"><span class="stamp">示意</span><span class="seen on">在線上</span></div>
         <div class="dinfo"><div class="dn"><span>Wesley</span><span>45</span></div><div class="dm"><span class="rtag">Sugar Daddy</span>台北市 · 科技業主管</div>
-          <div class="budget">每月預算 8–12 萬</div><span class="wbadge">✓ 財力認證</span>
+          <div class="budget">每月預算 8–12 萬</div><span class="pbadge">✓ 真人認證</span><span class="wbadge">✓ 財力認證</span>
           <p class="dbio">喜歡安靜的餐廳和週末的短程旅行。希望先好好聊，彼此舒服再見面。</p></div></div>
-      <div class="dcard"><div class="dph b"><span class="stamp">示意</span><span class="seen">今天上線</span><span class="mono">C</span></div>
+      <div class="dcard"><div class="dph" style="background-image:url('${IMG.d2}')"><span class="stamp">示意</span><span class="seen">今天上線</span></div>
         <div class="dinfo"><div class="dn"><span>Claire</span><span>26</span></div><div class="dm"><span class="rtag">甜心</span>台北市 · 設計師</div>
-          <div class="dtags"><span>咖啡</span><span>展覽</span><span>攝影</span></div><div class="dlock">🔒 2 張私密照，需對方同意才看得到</div>
+          <span class="pbadge">✓ 真人認證</span><div class="dtags"><span>咖啡</span><span>展覽</span><span>攝影</span></div><div class="dlock">🔒 2 張私密照，需對方同意才看得到</div>
           <p class="dbio">正在念設計研究所。喜歡有想法、說話溫和的人，期待成熟穩定的相處。</p></div></div>
-      <div class="dcard"><div class="dph c"><span class="stamp">示意</span><span class="mono">V</span></div>
+      <div class="dcard"><div class="dph" style="background-image:url('${IMG.d3}')"><span class="stamp">示意</span></div>
         <div class="dinfo"><div class="dn"><span>Vivian</span><span>41</span></div><div class="dm"><span class="rtag">Sugar Mommy</span>新北市 · 品牌創辦人</div>
           <div class="budget">每月預算 見面再談</div>
           <p class="dbio">工作忙，但願意為對的人留時間。重視坦誠，第一則訊息請說說你自己。</p></div></div>
@@ -727,6 +737,7 @@ async function viewLanding(){
     <ul class="dnotes">
       <li><b>真人審核</b>每一張照片、每一段自介都由真人看過才上架。</li>
       <li><b>每月預算</b>Sugar Daddy／Mommy 註冊時填寫，彼此一開始就清楚期待。</li>
+      <li><b>真人認證</b>依隨機指定動作拍自拍與短影片，確認照片就是本人。</li>
       <li><b>財力認證</b>自願上傳文件、真人確認後顯示，甜心可以申請查看。</li>
       <li><b>私密照</b>只給你同意的人看，看的時候會疊上對方的代號浮水印。</li>
     </ul>
@@ -739,6 +750,7 @@ async function viewLanding(){
       <div class="e"><dt>Sugar Daddy<br>Sugar Mommy</dt><dd class="pos">名詞</dd><dd>事業與生活都已穩定，願意把時間和心力，放在一段讓彼此都舒服的關係裡。</dd></div>
       <div class="e"><dt>坦誠</dt><dd class="pos">形容詞</dd><dd>微糖最重要的一個詞。見面之前，先把彼此期待的相處方式、見面節奏說清楚；不合適，就不必勉強。</dd></div>
       <div class="e"><dt>界線</dt><dd class="pos">名詞</dd><dd>每個人都有，也都該被尊重。對方說不，就是不。封鎖一次，對方就再也看不到你。</dd></div>
+      <div class="e"><dt>真人認證</dt><dd class="pos">名詞</dd><dd>依系統隨機指定的動作，拍一張自拍和一段短影片，由真人和頭像比對。通過後檔案會出現「✓ 真人認證」，自拍和影片審核完立即刪除。</dd></div>
       <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件（姓名可以遮住），由真人看過後，檔案上會出現「✓ 財力認證」。不是必要的，是加分；甜心想看文件可以申請，對方按允許才看得到。</dd></div>
       <div class="e"><dt>審核</dt><dd class="pos">動詞</dd><dd>每一張照片、每一段自介，都由真人看過才公開。業者、假照片、留聯絡方式的，到不了這裡。</dd></div>
       <div class="e no"><dt>性交易</dt><dd class="pos">名詞　微糖不使用的詞</dd><dd>以金錢或財物交換性行為，違法，也違反本站守則。出現就停權，必要時配合司法調查。平台不代收、不轉交會員之間的任何款項。</dd></div>
@@ -819,6 +831,7 @@ const CUPS = ['A','B','C','D','E','F+'];
 const RELS = { long:'長期穩定', short:'短期相處', dinner:'晚餐約會', travel:'旅伴', companion:'生活陪伴' };
 const FREQ = { weekly:'每週 1 次以上', twomonth:'每月 2–3 次', monthly:'每月 1 次', flexible:'時間彈性' };
 const WEALTH_KINDS = { deposit:'存款證明或存摺內頁', income:'薪資單或收入證明', tax:'所得扣繳憑單', property:'房屋或土地權狀', car:'名下車輛行照', business:'公司負責人證明（名片＋登記資料）', other:'其他可看出經濟能力的文件' };
+const personBadge = (p, big) => p && p.person_verified_at ? `<span class="pbadge${big?' big':''}" title="已通過真人認證">✓ 真人認證</span>` : '';
 const wealthBadge = (p, big) => p && p.wealth_verified_at ? `<span class="wbadge${big?' big':''}" title="已通過財力認證">✓ 財力認證</span>` : '';
 const budgetText = b => b ? (b==='negotiable' ? '每月預算 見面再談' : `每月預算 ${BUDGETS[b]}`) : '';
 function profileFormHtml(p={}){
@@ -894,7 +907,7 @@ async function uploadPhoto(file){
   if(error) throw error; return path;
 }
 
-const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,wealth_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -1008,9 +1021,9 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'' };
-const resetBrowse = () => Object.assign(browseState, { region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'' });
-const advCount = () => ['amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0);
+const browseState = { role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
+const resetBrowse = () => Object.assign(browseState, { region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' });
+const advCount = () => ['amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth','person'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0);
 async function viewBrowse(){
   if(me.status==='pending' && !me.approved_at){ $('#app').innerHTML = `${statusBanner()}<div class="center" style="padding:50px 0"><p class="muted">審核通過後，這裡就會出現和你方向吻合的會員。<br class="d">等待的時間，可以先到「我的」多放幾張照片、把自介寫完整。</p><a class="btn mt2" href="#/me">前往「我的」</a></div>`; return; }
   if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); }
@@ -1030,7 +1043,7 @@ async function viewBrowse(){
   const reload = async () => {
     $('#fMore').innerHTML = '更多篩選' + (advCount()?`<b>${advCount()}</b>`:'');
     const y = new Date().getFullYear(); const B = browseState;
-    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
+    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,person_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
     if(B.role==='baby') q = q.eq('role','baby'); else if(B.role==='sugar') q = q.in('role',['daddy','mommy']);
     q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
     if(B.city) q = q.eq('city', B.city); else if(B.region) q = q.in('city', REGIONS[B.region]);
@@ -1042,6 +1055,7 @@ async function viewBrowse(){
     if(me.looking_for==='female' && (B.cmin||B.cmax)){ const i0 = B.cmin?CUPS.indexOf(B.cmin):0, i1 = B.cmax?CUPS.indexOf(B.cmax):CUPS.length-1; q = q.in('cup', CUPS.slice(i0, i1+1)); }
     if(B.rel.length) q = q.overlaps('relation_types', B.rel);
     if(B.freq) q = q.eq('meet_freq', B.freq);
+    if(B.person) q = q.not('person_verified_at','is',null);
     if(sugarView()){
       if(B.wealth) q = q.not('wealth_verified_at','is',null);
       if(B.budget) q = q.in('budget', BUDGET_ORDER.slice(BUDGET_ORDER.indexOf(B.budget)));
@@ -1055,7 +1069,7 @@ async function viewBrowse(){
       $('#clrF') && ($('#clrF').onclick=()=>{ resetBrowse(); viewBrowse(); }); return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
-        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${wealthBadge(r)}</div></div>`).join('');
+        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${personBadge(r)}${wealthBadge(r)}</div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.textContent=''; } });
   };
@@ -1071,6 +1085,7 @@ async function viewBrowse(){
       <div class="fg"><label>身材（可複選）</label><div class="tags" id="xBody">${Object.entries(BODY).map(([k,v])=>`<button type="button" class="tag ${B.body.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
       ${me.looking_for==='female'?`<div class="fg"><label>罩杯</label><div class="two"><select id="xCmin"><option value="">不限</option>${opt(CUPS,B.cmin)}</select><span>—</span><select id="xCmax"><option value="">不限</option>${opt(CUPS,B.cmax)}</select></div><p class="tiny dim">只會篩選到有填寫罩杯的會員。</p></div>`:''}
       <div class="fg"><label>相處方式（符合任一項）</label><div class="tags" id="xRel">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${B.rel.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
+      <div class="fg"><label class="sw" style="margin:0"><input type="checkbox" id="xPerson" ${B.person?'checked':''}><span><b>只看真人認證</b></span></label></div>
       <div class="fg"><label>見面頻率</label><select id="xFreq"><option value="">不限</option>${Object.entries(FREQ).map(([k,v])=>`<option value="${k}" ${B.freq===k?'selected':''}>${v}</option>`).join('')}</select></div>
       ${sugarView()?`<div class="fg"><label>對方每月預算</label><select id="xBudget"><option value="">不限</option>${Object.entries({'30to50k':'3 萬以上','50to80k':'5 萬以上','80to120k':'8 萬以上','gt120k':'12 萬以上'}).map(([k,v])=>`<option value="${k}" ${B.budget===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="fg"><label class="sw" style="margin:0"><input type="checkbox" id="xWealth" ${B.wealth?'checked':''}><span><b>只看財力認證</b></span></label></div>`
@@ -1082,7 +1097,7 @@ async function viewBrowse(){
       let [a0,a1] = [v('#xAmin'), v('#xAmax')]; if(a0&&a1&&+a0>+a1) [a0,a1]=[a1,a0];
       let [h0,h1] = [v('#xHmin'), v('#xHmax')]; if(h0&&h1&&+h0>+h1) [h0,h1]=[h1,h0];
       let [c0,c1] = [v('#xCmin'), v('#xCmax')]; if(c0&&c1&&CUPS.indexOf(c0)>CUPS.indexOf(c1)) [c0,c1]=[c1,c0];
-      Object.assign(B, { amin:a0, amax:a1, hmin:h0, hmax:h1, cmin:c0, cmax:c1, freq:v('#xFreq'), budget:v('#xBudget'), ebudget:v('#xEb'), wealth: $('#xWealth')?.checked ? '1' : '',
+      Object.assign(B, { amin:a0, amax:a1, hmin:h0, hmax:h1, cmin:c0, cmax:c1, freq:v('#xFreq'), budget:v('#xBudget'), ebudget:v('#xEb'), wealth: $('#xWealth')?.checked ? '1' : '', person: $('#xPerson')?.checked ? '1' : '',
         body:[...document.querySelectorAll('#xBody .on')].map(t=>t.dataset.v), rel:[...document.querySelectorAll('#xRel .on')].map(t=>t.dataset.v) });
       closeModal(); reload(); };
   };
@@ -1112,7 +1127,7 @@ async function openProfile(id){
     <div class="row mt" style="justify-content:space-between;align-items:flex-start">
       <div>${p.role?`<div class="rtag" style="margin-bottom:4px">${ROLES[p.role]}</div>`:''}<h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
         <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}${seen(p.last_active_at)?' · '+seen(p.last_active_at):''}</div>
-        ${p.budget||p.wealth_verified_at?`<div class="mt row" style="gap:10px;align-items:center">${p.budget?`<span class="budget" style="font-size:14px">${budgetText(p.budget)}</span>`:''}${wealthBadge(p,true)}</div>`:''}
+        ${p.budget||p.wealth_verified_at||p.person_verified_at?`<div class="mt row" style="gap:10px;align-items:center;flex-wrap:wrap">${p.budget?`<span class="budget" style="font-size:14px">${budgetText(p.budget)}</span>`:''}${personBadge(p,true)}${wealthBadge(p,true)}</div>`:''}
         <div id="wDoc" class="small mt"></div></div>
       ${theirLike?'<span class="chip ok">♥ 對你心動</span>':''}
     </div>
@@ -1314,14 +1329,24 @@ async function viewChat(matchId){
    ===================================================================== */
 async function viewMe(){
   await loadMe();
-  const [{ data: photos }, { data: reqs }, { data: grants }, { data: blocks }, { data: wv }, { data: wr }] = await Promise.all([
+  const [{ data: photos }, { data: reqs }, { data: grants }, { data: blocks }, { data: wv }, { data: wr }, { data: pvs }] = await Promise.all([
     sb.from('photos').select('*').eq('user_id', me.id).order('created_at'),
     sb.from('photo_requests').select('requester_id').eq('owner_id', me.id).eq('status','pending'),
     sb.from('photo_grants').select('viewer_id').eq('owner_id', me.id),
     sb.from('blocks').select('blocked_id').eq('blocker_id', me.id),
     sb.from('wealth_verifications').select('*').eq('user_id', me.id).order('created_at',{ascending:false}).limit(1),
     sb.from('wealth_requests').select('requester_id,status').eq('owner_id', me.id).in('status',['pending','granted']),
+    sb.from('person_verifications').select('status,review_note').eq('user_id', me.id).neq('status','awaiting').order('created_at',{ascending:false}).limit(1),
   ]);
+  const lastPv = (pvs||[])[0];
+  const personCard = `<div class="card mt" id="pCard"><h3 style="font-size:17px">真人認證 ${personBadge(me)}</h3>
+    ${me.person_verified_at ? `<p class="small muted mt">你已在 ${new Date(me.person_verified_at).toLocaleDateString('zh-TW')} 通過真人認證，檔案和探索卡片上會顯示「✓ 真人認證」。</p>`
+    : lastPv?.status==='pending' ? `<p class="small mt">審核中，通常 1–2 天內完成。審核後自拍和影片會立即刪除。</p>`
+    : `<p class="small muted mt">證明照片裡的人就是你。通過後檔案會顯示「✓ 真人認證」，對方更敢回覆你。</p>
+      ${lastPv?.status==='rejected'?`<div class="banner warn mt">上一次沒有通過：${esc(lastPv.review_note||'')}</div>`:''}
+      <p class="tiny dim mt">系統會隨機給你兩個動作：一張自拍、一段 10 秒內的短影片。用手機前鏡頭當場拍，管理員會和你的頭像比對。<b>自拍和影片只有管理員看得到，審核完立即刪除。</b></p>
+      <button class="btn primary mt2" id="pvStart">開始真人認證</button>`}
+  </div>`;
   const lastWv = (wv||[])[0];
   const wPend = (wr||[]).filter(x=>x.status==='pending'), wGrant = (wr||[]).filter(x=>x.status==='granted');
   const hasDoc = !!(lastWv && lastWv.status==='approved' && lastWv.path);
@@ -1364,6 +1389,7 @@ async function viewMe(){
     </div>
     ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(r.requester_id)}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
     ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(g.viewer_id)}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
+    ${personCard}
     ${wealthCard}
     <div class="card mt"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
       <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你心動過的人、或正在和你聊天的人看得到你。</small></span></label>
@@ -1391,6 +1417,39 @@ async function viewMe(){
       const { error: ie } = await sb.from('wealth_verifications').insert({ user_id: me.id, kind: $('#wKind').value, path }); if(ie){ await sb.storage.from('verify').remove([path]); throw ie; }
       toast('已送出，審核後會在這裡顯示結果'); viewMe();
     }catch(err){ e.target.disabled=false; toast(err.message||err); } });
+  $('#pvStart') && ($('#pvStart').onclick = async ()=>{
+    const { data: task, error } = await sb.rpc('start_person_verification'); if(error) return toast(error.message);
+    const t = Array.isArray(task) ? task[0] : task;
+    $('#pCard').innerHTML = `<h3 style="font-size:17px">真人認證</h3>
+      <div class="pvstep mt"><b>1　自拍照片</b><p>請用前鏡頭拍一張：<span class="pvtask">${esc(t.photo_task)}</span></p>
+        <label class="btn sm ghost">拍照或選擇照片<input type="file" accept="image/*" capture="user" id="pvPhoto" class="hidden"></label><span class="tiny dim" id="pvPhotoOk"></span></div>
+      <div class="pvstep mt"><b>2　10 秒內短影片</b><p>請錄一段影片：<span class="pvtask">${esc(t.video_task)}</span>，並在影片中念出數字 <span class="pvtask">${esc(t.code)}</span></p>
+        <label class="btn sm ghost">錄影或選擇影片<input type="file" accept="video/*" capture="user" id="pvVideo" class="hidden"></label><span class="tiny dim" id="pvVideoOk"></span></div>
+      <p class="tiny dim mt">臉要清楚、光線充足，不要戴口罩或墨鏡。這組動作 2 小時內有效。</p>
+      <button class="btn primary mt2" id="pvSubmit" disabled>送出審核</button>`;
+    let pf=null, vf=null; const ready = () => $('#pvSubmit').disabled = !(pf && vf);
+    $('#pvPhoto').onchange = e => { pf = e.target.files[0]||null; $('#pvPhotoOk').textContent = pf ? '　✓ 已選擇' : ''; ready(); };
+    $('#pvVideo').onchange = async e => { const f = e.target.files[0]; vf=null; $('#pvVideoOk').textContent='';
+      if(!f) return ready();
+      if(f.size > 25*1024*1024){ toast('影片太大，請錄 10 秒內的短影片'); return ready(); }
+      const dur = await new Promise(res=>{ const v=document.createElement('video'); v.preload='metadata'; v.onloadedmetadata=()=>{ res(v.duration); URL.revokeObjectURL(v.src); }; v.onerror=()=>res(0); v.src=URL.createObjectURL(f); });
+      if(dur > 16){ toast('影片請在 10 秒左右，最長 15 秒'); return ready(); }
+      vf = f; $('#pvVideoOk').textContent = '　✓ 已選擇'; ready(); };
+    $('#pvSubmit').onclick = async ()=>{ const b=$('#pvSubmit'); b.disabled=true; b.textContent='上傳中…';
+      const ext = ({'video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'})[vf.type] || (/\.mov$/i.test(vf.name)?'mov':/\.webm$/i.test(vf.name)?'webm':'mp4');
+      const ts = Date.now(), photo = `${me.id}/${ts}.jpg`, video = `${me.id}/${ts+1}.${ext}`;
+      try{
+        const blob = await compressImage(pf, 1400, .85);
+        let r = await sb.storage.from('person').upload(photo, blob, { contentType:'image/jpeg', upsert:false }); if(r.error) throw r.error;
+        b.textContent='上傳影片中…';
+        r = await sb.storage.from('person').upload(video, vf, { contentType: ext==='mov'?'video/quicktime':ext==='webm'?'video/webm':'video/mp4', upsert:false });
+        if(r.error){ await sb.storage.from('person').remove([photo]); throw r.error; }
+        const { error: se } = await sb.rpc('submit_person_verification', { vid: t.id, photo, video });
+        if(se){ await sb.storage.from('person').remove([photo, video]); throw se; }
+        toast('已送出，審核後會在這裡顯示結果', 5000); viewMe();
+      }catch(err){ b.disabled=false; b.textContent='送出審核'; toast(err.message||err); }
+    };
+  });
   const wAct = async (fn, msg) => { const { error } = await fn(); toast(error?error.message:msg); viewMe(); };
   document.querySelectorAll('.wGrant').forEach(b=>b.onclick=()=>wAct(()=>sb.from('wealth_requests').update({ status:'granted' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已允許查看'));
   document.querySelectorAll('.wDeny').forEach(b=>b.onclick=()=>wAct(()=>sb.from('wealth_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已婉拒'));
@@ -1434,7 +1493,7 @@ function bindAccount(){
         // 1. 先解除照片登記，才能刪掉檔案
         let r = await sb.rpc('begin_account_deletion'); if(r.error) throw r.error;
         // 2. 刪掉自己資料夾裡的所有檔案
-        for(const bk of ['photos','verify']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(me.id, { limit:100 }); if(error) throw error;
+        for(const bk of ['photos','verify','person']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(me.id, { limit:100 }); if(error) throw error;
           const names = (files||[]).filter(f=>f.id).map(f=>`${me.id}/${f.name}`); if(!names.length) break;
           const { error: e2 } = await sb.storage.from(bk).remove(names); if(e2) throw e2; if(names.length<100) break; }
         // 3. 刪除帳號（含手機、信箱與所有資料）
@@ -1452,7 +1511,7 @@ async function viewAdmin(){
   let tab = 'profiles';
   const adm = async q => { const { error } = await q; if(error) toast('沒有完成：'+error.message); return !error; };
   const draw = async ()=>{
-    $('#app').innerHTML = `<div class="tabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='wealth'?'on':''}" data-t="wealth">財力認證</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button></div><div id="adm"><div class="spinner"></div></div>`;
+    $('#app').innerHTML = `<div class="tabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='person'?'on':''}" data-t="person">真人認證</button><button class="${tab==='wealth'?'on':''}" data-t="wealth">財力認證</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button></div><div id="adm"><div class="spinner"></div></div>`;
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
     const box = $('#adm');
     if(tab==='profiles'){
@@ -1503,6 +1562,32 @@ async function viewAdmin(){
         if(error) return toast(error.message);
         modal(`<h3 style="font-size:16px">檢舉當下雙方的對話（${(ms||[]).length} 則）</h3><p class="tiny dim">送出檢舉時自動備份，對方刪除帳號或結束對話也不會消失。</p>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--rule);padding:6px 0"><b class="tiny ${x.sender_id===b.dataset.id?'bad':''}">${x.sender_id===b.dataset.id?'被檢舉人':'檢舉人'}</b>　<span class="tiny dim">${fmtTime(x.created_at)}</span><br>${esc(x.body)}</p>`).join('')||'<p class="muted mt">兩人之間沒有對話紀錄</p>'}`); });
     }
+    if(tab==='person'){
+      const { data: rows, error } = await sb.from('person_verifications').select('*').eq('status','pending').order('submitted_at');
+      if(error) return toast(error.message);
+      if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審的真人認證 ✓</p>'; return; }
+      const { data: ps } = await sb.from('profiles').select('id,nickname,role,avatar_path').in('id', rows.map(r=>r.user_id));
+      const pm = Object.fromEntries((ps||[]).map(p=>[p.id,p]));
+      box.innerHTML = `<p class="tiny dim mb">比對三件事：自拍和影片裡是同一個人、和頭像是同一個人、動作與念出的數字正確。按下通過或退件後，自拍和影片會立即刪除。</p>` + rows.map(r=>{ const p=pm[r.user_id]||{};
+        return `<div class="card mb" data-id="${r.id}"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><b>${esc(p.nickname||'')}</b> <span class="rtag">${ROLES[p.role]||''}</span></div><span class="tiny dim">${fmtTime(r.submitted_at)}</span></div>
+          <div class="pvgrid mt">
+            <div><div class="tiny dim">頭像</div><div class="pvimg" data-ph="${esc(p.avatar_path||'')}"></div></div>
+            <div><div class="tiny dim">自拍：${esc(r.photo_task)}</div><a class="pvimg pvself" data-p="${esc(r.photo_path||'')}" target="_blank" rel="noopener"></a></div>
+            <div><div class="tiny dim">影片：${esc(r.video_task)}，念出 <b>${esc(r.code)}</b></div><video class="pvvid" data-p="${esc(r.video_path||'')}" controls playsinline preload="metadata"></video></div>
+          </div>
+          <input class="note mt" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px">
+          <div class="row mt" style="gap:8px"><button class="btn sm primary pva" data-id="${r.id}">✓ 通過</button><button class="btn sm ghost pvr" data-id="${r.id}">退件</button></div></div>`; }).join('');
+      box.querySelectorAll('.pvimg[data-ph]').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
+      box.querySelectorAll('.pvself').forEach(async a=>{ if(!a.dataset.p) return; const { data } = await sb.storage.from('person').createSignedUrl(a.dataset.p, 600); if(data?.signedUrl){ a.href=data.signedUrl; a.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; } });
+      box.querySelectorAll('.pvvid').forEach(async v=>{ if(!v.dataset.p) return; const { data } = await sb.storage.from('person').createSignedUrl(v.dataset.p, 600); if(data?.signedUrl) v.src=data.signedUrl; });
+      const pvReview = async (b, approve) => { b.disabled=true; const card=b.closest('.card'); const r = rows.find(x=>x.id===b.dataset.id);
+        const files=[r.photo_path, r.video_path].filter(Boolean); if(files.length) await sb.storage.from('person').remove(files);
+        const { error } = await sb.rpc('admin_review_person', { vid: r.id, approve, note: card.querySelector('.note').value||null });
+        if(error){ b.disabled=false; return toast(error.message); }
+        toast(approve?'已通過，檔案已刪除':'已退件，檔案已刪除'); card.style.opacity=.3; setTimeout(()=>{ card.remove(); if(!box.querySelector('.card')) draw(); },300); };
+      box.querySelectorAll('.pva').forEach(b=>b.onclick=()=>pvReview(b,true));
+      box.querySelectorAll('.pvr').forEach(b=>b.onclick=()=>pvReview(b,false));
+    }
     if(tab==='wealth'){
       const { data: rows, error } = await sb.from('wealth_verifications').select('*').eq('status','pending').order('created_at');
       if(error) return toast(error.message);
@@ -1531,10 +1616,11 @@ async function viewAdmin(){
         if(error) return toast(error.message);
         const st = {}; if(rows?.length){ const { data: ss } = await sb.rpc('admin_member_stats', { ids: rows.map(r=>r.id) }); (ss||[]).forEach(x=>st[x.id]=x); }
         const flag = x => x && (x.starts_7d>=7 || (x.unreplied_pct>=80 && x.starts_7d>=4) || x.closed_by_others>=3 || x.blocked_by>=2);
-        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
-          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}${p.wealth_verified_at?`<button class="btn sm ghost wrv" data-id="${p.id}">取消財力認證</button>`:''}</td></tr>`).join('')}</table></div>`;
+        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.person_verified_at?' <span class="pbadge">✓ 真人</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
+          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}${p.wealth_verified_at?`<button class="btn sm ghost wrv" data-id="${p.id}">取消財力認證</button>`:''}${p.person_verified_at?`<button class="btn sm ghost prv" data-id="${p.id}">取消真人認證</button>`:''}</td></tr>`).join('')}</table></div>`;
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
         $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id))) toast('已解除停權，檔案回到待審，請重新審核'); run(); });
+        $('#qr').querySelectorAll('.prv').forEach(b=>b.onclick=async()=>{ if(!confirm('取消這位會員的真人認證？')) return; const { error } = await sb.rpc('admin_revoke_person', { target: b.dataset.id }); toast(error?error.message:'已取消真人認證'); run(); });
         $('#qr').querySelectorAll('.wrv').forEach(b=>b.onclick=async()=>{ if(!confirm('取消這位會員的財力認證？')) return; const { error } = await sb.rpc('admin_revoke_wealth', { target: b.dataset.id }); toast(error?error.message:'已取消財力認證'); run(); });
         $('#qr').querySelectorAll('.dl').forEach(b=>b.onclick=async()=>{
           if(!confirm(`永久刪除「${b.dataset.n}」的帳號？\n檔案、照片、對話都會刪除，這支手機之後不能再註冊。無法復原。`)) return;
@@ -1580,7 +1666,7 @@ terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 
 <h3>第十二條　條款修改</h3><p>本平台得隨時修改本條款，修改後將公告於本頁；你於修改後繼續使用服務即視為同意修改後之條款。</p>`,
 
 privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
-<h3>蒐集之資料</h3><ul><li>財力文件（僅限自願申請財力認證者，姓名等個資可自行遮蔽）：由管理人員審核；未通過者立即刪除；通過者保存於私有空間，僅提供給你親自允許的會員查看，你可隨時刪除。</li><li>帳號資料：Email、密碼（加密儲存）。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：心動、對話、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
+<h3>蒐集之資料</h3><ul><li>真人認證自拍與短影片（僅限自願申請者）：只供管理人員比對，審核完成即刪除。</li><li>財力文件（僅限自願申請財力認證者，姓名等個資可自行遮蔽）：由管理人員審核；未通過者立即刪除；通過者保存於私有空間，僅提供給你親自允許的會員查看，你可隨時刪除。</li><li>帳號資料：Email、密碼（加密儲存）。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：心動、對話、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
 <h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
 <h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方。管理人員只在處理檢舉、或發現疑似詐騙與違規時查看相關對話。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
 <h3>資料儲存與保護</h3><p>資料儲存於 Supabase 雲端服務，傳輸全程加密（HTTPS）。照片以私有儲存空間存放，只透過加密的限時連結讀取，查看時疊加檢視者代號浮水印。資料庫以列級權限控管，會員只能讀取規則允許的資料。</p><h3>我們不做的事</h3><ul><li>不販售、出租或分享任何會員資料給第三方。</li><li>不使用第三方廣告追蹤。</li><li>管理人員只在處理檢舉時查看相關對話。</li></ul>
