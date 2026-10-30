@@ -622,6 +622,7 @@ begin
   perform set_config('halfsugar.deleting', '1', true);
   update public.profiles set hidden = true, avatar_path = null where id = uid;
   delete from public.photos where user_id = uid;
+  perform set_config('halfsugar.deleting', '0', true);
 end $$;
 revoke execute on function public.begin_account_deletion() from anon, public;
 grant execute on function public.begin_account_deletion() to authenticated;
