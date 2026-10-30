@@ -375,7 +375,8 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 const BUILD = 'v1.11.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
-  SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
+  SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
+  SUPPORT_EMAIL: '',   // ← 客服信箱（有自己的網域後填入，例如 'support@你的網域'）；空白時網站不顯示                      // ← 換成你的 anon public key
   SITE_NAME: '半糖 HALF SUGAR',
 };
 document.getElementById('ver').textContent = BUILD;
@@ -434,7 +435,8 @@ const ZH = [
 ];
 const zh = m => { m = String(m ?? ''); for(const [re,t] of ZH){ if(re.test(m)) return t.replace(/\$1/, (m.match(re)||[])[1]||''); }
   if(/^[\x00-\x7F]{12,}$/.test(m) && /[a-z]{3}/i.test(m)){ console.warn(m); return '發生錯誤，請稍後再試'; } return m; };
-function toast(msg, ms){ const t=$('#toast'); t.textContent=zh(msg); ms = ms || Math.max(2600, Math.min(7000, t.textContent.length*140)); t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), ms); }
+function toast(msg, ms){ const t=$('#toast'); t.textContent=zh(msg);
+  if(CONFIG.SUPPORT_EMAIL && t.textContent.includes('聯絡客服')) t.textContent = t.textContent.replace(/聯絡客服。?/, `聯絡客服：${CONFIG.SUPPORT_EMAIL}`); ms = ms || Math.max(2600, Math.min(7000, t.textContent.length*140)); t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), ms); }
 function containsBadWords(s){ const l=(s||'').toLowerCase(); return BAD_WORDS.filter(w=>l.includes(w.toLowerCase())); }
 const cssu = u => String(u).replace(/["\\\n\r()]/g, c=>encodeURIComponent(c));
 async function signed(path){
@@ -459,6 +461,8 @@ function modal(html){ $('#modal').innerHTML = `<div class="modal" id="mbg"><div 
   $('#mx').onclick = closeModal; $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); }; }
 function closeModal(){ $('#modal').innerHTML=''; recovering=false; }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('#modal').innerHTML) closeModal(); });
+
+if(CONFIG.SUPPORT_EMAIL){ const f=document.querySelector('footer div'); if(f) f.insertAdjacentHTML('beforeend', `·<a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">聯絡客服</a>`); }
 
 /* ---------- 18+ 閘門 ---------- */
 if(!localStorage.getItem('yy_age_ok')){ $('#gate').classList.remove('hidden'); }
@@ -577,7 +581,7 @@ function statusBanner(){
   if(!me) return '';
   if(me.status==='pending') return `<div class="banner info">⏳ 你的檔案正在審核中。通過後其他會員才看得到你，你也才能按讚與傳訊息。通常在 24 小時內完成。</div>`;
   if(me.status==='rejected') return `<div class="banner warn">✎ 你的檔案未通過審核${me.review_note?`：${esc(me.review_note)}`:''}。請到「我的」修改後重新送審。</div>`;
-  if(me.status==='suspended') return `<div class="banner bad">⛔ 你的帳號已被停權。如有疑問請聯絡客服。</div>`;
+  if(me.status==='suspended') return `<div class="banner bad">⛔ 你的帳號已被停權。如有疑問請聯絡客服${CONFIG.SUPPORT_EMAIL?`：<a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a>`:''}。</div>`;
   return '';
 }
 
