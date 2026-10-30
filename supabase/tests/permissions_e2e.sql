@@ -3,7 +3,7 @@ do $t$
 declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
-  F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
+  K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
 begin
   perform set_config('storage.allow_delete_query','true',true);
@@ -65,10 +65,8 @@ begin
   -- 4 照片調包：刪掉已登記的檔案
   delete from storage.objects where name = B||'/1.jpg'; get diagnostics n = row_count;
   out := array_append(out, (('4 B 刪除已登記照片檔 = '||n||' 筆 (應為0)'))::text);
-  insert into public.likes (from_id, to_id) values (B, A);
-  select id into mid from public.matches where user_a=least(A,B) and user_b=greatest(A,B);
-  out := array_append(out, (('5 互相喜歡後配對 = '||coalesce(mid::text,'無')||''))::text);
-  insert into public.messages (match_id, sender_id, body) values (mid, B, '舊訊息');
+  select public.send_first_message(A, '舊訊息') into mid;
+  out := array_append(out, (('5 直接傳訊息開啟對話 = '||coalesce(mid::text,'無')||''))::text);
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   update public.messages set created_at = now() - interval '1 hour' where match_id=mid;
@@ -92,16 +90,15 @@ begin
   perform public.request_private_photos(B); out := array_append(out, ('8 A 索取 B 私密照 ✓')::text);
   perform public.unmatch(mid);
   select count(*) into n from public.messages where match_id=mid; out := array_append(out, (('5b 解除配對後 A 看到訊息 = '||n||' (應為0)'))::text);
-  insert into public.likes (from_id, to_id) values (A, B);
+  perform public.send_first_message(B, '重新開始');
   execute 'reset role';
 
   perform set_config('request.jwt.claims', json_build_object('sub',B,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', B::text, true);
   execute 'set local role authenticated';
   update public.photo_requests set status='denied' where owner_id=B and requester_id=A;
-  insert into public.likes (from_id, to_id) values (B, A);
-  select count(*) into n from public.matches where id=mid; out := array_append(out, (('5c 重新配對 = '||n||' (應為1)'))::text);
-  select count(*) into n from public.messages where match_id=mid; out := array_append(out, (('5d 重新配對後看到舊訊息 = '||n||' (應為0)'))::text);
+  select count(*) into n from public.matches where id=mid; out := array_append(out, (('5c 重新開啟對話 = '||n||' (應為1)'))::text);
+  select count(*) into n from public.messages where match_id=mid and body='舊訊息'; out := array_append(out, (('5d 重新開啟後看到舊訊息 = '||n||' (應為0)'))::text);
   select count(*) into n from public.related_names(array[A,C,D]); out := array_append(out, (('13 B 用名單函式查不相關的人 = '||n||' (應為1：只有索取過的 A)'))::text);
   execute 'reset role';
 
@@ -270,6 +267,54 @@ begin
   execute 'set local role authenticated';
   perform public.resubmit_profile();
   select status into v from public.profiles where id=H; out := array_append(out, ('20h 退件後重新送審 = '||v||' (應為pending)')::text);
+  execute 'reset role';
+
+  -- 21 直接傳訊息：回覆前只能一則、每天 10 個新對話
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into auth.users (id, email, aud, role) values (K,'e2e-k@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='K', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市', status='approved' where id=K;
+  for i in 1..11 loop
+    T := gen_random_uuid();
+    insert into auth.users (id, email, aud, role) values (T, 'e2e-t'||i||'@test.invalid','authenticated','authenticated');
+    update public.profiles set nickname='T'||i, gender='female', looking_for='male', role='baby', birth_year=1998, city='台北市', status='approved' where id=T;
+    perform set_config('request.jwt.claims', json_build_object('sub',K,'role','authenticated')::text, true);
+    perform set_config('request.jwt.claim.sub', K::text, true);
+    execute 'set local role authenticated';
+    begin
+      select public.send_first_message(T, '你好') into mid;
+      if i = 1 then
+        begin insert into public.messages (match_id, sender_id, body) values (mid, K, '再一則'); out := array_append(out, '21 對方回覆前傳第二則：沒被擋 ✗'::text);
+        exception when others then out := array_append(out, '21 對方回覆前只能傳一則 ✓'::text); end;
+      end if;
+      if i = 11 then out := array_append(out, '21b 第 11 個新對話：沒被擋 ✗'::text); end if;
+    exception when others then
+      if i = 11 then out := array_append(out, ('21b 每天最多 10 個新對話 ✓ '||sqlerrm)::text);
+      else out := array_append(out, ('21x 第 '||i||' 個對話失敗 ✗ '||sqlerrm)::text); end if;
+    end;
+    execute 'reset role';
+    perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+    if i = 1 then
+      -- 對方回覆後就能繼續
+      perform set_config('request.jwt.claims', json_build_object('sub',T,'role','authenticated')::text, true);
+      perform set_config('request.jwt.claim.sub', T::text, true);
+      execute 'set local role authenticated';
+      insert into public.messages (match_id, sender_id, body) values (mid, T, '嗨');
+      execute 'reset role';
+      perform set_config('request.jwt.claims', json_build_object('sub',K,'role','authenticated')::text, true);
+      perform set_config('request.jwt.claim.sub', K::text, true);
+      execute 'set local role authenticated';
+      begin insert into public.messages (match_id, sender_id, body) values (mid, K, '謝謝回覆'); out := array_append(out, '21c 對方回覆後可以繼續聊 ✓'::text);
+      exception when others then out := array_append(out, ('21c 對方回覆後仍不能傳 ✗ '||sqlerrm)::text); end;
+      execute 'reset role';
+      perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+    end if;
+  end loop;
+  -- 未審核帳號不能主動傳
+  perform set_config('request.jwt.claims', json_build_object('sub',C,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', C::text, true);
+  execute 'set local role authenticated';
+  begin perform public.send_first_message(K, 'hi'); out := array_append(out, '21d 未審核帳號主動傳訊息：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '21d 未審核帳號不能主動傳訊息 ✓'::text); end;
   execute 'reset role';
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');

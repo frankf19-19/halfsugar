@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.12.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.13.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -251,12 +251,16 @@ create table if not exists public.matches (
   check (user_a < user_b)
 );
 alter table public.matches add column if not exists closed_at timestamptz;
-alter table public.matches add column if not exists reopened_at timestamptz;  -- 重新配對：只看得到這之後的訊息
+alter table public.matches add column if not exists reopened_at timestamptz;
+alter table public.matches add column if not exists initiator uuid references public.profiles(id) on delete set null;  -- 主動開啟對話的人
+create index if not exists matches_initiator_idx on public.matches(initiator, created_at);  -- 重新配對：只看得到這之後的訊息
 
+-- 「心動」不再自動開啟對話（v1.12 起：會員可直接傳訊息）
+drop trigger if exists likes_match_trg on public.likes;
 create or replace function public.handle_like()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if exists (select 1 from public.likes where from_id = new.to_id and to_id = new.from_id) then
+  if false then
     insert into public.matches as m (user_a, user_b)
     values (least(new.from_id, new.to_id), greatest(new.from_id, new.to_id))
     on conflict (user_a, user_b) do update
@@ -267,9 +271,7 @@ begin
   end if;
   return new;
 end $$;
-drop trigger if exists likes_match_trg on public.likes;
-create trigger likes_match_trg after insert on public.likes
-  for each row execute function public.handle_like();
+
 
 -- 解除配對：關閉對話並清掉雙方的喜歡（要重新互相喜歡才會再配對）
 create or replace function public.unmatch(mid uuid)
@@ -279,7 +281,6 @@ begin
   select * into m from public.matches where id = mid and (user_a = auth.uid() or user_b = auth.uid());
   if not found then raise exception '找不到這個配對'; end if;
   update public.matches set closed_at = now() where id = mid;
-  delete from public.likes where (from_id = m.user_a and to_id = m.user_b) or (from_id = m.user_b and to_id = m.user_a);
 end $$;
 
 create table if not exists public.messages (
@@ -325,6 +326,18 @@ create or replace function private.has_open_match(other uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.matches m where m.closed_at is null
                  and m.user_a = least(auth.uid(), other) and m.user_b = greatest(auth.uid(), other));
+$$;
+
+-- 主動開啟的一方，在對方回覆前只能先傳一則
+create or replace function private.can_send(mid uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((
+    select m.initiator is distinct from auth.uid()
+        or exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id <> auth.uid()
+                     and (m.reopened_at is null or x.created_at >= m.reopened_at))
+        or not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = auth.uid()
+                     and (m.reopened_at is null or x.created_at >= m.reopened_at))
+      from public.matches m where m.id = mid), false);
 $$;
 
 -- 雙方方向是否吻合（我想認識的性別 = 對方性別，且對方想認識的性別 = 我的性別）
@@ -520,6 +533,7 @@ create policy "messages_insert" on public.messages for insert to authenticated
     and exists (select 1 from public.matches m where m.id = match_id and m.closed_at is null
                 and (m.user_a = auth.uid() or m.user_b = auth.uid())
                 and not private.is_blocked_with(case when m.user_a = auth.uid() then m.user_b else m.user_a end))
+    and private.can_send(match_id)
   );
 drop policy if exists "messages_update_read" on public.messages;
 create policy "messages_update_read" on public.messages for update to authenticated
@@ -642,6 +656,43 @@ begin
      order by case when p_status = 'pending' then coalesce(p.submitted_at, p.updated_at) end asc nulls last, p.created_at desc
      limit least(coalesce(p_limit, 100), 500);
 end $$;
+
+-- 傳第一則訊息（直接開啟對話）：每天最多主動開啟 10 個新對話
+create or replace function public.send_first_message(other uuid, body text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid(); m public.matches; mid uuid; today timestamptz;
+begin
+  if me is null then raise exception '請先登入'; end if;
+  if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能傳訊息'; end if;
+  if other = me then raise exception '不能傳訊息給自己'; end if;
+  if body is null or char_length(trim(body)) = 0 or char_length(body) > 2000 then raise exception '訊息長度不正確'; end if;
+  if private.is_blocked_with(other) or not private.is_compatible(other)
+     or not exists (select 1 from public.profiles p where p.id = other and p.status = 'approved'
+                    and (not p.hidden or exists (select 1 from public.likes l where l.from_id = other and l.to_id = me))) then
+    raise exception '無法傳訊息給這位會員';
+  end if;
+  select * into m from public.matches where user_a = least(me, other) and user_b = greatest(me, other);
+  if found and m.closed_at is null then
+    -- 已有對話：照一般規則傳
+    if not private.can_send(m.id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
+    insert into public.messages (match_id, sender_id, body) values (m.id, me, body);
+    return m.id;
+  end if;
+  today := (date_trunc('day', now() at time zone 'Asia/Taipei')) at time zone 'Asia/Taipei';
+  if (select count(*) from public.matches where initiator = me and coalesce(reopened_at, created_at) >= today) >= 10 then
+    raise exception '今天主動開啟的新對話已達 10 個，明天再來吧';
+  end if;
+  if found then
+    update public.matches set closed_at = null, reopened_at = now(), initiator = me, last_message = null, last_message_at = null
+     where id = m.id returning id into mid;
+  else
+    insert into public.matches (user_a, user_b, initiator) values (least(me, other), greatest(me, other), me) returning id into mid;
+  end if;
+  insert into public.messages (match_id, sender_id, body) values (mid, me, body);
+  return mid;
+end $$;
+revoke execute on function public.send_first_message(uuid, text) from anon, public;
+grant execute on function public.send_first_message(uuid, text) to authenticated;
 
 -- 會員自行刪除帳號：刪除 auth.users（連同手機、信箱），其餘資料經由外鍵一併刪除
 -- 前端會先刪掉照片登記與 storage 檔案，再呼叫這個函式
