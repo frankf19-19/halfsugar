@@ -89,6 +89,9 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 .pwrap{position:relative}.pwrap input{padding-right:56px}
 .pwshow{position:absolute;right:0;bottom:6px;background:none;border:0;font-size:13px;color:var(--grey);letter-spacing:.1em;padding:8px 4px;cursor:pointer}
 .authwrap input[type=checkbox]{width:18px!important;height:18px;flex:none}
+.pactions{position:sticky;bottom:calc(-30px - env(safe-area-inset-bottom));background:#fff;margin-left:-26px;margin-right:-26px;padding:12px 26px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--rule);z-index:2}
+.item.closed{opacity:.55}
+.req{margin-top:6px;padding:10px 12px;background:var(--paper);font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:7.2em;overflow:hidden}
 .obsteps{display:flex;gap:28px;margin:0 0 22px;font-size:13px;letter-spacing:.12em;color:var(--grey)}
 .obsteps span{padding-bottom:6px;border-bottom:1px solid transparent}
 .obsteps span.on{color:var(--ink);border-bottom-color:var(--ink)}
@@ -370,9 +373,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SUGAR  前端  build v1.12.1
+   半糖 HALF SUGAR  前端  build v1.13.0
    ===================================================================== */
-const BUILD = 'v1.12.1';
+const BUILD = 'v1.13.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -530,9 +533,9 @@ function renderNav(){
 }
 
 async function refreshUnread(){
-  if(!me || me.status!=='approved') return;
+  if(!me || !['approved','pending'].includes(me.status)) return;
   const { data: ms } = await sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`);
-  const setBadge = n => document.querySelectorAll('a[href="#/matches"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(n>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${n>99?'99+':n}</span>`); });
+  const setBadge = n => (document.title = (n>0?`(${n>99?'99+':n}) `:'') + document.title.replace(/^\(\S+\) /,''), document.querySelectorAll('a[href="#/matches"]')).forEach(a=>{ a.querySelector('.badge')?.remove(); if(n>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${n>99?'99+':n}</span>`); });
   if(!ms || !ms.length) return setBadge(0);
   const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id));
   setBadge(count||0);
@@ -579,7 +582,9 @@ window.addEventListener('scroll', ()=>document.body.classList.toggle('scrolled',
 /* ---------- 狀態提示列 ---------- */
 function statusBanner(){
   if(!me) return '';
-  if(me.status==='pending') return `<div class="banner info">⏳ 你的檔案正在審核中。通過後其他會員才看得到你，你也才能按讚與傳訊息。通常在 24 小時內完成。</div>`;
+  if(me.status==='pending') return me.approved_at
+    ? `<div class="banner info">⏳ 你修改的檔案正在重新審核。期間新的會員暫時看不到你，正在聊的對話不受影響。</div>`
+    : `<div class="banner info">⏳ 你的檔案正在審核中。通過後其他會員才看得到你，你也才能傳訊息與心動。通常在 24 小時內完成。</div>`;
   if(me.status==='rejected') return `<div class="banner warn">✎ 你的檔案未通過審核${me.review_note?`：${esc(me.review_note)}`:''}。請到「我的」修改後重新送審。</div>`;
   if(me.status==='suspended') return `<div class="banner bad">⛔ 你的帳號已被停權。如有疑問請聯絡客服${CONFIG.SUPPORT_EMAIL?`：<a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a>`:''}。</div>`;
   return '';
@@ -931,6 +936,7 @@ async function viewBrowse(){
 }
 
 /* ---------- 會員檔案視窗 ---------- */
+const drafts = {};
 async function openProfile(id){
   modal('<div class="spinner"></div>');
   const [{ data: p, error }, { data: photos }, { data: myLike }, { data: theirLike }, { data: grant }, { data: req }, { data: privN }] = await Promise.all([
@@ -959,11 +965,13 @@ async function openProfile(id){
     ${pubPhotos.length?`<div class="gallery wmg" data-wm="${wmText()}">${pubPhotos.map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}
     ${privCount?`<div class="mt small muted">🔒 ${privCount} 張私密照 · ${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?`對方這次沒有同意 <button class="btn sm ghost" id="reqPriv" data-again="1" ${canAct?'':'disabled'}>再問一次</button>`:`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
       ${grant?`<div class="gallery wmg" data-wm="${wmText()}">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}`:''}
-    <div class="row mt2" style="justify-content:space-between">
-      <div class="row" style="gap:10px;align-items:center"><button class="btn primary" id="msgBtn" ${canAct?'':'disabled'}>${conv?'繼續聊天':'傳訊息'}</button><button class="btn ${myLike?'ghost':'rose'}" id="likeBtn" ${canAct?'':'disabled'} aria-pressed="${!!myLike}">${myLike?'♥ 已心動':'♡ 心動'}</button></div>
-      <div class="row"><button class="btn sm ghost" id="blockBtn">封鎖</button><button class="btn sm ghost" id="reportBtn">檢舉</button></div>
+    <div class="row mt2" style="justify-content:flex-end;gap:6px"><button class="btn sm ghost" id="blockBtn">封鎖</button><button class="btn sm ghost" id="reportBtn">檢舉</button></div>
+    ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能心動或傳訊息</p>'}
+    <div class="pactions">
+      <div class="row" style="gap:10px;align-items:center;flex-wrap:nowrap"><button class="btn primary" style="flex:1" id="msgBtn" ${canAct||conv?'':'disabled'}>${conv?'繼續聊天':'傳訊息'}</button><button class="btn ${myLike?'ghost':'rose'}" style="flex:1" id="likeBtn" ${canAct?'':'disabled'} aria-pressed="${!!myLike}">${myLike?'♥ 已心動':'♡ 心動'}</button></div>
+
     </div>
-    ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能心動或傳訊息</p>'}`;
+    `;
   modal(body);
   signed(p.avatar_path).then(u=>{ if(u) $('#bigPh').style.backgroundImage=`url("${cssu(u)}")`; });
   $('#modal').querySelectorAll('.gallery .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
@@ -972,20 +980,21 @@ async function openProfile(id){
     modal(`<h2>傳訊息給 ${esc(p.nickname)}</h2>
       <p class="tiny dim mt">第一則訊息很重要：說說你為什麼想認識對方。對方回覆前，你只能先傳這一則。</p>
       <p class="tiny mt" id="fmQuota"></p>
-      <textarea id="fmIn" maxlength="2000" rows="5" placeholder="嗨，看到你也喜歡…" style="margin-top:12px"></textarea>
+      <textarea id="fmIn" maxlength="2000" rows="5" placeholder="${(p.tags||[]).length?`嗨，看到你也喜歡${esc(p.tags[0])}…`:'嗨，看了你的自介，想認識你…'}" style="margin-top:12px">${esc(drafts[id]||'')}</textarea>
       <p class="tiny dim">請勿在訊息中提及金額或交換聯絡方式。</p>
       <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="fmBack">返回</button><button class="btn primary" id="fmSend">送出</button></div>`);
     $('#fmIn').focus();
     sb.rpc('my_start_quota').then(({ data: q })=>{ const el=$('#fmQuota'); if(!el || typeof q!=='number') return;
       el.innerHTML = q>0 ? `你還可以主動開啟 <b>${q}</b> 個新對話（前 10 個用完後，每天可再開 1 個）` : `<span class="bad">今天的新對話額度已用完，明天可以再開 1 個。</span>回覆別人的訊息不受限制。`;
       if(q<=0) $('#fmSend').disabled = true; });
+    $('#fmIn').oninput = e => { drafts[id] = e.target.value; };
     $('#fmBack').onclick = ()=>openProfile(id);
     $('#fmSend').onclick = async ()=>{ const body=$('#fmIn').value.trim(); if(!body) return toast('請先寫點什麼');
       const bad = containsBadWords(body); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);
       const b=$('#fmSend'); b.disabled=true; b.textContent='送出中…';
       const { data: mid, error } = await sb.rpc('send_first_message', { other:id, body });
       if(error){ b.disabled=false; b.textContent='送出'; return toast(error.message); }
-      closeModal(); toast('已送出，等對方回覆'); location.hash='#/chat/'+mid; };
+      delete drafts[id]; closeModal(); toast('已送出，等對方回覆'); location.hash='#/chat/'+mid; };
   };
   $('#likeBtn').onclick = async ()=>{
     $('#likeBtn').disabled = true;
@@ -1038,44 +1047,67 @@ async function viewMatches(){
   const { data: ms } = await sb.from('matches').select('*').or(`user_a.eq.${me.id},user_b.eq.${me.id}`).order('last_message_at',{ascending:false,nullsFirst:false});
   if(!ms || !ms.length){ $('#app').innerHTML = `${statusBanner()}<div class="center" style="padding:60px 0"><p class="muted">還沒有對話。<br class="d">到「探索」看看，遇到想認識的人就直接傳訊息吧。</p><a class="btn mt2" href="#/browse">去探索</a></div>`; return; }
   const ids = ms.map(m=> m.user_a===me.id ? m.user_b : m.user_a);
-  const { data: ps } = await sb.from('profiles').select('id,nickname,avatar_path,status').in('id', ids);
+  const [{ data: ps }, { data: nm }, { data: unread }] = await Promise.all([
+    sb.from('profiles').select('id,nickname,avatar_path,status,role,birth_year,city').in('id', ids),
+    sb.rpc('related_names', { ids }),
+    sb.from('messages').select('match_id').is('read_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id)),
+  ]);
   const pm = Object.fromEntries((ps||[]).map(p=>[p.id,p]));
-  const { data: unread } = await sb.from('messages').select('match_id').is('read_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id));
+  const names = {}; (Array.isArray(nm)?nm:[]).forEach(n=>names[n.id]=n.nickname);
   const uc = {}; (unread||[]).forEach(u=>uc[u.match_id]=(uc[u.match_id]||0)+1);
-  const mine = ms.filter(m=>m.initiator===me.id).map(m=>m.id);
-  const replied = new Set();
-  if(mine.length){ const { data: rp } = await sb.from('messages').select('match_id').neq('sender_id', me.id).in('match_id', mine).limit(1000); (rp||[]).forEach(r=>replied.add(r.match_id)); }
-  $('#app').innerHTML = `${statusBanner()}<div class="list">${ms.map(m=>{ const o=pm[m.user_a===me.id?m.user_b:m.user_a] || { nickname:'對方檔案審核中', avatar_path:'' };
-    return `<div class="item" data-id="${m.id}"><div class="avatar" data-ph="${esc(o.avatar_path||'')}"></div>
-      <div class="grow"><div class="t">${esc(o.nickname)} ${uc[m.id]?`<span class="chip" style="background:var(--rose);color:#fff">${uc[m.id]}</span>`:''}</div><div class="s">${m.initiator===me.id && !replied.has(m.id) ? '<i>等待對方回覆</i>' : (m.last_message?esc(m.last_message):'')}</div></div>
-      <span class="tiny dim">${m.last_message_at?fmtTime(m.last_message_at):''}</span></div>`; }).join('')}</div>`;
-  $('#app').querySelectorAll('.item').forEach(el=>el.onclick=()=>location.hash='#/chat/'+el.dataset.id);
+  const kind = m => m.closed_at ? 'closed' : (m.initiator && !m.replied_at ? (m.initiator===me.id ? 'waiting' : 'request') : 'chat');
+  const groups = { request:[], chat:[], waiting:[] };
+  ms.forEach(m=>{ const k=kind(m); (k==='closed' ? groups.chat : groups[k]).push(m); });
+  const row = m => { const oid = m.user_a===me.id?m.user_b:m.user_a; const o = pm[oid] || { nickname: names[oid] || '對方', avatar_path:'' }; const k = kind(m);
+    const sub = k==='closed' ? '<i>對方已結束對話</i>' : k==='waiting' ? '<i>等待對方回覆</i>' : (m.last_message?esc(m.last_message):'');
+    return `<div class="item ${k==='closed'?'closed':''}" data-id="${m.id}"><div class="avatar" data-ph="${esc(o.avatar_path||'')}"></div>
+      <div class="grow"><div class="t">${esc(o.nickname)} ${o.birth_year?`<span class="muted small">${age(o.birth_year)}</span>`:''} ${uc[m.id]?`<span class="chip" style="background:var(--rose);color:#fff">${uc[m.id]}</span>`:''}</div>
+      ${k==='request'?`<div class="tiny dim">${o.role?ROLES[o.role]+' · ':''}${esc(o.city||'')}</div><div class="req">${esc(m.last_message||'')}</div>
+        <div class="row mt" style="gap:8px"><button class="btn sm primary rq-reply" data-id="${m.id}">回覆</button><button class="btn sm ghost rq-no" data-id="${m.id}">不感興趣</button></div>`
+      :`<div class="s">${sub}</div>`}</div>
+      <span class="tiny dim">${m.last_message_at?fmtTime(m.last_message_at):''}</span></div>`; };
+  const tab = sessionStorage.getItem('inboxTab') || (groups.request.length ? 'request' : 'chat');
+  const T = [['request','訊息請求'],['chat','聊天中'],['waiting','等待回覆']];
+  const empty = { request:'目前沒有新的訊息請求。', chat:'還沒有正在聊的對話。', waiting:'沒有等待回覆的訊息。' };
+  $('#app').innerHTML = `${statusBanner()}<div class="tabs">${T.map(([k,v])=>`<button class="${k===tab?'on':''}" data-t="${k}">${v}（${groups[k].length}）</button>`).join('')}</div>
+    ${T.map(([k])=>`<div class="list ibx ${k===tab?'':'hidden'}" data-t="${k}">${groups[k].length?groups[k].map(row).join(''):`<p class="muted center" style="padding:40px 0">${empty[k]}</p>`}</div>`).join('')}
+    ${tab==='request'&&groups.request.length?'':''}`;
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ sessionStorage.setItem('inboxTab', b.dataset.t); document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on', x===b)); document.querySelectorAll('.ibx').forEach(x=>x.classList.toggle('hidden', x.dataset.t!==b.dataset.t)); });
+  $('#app').querySelectorAll('.item').forEach(el=>el.onclick=e=>{ if(e.target.closest('button')) return; location.hash='#/chat/'+el.dataset.id; });
+  $('#app').querySelectorAll('.rq-reply').forEach(b=>b.onclick=()=>location.hash='#/chat/'+b.dataset.id);
+  $('#app').querySelectorAll('.rq-no').forEach(b=>b.onclick=async()=>{ if(!confirm('不感興趣：這段對話會從你的訊息中移除，對方也不能再主動傳訊息給你。確定？')) return;
+    const { error } = await sb.rpc('unmatch', { mid: b.dataset.id }); if(error) return toast(error.message); toast('已移除'); viewMatches(); });
   $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
 }
-
 async function viewChat(matchId){
   const my = routeSeq;
   const { data: m } = await sb.from('matches').select('*').eq('id', matchId).single();
   if(!m){ $('#app').innerHTML='<div class="center" style="padding:60px 0"><p class="muted">這段對話已經關閉。</p><a class="btn mt2" href="#/matches">回到訊息</a></div>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
-  const { data: o } = await sb.from('profiles').select('id,nickname,avatar_path').eq('id', oid).maybeSingle();
+  const [{ data: o }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
+  const oname = o?.nickname || (Array.isArray(nm)&&nm[0]?.nickname) || '對方';
+  const closed = !!m.closed_at;
   const { data: last } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at',{ascending:false}).limit(300);
   const msgs = (last||[]).reverse();
   if(my!==routeSeq) return;   // 使用者已經離開這個對話
   $('#app').innerHTML = `<div class="chat">
     <div class="hd"><a href="#/matches" class="ib" aria-label="返回">‹</a>
-      <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${o?esc(o.nickname):'<span class="muted">對方檔案審核中</span>'}</div>
+      <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${esc(oname)}</div>
       <button class="ib" id="chMore" aria-label="更多">⋯</button></div>
     <div class="msgs" id="msgs"></div>
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
-    <form id="chForm"><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
+    <div class="banner ${closed?'':'hidden'}" id="chClosed" style="margin:8px 0 0">對方已結束這段對話，無法再傳訊息。如果有不當內容，仍可以從右上角「⋯」檢舉或封鎖。</div>
+    <form id="chForm" class="${closed?'hidden':''}"><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
 </div>`;
   if(o) signed(o.avatar_path).then(u=>{ if(u) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
   let lastDay='';
   const add = (x) => { const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); } box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${fmtTime(x.created_at)}</span></div>`); box.scrollTop = box.scrollHeight; };
   (msgs||[]).forEach(add);
-  let otherReplied = msgs.some(x=>x.sender_id!==me.id), mySent = msgs.some(x=>x.sender_id===me.id);
+  const lastMine = [...msgs].reverse().find(x=>x.sender_id===me.id);
+  if(lastMine && lastMine.read_at && msgs[msgs.length-1]===lastMine) box.insertAdjacentHTML('beforeend', `<div class="tiny dim" style="text-align:right;margin:-4px 2px 8px">已讀 ${fmtTime(lastMine.read_at)}</div>`), box.scrollTop=box.scrollHeight;
+  let otherReplied = !!m.replied_at || msgs.some(x=>x.sender_id!==me.id), mySent = msgs.some(x=>x.sender_id===me.id);
+  const showClosed = () => { $('#chClosed').classList.remove('hidden'); $('#chForm').classList.add('hidden'); $('#chWait').classList.add('hidden'); };
   const gate = () => { const wait = m.initiator===me.id && !otherReplied && mySent; const off = wait || !['approved','pending'].includes(me.status);
     $('#chIn').disabled = off; $('#chSend').disabled = off; $('#chWait').classList.toggle('hidden', !wait); };
   gate();
@@ -1083,23 +1115,29 @@ async function viewChat(matchId){
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     if(payload.new.sender_id!==me.id){ add(payload.new); otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
   }).subscribe();
-  $('#chForm').onsubmit = async e => { e.preventDefault(); const body=$('#chIn').value.trim(); if(!body) return;
+  let sending = false;
+  $('#chForm').onsubmit = async e => { e.preventDefault(); if(sending) return; const body=$('#chIn').value.trim(); if(!body) return;
     const bad = containsBadWords(body); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);
-    $('#chIn').value='';
+    sending = true; $('#chSend').disabled = true; $('#chIn').value='';
     const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body }).select().single();
-    if(error){ if(!$('#chIn').value) $('#chIn').value=body; return toast('沒有送出：'+error.message); } add(data); mySent=true; gate(); };
+    sending = false; $('#chSend').disabled = false;
+    if(error){ if(!$('#chIn').value) $('#chIn').value=body;
+      const { data: m2 } = await sb.from('matches').select('closed_at').eq('id', matchId).maybeSingle();
+      if(!m2 || m2.closed_at){ showClosed(); return toast('對方已結束這段對話'); }
+      return toast('沒有送出：'+error.message); }
+    add(data); mySent=true; gate(); };
   $('#chMore') && ($('#chMore').onclick=()=>{ modal(`<div class="sheet">
       ${o?'<button class="it" id="shProf">查看檔案</button>':''}
       <button class="it" id="shReport">檢舉</button>
       <button class="it bad" id="shBlock">封鎖</button>
-      <button class="it bad" id="shUnmatch">結束對話</button>
+      ${closed?'':'<button class="it bad" id="shUnmatch">結束對話</button>'}
       <p class="tiny dim" style="padding:14px 4px 0">請勿在對話中要求或提供任何金錢。遇到不當內容請封鎖並檢舉。</p></div>`);
     $('#shProf') && ($('#shProf').onclick=()=>openProfile(oid));
-    $('#shReport').onclick=()=>openReport(oid, o?.nickname||'這位會員');
+    $('#shReport').onclick=()=>openReport(oid, oname);
     $('#shBlock').onclick=async()=>{ if(!confirm('封鎖後，對方看不到你，這段對話也會關閉。確定？')) return;
       const { error } = await sb.from('blocks').insert({ blocker_id:me.id, blocked_id:oid }); if(error && error.code!=='23505') return toast(error.message);
       toast('已封鎖'); closeModal(); location.hash='#/matches'; };
-    $('#shUnmatch').onclick=async()=>{ if(!confirm('結束後，雙方都看不到這段對話。之後任何一方再傳訊息，會從新的對話開始。確定？')) return; const { error } = await sb.rpc('unmatch', { mid: matchId }); if(error) return toast(error.message); closeModal(); location.hash='#/matches'; }; });
+    $('#shUnmatch') && ($('#shUnmatch').onclick=async()=>{ if(!confirm('結束對話：這段對話會從你的訊息中移除，對方不能再主動傳訊息給你（對方仍可看到過去的訊息）。想完全不被看到，請改用封鎖。確定？')) return; const { error } = await sb.rpc('unmatch', { mid: matchId }); if(error) return toast(error.message); closeModal(); location.hash='#/matches'; }); });
 }
 
 /* =====================================================================
@@ -1137,6 +1175,7 @@ async function viewMe(){
     ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(g.viewer_id)}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
     <div class="card mt"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
       <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你心動過的人、或正在和你聊天的人看得到你。</small></span></label>
+      <label class="sw"><input type="checkbox" id="pvAccept" ${me.accept_from==='liked'?'checked':''}><span><b>只接受我心動過的人傳訊息</b><small>開啟後，只有你按過「心動」的人能主動傳第一則訊息給你，可以減少陌生訊息。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvOnline" ${me.show_online===false?'':'checked'}><span><b>顯示上線狀態</b><small>關閉後，別人看不到你「在線上」或「今天上線」。</small></span></label>
     </div>
     <form class="card mt" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改暱稱、自介、職業或興趣後會重新送審（新照片會個別審核）。審核期間新的會員暫時看不到你，正在聊天的人仍可以和你繼續聊。</p>
@@ -1160,6 +1199,7 @@ async function viewMe(){
   document.querySelectorAll('.unblockBtn').forEach(b=>b.onclick=async()=>{ await act(()=>sb.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',b.dataset.id), '已解除封鎖'); viewMe(); });
   const pv = async (patch, msg) => { const { error } = await sb.from('profiles').update(patch).eq('id', me.id); if(error) return toast(error.message); Object.assign(me, patch); toast(msg); };
   $('#pvHidden').onchange = e => pv({ hidden: e.target.checked }, e.target.checked ? '已隱藏，你不會出現在探索' : '已恢復出現在探索');
+  $('#pvAccept').onchange = e => pv({ accept_from: e.target.checked ? 'liked' : 'all' }, e.target.checked ? '只接受你心動過的人傳訊息' : '所有會員都能傳訊息給你');
   $('#pvOnline').onchange = e => pv({ show_online: e.target.checked }, e.target.checked ? '已開啟上線狀態' : '已隱藏上線狀態');
   $('#meForm').onsubmit = async e=>{ e.preventDefault(); const p=readProfileForm(e.target); if(!p) return;
     const { error } = await sb.from('profiles').update(p).eq('id',me.id); if(error) return toast(error.message);
@@ -1246,10 +1286,12 @@ async function viewAdmin(){
         modal(`<h3 style="font-size:16px">檢舉當下雙方的對話（${(ms||[]).length} 則）</h3><p class="tiny dim">送出檢舉時自動備份，對方刪除帳號或結束對話也不會消失。</p>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--rule);padding:6px 0"><b class="tiny ${x.sender_id===b.dataset.id?'bad':''}">${x.sender_id===b.dataset.id?'被檢舉人':'檢舉人'}</b>　<span class="tiny dim">${fmtTime(x.created_at)}</span><br>${esc(x.body)}</p>`).join('')||'<p class="muted mt">兩人之間沒有對話紀錄</p>'}`); });
     }
     if(tab==='members'){
-      box.innerHTML = `<div class="row mb"><input id="q" placeholder="暱稱關鍵字" style="padding:9px 12px"><select id="qs" style="width:auto;padding:9px 12px"><option value="">所有狀態</option>${Object.entries(STATUS_TXT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><button class="btn sm primary" id="qb">搜尋</button></div><div id="qr"></div>`;
+      box.innerHTML = `<p class="tiny dim mb">「對話行為」標紅 ⚠ 表示可能在大量群發或騷擾：近 7 天主動開啟 7 個以上、對方幾乎都不回、常被結束對話或被封鎖。</p><div class="row mb"><input id="q" placeholder="暱稱關鍵字" style="padding:9px 12px"><select id="qs" style="width:auto;padding:9px 12px"><option value="">所有狀態</option>${Object.entries(STATUS_TXT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><button class="btn sm primary" id="qb">搜尋</button></div><div id="qr"></div>`;
       const run = async ()=>{ const { data: rows, error } = await sb.rpc('admin_profiles', { p_status: $('#qs').value||null, p_q: $('#q').value.trim()||null });
         if(error) return toast(error.message);
-        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny">${fmtTime(p.created_at)}</td>
+        const st = {}; if(rows?.length){ const { data: ss } = await sb.rpc('admin_member_stats', { ids: rows.map(r=>r.id) }); (ss||[]).forEach(x=>st[x.id]=x); }
+        const flag = x => x && (x.starts_7d>=7 || (x.unreplied_pct>=80 && x.starts_7d>=4) || x.closed_by_others>=3 || x.blocked_by>=2);
+        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
           <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table></div>`;
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
         $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id))) toast('已解除停權，檔案回到待審，請重新審核'); run(); });
@@ -1299,7 +1341,7 @@ terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 
 privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
 <h3>蒐集之資料</h3><ul><li>帳號資料：Email、密碼（加密儲存）。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：心動、對話、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
 <h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
-<h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方與處理檢舉之管理人員。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
+<h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方。管理人員只在處理檢舉、或發現疑似詐騙與違規時查看相關對話。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
 <h3>資料儲存與保護</h3><p>資料儲存於 Supabase 雲端服務，傳輸全程加密（HTTPS）。照片以私有儲存空間存放，只透過加密的限時連結讀取，查看時疊加檢視者代號浮水印。資料庫以列級權限控管，會員只能讀取規則允許的資料。</p><h3>我們不做的事</h3><ul><li>不販售、出租或分享任何會員資料給第三方。</li><li>不使用第三方廣告追蹤。</li><li>管理人員只在處理檢舉時查看相關對話。</li></ul>
 <h3>手機號碼</h3><p>註冊時需以簡訊驗證手機，一支手機僅能綁定一個帳號。手機號碼僅用於確認真人與防止重複註冊，不會顯示給任何會員，也不會用於行銷。</p>
 <h3>你的權利</h3><p>你得隨時查詢、更正或下架你的資料，並可在「我的」頁面自行刪除帳號；刪除後檔案、照片、對話、手機號碼與信箱立即永久刪除，無法復原。其他問題請以註冊信箱來信客服。</p>
@@ -1328,9 +1370,9 @@ function viewPlans(){
       <div class="plan"><div class="who">甜心</div><h3>甜心會員</h3><div class="price">免費</div><div class="alt">通過真人審核即開通</div>
         <ul><li>建立檔案、公開與私密相簿</li><li>探索、心動、回覆所有訊息</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>看誰對我心動</li><li>不出現在探索、隱藏上線狀態</li><li>真人審核與檢舉優先處理</li></ul>${join}</div>
       <div class="plan"><div class="who">Sugar Daddy／Mommy</div><h3>基本會員</h3><div class="price">免費</div><div class="alt">先認識看看</div>
-        <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>回覆所有訊息</li><li class="no">看誰對我心動</li><li class="no">優先曝光</li></ul>${join}</div>
+        <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>回覆所有訊息</li><li>看誰對我心動</li><li class="no">優先曝光</li></ul>${join}</div>
       <div class="plan hl"><div class="who">Sugar Daddy／Mommy</div><h3>半糖會員</h3><div class="price">NT$1,680<small>／月</small></div><div class="alt">三個月 NT$3,980（每月約 NT$1,327）</div>
-        <ul><li>基本會員全部功能</li><li>主動開啟新對話不限次數</li><li>看誰對我心動</li><li>探索結果優先曝光</li><li>不出現在探索、隱藏上線狀態</li><li>審核優先處理</li></ul>
+        <ul><li>基本會員全部功能</li><li>主動開啟新對話不限次數</li><li>探索結果優先曝光</li><li>不出現在探索、隱藏上線狀態</li><li>審核優先處理</li></ul>
         <button class="btn primary block" id="planSoon">即將開放</button></div>
     </div>
     <p class="tiny dim center mt2">開站期間所有功能免費開放。價格為規劃中的定價，正式開放前可能調整；訂閱可隨時取消，取消後於當期結束時停止續扣。</p>

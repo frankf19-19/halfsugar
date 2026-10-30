@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.14.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.15.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -58,7 +58,8 @@ create table if not exists public.profiles (
 alter table public.profiles add column if not exists role text check (role in ('daddy','mommy','baby'));
 alter table public.profiles add column if not exists hidden boolean not null default false;
 alter table public.profiles add column if not exists show_online boolean not null default true;
-alter table public.profiles add column if not exists submitted_at timestamptz;   -- 最近一次送審時間（待審名單排序用）
+alter table public.profiles add column if not exists submitted_at timestamptz;
+alter table public.profiles add column if not exists approved_at timestamptz;    -- 第一次通過審核的時間   -- 最近一次送審時間（待審名單排序用）
 create index if not exists profiles_browse_idx on public.profiles(status, gender, city, last_active_at desc);
 alter table public.profiles drop constraint if exists profiles_looking_for_check;
 alter table public.profiles drop constraint if exists profiles_city_check;
@@ -139,6 +140,7 @@ create or replace function public.profiles_submitted_at()
 returns trigger language plpgsql as $$
 begin
   if new.status = 'pending' and old.status is distinct from 'pending' then new.submitted_at := now(); end if;
+  if new.status = 'approved' and new.approved_at is null then new.approved_at := now(); end if;
   return new;
 end $$;
 drop trigger if exists profiles_zz_submitted_trg on public.profiles;
@@ -252,6 +254,9 @@ create table if not exists public.matches (
 );
 alter table public.matches add column if not exists closed_at timestamptz;
 alter table public.matches add column if not exists reopened_at timestamptz;
+alter table public.matches add column if not exists closed_by uuid;            -- 誰結束了對話（另一方仍可唯讀查看、檢舉）
+alter table public.matches add column if not exists replied_at timestamptz;     -- 對方（非發起人）第一次回覆的時間
+alter table public.profiles add column if not exists accept_from text not null default 'all' check (accept_from in ('all','liked'));
 alter table public.matches add column if not exists initiator uuid references public.profiles(id) on delete set null;  -- 主動開啟對話的人
 create index if not exists matches_initiator_idx on public.matches(initiator, created_at);  -- 重新配對：只看得到這之後的訊息
 
@@ -273,14 +278,14 @@ begin
 end $$;
 
 
--- 解除配對：關閉對話並清掉雙方的喜歡（要重新互相喜歡才會再配對）
+-- 結束對話：按下的人看不到這段對話；另一方保留唯讀，並且不能再主動開啟
 create or replace function public.unmatch(mid uuid)
 returns void language plpgsql security definer set search_path = public as $$
 declare m public.matches;
 begin
   select * into m from public.matches where id = mid and (user_a = auth.uid() or user_b = auth.uid());
-  if not found then raise exception '找不到這個配對'; end if;
-  update public.matches set closed_at = now() where id = mid;
+  if not found then raise exception '找不到這個對話'; end if;
+  update public.matches set closed_at = now(), closed_by = auth.uid() where id = mid and closed_at is null;
 end $$;
 
 create table if not exists public.messages (
@@ -296,7 +301,8 @@ create index if not exists messages_match_idx on public.messages(match_id, creat
 create or replace function public.handle_message()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  update public.matches set last_message_at = new.created_at, last_message = left(new.body, 80)
+  update public.matches set last_message_at = new.created_at, last_message = left(new.body, 80),
+         replied_at = case when replied_at is null and initiator is not null and new.sender_id <> initiator then new.created_at else replied_at end
    where id = new.match_id;
   return new;
 end $$;
@@ -310,7 +316,14 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if auth.uid() is null or public.is_admin() then return new; end if;
   if tg_op = 'INSERT' then
-    new.created_at := now(); new.read_at := null;
+    new.created_at := clock_timestamp(); new.read_at := null;
+    perform 1 from public.matches where id = new.match_id for update;   -- 同一段對話的送出排隊，避免連點繞過規則
+    if not private.can_send(new.match_id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
+    if not private.partner_active(new.match_id) then raise exception '對方目前無法接收訊息'; end if;
+    if exists (select 1 from public.matches m where m.id = new.match_id and m.initiator = auth.uid() and m.replied_at is null)
+       and new.body ~* '(https?://|www\.|line\s*id|加\s*賴|加\s*line|微信|wechat|telegram|instagram|\yig\y|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}|車馬|包月|月費|價碼|一次多少|零用錢)' then
+      raise exception '第一則訊息不能留聯絡方式或談金錢，請先好好介紹自己';
+    end if;
   else
     new.body := old.body; new.sender_id := old.sender_id; new.match_id := old.match_id; new.created_at := old.created_at;
     if old.sender_id = auth.uid() then new.read_at := old.read_at; end if;
@@ -328,13 +341,20 @@ returns boolean language sql stable security definer set search_path = public as
                  and m.user_a = least(auth.uid(), other) and m.user_b = greatest(auth.uid(), other));
 $$;
 
+-- 對方是否還能收訊息（已上架或重新審核中）
+create or replace function private.partner_active(mid uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.matches m join public.profiles p
+                   on p.id = case when m.user_a = auth.uid() then m.user_b else m.user_a end
+                  where m.id = mid and p.status in ('approved','pending'));
+$$;
+
 -- 主動開啟的一方，在對方回覆前只能先傳一則
 create or replace function private.can_send(mid uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select coalesce((
     select m.initiator is distinct from auth.uid()
-        or exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id <> auth.uid()
-                     and (m.reopened_at is null or x.created_at >= m.reopened_at))
+        or m.replied_at is not null
         or not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = auth.uid()
                      and (m.reopened_at is null or x.created_at >= m.reopened_at))
       from public.matches m where m.id = mid), false);
@@ -516,13 +536,16 @@ create policy "likes_delete" on public.likes for delete to authenticated
 -- matches：會員只看得到未解除的配對；解除請呼叫 unmatch()
 drop policy if exists "matches_select" on public.matches;
 create policy "matches_select" on public.matches for select to authenticated
-  using (((user_a = auth.uid() or user_b = auth.uid()) and closed_at is null) or public.is_admin());
+  using (((user_a = auth.uid() or user_b = auth.uid())
+          and (closed_at is null or (closed_by is not null and closed_by <> auth.uid())))   -- 被對方結束的對話：唯讀保留
+         or public.is_admin());
 drop policy if exists "matches_delete" on public.matches;
 
 -- messages
 drop policy if exists "messages_select" on public.messages;
 create policy "messages_select" on public.messages for select to authenticated
-  using (exists (select 1 from public.matches m where m.id = match_id and m.closed_at is null
+  using (exists (select 1 from public.matches m where m.id = match_id
+                 and (m.closed_at is null or (m.closed_by is not null and m.closed_by <> auth.uid()))
                  and (m.user_a = auth.uid() or m.user_b = auth.uid())
                  and (m.reopened_at is null or messages.created_at >= m.reopened_at)) or public.is_admin());
 drop policy if exists "messages_insert" on public.messages;
@@ -590,7 +613,7 @@ create policy "photos_storage_select" on storage.objects for select to authentic
       (storage.foldername(name))[1] = auth.uid()::text
       or public.is_admin()
       or exists (select 1 from public.profiles p
-                 where p.avatar_path = name and p.status = 'approved'
+                 where p.avatar_path = name and (p.status = 'approved' or (p.status = 'pending' and private.has_open_match(p.id)))
                    and (storage.foldername(name))[1] = p.id::text
                    and not private.is_blocked_with(p.id))
       or exists (select 1 from public.photos ph
@@ -630,7 +653,9 @@ returns table (id uuid, nickname text) language sql stable security definer set 
    where p.id = any(ids)
      and (exists (select 1 from public.blocks where blocker_id = auth.uid() and blocked_id = p.id)
        or exists (select 1 from public.photo_grants where owner_id = auth.uid() and viewer_id = p.id)
-       or exists (select 1 from public.photo_requests where owner_id = auth.uid() and requester_id = p.id));
+       or exists (select 1 from public.photo_requests where owner_id = auth.uid() and requester_id = p.id)
+       or exists (select 1 from public.matches m where m.user_a = least(auth.uid(), p.id) and m.user_b = greatest(auth.uid(), p.id)
+                    and (m.closed_at is null or (m.closed_by is not null and m.closed_by <> auth.uid()))));
 $$;
 
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
@@ -687,28 +712,41 @@ returns uuid language plpgsql security definer set search_path = public as $$
 declare me uuid := auth.uid(); m public.matches; mid uuid; existed boolean;
 begin
   if me is null then raise exception '請先登入'; end if;
-  if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能傳訊息'; end if;
   if other = me then raise exception '不能傳訊息給自己'; end if;
   if body is null or char_length(trim(body)) = 0 or char_length(body) > 2000 then raise exception '訊息長度不正確'; end if;
+  -- 同一位會員的開啟動作排隊處理，避免同時大量送出繞過額度
+  perform pg_advisory_xact_lock(hashtext('start:' || me::text));
+  perform pg_advisory_xact_lock(hashtext('pair:' || least(me, other)::text || greatest(me, other)::text));
+  select * into m from public.matches where user_a = least(me, other) and user_b = greatest(me, other) for update;
+  existed := found;
+  if existed and m.closed_at is null then
+    -- 已有對話：照一般規則傳（由訊息規則檢查）
+    insert into public.messages (match_id, sender_id, body) values (m.id, me, body);
+    return m.id;
+  end if;
+  if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能主動傳訊息'; end if;
   if private.is_blocked_with(other) or not private.is_compatible(other)
      or not exists (select 1 from public.profiles p where p.id = other and p.status = 'approved'
                     and (not p.hidden or exists (select 1 from public.likes l where l.from_id = other and l.to_id = me))) then
     raise exception '無法傳訊息給這位會員';
   end if;
-  select * into m from public.matches where user_a = least(me, other) and user_b = greatest(me, other);
-  existed := found;
-  if existed and m.closed_at is null then
-    -- 已有對話：照一般規則傳
-    if not private.can_send(m.id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
-    insert into public.messages (match_id, sender_id, body) values (m.id, me, body);
-    return m.id;
+  if exists (select 1 from public.profiles p where p.id = other and p.accept_from = 'liked')
+     and not exists (select 1 from public.likes l where l.from_id = other and l.to_id = me) then
+    raise exception '對方目前只接受自己心動過的人傳訊息';
+  end if;
+  if existed then
+    if m.closed_by = other then raise exception '對方已結束和你的對話，無法再主動傳訊息'; end if;
+    if m.closed_by = me and m.initiator = me and m.replied_at is null and m.closed_at > now() - interval '30 days' then
+      raise exception '對方還沒回覆過你，30 天內不能重新開啟這段對話';
+    end if;
   end if;
   if public.my_start_quota() <= 0 then
     raise exception '前 10 個新對話已經用完，之後每天可以再開啟 1 個，明天再來吧';
   end if;
   insert into public.conversation_starts (user_id) values (me);
   if existed then
-    update public.matches set closed_at = null, reopened_at = now(), initiator = me, last_message = null, last_message_at = null
+    update public.matches set closed_at = null, closed_by = null, reopened_at = clock_timestamp(), initiator = me,
+           replied_at = null, last_message = null, last_message_at = null
      where id = m.id returning id into mid;
   else
     insert into public.matches (user_a, user_b, initiator) values (least(me, other), greatest(me, other), me) returning id into mid;
@@ -803,6 +841,24 @@ begin
 end $$;
 revoke execute on function public.resubmit_profile() from anon, public;
 grant execute on function public.resubmit_profile() to authenticated;
+
+-- 管理員：會員的對話行為統計（找出大量群發的人）
+create or replace function public.admin_member_stats(ids uuid[])
+returns table (id uuid, starts_7d int, unreplied_pct int, closed_by_others int, blocked_by int)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query
+  select u.id,
+    (select count(*)::int from public.conversation_starts c where c.user_id = u.id and c.created_at > now() - interval '7 days'),
+    (select case when count(*) = 0 then 0 else (100 * count(*) filter (where m.replied_at is null) / count(*))::int end
+       from public.matches m where m.initiator = u.id),
+    (select count(*)::int from public.matches m where (m.user_a = u.id or m.user_b = u.id) and m.closed_by is not null and m.closed_by <> u.id),
+    (select count(*)::int from public.blocks b where b.blocked_id = u.id)
+  from unnest(ids) as u(id);
+end $$;
+revoke execute on function public.admin_member_stats(uuid[]) from anon, public;
+grant execute on function public.admin_member_stats(uuid[]) to authenticated;
 
 -- 管理員刪除帳號（用於已停權帳號）：手機若在黑名單中仍保留指紋，之後不能再註冊
 create or replace function public.admin_delete_account(target uuid)

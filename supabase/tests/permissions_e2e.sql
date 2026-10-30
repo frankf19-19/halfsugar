@@ -3,7 +3,7 @@ do $t$
 declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
-  K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
+  P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
 begin
   perform set_config('storage.allow_delete_query','true',true);
@@ -334,6 +334,43 @@ begin
   begin perform public.send_first_message(K, 'hi'); out := array_append(out, '21d 未審核帳號主動傳訊息：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '21d 未審核帳號不能主動傳訊息 ✓'::text); end;
   execute 'reset role';
+
+  -- 22 收件人保護：第一則內容、結束對話、只接受心動過的人、自己關掉重開
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into auth.users (id, email, aud, role) values (P,'e2e-p@test.invalid','authenticated','authenticated'),(Q,'e2e-q@test.invalid','authenticated','authenticated'),
+    (R,'e2e-r@test.invalid','authenticated','authenticated'),(S2,'e2e-s@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='P', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市', status='approved' where id=P;
+  update public.profiles set nickname='Q', gender='female', looking_for='male', role='baby', birth_year=1998, city='台北市', status='approved' where id in (Q,R,S2);
+  update public.profiles set accept_from='liked' where id=R;
+  perform set_config('request.jwt.claims', json_build_object('sub',P,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', P::text, true);
+  execute 'set local role authenticated';
+  begin perform public.send_first_message(Q, '加我 line 0912-345-678'); out := array_append(out, '22 第一則留聯絡方式：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '22 第一則不能留聯絡方式 ✓'::text); end;
+  select public.send_first_message(Q, '你好，想認識你') into mid;
+  begin perform public.send_first_message(R, '你好'); out := array_append(out, '22b 對方只收心動過的人：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '22b 對方只收心動過的人 ✓'::text); end;
+  perform public.send_first_message(S2, '你好');
+  perform public.unmatch((select id from public.matches where user_a=least(P,S2) and user_b=greatest(P,S2)));
+  begin perform public.send_first_message(S2, '再試一次'); out := array_append(out, '22c 自己關掉再重開洗訊息：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '22c 對方沒回覆前不能自己關掉重開 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  perform public.unmatch(mid);   -- 不感興趣
+  select count(*) into n from public.matches where id=mid; out := array_append(out, ('22d 結束的人看到對話 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',P,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', P::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.messages where match_id=mid; out := array_append(out, ('22e 另一方仍可唯讀看到訊息 = '||n||' (應為1)')::text);
+  begin perform public.send_first_message(Q, '為什麼不理我'); out := array_append(out, '22f 被結束後重開：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '22f 被對方結束後不能再開 ✓'::text); end;
+  begin insert into public.messages (match_id, sender_id, body) values (mid, P, '還在嗎'); out := array_append(out, '22g 對已結束的對話傳訊：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '22g 已結束的對話不能傳訊 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
