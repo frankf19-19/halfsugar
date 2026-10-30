@@ -163,6 +163,33 @@ input.otp{font-size:24px;letter-spacing:.5em;text-align:center;font-variant-nume
 br.d{display:none}
 @media(min-width:760px){br.d{display:inline}}
 .hero .sub{margin:-18px 0 34px;font-size:14px;line-height:2;color:rgba(255,255,255,.85);letter-spacing:.08em}
+.demo{max-width:1180px;margin:0 auto;padding:40px 30px 140px}
+.demo .hd{text-align:center;margin-bottom:56px}
+.demo .hd h2{font-size:clamp(26px,3vw,40px)}
+.demo .hd p{margin-top:18px;color:var(--grey);font-size:15px;line-height:1.9}
+.dcards{display:grid;grid-template-columns:1fr;gap:34px;max-width:420px;margin:0 auto}
+@media(min-width:860px){.dcards{grid-template-columns:repeat(3,1fr);max-width:none;gap:28px}}
+.dcard{border:1px solid var(--rule);background:#fff;text-align:left}
+.dph{position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.dph.a{background:#2B2B2E}.dph.b{background:#E9DCDD}.dph.c{background:#D9D4CC}
+.dph .mono{font-family:"Noto Serif TC",serif;font-weight:300;font-size:64px;letter-spacing:.1em;color:rgba(255,255,255,.85)}
+.dph.b .mono,.dph.c .mono{color:rgba(26,26,26,.55)}
+.dph .stamp{position:absolute;top:12px;right:12px;border:1px solid currentColor;padding:2px 9px;font-size:12px;letter-spacing:.3em;color:var(--wine);background:rgba(255,255,255,.92)}
+.dph .seen{position:absolute;top:12px;left:12px;font-size:11px;letter-spacing:.08em;padding:3px 9px;background:rgba(255,255,255,.92);color:var(--ink)}
+.dph .seen.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#3E9A61;margin-right:6px;vertical-align:1px}
+.dinfo{padding:18px 20px 22px}
+.dn{display:flex;justify-content:space-between;align-items:baseline;font-family:"Noto Serif TC",serif;font-size:20px;letter-spacing:.06em}
+.dn span+span{font-size:14px;color:var(--grey)}
+.dm{margin-top:6px;font-size:13px;color:var(--grey)}
+.dm .rtag{margin-right:8px}
+.demo .budget{margin-top:8px;font-size:13px}
+.dtags{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}.dtags span{border:1px solid var(--rule);padding:2px 9px;font-size:12px}
+.dlock{margin-top:10px;font-size:12px;color:var(--grey)}
+.dbio{margin-top:12px;font-size:14px;line-height:1.85;color:var(--ink)}
+.dnotes{list-style:none;margin:56px auto 0;padding:0;max-width:880px;display:grid;grid-template-columns:1fr;gap:18px 40px}
+@media(min-width:760px){.dnotes{grid-template-columns:1fr 1fr}}
+.dnotes li{font-size:14px;line-height:1.85;color:var(--grey);padding-top:14px;border-top:1px solid var(--rule)}
+.dnotes b{display:block;color:var(--ink);font-weight:500;letter-spacing:.1em;margin-bottom:2px}
 .lex{background:var(--paper);padding:130px 30px}
 .lex>*{max-width:1320px;margin-left:auto;margin-right:auto}
 .lex .hd{text-align:center;margin-bottom:70px}
@@ -378,9 +405,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   微糖 SUGAR 30  前端  build v1.17.0
+   微糖 SUGAR 30  前端  build v1.18.0
    ===================================================================== */
-const BUILD = 'v1.17.0';
+const BUILD = 'v1.18.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -669,6 +696,30 @@ async function viewLanding(){
       <div><div class="n">二</div><h3>真人審核</h3><p>我們會在 24 小時內看過你的檔案，通過後即開放探索。</p></div>
       <div><div class="n">三</div><h3>開始對話</h3><p>瀏覽會員，遇到想認識的人就直接傳訊息；也可以先按「心動」讓對方知道。</p></div>
     </div>
+  </section>
+
+  <section class="demo" aria-label="會員檔案示意">
+    <div class="hd"><h2>會員檔案長這樣</h2><p>加入之前，先看看裡面是什麼樣子。<br class="d">以下為<b>示意檔案</b>，並非真實會員。</p></div>
+    <div class="dcards">
+      <div class="dcard"><div class="dph a"><span class="stamp">示意</span><span class="seen on">在線上</span><span class="mono">W</span></div>
+        <div class="dinfo"><div class="dn"><span>Wesley</span><span>45</span></div><div class="dm"><span class="rtag">Sugar Daddy</span>台北市 · 科技業主管</div>
+          <div class="budget">每月預算 8–12 萬</div><span class="wbadge">✓ 財力認證</span>
+          <p class="dbio">喜歡安靜的餐廳和週末的短程旅行。希望先好好聊，彼此舒服再見面。</p></div></div>
+      <div class="dcard"><div class="dph b"><span class="stamp">示意</span><span class="seen">今天上線</span><span class="mono">C</span></div>
+        <div class="dinfo"><div class="dn"><span>Claire</span><span>26</span></div><div class="dm"><span class="rtag">甜心</span>台北市 · 設計師</div>
+          <div class="dtags"><span>咖啡</span><span>展覽</span><span>攝影</span></div><div class="dlock">🔒 2 張私密照，需對方同意才看得到</div>
+          <p class="dbio">正在念設計研究所。喜歡有想法、說話溫和的人，期待成熟穩定的相處。</p></div></div>
+      <div class="dcard"><div class="dph c"><span class="stamp">示意</span><span class="mono">V</span></div>
+        <div class="dinfo"><div class="dn"><span>Vivian</span><span>41</span></div><div class="dm"><span class="rtag">Sugar Mommy</span>新北市 · 品牌創辦人</div>
+          <div class="budget">每月預算 見面再談</div>
+          <p class="dbio">工作忙，但願意為對的人留時間。重視坦誠，第一則訊息請說說你自己。</p></div></div>
+    </div>
+    <ul class="dnotes">
+      <li><b>真人審核</b>每一張照片、每一段自介都由真人看過才上架。</li>
+      <li><b>每月預算</b>Sugar Daddy／Mommy 註冊時填寫，彼此一開始就清楚期待。</li>
+      <li><b>財力認證</b>自願上傳文件、真人確認後顯示，甜心可以申請查看。</li>
+      <li><b>私密照</b>只給你同意的人看，看的時候會疊上對方的代號浮水印。</li>
+    </ul>
   </section>
 
   <section class="lex">
