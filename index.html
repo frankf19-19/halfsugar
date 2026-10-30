@@ -78,7 +78,7 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 @media(max-width:719px){.landing{margin-top:-28px}}
 .hero{position:relative;height:100svh;min-height:620px;display:grid;grid-template-columns:1fr;background:#111}
 @media(min-width:900px){.hero{grid-template-columns:1fr 1fr 1fr}}
-.hero .pn{background:#222 center/cover no-repeat}
+.hero .pn{background:#222 center/cover no-repeat;filter:grayscale(1) contrast(1.05)}
 .hero .pn:nth-child(n+2){display:none}
 @media(min-width:900px){.hero .pn:nth-child(n+2){display:block}}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.1) 35%,rgba(0,0,0,.55) 100%)}
@@ -94,7 +94,7 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 
 .chapter{display:grid;grid-template-columns:1fr;align-items:center}
 @media(min-width:900px){.chapter{grid-template-columns:1fr 1fr;min-height:88vh}.chapter.rev .img{order:2}}
-.chapter .img{min-height:70vh;background:#ddd center/cover no-repeat}
+.chapter .img{min-height:70vh;background:#ddd center/cover no-repeat;filter:grayscale(1)}
 @media(min-width:900px){.chapter .img{min-height:88vh}}
 .chapter .txt{padding:80px 9vw;max-width:680px}
 @media(max-width:899px){.chapter .txt{padding:56px 22px 80px}}
@@ -117,7 +117,7 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 .howto p{color:var(--grey);font-size:14px;line-height:2;max-width:300px;margin:0 auto}
 @media(max-width:719px){.howto{padding:90px 22px}}
 
-.cta{position:relative;min-height:90vh;display:flex;align-items:center;justify-content:center;background:#111 center 30%/cover no-repeat;text-align:center;color:#fff}
+.cta{position:relative;min-height:90vh;display:flex;align-items:center;justify-content:center;background:#111 center 30%/cover no-repeat;text-align:center;color:#fff;background-blend-mode:luminosity}
 .cta::before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.42)}
 .cta .in{position:relative;padding:80px 22px}
 .cta h2{font-size:clamp(30px,4vw,56px);line-height:1.5}
