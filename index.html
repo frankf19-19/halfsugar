@@ -8,6 +8,12 @@
 <meta name="robots" content="index,follow">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjQgNiA1NiA1MiI+PHBhdGggZD0iTTMyIDU0IEMxNCA0MiA4IDMyIDggMjMgQzggMTUgMTQgMTAgMjEgMTAgQzI2IDEwIDMwIDEzIDMyIDE3IFoiIGZpbGw9IiNCMDRBNjIiLz48cGF0aCBkPSJNMzIgNTQgQzE0IDQyIDggMzIgOCAyMyBDOCAxNSAxNCAxMCAyMSAxMCBDMjYgMTAgMzAgMTMgMzIgMTcgQzM0IDEzIDM4IDEwIDQzIDEwIEM1MCAxMCA1NiAxNSA1NiAyMyBDNTYgMzIgNTAgNDIgMzIgNTRaIiBmaWxsPSJub25lIiBzdHJva2U9IiNCMDRBNjIiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==">
 <meta name="theme-color" content="#FFFFFF">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="半糖 HALF SUGAR">
+<meta property="og:title" content="半糖 HALF SUGAR｜台灣甜心交友">
+<meta property="og:description" content="真人審核的台灣甜心交友平台。Sugar Daddy、Sugar Mommy 與甜心，坦誠地認識彼此。">
+<meta property="og:image" content="https://images.unsplash.com/photo-1594760136382-0c07cc163715?auto=format&fit=crop&w=1200&h=630&q=80">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -195,6 +201,40 @@ br.d{display:none}
 .roles .rl small{display:block;font-size:12px;letter-spacing:.02em;color:var(--grey);margin-top:4px;line-height:1.6}
 .roles .rl input:checked+span{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .roles .rl input:focus-visible+span{outline:1px solid var(--ink);outline-offset:3px}
+.pcard .seen{position:absolute;top:10px;left:10px;font-size:11px;letter-spacing:.08em;padding:3px 9px;background:rgba(255,255,255,.92);color:var(--ink)}
+.pcard .seen.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#3E9A61;margin-right:6px;vertical-align:1px}
+.chat .day{align-self:center;font-size:11px;letter-spacing:.14em;color:var(--grey);margin:10px 0 2px}
+.bnav a{position:relative}
+.bnav .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:16px;height:16px;line-height:16px;border-radius:8px;background:var(--wine);color:#fff;font-size:10px;text-align:center;padding:0 4px;letter-spacing:0}
+.safe{background:var(--black);color:#fff;padding:130px 30px}
+.safe .in{max-width:1320px;margin:0 auto}
+.safe h2{font-size:clamp(28px,3.2vw,44px);line-height:1.5}
+.safe .pts{display:grid;grid-template-columns:1fr;gap:0;margin-top:56px}
+@media(min-width:760px){.safe .pts{grid-template-columns:repeat(2,1fr);column-gap:60px}}
+@media(min-width:1100px){.safe .pts{grid-template-columns:repeat(3,1fr)}}
+.safe .pts>div{padding:30px 0 34px;border-top:1px solid rgba(255,255,255,.3)}
+.safe h3{font-size:19px;font-weight:400;letter-spacing:.06em;margin-bottom:10px}
+.safe p{color:#BDBDBD;font-size:14px;line-height:2}
+@media(max-width:719px){.safe{padding:90px 22px}}
+.wm,.wmg .g{position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.wm::after,.wmg .g::after{content:attr(data-wm);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transform:rotate(-24deg);font-size:13px;letter-spacing:.3em;color:rgba(255,255,255,.38);text-shadow:0 0 2px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap}
+.wmg .g::after{content:attr(data-wm);font-size:9px;letter-spacing:.15em}
+.sw{display:flex;gap:14px;align-items:flex-start;margin:18px 0 0;cursor:pointer;letter-spacing:0}
+.sw input{margin-top:5px;width:18px;height:18px;flex:none}
+.sw b{display:block;font-weight:500;font-size:15px;color:var(--ink)}
+.sw small{display:block;font-size:12px;color:var(--grey);line-height:1.7;margin-top:2px}
+.plans{display:grid;grid-template-columns:1fr;gap:16px;margin-top:40px}
+@media(min-width:900px){.plans{grid-template-columns:repeat(3,1fr)}}
+.plan{border:1px solid var(--rule);padding:34px 28px 30px;display:flex;flex-direction:column}
+.plan.hl{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.plan .who{font-size:12px;letter-spacing:.2em;color:var(--wine)}
+.plan h3{font-size:24px;font-weight:300;margin:10px 0 6px}
+.plan .price{font-family:"Noto Serif TC",serif;font-size:34px;font-weight:300;letter-spacing:.02em}
+.plan .price small{font-family:"Noto Sans TC";font-size:13px;color:var(--grey);letter-spacing:.06em;margin-left:6px}
+.plan .alt{font-size:13px;color:var(--grey);margin-top:4px;min-height:22px}
+.plan ul{list-style:none;margin:22px 0 28px;flex:1}
+.plan li{font-size:14px;line-height:1.9;padding:7px 0;border-top:1px solid var(--rule)}
+.plan li.no{color:var(--grey2);text-decoration:line-through;text-decoration-thickness:1px}
 .rtag{display:inline-block;font-size:11px;letter-spacing:.08em;color:var(--wine);margin-right:8px}
 .tags{display:flex;flex-wrap:wrap;gap:8px}
 .tag{font-size:12px;letter-spacing:.08em;padding:5px 13px;border:1px solid var(--rule);color:var(--grey)}
@@ -273,7 +313,7 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
   <div class="box">
     <div class="logo"><svg class="lm" viewBox="4 6 56 52" aria-hidden="true"><path d="M32 54 C14 42 8 32 8 23 C8 15 14 10 21 10 C26 10 30 13 32 17 Z" fill="#B04A62"/><path d="M32 54 C14 42 8 32 8 23 C8 15 14 10 21 10 C26 10 30 13 32 17 C34 13 38 10 43 10 C50 10 56 15 56 23 C56 32 50 42 32 54Z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/></svg><span>半糖</span></div>
     <h2 style="margin:26px 0 12px;font-size:22px;font-weight:500">僅限年滿 18 歲的成年人</h2>
-    <p class="muted small">進入即表示你已年滿 18 歲（或你所在地之法定成年年齡），並同意本站<a href="#/terms">使用條款</a>與<a href="#/privacy">隱私政策</a>。本站為成人交友平台，禁止任何形式之金錢交易與色情服務招攬。</p>
+    <p class="muted small">進入即表示你已年滿 18 歲（或你所在地之法定成年年齡），並同意本站<a href="#/terms">使用條款</a>與<a href="#/privacy">隱私政策</a>。本站為成年人之間的甜心交友平台，禁止任何以金錢交換性行為的要求，以及色情產業的招攬。</p>
     <div class="row mt2" style="justify-content:center">
       <button class="btn primary" id="gateYes">我已年滿 18 歲，進入</button>
       <a class="btn ghost" href="https://www.google.com">離開</a>
@@ -293,7 +333,7 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 <nav class="bnav hidden" id="bnav"></nav>
 
 <footer>
-  <div><a href="#/terms">使用條款</a>·<a href="#/privacy">隱私政策</a>·<a href="#/guidelines">社群守則</a>·<a href="#/safety">安全須知</a></div>
+  <div><a href="#/terms">使用條款</a>·<a href="#/privacy">隱私政策</a>·<a href="#/guidelines">社群守則</a>·<a href="#/safety">安全須知</a>·<a href="#/plans">會員方案</a></div>
   <div class="mt" style="margin-top:10px">© 2026 半糖 HALF SUGAR · 僅限 18 歲以上成年人使用 · <span id="ver"></span></div>
 </footer>
 
@@ -302,9 +342,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SUGAR  前端  build v1.1.1
+   半糖 HALF SUGAR  前端  build v1.4.0
    ===================================================================== */
-const BUILD = 'v1.1.1';
+const BUILD = 'v1.4.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -334,13 +374,19 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const age = y => y ? (new Date().getFullYear() - y) : '';
 const fmtTime = t => { const d = new Date(t); const now = new Date();
   return d.toDateString()===now.toDateString() ? d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}); };
+const seen = t => { if(!t) return ''; const m=(Date.now()-new Date(t))/60000;
+  if(m<15) return '在線上'; if(m<60*24) return '今天上線'; if(m<60*24*3) return '近三天上線'; if(m<60*24*7) return '本週上線'; return ''; };
+const wmText = () => `半糖 · ${(me?.id||'').slice(0,8)}`;
 function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), ms); }
 function containsBadWords(s){ const l=(s||'').toLowerCase(); return BAD_WORDS.filter(w=>l.includes(w.toLowerCase())); }
 async function signed(path){
   if(!path) return null;
-  if(urlCache.has(path)) return urlCache.get(path);
+  const c = urlCache.get(path);
+  if(c && c.exp > Date.now()) return c.url;
   const { data } = await sb.storage.from('photos').createSignedUrl(path, 3600);
-  const u = data?.signedUrl || null; urlCache.set(path, u); return u;
+  const u = data?.signedUrl || null;
+  if(u) urlCache.set(path, { url:u, exp: Date.now() + 50*60*1000 });
+  return u;
 }
 async function compressImage(file, max=1080, q=.85){
   const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=URL.createObjectURL(file); });
@@ -352,6 +398,7 @@ async function compressImage(file, max=1080, q=.85){
 function modal(html){ $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx">×</button>${html}</div></div>`;
   $('#mx').onclick = closeModal; $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); }; }
 function closeModal(){ $('#modal').innerHTML=''; }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('#modal').innerHTML) closeModal(); });
 
 /* ---------- 18+ 閘門 ---------- */
 if(!localStorage.getItem('yy_age_ok')){ $('#gate').classList.remove('hidden'); }
@@ -364,19 +411,34 @@ async function loadMe(){
   if(!session){ me=null; return; }
   const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   me = data;
-  if(me) sb.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', me.id).then(()=>{});
+  if(me && me.show_online!==false) sb.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', me.id).then(()=>{});
 }
-sb.auth.onAuthStateChange(async (ev)=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT'||ev==='USER_UPDATED'){ await loadMe(); route(); } });
+sb.auth.onAuthStateChange(async (ev)=>{
+  if(ev==='PASSWORD_RECOVERY'){ setTimeout(openPasswordReset, 300); return; }
+  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.gender=''; browseState.city=''; browseState.amin=''; browseState.amax=''; }
+  if(ev==='SIGNED_IN'||ev==='SIGNED_OUT'||ev==='USER_UPDATED'){ setTimeout(async ()=>{ await loadMe(); route(); }, 0); }
+});
+function openPasswordReset(){
+  modal(`<h2>設定新密碼</h2><p class="muted small mt">請輸入新的密碼，至少 8 碼。</p>
+    <form id="pwReset"><label>新密碼</label><input type="password" name="pw" minlength="8" required autocomplete="new-password">
+    <label>再輸入一次</label><input type="password" name="pw2" minlength="8" required autocomplete="new-password">
+    <p class="small bad mt" id="pwErr"></p><button class="btn primary block mt2" type="submit">更新密碼</button></form>`);
+  $('#pwReset').onsubmit = async e => { e.preventDefault(); const f=new FormData(e.target);
+    if(f.get('pw')!==f.get('pw2')) { $('#pwErr').textContent='兩次輸入的密碼不一樣'; return; }
+    const { error } = await sb.auth.updateUser({ password: f.get('pw') });
+    if(error){ $('#pwErr').textContent = error.message; return; }
+    closeModal(); toast('密碼已更新'); location.hash='#/me'; };
+}
 
 /* ---------- 導覽 ---------- */
 function renderNav(){
   const h = location.hash || '#/';
   const link = (href, txt, badge='') => `<a href="${href}" class="${h.startsWith(href)&&href!=='#/'||h===href?'active':''}">${txt}${badge}</a>`;
   if(!me){
-    $('#nav').innerHTML = link('#/about','關於半糖') + link('#/auth','登入／註冊');
+    $('#nav').innerHTML = link('#/plans','會員方案') + link('#/auth','登入／註冊');
     $('#bnav').classList.add('hidden'); return;
   }
-  const admin = me.is_admin ? link('#/admin','後台') : '';
+  const admin = (me.is_admin ? link('#/admin','後台') : '') + link('#/plans','方案');
   $('#nav').innerHTML = link('#/browse','探索') + link('#/likes','喜歡') + link('#/matches','訊息') + link('#/me','我的') + admin;
   const IC = {
     browse:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5-5 2.2 2.2-5z"/></svg>',
@@ -388,19 +450,30 @@ function renderNav(){
   $('#bnav').innerHTML = bl('#/browse','browse','探索') + bl('#/likes','likes','喜歡') + bl('#/matches','matches','訊息') + bl('#/me','me','我的') + (me.is_admin? bl('#/admin','admin','後台'):'');
   document.body.classList.toggle('nobnav', h.startsWith('#/chat/'));
   $('#bnav').classList.remove('hidden');
+  refreshUnread();
 }
+
+async function refreshUnread(){
+  if(!me || me.status!=='approved') return;
+  const { data: ms } = await sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`);
+  if(!ms || !ms.length) return;
+  const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id));
+  document.querySelectorAll('a[href="#/matches"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(count>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${count>99?'99+':count}</span>`); });
+}
+setInterval(()=>{ if(document.visibilityState==='visible') refreshUnread(); }, 60000);
 
 /* ---------- 路由 ---------- */
 const routes = {
   '': viewLanding, 'about': viewLanding, 'auth': viewAuth, 'onboarding': viewOnboarding,
   'browse': viewBrowse, 'likes': viewLikes, 'matches': viewMatches, 'chat': viewChat, 'me': viewMe,
   'admin': viewAdmin, 'terms': ()=>viewDoc('terms'), 'privacy': ()=>viewDoc('privacy'),
-  'guidelines': ()=>viewDoc('guidelines'), 'safety': ()=>viewDoc('safety'),
+  'guidelines': ()=>viewDoc('guidelines'), 'safety': ()=>viewDoc('safety'), 'plans': viewPlans,
 };
 let chatChannel = null;
 async function route(){
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; }
-  const [path, arg] = (location.hash.replace(/^#\//,'')||'').split('/');
+  closeModal();
+  const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
   renderNav();
   document.body.classList.toggle('home', !path || path==='about');
   const app = $('#app'); app.innerHTML = '<div class="spinner"></div>';
@@ -476,6 +549,20 @@ async function viewLanding(){
     <div class="who">違反者將直接停權，並保留法律追訴權。<br><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a></div>
   </section>
 
+  <section class="safe">
+    <div class="in">
+      <h2>你的隱私，<br>我們這樣保護。</h2>
+      <div class="pts">
+        <div><h3>沒有登入，什麼都看不到</h3><p>會員的照片與檔案只對已登入、且通過審核的會員開放。搜尋引擎與路人都看不到。</p></div>
+        <div><h3>照片不公開存放</h3><p>照片存放在私有空間，每次都用一小時內有效的連結讀取，連結外流也很快失效；查看時會疊上看的人的代號浮水印。</p></div>
+        <div><h3>不留電話、不留 LINE</h3><p>站內就能聊，不必交換任何聯絡方式。你的 Email 永遠不會顯示給其他會員。</p></div>
+        <div><h3>想隱身就隱身</h3><p>可以不出現在探索，只讓你按過喜歡的人看到你；也可以隱藏上線狀態。</p></div>
+        <div><h3>私密照，親自授權</h3><p>私密相簿只給你點頭的人看，隨時收回；封鎖之後，對方再也找不到你。</p></div>
+        <div><h3>說刪就刪</h3><p>要求刪除帳號後，檔案、照片與對話會從資料庫移除。我們不販售、不分享任何會員資料。</p></div>
+      </div>
+    </div>
+  </section>
+
   <section class="howto">
     <h2>從申請，到相遇</h2>
     <div class="steps">
@@ -549,7 +636,7 @@ async function viewAuth(){
       if(err) $('#authErr').textContent = ({'Invalid login credentials':'Email 或密碼錯誤','User already registered':'這個 Email 已經註冊過了','Email not confirmed':'請先到信箱點擊驗證連結'})[err.message] || err.message;
     };
     const fg = $('#forgot'); if(fg) fg.onclick = async ()=>{ const email = $('input[name=email]').value.trim(); if(!email) return toast('請先輸入 Email');
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname + '#/me' }); toast(error?error.message:'重設密碼信已寄出'); };
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); toast(error?error.message:'重設密碼信已寄出'); };
   };
   draw();
 }
@@ -587,7 +674,7 @@ function readProfileForm(form){
   const bio = f.get('bio').trim();
   const bad = containsBadWords(bio + ' ' + f.get('nickname') + ' ' + f.get('occupation'));
   if(bad.length) { toast(`自介含不允許的字眼：${bad.join('、')}`); return null; }
-  if(/line|ig\b|instagram|telegram|wechat|微信|\d{8,}/i.test(bio)) { toast('自介請勿留下聯絡方式'); return null; }
+  if(/\bline\b|\bline\s*id|\big\b|instagram|telegram|wechat|微信|加賴|加line|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}/i.test(bio)) { toast('自介請勿留下聯絡方式'); return null; }
   if(!f.get('role')) { toast('請選擇你的身分'); return null; }
   return { role:f.get('role'), nickname:f.get('nickname').trim(), gender:f.get('gender'), looking_for:f.get('looking_for'), birth_year:+f.get('birth_year'),
     city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
@@ -656,7 +743,7 @@ async function viewBrowse(){
     if(!rows.length){ $('#grid').innerHTML = `<p class="muted center" style="grid-column:1/-1;padding:40px 0">目前沒有符合條件的會員，換個條件試試。</p>`; return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已喜歡</span>':''}
-        <div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div></div></div>`).join('');
+        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div></div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.textContent=''; } });
   };
@@ -667,30 +754,31 @@ async function viewBrowse(){
 /* ---------- 會員檔案視窗 ---------- */
 async function openProfile(id){
   modal('<div class="spinner"></div>');
-  const [{ data: p, error }, { data: photos }, { data: myLike }, { data: theirLike }, { data: grant }, { data: req }] = await Promise.all([
+  const [{ data: p, error }, { data: photos }, { data: myLike }, { data: theirLike }, { data: grant }, { data: req }, { data: privN }] = await Promise.all([
     sb.from('profiles').select('*').eq('id', id).single(),
     sb.from('photos').select('*').eq('user_id', id).eq('status','approved').order('created_at'),
     sb.from('likes').select('to_id').eq('from_id', me.id).eq('to_id', id).maybeSingle(),
     sb.from('likes').select('to_id').eq('from_id', id).eq('to_id', me.id).maybeSingle(),
     sb.from('photo_grants').select('owner_id').eq('owner_id', id).eq('viewer_id', me.id).maybeSingle(),
     sb.from('photo_requests').select('status').eq('requester_id', me.id).eq('owner_id', id).maybeSingle(),
+    sb.rpc('private_photo_count', { uid: id }),
   ]);
   if(error || !p){ modal('<p class="muted">找不到這位會員，可能已下架。</p>'); return; }
   const canAct = me.status==='approved';
   const pubPhotos = (photos||[]).filter(x=>!x.is_private);
-  const privCount = (photos||[]).filter(x=>x.is_private).length;
+  const privCount = typeof privN==='number' ? privN : (photos||[]).filter(x=>x.is_private).length;
   const body = `
-    <div class="photo-big" id="bigPh"></div>
+    <div class="photo-big wm" id="bigPh" data-wm="${wmText()}"></div>
     <div class="row mt" style="justify-content:space-between;align-items:flex-start">
       <div>${p.role?`<div class="rtag" style="margin-bottom:4px">${ROLES[p.role]}</div>`:''}<h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
-        <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}</div></div>
+        <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}${seen(p.last_active_at)?' · '+seen(p.last_active_at):''}</div></div>
       ${theirLike?'<span class="chip ok">對方喜歡你</span>':''}
     </div>
     ${(p.tags||[]).length?`<div class="tags mt">${p.tags.map(t=>`<span class="tag on">${esc(t)}</span>`).join('')}</div>`:''}
     <p class="mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
-    ${pubPhotos.length?`<div class="gallery">${pubPhotos.map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}
-    ${privCount?`<div class="mt small muted">🔒 ${privCount} 張私密照 · ${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?'對方未同意':`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
-      ${grant?`<div class="gallery">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}`:''}
+    ${pubPhotos.length?`<div class="gallery wmg" data-wm="${wmText()}">${pubPhotos.map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}
+    ${privCount?`<div class="mt small muted">🔒 ${privCount} 張私密照 · ${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?`對方這次沒有同意 <button class="btn sm ghost" id="reqPriv" data-again="1" ${canAct?'':'disabled'}>再問一次</button>`:`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
+      ${grant?`<div class="gallery wmg" data-wm="${wmText()}">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}`:''}
     <div class="row mt2" style="justify-content:space-between">
       <button class="btn ${myLike?'ghost':'rose'}" id="likeBtn" ${canAct?'':'disabled'}>${myLike?'取消喜歡':'♥ 喜歡'}</button>
       <div class="row"><button class="btn sm ghost" id="blockBtn">封鎖</button><button class="btn sm ghost" id="reportBtn">檢舉</button></div>
@@ -705,7 +793,7 @@ async function openProfile(id){
       if(theirLike){ toast('🎉 配對成功！可以開始聊天了'); closeModal(); location.hash='#/matches'; return; } toast('已送出喜歡'); }
     openProfile(id);
   };
-  $('#reqPriv') && ($('#reqPriv').onclick = async ()=>{ const { error } = await sb.from('photo_requests').insert({ requester_id:me.id, owner_id:id }); toast(error?error.message:'已送出索取'); openProfile(id); });
+  $('#reqPriv') && ($('#reqPriv').onclick = async ()=>{ if($('#reqPriv').dataset.again) await sb.from('photo_requests').delete().eq('requester_id',me.id).eq('owner_id',id); const { error } = await sb.from('photo_requests').insert({ requester_id:me.id, owner_id:id }); toast(error?error.message:'已送出索取'); openProfile(id); });
   $('#blockBtn').onclick = async ()=>{ if(!confirm(`封鎖 ${p.nickname}？對方將無法再看到你或傳訊息給你。`)) return;
     await sb.from('blocks').insert({ blocker_id:me.id, blocked_id:id }); toast('已封鎖'); closeModal(); route(); };
   $('#reportBtn').onclick = ()=>openReport(id, p.nickname);
@@ -731,9 +819,10 @@ async function viewLikes(){
     sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,birth_year,city,avatar_path,status)').eq('to_id', me.id).order('created_at',{ascending:false}),
     sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,birth_year,city,avatar_path,status)').eq('from_id', me.id).order('created_at',{ascending:false}),
   ]);
-  const list = (rows, key) => rows && rows.length ? `<div class="list">${rows.filter(r=>r.p&&r.p.status==='approved').map(r=>`<div class="item" data-id="${r.p.id}">
+  const ok = rows => (rows||[]).filter(r=>r.p&&r.p.status==='approved');
+  const list = (rows, key) => ok(rows).length ? `<div class="list">${ok(rows).map(r=>`<div class="item" data-id="${r.p.id}">
       <div class="avatar" data-ph="${esc(r.p.avatar_path||'')}"></div><div class="grow"><div class="t">${esc(r.p.nickname)} <span class="muted small">${age(r.p.birth_year)}</span></div><div class="s">${esc(r.p.city||'')}</div></div><span class="tiny dim">${fmtTime(r.created_at)}</span></div>`).join('')}</div>` : `<p class="muted center" style="padding:30px 0">還沒有</p>`;
-  $('#app').innerHTML = `${statusBanner()}<div class="tabs"><button class="on" data-t="a">喜歡我的（${(toMe||[]).length}）</button><button data-t="b">我喜歡的（${(fromMe||[]).length}）</button></div>
+  $('#app').innerHTML = `${statusBanner()}<div class="tabs"><button class="on" data-t="a">喜歡我的（${ok(toMe).length}）</button><button data-t="b">我喜歡的（${ok(fromMe).length}）</button></div>
     <div id="ta">${list(toMe)}</div><div id="tb" class="hidden">${list(fromMe)}</div>`;
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); });
   $('#app').querySelectorAll('.item').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
@@ -764,7 +853,8 @@ async function viewChat(matchId){
   if(!m){ $('#app').innerHTML='<p class="muted">找不到這個對話</p>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
   const { data: o } = await sb.from('profiles').select('id,nickname,avatar_path').eq('id', oid).maybeSingle();
-  const { data: msgs } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at').limit(300);
+  const { data: last } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at',{ascending:false}).limit(300);
+  const msgs = (last||[]).reverse();
   $('#app').innerHTML = `<div class="chat">
     <div class="hd"><a href="#/matches" class="ib" aria-label="返回">‹</a>
       <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${o?esc(o.nickname):'（已下架）'}</div>
@@ -774,7 +864,8 @@ async function viewChat(matchId){
 </div>`;
   if(o) signed(o.avatar_path).then(u=>{ if(u) $('#chAv').style.backgroundImage=`url(${u})`; });
   const box = $('#msgs');
-  const add = (x) => { box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${fmtTime(x.created_at)}</span></div>`); box.scrollTop = box.scrollHeight; };
+  let lastDay='';
+  const add = (x) => { const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); } box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${fmtTime(x.created_at)}</span></div>`); box.scrollTop = box.scrollHeight; };
   (msgs||[]).forEach(add);
   sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>{});
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
@@ -792,7 +883,7 @@ async function viewChat(matchId){
       <p class="tiny dim" style="padding:14px 4px 0">請勿在對話中要求或提供任何金錢。遇到不當內容請封鎖並檢舉。</p></div>`);
     $('#shProf').onclick=()=>openProfile(oid);
     $('#shReport').onclick=()=>openReport(oid, o.nickname);
-    $('#shUnmatch').onclick=async()=>{ if(!confirm('解除配對後對話將刪除，確定？')) return; await sb.from('matches').delete().eq('id',matchId); closeModal(); location.hash='#/matches'; }; });
+    $('#shUnmatch').onclick=async()=>{ if(!confirm('解除配對後，你們將無法再看到這段對話，也要重新互相喜歡才會再配對。確定？')) return; const { error } = await sb.rpc('unmatch', { mid: matchId }); if(error) return toast(error.message); closeModal(); location.hash='#/matches'; }; });
 }
 
 /* =====================================================================
@@ -818,6 +909,10 @@ async function viewMe(){
     </div>
     ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${esc(r.p?.nickname||'')}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
     ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${esc(g.p?.nickname||'')}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
+    <div class="card mt"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
+      <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你按過喜歡的人、或已配對的人看得到你。</small></span></label>
+      <label class="sw"><input type="checkbox" id="pvOnline" ${me.show_online===false?'':'checked'}><span><b>顯示上線狀態</b><small>關閉後，別人看不到你「在線上」或「今天上線」。</small></span></label>
+    </div>
     <form class="card mt" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改暱稱、自介、職業或興趣後會重新送審，期間檔案暫時下架。</p>
       ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存並送審</button></form>
     ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${esc(b.p?.nickname||'')}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
@@ -836,11 +931,14 @@ async function viewMe(){
   document.querySelectorAll('.denyBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id); viewMe(); });
   document.querySelectorAll('.revokeBtn').forEach(b=>b.onclick=async()=>{ await sb.from('photo_grants').delete().eq('owner_id',me.id).eq('viewer_id',b.dataset.id); await sb.from('photo_requests').delete().eq('owner_id',me.id).eq('requester_id',b.dataset.id); toast('已收回'); viewMe(); });
   document.querySelectorAll('.unblockBtn').forEach(b=>b.onclick=async()=>{ await sb.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',b.dataset.id); viewMe(); });
+  const pv = async (patch, msg) => { const { error } = await sb.from('profiles').update(patch).eq('id', me.id); if(error) return toast(error.message); Object.assign(me, patch); toast(msg); };
+  $('#pvHidden').onchange = e => pv({ hidden: e.target.checked }, e.target.checked ? '已隱藏，你不會出現在探索' : '已恢復出現在探索');
+  $('#pvOnline').onchange = e => pv({ show_online: e.target.checked }, e.target.checked ? '已開啟上線狀態' : '已隱藏上線狀態');
   $('#meForm').onsubmit = async e=>{ e.preventDefault(); const p=readProfileForm(e.target); if(!p) return;
     const { error } = await sb.from('profiles').update(p).eq('id',me.id); if(error) return toast(error.message); toast('已儲存'); viewMe(); };
   $('#pwBtn').onclick = async ()=>{ const pw = prompt('輸入新密碼（至少 8 碼）'); if(!pw||pw.length<8) return; const { error } = await sb.auth.updateUser({ password:pw }); toast(error?error.message:'密碼已更新'); };
   $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.hash='#/'; };
-  $('#delBtn').onclick = ()=>{ modal(`<h3 style="font-size:18px">刪除帳號</h3><p class="muted small mt">為保障安全，刪除帳號需由客服處理。請用你的註冊信箱寄信至 <b>support@yueyu.example</b>，主旨「刪除帳號」，我們會在 7 個工作天內刪除你的所有資料。你也可以先把檔案下架：到「編輯檔案」清空自介後送出，即不會被其他會員看到。</p>`); };
+  $('#delBtn').onclick = ()=>{ modal(`<h3 style="font-size:18px">刪除帳號</h3><p class="muted small mt">為保障安全，刪除帳號需由客服處理。請用你的註冊信箱寄信至 <b>support@halfsugar.tw</b>，主旨「刪除帳號」，我們會在 7 個工作天內刪除你的所有資料。如果只想暫時隱藏檔案，也可以在信中說明，我們會先幫你下架。</p>`); };
 }
 
 /* =====================================================================
@@ -937,7 +1035,7 @@ privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 �
 <h3>蒐集之資料</h3><ul><li>帳號資料：Email、密碼（加密儲存）。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：按讚、配對、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
 <h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
 <h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方與處理檢舉之管理人員。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
-<h3>資料儲存</h3><p>資料儲存於 Supabase 雲端服務。照片以私有儲存空間存放，透過限時簽章連結讀取。</p>
+<h3>資料儲存與保護</h3><p>資料儲存於 Supabase 雲端服務，傳輸全程加密（HTTPS）。照片以私有儲存空間存放，只透過一小時內有效的限時連結讀取，查看時疊加檢視者代號浮水印。資料庫以列級權限控管，會員只能讀取規則允許的資料。</p><h3>我們不做的事</h3><ul><li>不販售、出租或分享任何會員資料給第三方。</li><li>不使用第三方廣告追蹤。</li><li>管理人員只在處理檢舉時查看相關對話。</li></ul>
 <h3>你的權利</h3><p>你得隨時查詢、更正、下架或要求刪除你的個人資料。請以註冊信箱來信客服，我們將於 7 個工作天內處理。</p>
 <h3>Cookie 與本機儲存</h3><p>本平台使用瀏覽器本機儲存以維持登入狀態與年齡確認紀錄，不使用第三方廣告追蹤。</p>`,
 
@@ -955,6 +1053,24 @@ safety: `<h2>安全須知</h2><p>線上認識的人，請用線下的謹慎對�
 <h3>保護個資</h3><ul><li>不要過早透露住址、公司、全名或財務狀況。</li><li>不要傳送可能被用來勒索的照片或影片。</li></ul>
 <h3>遇到問題</h3><p>任何讓你不舒服的互動，請立即封鎖並檢舉。若涉及威脅、勒索或人身安全，請報警（110），並保留對話紀錄。</p>`
 };
+function viewPlans(){
+  const join = me ? '' : `<a class="btn primary block" href="#/auth">免費建立檔案</a>`;
+  $('#app').innerHTML = `<div style="max-width:1120px;margin:0 auto">
+    <h2 style="font-size:clamp(28px,3.4vw,44px);text-align:center">會員方案</h2>
+    <p class="muted center mt" style="max-width:560px;margin:16px auto 0">建立檔案、通過審核都免費。甜心完整功能免費；Sugar Daddy／Mommy 可依需要升級。付費只買平台功能，平台不經手會員之間的任何款項。</p>
+    <div class="plans">
+      <div class="plan"><div class="who">甜心</div><h3>甜心會員</h3><div class="price">免費</div><div class="alt">通過真人審核即開通</div>
+        <ul><li>建立檔案、公開與私密相簿</li><li>探索、喜歡、無限對話</li><li>看誰喜歡我</li><li>不出現在探索、隱藏上線狀態</li><li>真人審核與檢舉優先處理</li></ul>${join}</div>
+      <div class="plan"><div class="who">Sugar Daddy／Mommy</div><h3>基本會員</h3><div class="price">免費</div><div class="alt">先認識看看</div>
+        <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>每天 5 個喜歡</li><li>配對後可對話</li><li class="no">看誰喜歡我</li><li class="no">優先曝光</li></ul>${join}</div>
+      <div class="plan hl"><div class="who">Sugar Daddy／Mommy</div><h3>半糖會員</h3><div class="price">NT$1,680<small>／月</small></div><div class="alt">三個月 NT$3,980（每月約 NT$1,327）</div>
+        <ul><li>基本會員全部功能</li><li>無限喜歡、無限對話</li><li>看誰喜歡我</li><li>探索結果優先曝光</li><li>不出現在探索、隱藏上線狀態</li><li>審核優先處理</li></ul>
+        <button class="btn primary block" onclick="toast('付費功能即將開放，正式開放時會先通知你')">即將開放</button></div>
+    </div>
+    <p class="tiny dim center mt2">價格為規劃中的定價，正式開放前可能調整。訂閱可隨時取消，取消後於當期結束時停止續扣。</p>
+  </div>`;
+}
+
 function viewDoc(k){ $('#app').innerHTML = `<div class="doc card">${DOCS[k]}</div>`; }
 
 /* ---------- 啟動 ---------- */
