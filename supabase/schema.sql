@@ -10,9 +10,10 @@ create extension if not exists pgcrypto;
 -- ---------------------------------------------------------------------
 create or replace function public.is_admin()
 returns boolean
-language sql stable security definer set search_path = public as $$
-  select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
-$$;
+language plpgsql stable security definer set search_path = public as $$
+begin
+  return coalesce((select is_admin from public.profiles where id = auth.uid()), false);
+end $$;
 
 -- ---------------------------------------------------------------------
 -- 1. profiles  會員檔案（與 auth.users 一對一）
