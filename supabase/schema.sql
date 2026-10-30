@@ -684,7 +684,7 @@ grant execute on function public.my_start_quota() to authenticated;
 -- 傳第一則訊息（直接開啟對話）
 create or replace function public.send_first_message(other uuid, body text)
 returns uuid language plpgsql security definer set search_path = public as $$
-declare me uuid := auth.uid(); m public.matches; mid uuid;
+declare me uuid := auth.uid(); m public.matches; mid uuid; existed boolean;
 begin
   if me is null then raise exception '請先登入'; end if;
   if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能傳訊息'; end if;
@@ -696,7 +696,8 @@ begin
     raise exception '無法傳訊息給這位會員';
   end if;
   select * into m from public.matches where user_a = least(me, other) and user_b = greatest(me, other);
-  if found and m.closed_at is null then
+  existed := found;
+  if existed and m.closed_at is null then
     -- 已有對話：照一般規則傳
     if not private.can_send(m.id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
     insert into public.messages (match_id, sender_id, body) values (m.id, me, body);
@@ -706,7 +707,7 @@ begin
     raise exception '前 10 個新對話已經用完，之後每天可以再開啟 1 個，明天再來吧';
   end if;
   insert into public.conversation_starts (user_id) values (me);
-  if found then
+  if existed then
     update public.matches set closed_at = null, reopened_at = now(), initiator = me, last_message = null, last_message_at = null
      where id = m.id returning id into mid;
   else
