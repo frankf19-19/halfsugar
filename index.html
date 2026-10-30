@@ -469,7 +469,7 @@ details.more summary{cursor:pointer;font-size:13px;color:var(--grey);text-decora
 /* =====================================================================
    微糖 SUGAR 30  前端  build v1.21.0
    ===================================================================== */
-const BUILD = 'v1.22.0';
+const BUILD = 'v1.23.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -682,6 +682,7 @@ async function route(){
   const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding'];
   if(protectedPages.includes(path) && !me){ location.hash='#/auth'; return; }
   if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat'].includes(path||'')){ location.hash='#/onboarding'; return; }
+  if(me && me.status!=='incomplete' && missingBasics(me).length && ['browse','likes','matches','chat'].includes(path)){ sessionStorage.setItem('meTab','profile'); toast('請先完成基本資料'); location.hash='#/me'; return; }
   if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety'].includes(path));
   const fn = routes[path] || viewLanding;
   const seq = routeSeq;
@@ -917,7 +918,8 @@ function profileFormHtml(p={}){
       <select name="budget"><option value="">請選擇</option>${Object.entries(BUDGETS).map(([k,v])=>`<option value="${k}" ${p.budget===k?'selected':''}>${v}</option>`).join('')}</select>
       <p class="tiny dim">一起用餐、旅行、禮物與生活上照顧的大約預算，會顯示在你的檔案上，讓彼此一開始就清楚期待。這不是任何性服務的對價，平台也不經手會員之間的任何款項。</p>
     </div>
-    <label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字">
+    ${p.nickname && !['incomplete','rejected'].includes(p.status) ? `<label>暱稱</label><div class="locked"><b>${esc(p.nickname)}</b><small>暱稱確定後就無法修改。</small></div><input type="hidden" name="nickname" value="${esc(p.nickname)}">`
+    : `<label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="tiny" style="color:var(--wine);margin-top:6px">送出審核後，暱稱就<b>無法再修改</b>，請想好再填。</p>`}
 
     <div class="row">
       <div class="grow"><label>出生年 *</label><select name="birth_year" required><option value="">請選擇</option>${years.map(y=>`<option value="${y}" ${p.birth_year==y?'selected':''}>${y}（${age(y)} 歲）</option>`).join('')}</select></div>
@@ -977,6 +979,11 @@ async function uploadPhoto(file){
   return path;
 }
 
+// 必填基本資料（缺任何一項就不能使用網站，要先補齊）
+function missingBasics(p){ if(!p) return [];
+  const m=[]; if(!(p.nickname||'').trim()) m.push('暱稱'); if(!p.gender||!p.looking_for) m.push('想認識的對象'); if(!p.role) m.push('身分');
+  if(!p.birth_year) m.push('出生年'); if(!p.city) m.push('所在地'); if(!p.body_type) m.push('身材'); if(!(p.bio||'').trim()) m.push('自我介紹');
+  if((p.role==='daddy'||p.role==='mommy') && !p.budget) m.push('每月相處預算'); if(!p.avatar_path) m.push('頭像'); return m; }
 const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
@@ -1040,7 +1047,7 @@ async function viewOnboarding(){
     <div class="obsteps"><span class="done">1　手機驗證 ✓</span><span class="on">2　建立檔案</span></div>
     <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
-    <div class="banner">「想認識的對象」與「性別」送出後就<b>無法修改</b>，探索時只會看到方向和你互相吻合的會員。請先確認再送出。</div>
+    <div class="banner">以下基本資料都要填完才能送出。<b>暱稱</b>、<b>性別</b>與<b>想認識的對象</b>送出後就<b>無法修改</b>，請先確認再送出。</div>
     <form id="obForm" class="card">
       ${profileFormHtml(me)}
       <label>頭像照片 *</label>
@@ -1066,8 +1073,8 @@ async function viewOnboarding(){
       modal(`<h2>確認送出</h2>
         <p class="mt">你選擇的是：</p>
         <p class="serif" style="font-size:22px;margin:10px 0 4px">${ORIENT[p.gender+'-'+p.looking_for]}</p>
-        <p class="muted small">身分：${ROLES[p.role]}</p>
-        <div class="banner bad mt">送出後，性別與想認識的對象<b>無法再修改</b>。</div>
+        <p class="muted small">暱稱：<b style="color:var(--ink)">${esc(p.nickname)}</b>　身分：${ROLES[p.role]}</p>
+        <div class="banner bad mt">送出後，<b>暱稱</b>、性別與想認識的對象都<b>無法再修改</b>。</div>
         <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="cfNo">回去修改</button><button class="btn primary" id="cfYes">確認送出</button></div>`);
       $('#cfNo').onclick = () => { closeModal(); res(false); };
       $('#cfYes').onclick = () => { closeModal(); res(true); };
@@ -1468,9 +1475,10 @@ async function viewMe(){
   ];
   const nAlbum=(reqs||[]).length, nVerify=wPend.length;
   const TABS=[['profile','檔案',0],['album','相簿',nAlbum],['verify','認證',nVerify],['settings','設定',0]];
-  let meTab = sessionStorage.getItem('meTab') || (nAlbum?'album':nVerify?'verify':'profile');
+  const miss = missingBasics(me);
+  let meTab = miss.length ? 'profile' : (sessionStorage.getItem('meTab') || (nAlbum?'album':nVerify?'verify':'profile'));
   if(!TABS.some(t=>t[0]===meTab)) meTab='profile';
-  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<div class="narrow">
+  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}<div class="narrow">
     <div class="card">
       <div class="row"><div class="avatar lg" id="meAv"></div><div class="grow"><h2 style="font-size:22px">${esc(me.nickname||'（未命名）')}</h2><span class="chip ${st}">${STATUS_TXT[me.status]}</span> ${personBadge(me)} ${wealthBadge(me)}
         <div class="mt"><label class="btn sm ghost" style="margin:0">更換頭像<input type="file" accept="image/*" id="meAvFile" class="hidden"></label></div></div></div>
@@ -1490,7 +1498,7 @@ async function viewMe(){
     ${wealthCard}
     </section>
     <section class="mt-pane" data-mt="profile">
-    <form class="card" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改暱稱、自介、職業或興趣後會重新送審。審核期間新的會員暫時看不到你，正在聊天的人仍可以繼續聊。</p>
+    <form class="card" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改自介、職業、興趣或頭像後會重新送審。審核期間新的會員暫時看不到你，正在聊天的人仍可以繼續聊。</p>
       ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存</button></form>
     </section>
     <section class="mt-pane" data-mt="settings">
@@ -1775,7 +1783,7 @@ const DOCS = {
 terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
 <h3>第一條　契約主體與服務性質</h3><p>本條款為微糖 SUGAR 30（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友服務（包括 Sugar Dating 甜心交友）。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
 <h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
-<h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。你於建立檔案時設定之性別與想認識的對象，送出審核後即無法自行修改；如有特殊需要，得來信客服申請，由本平台審酌處理。Sugar Daddy 身分限男性、Sugar Mommy 身分限女性。</p>
+<h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。你於建立檔案時設定之暱稱、性別與想認識的對象，送出審核後即無法自行修改（暱稱於檔案未通過審核時得修改）；如有特殊需要，得來信客服申請，由本平台審酌處理。Sugar Daddy 身分限男性、Sugar Mommy 身分限女性。</p>
 <h3>第四條　禁止行為</h3><p>你同意不得於本平台從事以下行為，違者本平台得逕行停權、刪除內容，並保留法律追訴權：</p><ol>
 <li>上傳非本人、冒用他人、或未經授權之照片或資料。</li>
 <li>以金錢、財物或其他對價交換性交或猥褻行為，或以任何方式要求、提供、暗示此類交換。</li><li>於見面前以任何名義向其他會員要求匯款、借貸、投資、訂金或保證金。</li>
