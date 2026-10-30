@@ -1,6 +1,6 @@
-# 悅遇 YUEYU — 成人交友平台（MVP）  build v0.1.0
+# 半糖 HALF SWEET — 成人交友平台（MVP）  build v0.1.0
 
-暫定名「悅遇 YUEYU」，之後改名只需搜尋替換 `悅遇` / `YUEYU` 兩個字串。
+暫定名「半糖 HALF SWEET」，之後改名只需搜尋替換 `半糖` / `HALF SWEET` 兩個字串。
 
 ## 檔案
 ```
