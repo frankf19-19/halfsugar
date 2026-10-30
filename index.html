@@ -96,6 +96,12 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .budget{color:var(--wine);letter-spacing:.06em}
 .wbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid #9C7A3C;color:#7A5B22;background:#FBF6EC;margin-top:5px;font-family:"Noto Sans TC";font-weight:500;white-space:nowrap}
 .wbadge.big{font-size:13px;padding:3px 10px;margin-top:0}
+.pfacts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--grey)}
+.tag.rel{border-color:var(--wine);color:var(--wine)}
+.fsheet .fg{margin-top:18px}.fsheet .fg>label{margin-top:0}
+.fsheet .two{display:flex;gap:10px;align-items:center}.fsheet .two select{flex:1;min-width:0}
+.fbtn{border:1px solid var(--ink);background:#fff;padding:10px 14px;font-size:13px;letter-spacing:.1em;white-space:nowrap}
+.fbtn b{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--wine);color:#fff;font-size:11px;text-align:center;margin-left:6px;font-weight:500}
 .obsteps{display:flex;gap:28px;margin:0 0 22px;font-size:13px;letter-spacing:.12em;color:var(--grey)}
 .obsteps span{padding-bottom:6px;border-bottom:1px solid transparent}
 .obsteps span.on{color:var(--ink);border-bottom-color:var(--ink)}
@@ -405,9 +411,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   微糖 SUGAR 30  前端  build v1.18.0
+   微糖 SUGAR 30  前端  build v1.19.0
    ===================================================================== */
-const BUILD = 'v1.18.0';
+const BUILD = 'v1.19.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -517,7 +523,7 @@ async function loadMe(){
 lastUid = undefined;
 sb.auth.onAuthStateChange(async (ev, s)=>{
   if(ev==='PASSWORD_RECOVERY'){ recovering = true; lastUid = s?.user?.id; setTimeout(openPasswordReset, 300); return; }
-  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; browseState.budget=''; browseState.wealth=''; }
+  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; resetBrowse(); }
   // 切回分頁、選照片時 supabase 會再發 SIGNED_IN；同一個人就不重畫，避免正在填的表單被清掉
   const uid = s?.user?.id || null;
   if((ev==='SIGNED_IN'||ev==='SIGNED_OUT') && uid!==lastUid){ lastUid = uid; setTimeout(async ()=>{ await loadMe(); route(); }, 0); }
@@ -803,6 +809,11 @@ async function viewAuth(){
    ===================================================================== */
 const BUDGETS = { negotiable:'見面再談', lt30k:'3 萬以下', '30to50k':'3–5 萬', '50to80k':'5–8 萬', '80to120k':'8–12 萬', gt120k:'12 萬以上' };
 const BUDGET_ORDER = ['lt30k','30to50k','50to80k','80to120k','gt120k'];
+const REGIONS = { '北部':['台北市','新北市','基隆','桃園市','新竹','宜蘭'], '中部':['苗栗','台中市','彰化','南投','雲林'], '南部':['嘉義','台南市','高雄市','屏東'], '東部':['花蓮','台東'], '離島':['澎湖','金門'], '海外':['海外'] };
+const BODY = { slim:'纖細', fit:'勻稱', average:'標準', athletic:'健壯', curvy:'曲線', chubby:'微胖' };
+const CUPS = ['A','B','C','D','E','F+'];
+const RELS = { long:'長期穩定', short:'短期相處', dinner:'晚餐約會', travel:'旅伴', companion:'生活陪伴' };
+const FREQ = { weekly:'每週 1 次以上', twomonth:'每月 2–3 次', monthly:'每月 1 次', flexible:'時間彈性' };
 const WEALTH_KINDS = { deposit:'存款證明或存摺內頁', income:'薪資單或收入證明', tax:'所得扣繳憑單', property:'房屋或土地權狀', car:'名下車輛行照', business:'公司負責人證明（名片＋登記資料）', other:'其他可看出經濟能力的文件' };
 const wealthBadge = (p, big) => p && p.wealth_verified_at ? `<span class="wbadge${big?' big':''}" title="已通過財力認證">✓ 財力認證</span>` : '';
 const budgetText = b => b ? (b==='negotiable' ? '每月預算 見面再談' : `每月預算 ${BUDGETS[b]}`) : '';
@@ -832,12 +843,24 @@ function profileFormHtml(p={}){
       <div class="grow"><label>身高（cm）</label><input name="height_cm" type="number" min="100" max="250" value="${esc(p.height_cm||'')}"></div>
       <div class="grow"><label>職業</label><input name="occupation" maxlength="30" value="${esc(p.occupation||'')}" placeholder="例如：外商主管、設計師"></div>
     </div>
+    <div class="row">
+      <div class="grow"><label>身材 *</label><select name="body_type" required><option value="">請選擇</option>${Object.entries(BODY).map(([k,v])=>`<option value="${k}" ${p.body_type===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="grow" id="cupBox" ${p.gender==='male'?'style="display:none"':''}><label>罩杯（選填）</label><select name="cup"><option value="">不填</option>${CUPS.map(c=>`<option ${p.cup===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <label>相處方式（可複選）</label>
+    <div class="tags" id="relPick">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${(p.relation_types||[]).includes(k)?'on':''}" data-r="${k}">${v}</button>`).join('')}</div>
+    <div class="row">
+      <div class="grow"><label>見面頻率</label><select name="meet_freq"><option value="">不填</option>${Object.entries(FREQ).map(([k,v])=>`<option value="${k}" ${p.meet_freq===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="grow" id="ebBox" ${p.role&&p.role!=='baby'?'style="display:none"':''}><label>期望每月預算（甜心選填）</label><select name="expect_budget"><option value="">不填</option>${Object.entries(BUDGETS).map(([k,v])=>`<option value="${k}" ${p.expect_budget===k?'selected':''}>${v}</option>`).join('')}</select></div>
+    </div>
     <label>興趣（最多 8 個）</label>
     <div class="tags" id="tagPick">${TAGS.map(t=>`<button type="button" class="tag ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
     <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額或價碼。">${esc(p.bio||'')}</textarea>
     <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額價碼或性交易相關字眼，將無法通過審核。</p>`;
 }
-function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',()=>$('#budgetBox')?.classList.toggle('hidden', r.value==='baby'))); $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
+function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',()=>{ $('#budgetBox')?.classList.toggle('hidden', r.value==='baby'); const eb=$('#ebBox'); if(eb) eb.style.display = r.value==='baby'?'':'none'; }));
+  document.querySelectorAll('input[name=orient]').forEach(r=>r.addEventListener('change',()=>{ const c=$('#cupBox'); if(c) c.style.display = r.value.startsWith('male')?'none':''; }));
+  $('#relPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(b) b.classList.toggle('on'); }); $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
   if(!b.classList.contains('on') && $('#tagPick').querySelectorAll('.on').length>=8) return toast('最多 8 個興趣'); b.classList.toggle('on'); }); }
 function readProfileForm(form){
   const f = new FormData(form); const tags=[...$('#tagPick').querySelectorAll('.on')].map(b=>b.dataset.t);
@@ -853,7 +876,11 @@ function readProfileForm(form){
   if(f.get('role')==='mommy' && gender!=='female') { toast('Sugar Mommy 限女性，男性請選 Sugar Daddy'); return null; }
   const budget = f.get('role')==='baby' ? null : (f.get('budget')||null);
   if(f.get('role')!=='baby' && !budget){ toast('請選擇每月相處預算'); return null; }
-  return { role:f.get('role'), budget, nickname:f.get('nickname').trim(), gender, looking_for, birth_year:+f.get('birth_year'),
+  if(!f.get('body_type')){ toast('請選擇身材'); return null; }
+  const relation_types = [...document.querySelectorAll('#relPick .on')].map(b=>b.dataset.r);
+  const extra = { body_type: f.get('body_type'), cup: gender==='female' ? (f.get('cup')||null) : null, relation_types, meet_freq: f.get('meet_freq')||null,
+    expect_budget: f.get('role')==='baby' ? (f.get('expect_budget')||null) : null };
+  return { ...extra, role:f.get('role'), budget, nickname:f.get('nickname').trim(), gender, looking_for, birth_year:+f.get('birth_year'),
     city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
 }
 async function uploadPhoto(file){
@@ -863,7 +890,7 @@ async function uploadPhoto(file){
   if(error) throw error; return path;
 }
 
-const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,wealth_verified_at,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,wealth_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -967,46 +994,83 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { role: null, city:'', amin:'', amax:'', budget:'', wealth:'' };
+const browseState = { role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'' };
+const resetBrowse = () => Object.assign(browseState, { region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'' });
+const advCount = () => ['amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0);
 async function viewBrowse(){
   if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); }
+  const sugarView = () => browseState.role!=='baby';
+  const cities = () => browseState.region ? REGIONS[browseState.region] : CITIES;
   $('#app').innerHTML = `${statusBanner()}
     <p class="tiny dim" style="margin:-8px 0 14px;letter-spacing:.1em">${orientText(me)}　·　只顯示方向互相吻合的會員</p>
     <div class="filters">
       <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
-      <select id="fCity" aria-label="地區"><option value="">地區不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select>
-      <select id="fBudget" aria-label="預算" class="${browseState.role==='baby'?'hidden':''}"><option value="">預算不限</option>${Object.entries({'30to50k':'3 萬以上','50to80k':'5 萬以上','80to120k':'8 萬以上','gt120k':'12 萬以上'}).map(([k,v])=>`<option value="${k}" ${browseState.budget===k?'selected':''}>預算 ${v}</option>`).join('')}</select>
-      <select id="fWealth" aria-label="財力認證" class="${browseState.role==='baby'?'hidden':''}"><option value="">認證不限</option><option value="1" ${browseState.wealth?'selected':''}>只看財力認證</option></select>
-      <select id="fAge" aria-label="年齡"><option value="">年齡不限</option>${[['18','25'],['26','30'],['31','35'],['36','40'],['41','50'],['51','99']].map(([a,b])=>`<option value="${a}-${b}" ${browseState.amin===a?'selected':''}>${b==='99'?a+' 歲以上':a+'–'+b+' 歲'}</option>`).join('')}</select>
+      <select id="fRegion" aria-label="地區"><option value="">地區不限</option>${Object.keys(REGIONS).map(r=>`<option ${browseState.region===r?'selected':''}>${r}</option>`).join('')}</select>
+      <select id="fCity" aria-label="城市"><option value="">城市不限</option></select>
+      <button type="button" class="fbtn" id="fMore">更多篩選${advCount()?`<b>${advCount()}</b>`:''}</button>
     </div>
     <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
+  const fillCity = () => { $('#fCity').innerHTML = `<option value="">城市不限</option>` + cities().map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join(''); };
+  fillCity();
   const reload = async () => {
-    browseState.role=$('#fRole').value; browseState.city=$('#fCity').value; browseState.budget=$('#fBudget').value; browseState.wealth=$('#fWealth').value;
-    $('#fWealth').classList.toggle('hidden', browseState.role==='baby');
-    $('#fBudget').classList.toggle('hidden', browseState.role==='baby'); const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
-    const y = new Date().getFullYear();
-    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
-    if(browseState.role==='baby') q = q.eq('role','baby'); else if(browseState.role==='sugar') q = q.in('role',['daddy','mommy']);
+    $('#fMore').innerHTML = '更多篩選' + (advCount()?`<b>${advCount()}</b>`:'');
+    const y = new Date().getFullYear(); const B = browseState;
+    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
+    if(B.role==='baby') q = q.eq('role','baby'); else if(B.role==='sugar') q = q.in('role',['daddy','mommy']);
     q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
-    if(browseState.city) q = q.eq('city', browseState.city);
-    if(browseState.wealth && browseState.role!=='baby') q = q.not('wealth_verified_at','is',null);
-    if(browseState.budget && browseState.role!=='baby') q = q.in('budget', BUDGET_ORDER.slice(BUDGET_ORDER.indexOf(browseState.budget)));
-    if(browseState.amin) q = q.lte('birth_year', y - +browseState.amin);
-    if(browseState.amax) q = q.gte('birth_year', y - +browseState.amax);
+    if(B.city) q = q.eq('city', B.city); else if(B.region) q = q.in('city', REGIONS[B.region]);
+    if(B.amin) q = q.lte('birth_year', y - +B.amin);
+    if(B.amax) q = q.gte('birth_year', y - +B.amax);
+    if(B.hmin) q = q.gte('height_cm', +B.hmin);
+    if(B.hmax) q = q.lte('height_cm', +B.hmax);
+    if(B.body.length) q = q.in('body_type', B.body);
+    if(me.looking_for==='female' && (B.cmin||B.cmax)){ const i0 = B.cmin?CUPS.indexOf(B.cmin):0, i1 = B.cmax?CUPS.indexOf(B.cmax):CUPS.length-1; q = q.in('cup', CUPS.slice(i0, i1+1)); }
+    if(B.rel.length) q = q.overlaps('relation_types', B.rel);
+    if(B.freq) q = q.eq('meet_freq', B.freq);
+    if(sugarView()){
+      if(B.wealth) q = q.not('wealth_verified_at','is',null);
+      if(B.budget) q = q.in('budget', BUDGET_ORDER.slice(BUDGET_ORDER.indexOf(B.budget)));
+    } else if(B.ebudget){ q = q.in('expect_budget', ['negotiable', ...BUDGET_ORDER.slice(0, BUDGET_ORDER.indexOf(B.ebudget)+1)]); }
     const [{ data: rows, error }, { data: myLikes }] = await Promise.all([q, sb.from('likes').select('to_id').eq('from_id', me.id)]);
     if(error) throw error;
     const liked = new Set((myLikes||[]).map(l=>l.to_id));
-    if(!rows.length){ const filtered = browseState.city||browseState.amin||browseState.amax||browseState.budget||browseState.wealth;
+    if(!rows.length){ const filtered = B.city||B.region||advCount();
       $('#grid').innerHTML = me.status==='rejected' ? `<p class="muted center" style="grid-column:1/-1;padding:40px 0">你的檔案需要修改後才能探索。<br><a class="btn mt2" href="#/me">前往修改</a></p>`
         : `<p class="muted center" style="grid-column:1/-1;padding:40px 0">${filtered?'這個條件下暫時沒有會員。':'會員陸續加入中，晚點再回來看看。'}${filtered?'<br><button class="btn mt2" id="clrF">清除篩選</button>':''}</p>`;
-      $('#clrF') && ($('#clrF').onclick=()=>{ $('#fCity').value=''; $('#fAge').value=''; $('#fBudget').value=''; $('#fWealth').value=''; reload(); }); return; }
+      $('#clrF') && ($('#clrF').onclick=()=>{ resetBrowse(); viewBrowse(); }); return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
         ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${wealthBadge(r)}</div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.textContent=''; } });
   };
-  ['#fRole','#fCity','#fAge','#fBudget','#fWealth'].forEach(s=>$(s).onchange=reload);
+  $('#fRole').onchange = ()=>{ browseState.role=$('#fRole').value; reload(); };
+  $('#fRegion').onchange = ()=>{ browseState.region=$('#fRegion').value; browseState.city=''; fillCity(); reload(); };
+  $('#fCity').onchange = ()=>{ browseState.city=$('#fCity').value; reload(); };
+  $('#fMore').onclick = ()=>{
+    const B = browseState; const opt = (arr, cur, fmt) => arr.map(v=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${fmt?fmt(v):v}</option>`).join('');
+    const ages = Array.from({length:53},(_,i)=>18+i), hs = Array.from({length:13},(_,i)=>140+i*5);
+    modal(`<div class="fsheet"><h2>更多篩選</h2>
+      <div class="fg"><label>年齡</label><div class="two"><select id="xAmin"><option value="">不限</option>${opt(ages,B.amin)}</select><span>—</span><select id="xAmax"><option value="">不限</option>${opt(ages,B.amax)}</select><span class="small muted">歲</span></div></div>
+      <div class="fg"><label>身高</label><div class="two"><select id="xHmin"><option value="">不限</option>${opt(hs,B.hmin)}</select><span>—</span><select id="xHmax"><option value="">不限</option>${opt(hs,B.hmax)}</select><span class="small muted">cm</span></div></div>
+      <div class="fg"><label>身材（可複選）</label><div class="tags" id="xBody">${Object.entries(BODY).map(([k,v])=>`<button type="button" class="tag ${B.body.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
+      ${me.looking_for==='female'?`<div class="fg"><label>罩杯</label><div class="two"><select id="xCmin"><option value="">不限</option>${opt(CUPS,B.cmin)}</select><span>—</span><select id="xCmax"><option value="">不限</option>${opt(CUPS,B.cmax)}</select></div><p class="tiny dim">只會篩選到有填寫罩杯的會員。</p></div>`:''}
+      <div class="fg"><label>相處方式（符合任一項）</label><div class="tags" id="xRel">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${B.rel.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
+      <div class="fg"><label>見面頻率</label><select id="xFreq"><option value="">不限</option>${Object.entries(FREQ).map(([k,v])=>`<option value="${k}" ${B.freq===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      ${sugarView()?`<div class="fg"><label>對方每月預算</label><select id="xBudget"><option value="">不限</option>${Object.entries({'30to50k':'3 萬以上','50to80k':'5 萬以上','80to120k':'8 萬以上','gt120k':'12 萬以上'}).map(([k,v])=>`<option value="${k}" ${B.budget===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="fg"><label class="sw" style="margin:0"><input type="checkbox" id="xWealth" ${B.wealth?'checked':''}><span><b>只看財力認證</b></span></label></div>`
+      :`<div class="fg"><label>甜心期望的每月預算</label><select id="xEb"><option value="">不限</option>${Object.entries({'lt30k':'3 萬以下','30to50k':'5 萬以下','50to80k':'8 萬以下','80to120k':'12 萬以下'}).map(([k,v])=>`<option value="${k}" ${B.ebudget===k?'selected':''}>${v}（含見面再談）</option>`).join('')}</select></div>`}
+      <div class="row mt2" style="justify-content:space-between;gap:10px"><button class="btn" id="xClear">全部清除</button><button class="btn primary" id="xApply">套用篩選</button></div></div>`);
+    document.querySelectorAll('#xBody .tag,#xRel .tag').forEach(t=>t.onclick=()=>t.classList.toggle('on'));
+    $('#xClear').onclick = ()=>{ resetBrowse(); closeModal(); viewBrowse(); };
+    $('#xApply').onclick = ()=>{ const v = id => $(id)?.value || '';
+      let [a0,a1] = [v('#xAmin'), v('#xAmax')]; if(a0&&a1&&+a0>+a1) [a0,a1]=[a1,a0];
+      let [h0,h1] = [v('#xHmin'), v('#xHmax')]; if(h0&&h1&&+h0>+h1) [h0,h1]=[h1,h0];
+      let [c0,c1] = [v('#xCmin'), v('#xCmax')]; if(c0&&c1&&CUPS.indexOf(c0)>CUPS.indexOf(c1)) [c0,c1]=[c1,c0];
+      Object.assign(B, { amin:a0, amax:a1, hmin:h0, hmax:h1, cmin:c0, cmax:c1, freq:v('#xFreq'), budget:v('#xBudget'), ebudget:v('#xEb'), wealth: $('#xWealth')?.checked ? '1' : '',
+        body:[...document.querySelectorAll('#xBody .on')].map(t=>t.dataset.v), rel:[...document.querySelectorAll('#xRel .on')].map(t=>t.dataset.v) });
+      closeModal(); reload(); };
+  };
   await reload();
 }
 
@@ -1037,6 +1101,8 @@ async function openProfile(id){
         <div id="wDoc" class="small mt"></div></div>
       ${theirLike?'<span class="chip ok">♥ 對你心動</span>':''}
     </div>
+    ${p.body_type||p.cup||p.meet_freq||p.expect_budget?`<div class="pfacts mt">${p.body_type?`<span>身材 ${BODY[p.body_type]}</span>`:''}${p.cup?`<span>罩杯 ${esc(p.cup)}</span>`:''}${p.meet_freq?`<span>見面 ${FREQ[p.meet_freq]}</span>`:''}${p.expect_budget?`<span class="budget">期望每月預算 ${BUDGETS[p.expect_budget]}</span>`:''}</div>`:''}
+    ${(p.relation_types||[]).length?`<div class="tags mt">${p.relation_types.map(r=>`<span class="tag rel">${RELS[r]||''}</span>`).join('')}</div>`:''}
     ${(p.tags||[]).length?`<div class="tags mt">${p.tags.map(t=>`<span class="tag on">${esc(t)}</span>`).join('')}</div>`:''}
     <p class="mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
     ${pubPhotos.length?`<div class="gallery wmg" data-wm="${wmText()}">${pubPhotos.map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}
