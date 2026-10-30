@@ -127,7 +127,7 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub',F,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', F::text, true);
   execute 'set local role authenticated';
-  update public.profiles set nickname='F', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市',
+  update public.profiles set nickname='F', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1980, city='台北市',
     avatar_path=F||'/a.jpg', age_confirmed=true, agreed_terms_at=now() where id=F;
   select status into v from public.profiles where id=F; out := array_append(out, ('14 沒驗證手機送審後狀態 = '||v||' (應為incomplete)')::text);
   execute 'reset role';
@@ -369,6 +369,17 @@ begin
   exception when others then out := array_append(out, '22f 被對方結束後不能再開 ✓'::text); end;
   begin insert into public.messages (match_id, sender_id, body) values (mid, P, '還在嗎'); out := array_append(out, '22g 對已結束的對話傳訊：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '22g 已結束的對話不能傳訊 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 23 每月預算
+  perform set_config('request.jwt.claims', json_build_object('sub',F,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', F::text, true);
+  execute 'set local role authenticated';
+  begin update public.profiles set budget = null where id=F; out := array_append(out, '23 Daddy 清空預算：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '23 Daddy 一定要有預算 ✓'::text); end;
+  begin update public.profiles set budget = '一百萬' where id=F; out := array_append(out, '23b 預算亂填：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '23b 預算只能選清單 ✓'::text); end;
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 

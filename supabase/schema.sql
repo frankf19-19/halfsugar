@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.15.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.16.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -59,7 +59,10 @@ alter table public.profiles add column if not exists role text check (role in ('
 alter table public.profiles add column if not exists hidden boolean not null default false;
 alter table public.profiles add column if not exists show_online boolean not null default true;
 alter table public.profiles add column if not exists submitted_at timestamptz;
-alter table public.profiles add column if not exists approved_at timestamptz;    -- 第一次通過審核的時間   -- 最近一次送審時間（待審名單排序用）
+alter table public.profiles add column if not exists approved_at timestamptz;
+-- 每月相處預算（Sugar Daddy／Mommy 必填；甜心不填）
+alter table public.profiles add column if not exists budget text
+  check (budget in ('negotiable','lt30k','30to50k','50to80k','80to120k','gt120k'));
 create index if not exists profiles_browse_idx on public.profiles(status, gender, city, last_active_at desc);
 alter table public.profiles drop constraint if exists profiles_looking_for_check;
 alter table public.profiles drop constraint if exists profiles_city_check;
@@ -99,6 +102,10 @@ begin
   -- 性別與想認識的對象：第一次設定後不可更改
   if old.gender is not null then new.gender := old.gender; end if;
   if old.looking_for is not null then new.looking_for := old.looking_for; end if;
+  if new.role = 'baby' then new.budget := null; end if;
+  if new.role in ('daddy','mommy') and new.budget is null and old.status <> 'incomplete' then
+    raise exception 'Sugar Daddy／Mommy 請選擇每月相處預算';
+  end if;
   if (new.role = 'daddy' and new.gender = 'female') or (new.role = 'mommy' and new.gender = 'male') then
     raise exception 'Sugar Daddy 限男性、Sugar Mommy 限女性';
   end if;
@@ -116,6 +123,7 @@ begin
     if new.nickname is not null and new.gender is not null and new.looking_for is not null and new.role is not null
        and new.birth_year is not null and new.city is not null and new.avatar_path is not null
        and new.age_confirmed and new.agreed_terms_at is not null
+       and (new.role = 'baby' or new.budget is not null)
        and exists (select 1 from auth.users u where u.id = new.id and u.phone is not null and u.phone_confirmed_at is not null) then
       new.status := 'pending';
     else
@@ -660,7 +668,7 @@ $$;
 
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
-grant select (id, nickname, gender, looking_for, role, birth_year, city, height_cm, occupation, bio, tags,
+grant select (id, nickname, gender, looking_for, role, budget, birth_year, city, height_cm, occupation, bio, tags,
               avatar_path, status, hidden, last_active_at, created_at, updated_at) on public.profiles to authenticated;
 
 -- 讀自己的完整資料

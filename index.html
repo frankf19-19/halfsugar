@@ -92,6 +92,8 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .pactions{position:sticky;bottom:calc(-30px - env(safe-area-inset-bottom));background:#fff;margin-left:-26px;margin-right:-26px;padding:12px 26px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--rule);z-index:2}
 .item.closed{opacity:.55}
 .req{margin-top:6px;padding:10px 12px;background:var(--paper);font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:7.2em;overflow:hidden}
+.pcard .budget{font-size:12px;letter-spacing:.06em;color:var(--wine);margin-top:4px}
+.budget{color:var(--wine);letter-spacing:.06em}
 .obsteps{display:flex;gap:28px;margin:0 0 22px;font-size:13px;letter-spacing:.12em;color:var(--grey)}
 .obsteps span{padding-bottom:6px;border-bottom:1px solid transparent}
 .obsteps span.on{color:var(--ink);border-bottom-color:var(--ink)}
@@ -192,7 +194,7 @@ br.d{display:none}
 .filters::-webkit-scrollbar{display:none}
 @media(max-width:719px){#adm .note{flex:1 1 100%;order:-1;margin-bottom:4px}}
 .filters select{flex:0 0 auto;width:auto;min-width:118px;border:1px solid var(--rule);padding:10px 30px 10px 14px;font-size:13px;letter-spacing:.1em;background-position:right 12px center}
-@media(max-width:719px){.filters{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);overflow:visible;gap:8px}.filters select{min-width:0;width:100%;box-sizing:border-box;padding:10px 22px 10px 10px;letter-spacing:.04em;background-position:right 8px center;text-overflow:ellipsis}}
+@media(max-width:719px){.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:8px}.filters select{min-width:0;width:100%;box-sizing:border-box;padding:10px 22px 10px 10px;letter-spacing:.04em;background-position:right 8px center;text-overflow:ellipsis}}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px 12px}
 @media(min-width:760px){.grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:40px 22px}}
 .pcard{cursor:pointer;position:relative}
@@ -374,9 +376,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   微糖 SUGAR 30  前端  build v1.14.0
+   微糖 SUGAR 30  前端  build v1.15.0
    ===================================================================== */
-const BUILD = 'v1.14.0';
+const BUILD = 'v1.15.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -486,7 +488,7 @@ async function loadMe(){
 lastUid = undefined;
 sb.auth.onAuthStateChange(async (ev, s)=>{
   if(ev==='PASSWORD_RECOVERY'){ recovering = true; lastUid = s?.user?.id; setTimeout(openPasswordReset, 300); return; }
-  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; }
+  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; browseState.budget=''; }
   // 切回分頁、選照片時 supabase 會再發 SIGNED_IN；同一個人就不重畫，避免正在填的表單被清掉
   const uid = s?.user?.id || null;
   if((ev==='SIGNED_IN'||ev==='SIGNED_OUT') && uid!==lastUid){ lastUid = uid; setTimeout(async ()=>{ await loadMe(); route(); }, 0); }
@@ -745,6 +747,9 @@ async function viewAuth(){
 /* =====================================================================
    頁面：建立檔案（Onboarding）＋ 共用表單
    ===================================================================== */
+const BUDGETS = { negotiable:'見面再談', lt30k:'3 萬以下', '30to50k':'3–5 萬', '50to80k':'5–8 萬', '80to120k':'8–12 萬', gt120k:'12 萬以上' };
+const BUDGET_ORDER = ['lt30k','30to50k','50to80k','80to120k','gt120k'];
+const budgetText = b => b ? (b==='negotiable' ? '每月預算 見面再談' : `每月預算 ${BUDGETS[b]}`) : '';
 function profileFormHtml(p={}){
   const years = []; const y0 = new Date().getFullYear()-18; for(let y=y0;y>=y0-62;y--) years.push(y);
   return `
@@ -756,6 +761,11 @@ function profileFormHtml(p={}){
     <div class="roles orient">${Object.entries(ORIENT).map(([k,v])=>`<label class="rl"><input type="radio" name="orient" value="${k}" required><span><b>${v.replace('我是','').replace('，想認識','　找')}</b><small>${v}</small></span></label>`).join('')}</div>`}
     <label>我的身分 *</label>
     <div class="roles">${Object.entries(ROLES).map(([k,v])=>`<label class="rl"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div>
+    <div id="budgetBox" class="${p.role==='daddy'||p.role==='mommy'?'':'hidden'}">
+      <label>每月相處預算 *</label>
+      <select name="budget"><option value="">請選擇</option>${Object.entries(BUDGETS).map(([k,v])=>`<option value="${k}" ${p.budget===k?'selected':''}>${v}</option>`).join('')}</select>
+      <p class="tiny dim">一起用餐、旅行、禮物與生活上照顧的大約預算，會顯示在你的檔案上，讓彼此一開始就清楚期待。這不是任何性服務的對價，平台也不經手會員之間的任何款項。</p>
+    </div>
     <label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字">
 
     <div class="row">
@@ -771,7 +781,7 @@ function profileFormHtml(p={}){
     <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額或價碼。">${esc(p.bio||'')}</textarea>
     <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額價碼或性交易相關字眼，將無法通過審核。</p>`;
 }
-function bindTagPick(){ $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
+function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',()=>$('#budgetBox')?.classList.toggle('hidden', r.value==='baby'))); $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
   if(!b.classList.contains('on') && $('#tagPick').querySelectorAll('.on').length>=8) return toast('最多 8 個興趣'); b.classList.toggle('on'); }); }
 function readProfileForm(form){
   const f = new FormData(form); const tags=[...$('#tagPick').querySelectorAll('.on')].map(b=>b.dataset.t);
@@ -785,7 +795,9 @@ function readProfileForm(form){
   if(!gender || !looking_for) { toast('請選擇想認識的對象'); return null; }
   if(f.get('role')==='daddy' && gender!=='male') { toast('Sugar Daddy 限男性，女性請選 Sugar Mommy'); return null; }
   if(f.get('role')==='mommy' && gender!=='female') { toast('Sugar Mommy 限女性，男性請選 Sugar Daddy'); return null; }
-  return { role:f.get('role'), nickname:f.get('nickname').trim(), gender, looking_for, birth_year:+f.get('birth_year'),
+  const budget = f.get('role')==='baby' ? null : (f.get('budget')||null);
+  if(f.get('role')!=='baby' && !budget){ toast('請選擇每月相處預算'); return null; }
+  return { role:f.get('role'), budget, nickname:f.get('nickname').trim(), gender, looking_for, birth_year:+f.get('birth_year'),
     city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
 }
 async function uploadPhoto(file){
@@ -795,7 +807,7 @@ async function uploadPhoto(file){
   if(error) throw error; return path;
 }
 
-const PUB_COLS = 'id,nickname,gender,looking_for,role,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -899,7 +911,7 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { role: null, city:'', amin:'', amax:'' };
+const browseState = { role: null, city:'', amin:'', amax:'', budget:'' };
 async function viewBrowse(){
   if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); }
   $('#app').innerHTML = `${statusBanner()}
@@ -907,32 +919,35 @@ async function viewBrowse(){
     <div class="filters">
       <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
       <select id="fCity" aria-label="地區"><option value="">地區不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select>
+      <select id="fBudget" aria-label="預算" class="${browseState.role==='baby'?'hidden':''}"><option value="">預算不限</option>${Object.entries({'30to50k':'3 萬以上','50to80k':'5 萬以上','80to120k':'8 萬以上','gt120k':'12 萬以上'}).map(([k,v])=>`<option value="${k}" ${browseState.budget===k?'selected':''}>預算 ${v}</option>`).join('')}</select>
       <select id="fAge" aria-label="年齡"><option value="">年齡不限</option>${[['18','25'],['26','30'],['31','35'],['36','40'],['41','50'],['51','99']].map(([a,b])=>`<option value="${a}-${b}" ${browseState.amin===a?'selected':''}>${b==='99'?a+' 歲以上':a+'–'+b+' 歲'}</option>`).join('')}</select>
     </div>
     <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
   const reload = async () => {
-    browseState.role=$('#fRole').value; browseState.city=$('#fCity').value; const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
+    browseState.role=$('#fRole').value; browseState.city=$('#fCity').value; browseState.budget=$('#fBudget').value;
+    $('#fBudget').classList.toggle('hidden', browseState.role==='baby'); const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
     const y = new Date().getFullYear();
-    let q = sb.from('profiles').select('id,nickname,role,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
+    let q = sb.from('profiles').select('id,nickname,role,budget,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
     if(browseState.role==='baby') q = q.eq('role','baby'); else if(browseState.role==='sugar') q = q.in('role',['daddy','mommy']);
     q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
     if(browseState.city) q = q.eq('city', browseState.city);
+    if(browseState.budget && browseState.role!=='baby') q = q.in('budget', BUDGET_ORDER.slice(BUDGET_ORDER.indexOf(browseState.budget)));
     if(browseState.amin) q = q.lte('birth_year', y - +browseState.amin);
     if(browseState.amax) q = q.gte('birth_year', y - +browseState.amax);
     const [{ data: rows, error }, { data: myLikes }] = await Promise.all([q, sb.from('likes').select('to_id').eq('from_id', me.id)]);
     if(error) throw error;
     const liked = new Set((myLikes||[]).map(l=>l.to_id));
-    if(!rows.length){ const filtered = browseState.city||browseState.amin||browseState.amax;
+    if(!rows.length){ const filtered = browseState.city||browseState.amin||browseState.amax||browseState.budget;
       $('#grid').innerHTML = me.status==='rejected' ? `<p class="muted center" style="grid-column:1/-1;padding:40px 0">你的檔案需要修改後才能探索。<br><a class="btn mt2" href="#/me">前往修改</a></p>`
         : `<p class="muted center" style="grid-column:1/-1;padding:40px 0">${filtered?'這個條件下暫時沒有會員。':'會員陸續加入中，晚點再回來看看。'}${filtered?'<br><button class="btn mt2" id="clrF">清除篩選</button>':''}</p>`;
-      $('#clrF') && ($('#clrF').onclick=()=>{ $('#fCity').value=''; $('#fAge').value=''; reload(); }); return; }
+      $('#clrF') && ($('#clrF').onclick=()=>{ $('#fCity').value=''; $('#fAge').value=''; $('#fBudget').value=''; reload(); }); return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
-        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div></div></div>`).join('');
+        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}</div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.textContent=''; } });
   };
-  ['#fRole','#fCity','#fAge'].forEach(s=>$(s).onchange=reload);
+  ['#fRole','#fCity','#fAge','#fBudget'].forEach(s=>$(s).onchange=reload);
   await reload();
 }
 
@@ -958,7 +973,8 @@ async function openProfile(id){
     <div class="photo-big wm" id="bigPh" data-wm="${wmText()}"></div>
     <div class="row mt" style="justify-content:space-between;align-items:flex-start">
       <div>${p.role?`<div class="rtag" style="margin-bottom:4px">${ROLES[p.role]}</div>`:''}<h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
-        <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}${seen(p.last_active_at)?' · '+seen(p.last_active_at):''}</div></div>
+        <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}${seen(p.last_active_at)?' · '+seen(p.last_active_at):''}</div>
+        ${p.budget?`<div class="budget mt" style="font-size:14px">${budgetText(p.budget)}</div>`:''}</div>
       ${theirLike?'<span class="chip ok">♥ 對你心動</span>':''}
     </div>
     ${(p.tags||[]).length?`<div class="tags mt">${p.tags.map(t=>`<span class="tag on">${esc(t)}</span>`).join('')}</div>`:''}
