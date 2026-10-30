@@ -235,6 +235,13 @@ br.d{display:none}
 .plan ul{list-style:none;margin:22px 0 28px;flex:1}
 .plan li{font-size:14px;line-height:1.9;padding:7px 0;border-top:1px solid var(--rule)}
 .plan li.no{color:var(--grey2);text-decoration:line-through;text-decoration-thickness:1px}
+.roles.orient{grid-template-columns:1fr 1fr}
+@media(min-width:560px){.roles.orient{grid-template-columns:repeat(4,1fr)}}
+.orient-note{font-size:13px;color:var(--grey);margin:4px 0 2px;line-height:1.8}
+.orient-note b,.banner b{font-weight:500;color:var(--wine)}
+.locked{border:1px dashed var(--rule);padding:12px 16px;margin-top:6px}
+.locked b{display:block;font-weight:400;font-family:"Noto Serif TC",serif;font-size:17px}
+.locked small{display:block;font-size:12px;color:var(--grey);margin-top:4px}
 .rtag{display:inline-block;font-size:11px;letter-spacing:.08em;color:var(--wine);margin-right:8px}
 .tags{display:flex;flex-wrap:wrap;gap:8px}
 .tag{font-size:12px;letter-spacing:.08em;padding:5px 13px;border:1px solid var(--rule);color:var(--grey)}
@@ -342,9 +349,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SUGAR  前端  build v1.4.0
+   半糖 HALF SUGAR  前端  build v1.5.0
    ===================================================================== */
-const BUILD = 'v1.4.0';
+const BUILD = 'v1.5.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -358,6 +365,8 @@ const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON);
 /* ---------- 常數 ---------- */
 const CITIES = ['台北市','新北市','桃園市','新竹','台中市','彰化','雲林','嘉義','台南市','高雄市','屏東','基隆','宜蘭','花蓮','台東','南投','苗栗','澎湖','金門','海外'];
 const TAGS = ['美食','旅行','咖啡','紅酒','健身','電影','音樂','閱讀','藝術','攝影','高爾夫','登山','游泳','烹飪','寵物','時尚','品茶','露營','瑜伽','投資理財'];
+const ORIENT = { 'male-female':'我是男生，想認識女生', 'female-male':'我是女生，想認識男生', 'male-male':'我是男生，想認識男生', 'female-female':'我是女生，想認識女生' };
+const orientText = p => ORIENT[`${p.gender}-${p.looking_for}`] || '';
 const ROLES = { daddy:'Sugar Daddy', mommy:'Sugar Mommy', baby:'甜心' };
 const ROLE_DESC = { daddy:'事業有成，願意照顧對方的男性', mommy:'事業有成，願意照顧對方的女性', baby:'希望認識成熟、穩定對象的甜心' };
 const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'色情產業招攬', minor:'疑似未成年', other:'其他' };
@@ -415,7 +424,7 @@ async function loadMe(){
 }
 sb.auth.onAuthStateChange(async (ev)=>{
   if(ev==='PASSWORD_RECOVERY'){ setTimeout(openPasswordReset, 300); return; }
-  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.gender=''; browseState.city=''; browseState.amin=''; browseState.amax=''; }
+  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; }
   if(ev==='SIGNED_IN'||ev==='SIGNED_OUT'||ev==='USER_UPDATED'){ setTimeout(async ()=>{ await loadMe(); route(); }, 0); }
 });
 function openPasswordReset(){
@@ -613,6 +622,7 @@ async function viewAuth(){
         ${mode==='register' ? `
         <label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--text);font-size:14px"><input type="checkbox" name="age" required style="width:auto;margin-top:4px"><span>我確認已年滿 18 歲（或所在地法定成年年齡）</span></label>
         <label style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--text);font-size:14px"><input type="checkbox" name="terms" required style="width:auto;margin-top:4px"><span>我已閱讀並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>，並了解本站禁止任何金錢交易與色情招攬</span></label>` : ''}
+        ${mode==='register'?'<p class="tiny dim mt">註冊後的第一步，會請你設定性別與想認識的對象（男找女、女找男、男找男、女找女），送出後無法修改。</p>':''}
         <button class="btn primary block mt2" type="submit">${mode==='register'?'建立帳號':'登入'}</button>
         ${mode==='login' ? `<button class="btn ghost block mt" type="button" id="forgot">忘記密碼</button>`:''}
         <p class="small bad mt" id="authErr"></p>
@@ -647,13 +657,16 @@ async function viewAuth(){
 function profileFormHtml(p={}){
   const years = []; const y0 = new Date().getFullYear()-18; for(let y=y0;y>=y0-62;y--) years.push(y);
   return `
+    ${p.gender && p.looking_for ? `
+    <label>想認識的對象</label>
+    <div class="locked"><b>${orientText(p)}</b><small>這項設定送出後就無法修改。如有特殊需要，請來信客服。</small></div>` : `
+    <label>想認識的對象 *</label>
+    <div class="orient-note">請選擇你的性別與想認識的對象。<b>送出審核後就無法修改</b>，請確認後再選。</div>
+    <div class="roles orient">${Object.entries(ORIENT).map(([k,v])=>`<label class="rl"><input type="radio" name="orient" value="${k}" required><span><b>${v.replace('我是','').replace('，想認識','　找')}</b><small>${v}</small></span></label>`).join('')}</div>`}
     <label>我的身分 *</label>
     <div class="roles">${Object.entries(ROLES).map(([k,v])=>`<label class="rl"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div>
     <label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字">
-    <div class="row">
-      <div class="grow"><label>我是 *</label><select name="gender" required><option value="">請選擇</option><option value="male" ${p.gender==='male'?'selected':''}>男性</option><option value="female" ${p.gender==='female'?'selected':''}>女性</option></select></div>
-      <div class="grow"><label>想認識 *</label><select name="looking_for" required><option value="">請選擇</option><option value="female" ${p.looking_for==='female'?'selected':''}>女性</option><option value="male" ${p.looking_for==='male'?'selected':''}>男性</option><option value="any" ${p.looking_for==='any'?'selected':''}>不限</option></select></div>
-    </div>
+
     <div class="row">
       <div class="grow"><label>出生年 *</label><select name="birth_year" required><option value="">請選擇</option>${years.map(y=>`<option value="${y}" ${p.birth_year==y?'selected':''}>${y}（${age(y)} 歲）</option>`).join('')}</select></div>
       <div class="grow"><label>所在地 *</label><select name="city" required><option value="">請選擇</option>${CITIES.map(c=>`<option ${p.city===c?'selected':''}>${c}</option>`).join('')}</select></div>
@@ -676,7 +689,12 @@ function readProfileForm(form){
   if(bad.length) { toast(`自介含不允許的字眼：${bad.join('、')}`); return null; }
   if(/\bline\b|\bline\s*id|\big\b|instagram|telegram|wechat|微信|加賴|加line|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}/i.test(bio)) { toast('自介請勿留下聯絡方式'); return null; }
   if(!f.get('role')) { toast('請選擇你的身分'); return null; }
-  return { role:f.get('role'), nickname:f.get('nickname').trim(), gender:f.get('gender'), looking_for:f.get('looking_for'), birth_year:+f.get('birth_year'),
+  let gender = me?.gender, looking_for = me?.looking_for;
+  if(f.get('orient')) [gender, looking_for] = f.get('orient').split('-');
+  if(!gender || !looking_for) { toast('請選擇想認識的對象'); return null; }
+  if(f.get('role')==='daddy' && gender!=='male') { toast('Sugar Daddy 限男性，女性請選 Sugar Mommy'); return null; }
+  if(f.get('role')==='mommy' && gender!=='female') { toast('Sugar Mommy 限女性，男性請選 Sugar Daddy'); return null; }
+  return { role:f.get('role'), nickname:f.get('nickname').trim(), gender, looking_for, birth_year:+f.get('birth_year'),
     city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
 }
 async function uploadPhoto(file){
@@ -691,10 +709,11 @@ async function viewOnboarding(){
   $('#app').innerHTML = `<div class="narrow">
     <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
+    <div class="banner">「想認識的對象」與「性別」送出後就<b>無法修改</b>，探索時只會看到方向和你互相吻合的會員。請先確認再送出。</div>
     <form id="obForm" class="card">
+      ${profileFormHtml()}
       <label>頭像照片 *</label>
       <div class="row"><div class="avatar lg" id="avPrev">＋</div><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><input type="file" accept="image/*" id="avFile" style="margin-top:8px"></div></div>
-      ${profileFormHtml()}
       <button class="btn primary block mt2" type="submit">送出審核</button>
       <p class="tiny dim mt center">送出即表示你再次確認已年滿 18 歲並同意<a href="#/terms" target="_blank">使用條款</a></p>
     </form></div>`;
@@ -704,6 +723,18 @@ async function viewOnboarding(){
   $('#obForm').onsubmit = async e => {
     e.preventDefault(); const p = readProfileForm(e.target); if(!p) return;
     if(!avatarFile) return toast('請上傳頭像照片');
+    const ok = await new Promise(res => {
+      modal(`<h2>確認送出</h2>
+        <p class="mt">你選擇的是：</p>
+        <p class="serif" style="font-size:22px;margin:10px 0 4px">${ORIENT[p.gender+'-'+p.looking_for]}</p>
+        <p class="muted small">身分：${ROLES[p.role]}</p>
+        <div class="banner bad mt">送出後，性別與想認識的對象<b>無法再修改</b>。</div>
+        <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="cfNo">回去修改</button><button class="btn primary" id="cfYes">確認送出</button></div>`);
+      $('#cfNo').onclick = () => { closeModal(); res(false); };
+      $('#cfYes').onclick = () => { closeModal(); res(true); };
+      $('#mx').onclick = () => { closeModal(); res(false); };
+    });
+    if(!ok) return;
     const btn = e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='上傳中…';
     try{
       const path = await uploadPhoto(avatarFile);
@@ -717,23 +748,23 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { role: null, gender: '', city:'', amin:'', amax:'' };
+const browseState = { role: null, city:'', amin:'', amax:'' };
 async function viewBrowse(){
-  if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); browseState.gender = me.looking_for==='any' ? '' : (me.looking_for || ''); }
+  if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); }
   $('#app').innerHTML = `${statusBanner()}
+    <p class="tiny dim" style="margin:-8px 0 14px;letter-spacing:.1em">${orientText(me)}　·　只顯示方向互相吻合的會員</p>
     <div class="filters">
       <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
-      <select id="fGender" aria-label="性別"><option value="">性別不限</option><option value="female" ${browseState.gender==='female'?'selected':''}>女性</option><option value="male" ${browseState.gender==='male'?'selected':''}>男性</option></select>
       <select id="fCity" aria-label="地區"><option value="">地區不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select>
       <select id="fAge" aria-label="年齡"><option value="">年齡不限</option>${[['18','25'],['26','30'],['31','35'],['36','40'],['41','50'],['51','99']].map(([a,b])=>`<option value="${a}-${b}" ${browseState.amin===a?'selected':''}>${b==='99'?a+' 歲以上':a+'–'+b+' 歲'}</option>`).join('')}</select>
     </div>
     <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
   const reload = async () => {
-    browseState.role=$('#fRole').value; browseState.gender=$('#fGender').value; browseState.city=$('#fCity').value; const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
+    browseState.role=$('#fRole').value; browseState.city=$('#fCity').value; const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
     const y = new Date().getFullYear();
     let q = sb.from('profiles').select('id,nickname,role,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).order('last_active_at',{ascending:false}).limit(60);
     if(browseState.role==='baby') q = q.eq('role','baby'); else if(browseState.role==='sugar') q = q.in('role',['daddy','mommy']);
-    if(browseState.gender) q = q.eq('gender', browseState.gender);
+    q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
     if(browseState.city) q = q.eq('city', browseState.city);
     if(browseState.amin) q = q.lte('birth_year', y - +browseState.amin);
     if(browseState.amax) q = q.gte('birth_year', y - +browseState.amax);
@@ -747,7 +778,7 @@ async function viewBrowse(){
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.textContent=''; } });
   };
-  ['#fRole','#fGender','#fCity','#fAge'].forEach(s=>$(s).onchange=reload);
+  ['#fRole','#fCity','#fAge'].forEach(s=>$(s).onchange=reload);
   await reload();
 }
 
@@ -956,7 +987,7 @@ async function viewAdmin(){
       if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審會員 ✓</p>'; return; }
       box.innerHTML = rows.map(p=>`<div class="card mb" data-id="${p.id}">
         <div class="row" style="align-items:flex-start"><div class="avatar lg" data-ph="${esc(p.avatar_path||'')}"></div>
-          <div class="grow"><b>${esc(p.nickname)}</b> <span class="rtag">${ROLES[p.role]||'未選身分'}</span><span class="muted small">${p.gender==='male'?'男':'女'} · ${age(p.birth_year)} 歲 · ${esc(p.city||'')} · 找${({male:'男',female:'女',any:'不限'})[p.looking_for]||''}</span>
+          <div class="grow"><b>${esc(p.nickname)}</b> <span class="rtag">${ROLES[p.role]||'未選身分'}</span><span class="muted small">${orientText(p)} · ${age(p.birth_year)} 歲 · ${esc(p.city||'')}</span>
             <div class="small muted">${esc(p.occupation||'')} ${p.height_cm?p.height_cm+'cm':''}</div>
             <p class="small mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
             ${containsBadWords(p.bio+' '+p.nickname).length?`<p class="tiny bad">⚠ 含敏感字：${containsBadWords(p.bio+' '+p.nickname).join('、')}</p>`:''}
@@ -1011,7 +1042,7 @@ const DOCS = {
 terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
 <h3>第一條　契約主體與服務性質</h3><p>本條款為半糖 HALF SUGAR（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友服務（包括 Sugar Dating 甜心交友）。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
 <h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
-<h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。</p>
+<h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。你於建立檔案時設定之性別與想認識的對象，送出審核後即無法自行修改；如有特殊需要，得來信客服申請，由本平台審酌處理。Sugar Daddy 身分限男性、Sugar Mommy 身分限女性。</p>
 <h3>第四條　禁止行為</h3><p>你同意不得於本平台從事以下行為，違者本平台得逕行停權、刪除內容，並保留法律追訴權：</p><ol>
 <li>上傳非本人、冒用他人、或未經授權之照片或資料。</li>
 <li>以金錢、財物或其他對價交換性交或猥褻行為，或以任何方式要求、提供、暗示此類交換。</li><li>於見面前以任何名義向其他會員要求匯款、借貸、投資、訂金或保證金。</li>

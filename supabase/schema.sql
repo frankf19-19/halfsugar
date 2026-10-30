@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.5.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.6.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -30,7 +30,7 @@ create table if not exists public.profiles (
   id              uuid primary key references auth.users(id) on delete cascade,
   nickname        text,
   gender          text check (gender in ('male','female')),
-  looking_for     text check (looking_for in ('male','female','any')),
+  looking_for     text check (looking_for in ('male','female')),   -- 設定後不可更改
   role            text check (role in ('daddy','mommy','baby')),   -- Sugar Daddy / Sugar Mommy / 甜心
   birth_year      int  check (birth_year between 1900 and 2100),
   city            text,
@@ -55,6 +55,8 @@ alter table public.profiles add column if not exists role text check (role in ('
 alter table public.profiles add column if not exists hidden boolean not null default false;
 alter table public.profiles add column if not exists show_online boolean not null default true;
 create index if not exists profiles_browse_idx on public.profiles(status, gender, city, last_active_at desc);
+alter table public.profiles drop constraint if exists profiles_looking_for_check;
+alter table public.profiles add constraint profiles_looking_for_check check (looking_for in ('male','female'));
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -81,6 +83,12 @@ begin
   new.review_note := old.review_note;
   new.created_at  := old.created_at;
   if new.last_active_at is not null then new.last_active_at := least(new.last_active_at, now()); end if;
+  -- 性別與想認識的對象：第一次設定後不可更改
+  if old.gender is not null then new.gender := old.gender; end if;
+  if old.looking_for is not null then new.looking_for := old.looking_for; end if;
+  if (new.role = 'daddy' and new.gender = 'female') or (new.role = 'mommy' and new.gender = 'male') then
+    raise exception 'Sugar Daddy 限男性、Sugar Mommy 限女性';
+  end if;
   if new.avatar_path is not null and new.avatar_path not like new.id::text || '/%' then
     raise exception '頭像必須是自己上傳的照片';
   end if;
@@ -261,6 +269,14 @@ drop trigger if exists messages_guard_trg on public.messages;
 create trigger messages_guard_trg before insert or update on public.messages
   for each row execute function public.messages_guard();
 
+-- 雙方方向是否吻合（我想認識的性別 = 對方性別，且對方想認識的性別 = 我的性別）
+create or replace function public.is_compatible(other uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles a, public.profiles b
+                 where a.id = auth.uid() and b.id = other
+                   and a.looking_for = b.gender and b.looking_for = a.gender);
+$$;
+
 -- 私密照數量（看不到私密照的人也能知道對方有幾張，才能索取）
 create or replace function public.private_photo_count(uid uuid)
 returns int language sql stable security definer set search_path = public as $$
@@ -366,6 +382,7 @@ create policy "likes_insert" on public.likes for insert to authenticated
     and public.my_status() = 'approved'
     and exists (select 1 from public.profiles p where p.id = to_id and p.status = 'approved')
     and not public.is_blocked_with(to_id)
+    and public.is_compatible(to_id)
   );
 drop policy if exists "likes_delete" on public.likes;
 create policy "likes_delete" on public.likes for delete to authenticated
