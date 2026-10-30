@@ -19,7 +19,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:clip;-webkit-text-size-adjust:100%}
-body{font-family:"Noto Sans TC",system-ui,-apple-system,sans-serif;font-weight:400;background:var(--white);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased}
+body{font-family:"Noto Sans TC",system-ui,-apple-system,sans-serif;font-weight:400;background:var(--white);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
 a{color:inherit;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;text-decoration-color:var(--grey2)}
 a:hover{text-decoration-color:var(--ink)}
 h1,h2,h3,.serif{font-family:"Noto Serif TC",serif;font-weight:300;letter-spacing:.06em;text-wrap:balance}
@@ -103,7 +103,7 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 .chapter p{color:var(--grey);font-size:15px;line-height:2.1}
 
 .pledge{background:var(--black);color:#fff;padding:150px 26px;text-align:center}
-.pledge blockquote{max-width:880px;margin:0 auto;font-family:"Noto Serif TC",serif;font-weight:300;font-size:clamp(22px,2.6vw,34px);line-height:1.9;letter-spacing:.06em}
+.pledge blockquote{max-width:880px;margin:0 auto;font-family:"Noto Serif TC",serif;font-weight:300;font-size:clamp(19px,2.6vw,34px);line-height:1.9;letter-spacing:.04em}
 .pledge .who{margin-top:34px;font-size:12px;letter-spacing:.18em;color:var(--grey2)}
 .pledge .who a{color:#fff;text-decoration-color:var(--grey)}
 @media(max-width:719px){.pledge{padding:100px 22px}}
@@ -123,6 +123,8 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 .cta h2{font-size:clamp(30px,4vw,56px);line-height:1.5}
 .cta p{margin:22px 0 40px;letter-spacing:.14em;font-size:14px;color:rgba(255,255,255,.85)}
 .cta .row{justify-content:center;gap:14px}
+br.d{display:none}
+@media(min-width:760px){br.d{display:inline}}
 .credit{font-size:11px;letter-spacing:.12em;color:var(--grey2);text-align:center;padding:18px}
 
 /* ===== 登入 ===== */
@@ -264,9 +266,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   悅遇 YUEYU  前端  build v0.7.0
+   悅遇 YUEYU  前端  build v0.7.1
    ===================================================================== */
-const BUILD = 'v0.7.0';
+const BUILD = 'v0.7.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -415,7 +417,7 @@ async function viewLanding(){
 
   <section class="intro">
     <h2>認識一個人，<br>不必急。</h2>
-    <p>悅遇是為成熟成年人設計的私人交友空間。我們不追求會員數字，只在意每一次認識是否從尊重開始——每一位會員都經過真人審核，每一段對話都從彼此有意開始。</p>
+    <p>悅遇是為成熟成年人設計的私人交友空間。<br class="d">我們不追求會員數字，只在意每一次認識是否從尊重開始。<br>每一位會員都經過真人審核，<br class="d">每一段對話都從彼此有意開始。</p>
   </section>
 
   <section class="chapter">
@@ -432,8 +434,8 @@ async function viewLanding(){
   </section>
 
   <section class="pledge">
-    <blockquote>悅遇是交友平台，不是交易平台。我們不經手、不媒介、也不允許會員之間的任何金錢往來，色情產業相關人士不得在此招攬。</blockquote>
-    <div class="who">違反者將直接停權，並保留法律追訴權　<a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a></div>
+    <blockquote>悅遇是交友平台，不是交易平台。<br>我們不經手、不媒介，<br class="d">也不允許會員之間的任何金錢往來；<br>色情產業相關人士，不得在此招攬。</blockquote>
+    <div class="who">違反者將直接停權，並保留法律追訴權。<br><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a></div>
   </section>
 
   <section class="howto">
