@@ -1,6 +1,6 @@
-# 半糖 HALF SUGAR — 成人交友平台（MVP）  build v0.1.0
+# 微糖 SUGAR 30 — 台灣甜心交友平台
 
-暫定名「半糖 HALF SUGAR」，之後改名只需搜尋替換 `半糖` / `HALF SUGAR` 兩個字串。
+品牌名「微糖 SUGAR 30」（前名半糖 HALF SUGAR）。改名只需搜尋替換 `微糖` / `SUGAR 30` 兩個字串。
 
 ## 檔案
 ```

@@ -1,4 +1,4 @@
--- 半糖 E2E 權限測試：全部在一個交易裡執行，最後故意丟出例外讓一切回滾（不留下任何資料）
+-- 微糖 E2E 權限測試：全部在一個交易裡執行，最後故意丟出例外讓一切回滾（不留下任何資料）
 do $t$
 declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
