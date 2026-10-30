@@ -383,5 +383,26 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 24 財力認證
+  perform set_config('request.jwt.claims', json_build_object('sub',P,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', P::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set wealth_verified_at = now() where id=P;
+  select count(*) into n from public.profiles where id=P and wealth_verified_at is not null; out := array_append(out, ('24 自己標記財力認證 = '||n||' (應為0)')::text);
+  insert into public.wealth_verifications (user_id, kind, path) values (P, 'deposit', P||'/123.jpg');
+  begin insert into public.wealth_verifications (user_id, kind, path) values (P, 'income', P||'/124.jpg'); out := array_append(out, '24b 同時送兩份：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '24b 同時只能有一份待審 ✓'::text); end;
+  begin update public.wealth_verifications set status='approved' where user_id=P; get diagnostics n = row_count; out := array_append(out, ('24c 自己核准 = '||n||' 筆 (應為0)')::text);
+  exception when others then out := array_append(out, '24c 自己核准被擋 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.wealth_verifications; out := array_append(out, ('24d 別人看到財力文件紀錄 = '||n||' (應為0)')::text);
+  begin insert into public.wealth_verifications (user_id, kind, path) values (Q, 'deposit', Q||'/1.jpg'); out := array_append(out, '24e 甜心申請財力認證：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '24e 財力認證只限 Daddy／Mommy ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

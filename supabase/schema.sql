@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.16.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.17.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -60,6 +60,7 @@ alter table public.profiles add column if not exists hidden boolean not null def
 alter table public.profiles add column if not exists show_online boolean not null default true;
 alter table public.profiles add column if not exists submitted_at timestamptz;
 alter table public.profiles add column if not exists approved_at timestamptz;
+alter table public.profiles add column if not exists wealth_verified_at timestamptz;   -- 財力認證通過時間
 -- 每月相處預算（Sugar Daddy／Mommy 必填；甜心不填）
 alter table public.profiles add column if not exists budget text
   check (budget in ('negotiable','lt30k','30to50k','50to80k','80to120k','gt120k'));
@@ -97,6 +98,7 @@ begin
   new.id          := old.id;
   new.is_admin    := old.is_admin;
   new.review_note := old.review_note;
+  new.wealth_verified_at := old.wealth_verified_at;   -- 財力認證只有管理員能設定
   new.created_at  := old.created_at;
   if new.last_active_at is not null then new.last_active_at := least(new.last_active_at, now()); end if;
   -- 性別與想認識的對象：第一次設定後不可更改
@@ -590,6 +592,27 @@ values ('photos', 'photos', false, 5242880, array['image/jpeg','image/png','imag
 on conflict (id) do update set public = false, file_size_limit = 5242880,
   allowed_mime_types = array['image/jpeg','image/png','image/webp'];
 
+create or replace function private.my_verify_file_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from storage.objects where bucket_id = 'verify' and name like auth.uid()::text || '/%';
+$$;
+
+-- 財力文件：私有空間，只有管理員與本人看得到，審核後刪除
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('verify', 'verify', false, 8388608, array['image/jpeg'])
+on conflict (id) do update set public = false, file_size_limit = 8388608, allowed_mime_types = array['image/jpeg'];
+drop policy if exists "verify_storage_insert" on storage.objects;
+create policy "verify_storage_insert" on storage.objects for insert to authenticated
+  with check (bucket_id = 'verify' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
+              and exists (select 1 from public.profiles where id = auth.uid() and role in ('daddy','mommy') and status in ('pending','approved'))
+              and private.my_verify_file_count() < 4);
+drop policy if exists "verify_storage_select" on storage.objects;
+create policy "verify_storage_select" on storage.objects for select to authenticated
+  using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
+drop policy if exists "verify_storage_delete" on storage.objects;
+create policy "verify_storage_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
+
 -- 檔名是否已登記為照片或頭像（登記後檔案不能刪除再用同檔名重傳）
 create or replace function private.photo_path_in_use(p text)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -668,7 +691,7 @@ $$;
 
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
-grant select (id, nickname, gender, looking_for, role, budget, birth_year, city, height_cm, occupation, bio, tags,
+grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, birth_year, city, height_cm, occupation, bio, tags,
               avatar_path, status, hidden, last_active_at, created_at, updated_at) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
@@ -780,6 +803,7 @@ begin
   perform set_config('halfsugar.deleting', '1', true);
   update public.profiles set hidden = true, avatar_path = null where id = uid;
   delete from public.photos where user_id = uid;
+  delete from public.wealth_verifications where user_id = uid;
   perform set_config('halfsugar.deleting', '0', true);
 end $$;
 revoke execute on function public.begin_account_deletion() from anon, public;
@@ -795,7 +819,7 @@ begin
      or exists (select 1 from public.reports where reported_id = uid and status = 'open') then
     raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
   end if;
-  if exists (select 1 from storage.objects where bucket_id = 'photos' and name like uid::text || '/%') then
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify') and name like uid::text || '/%') then
     raise exception '照片檔案還沒刪完，請再按一次刪除';
   end if;
   delete from public.photos where user_id = uid;
@@ -849,6 +873,81 @@ begin
 end $$;
 revoke execute on function public.resubmit_profile() from anon, public;
 grant execute on function public.resubmit_profile() to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 財力認證：Sugar Daddy／Mommy 上傳一份財力文件，管理員看過後給「財力認證」標章，文件審核後立即刪除
+-- ---------------------------------------------------------------------
+create table if not exists public.wealth_verifications (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  kind        text not null check (kind in ('deposit','income','tax','property','car','business','other')),
+  path        text,                -- 審核後清空（檔案已刪除）
+  status      text not null default 'pending' check (status in ('pending','approved','rejected')),
+  review_note text,
+  created_at  timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+create index if not exists wealth_verifications_idx on public.wealth_verifications(status, created_at);
+alter table public.wealth_verifications enable row level security;
+
+create or replace function public.wealth_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or public.is_admin() then return new; end if;
+  new.user_id := auth.uid(); new.status := 'pending'; new.review_note := null; new.reviewed_at := null; new.created_at := now();
+  if new.path is null or new.path !~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$') then raise exception '請上傳文件照片'; end if;
+  if not exists (select 1 from public.profiles where id = auth.uid() and role in ('daddy','mommy') and status in ('pending','approved')) then
+    raise exception '財力認證只開放給 Sugar Daddy／Mommy';
+  end if;
+  if exists (select 1 from public.wealth_verifications where user_id = auth.uid() and status = 'pending') then
+    raise exception '你已經有一份文件在審核中';
+  end if;
+  if (select count(*) from public.wealth_verifications where user_id = auth.uid() and created_at > now() - interval '1 day') >= 3 then
+    raise exception '今天送出太多次了，明天再試';
+  end if;
+  return new;
+end $$;
+drop trigger if exists wealth_guard_trg on public.wealth_verifications;
+create trigger wealth_guard_trg before insert on public.wealth_verifications
+  for each row execute function public.wealth_guard();
+
+drop policy if exists "wealth_select" on public.wealth_verifications;
+create policy "wealth_select" on public.wealth_verifications for select to authenticated
+  using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "wealth_insert" on public.wealth_verifications;
+create policy "wealth_insert" on public.wealth_verifications for insert to authenticated
+  with check (user_id = auth.uid() and status = 'pending');
+drop policy if exists "wealth_delete" on public.wealth_verifications;
+create policy "wealth_delete" on public.wealth_verifications for delete to authenticated
+  using ((user_id = auth.uid() and status = 'pending') or public.is_admin());
+
+-- 管理員審核財力文件（前端會先刪掉檔案）
+create or replace function public.admin_review_wealth(vid uuid, approve boolean, note text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.wealth_verifications;
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  select * into v from public.wealth_verifications where id = vid for update;
+  if not found then raise exception '找不到這筆申請'; end if;
+  update public.wealth_verifications
+     set status = case when approve then 'approved' else 'rejected' end,
+         review_note = case when approve then null else coalesce(nullif(note,''), '文件看不出財力，請換一份更清楚的文件') end,
+         reviewed_at = now(), path = null
+   where id = vid;
+  if approve then update public.profiles set wealth_verified_at = now() where id = v.user_id; end if;
+end $$;
+revoke execute on function public.admin_review_wealth(uuid, boolean, text) from anon, public;
+grant execute on function public.admin_review_wealth(uuid, boolean, text) to authenticated;
+
+-- 管理員取消某人的財力認證
+create or replace function public.admin_revoke_wealth(target uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  update public.profiles set wealth_verified_at = null where id = target;
+end $$;
+revoke execute on function public.admin_revoke_wealth(uuid) from anon, public;
+grant execute on function public.admin_revoke_wealth(uuid) to authenticated;
 
 -- 管理員：會員的對話行為統計（找出大量群發的人）
 create or replace function public.admin_member_stats(ids uuid[])

@@ -94,6 +94,8 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .req{margin-top:6px;padding:10px 12px;background:var(--paper);font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:7.2em;overflow:hidden}
 .pcard .budget{font-size:12px;letter-spacing:.06em;color:var(--wine);margin-top:4px}
 .budget{color:var(--wine);letter-spacing:.06em}
+.wbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid #9C7A3C;color:#7A5B22;background:#FBF6EC;margin-top:5px;font-family:"Noto Sans TC";font-weight:500;white-space:nowrap}
+.wbadge.big{font-size:13px;padding:3px 10px;margin-top:0}
 .obsteps{display:flex;gap:28px;margin:0 0 22px;font-size:13px;letter-spacing:.12em;color:var(--grey)}
 .obsteps span{padding-bottom:6px;border-bottom:1px solid transparent}
 .obsteps span.on{color:var(--ink);border-bottom-color:var(--ink)}
@@ -376,9 +378,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   微糖 SUGAR 30  前端  build v1.15.0
+   微糖 SUGAR 30  前端  build v1.16.0
    ===================================================================== */
-const BUILD = 'v1.15.0';
+const BUILD = 'v1.16.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -488,7 +490,7 @@ async function loadMe(){
 lastUid = undefined;
 sb.auth.onAuthStateChange(async (ev, s)=>{
   if(ev==='PASSWORD_RECOVERY'){ recovering = true; lastUid = s?.user?.id; setTimeout(openPasswordReset, 300); return; }
-  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; browseState.budget=''; }
+  if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; browseState.city=''; browseState.amin=''; browseState.amax=''; browseState.budget=''; browseState.wealth=''; }
   // 切回分頁、選照片時 supabase 會再發 SIGNED_IN；同一個人就不重畫，避免正在填的表單被清掉
   const uid = s?.user?.id || null;
   if((ev==='SIGNED_IN'||ev==='SIGNED_OUT') && uid!==lastUid){ lastUid = uid; setTimeout(async ()=>{ await loadMe(); route(); }, 0); }
@@ -676,6 +678,7 @@ async function viewLanding(){
       <div class="e"><dt>Sugar Daddy<br>Sugar Mommy</dt><dd class="pos">名詞</dd><dd>事業與生活都已穩定，願意把時間和心力，放在一段讓彼此都舒服的關係裡。</dd></div>
       <div class="e"><dt>坦誠</dt><dd class="pos">形容詞</dd><dd>微糖最重要的一個詞。見面之前，先把彼此期待的相處方式、見面節奏說清楚；不合適，就不必勉強。</dd></div>
       <div class="e"><dt>界線</dt><dd class="pos">名詞</dd><dd>每個人都有，也都該被尊重。對方說不，就是不。封鎖一次，對方就再也看不到你。</dd></div>
+      <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件，由真人看過後，檔案上會出現「✓ 財力認證」。文件審核完立即刪除，只留下「已認證」這件事。</dd></div>
       <div class="e"><dt>審核</dt><dd class="pos">動詞</dd><dd>每一張照片、每一段自介，都由真人看過才公開。業者、假照片、留聯絡方式的，到不了這裡。</dd></div>
       <div class="e no"><dt>性交易</dt><dd class="pos">名詞　微糖不使用的詞</dd><dd>以金錢或財物交換性行為，違法，也違反本站守則。出現就停權，必要時配合司法調查。平台不代收、不轉交會員之間的任何款項。</dd></div>
     </dl>
@@ -749,6 +752,8 @@ async function viewAuth(){
    ===================================================================== */
 const BUDGETS = { negotiable:'見面再談', lt30k:'3 萬以下', '30to50k':'3–5 萬', '50to80k':'5–8 萬', '80to120k':'8–12 萬', gt120k:'12 萬以上' };
 const BUDGET_ORDER = ['lt30k','30to50k','50to80k','80to120k','gt120k'];
+const WEALTH_KINDS = { deposit:'存款證明或存摺內頁', income:'薪資單或收入證明', tax:'所得扣繳憑單', property:'房屋或土地權狀', car:'名下車輛行照', business:'公司負責人證明（名片＋登記資料）', other:'其他可看出經濟能力的文件' };
+const wealthBadge = (p, big) => p && p.wealth_verified_at ? `<span class="wbadge${big?' big':''}" title="已通過財力認證">✓ 財力認證</span>` : '';
 const budgetText = b => b ? (b==='negotiable' ? '每月預算 見面再談' : `每月預算 ${BUDGETS[b]}`) : '';
 function profileFormHtml(p={}){
   const years = []; const y0 = new Date().getFullYear()-18; for(let y=y0;y>=y0-62;y--) years.push(y);
@@ -807,7 +812,7 @@ async function uploadPhoto(file){
   if(error) throw error; return path;
 }
 
-const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'id,nickname,gender,looking_for,role,budget,wealth_verified_at,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -911,7 +916,7 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { role: null, city:'', amin:'', amax:'', budget:'' };
+const browseState = { role: null, city:'', amin:'', amax:'', budget:'', wealth:'' };
 async function viewBrowse(){
   if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); }
   $('#app').innerHTML = `${statusBanner()}
@@ -920,34 +925,37 @@ async function viewBrowse(){
       <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
       <select id="fCity" aria-label="地區"><option value="">地區不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select>
       <select id="fBudget" aria-label="預算" class="${browseState.role==='baby'?'hidden':''}"><option value="">預算不限</option>${Object.entries({'30to50k':'3 萬以上','50to80k':'5 萬以上','80to120k':'8 萬以上','gt120k':'12 萬以上'}).map(([k,v])=>`<option value="${k}" ${browseState.budget===k?'selected':''}>預算 ${v}</option>`).join('')}</select>
+      <select id="fWealth" aria-label="財力認證" class="${browseState.role==='baby'?'hidden':''}"><option value="">認證不限</option><option value="1" ${browseState.wealth?'selected':''}>只看財力認證</option></select>
       <select id="fAge" aria-label="年齡"><option value="">年齡不限</option>${[['18','25'],['26','30'],['31','35'],['36','40'],['41','50'],['51','99']].map(([a,b])=>`<option value="${a}-${b}" ${browseState.amin===a?'selected':''}>${b==='99'?a+' 歲以上':a+'–'+b+' 歲'}</option>`).join('')}</select>
     </div>
     <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
   const reload = async () => {
-    browseState.role=$('#fRole').value; browseState.city=$('#fCity').value; browseState.budget=$('#fBudget').value;
+    browseState.role=$('#fRole').value; browseState.city=$('#fCity').value; browseState.budget=$('#fBudget').value; browseState.wealth=$('#fWealth').value;
+    $('#fWealth').classList.toggle('hidden', browseState.role==='baby');
     $('#fBudget').classList.toggle('hidden', browseState.role==='baby'); const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
     const y = new Date().getFullYear();
-    let q = sb.from('profiles').select('id,nickname,role,budget,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
+    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
     if(browseState.role==='baby') q = q.eq('role','baby'); else if(browseState.role==='sugar') q = q.in('role',['daddy','mommy']);
     q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
     if(browseState.city) q = q.eq('city', browseState.city);
+    if(browseState.wealth && browseState.role!=='baby') q = q.not('wealth_verified_at','is',null);
     if(browseState.budget && browseState.role!=='baby') q = q.in('budget', BUDGET_ORDER.slice(BUDGET_ORDER.indexOf(browseState.budget)));
     if(browseState.amin) q = q.lte('birth_year', y - +browseState.amin);
     if(browseState.amax) q = q.gte('birth_year', y - +browseState.amax);
     const [{ data: rows, error }, { data: myLikes }] = await Promise.all([q, sb.from('likes').select('to_id').eq('from_id', me.id)]);
     if(error) throw error;
     const liked = new Set((myLikes||[]).map(l=>l.to_id));
-    if(!rows.length){ const filtered = browseState.city||browseState.amin||browseState.amax||browseState.budget;
+    if(!rows.length){ const filtered = browseState.city||browseState.amin||browseState.amax||browseState.budget||browseState.wealth;
       $('#grid').innerHTML = me.status==='rejected' ? `<p class="muted center" style="grid-column:1/-1;padding:40px 0">你的檔案需要修改後才能探索。<br><a class="btn mt2" href="#/me">前往修改</a></p>`
         : `<p class="muted center" style="grid-column:1/-1;padding:40px 0">${filtered?'這個條件下暫時沒有會員。':'會員陸續加入中，晚點再回來看看。'}${filtered?'<br><button class="btn mt2" id="clrF">清除篩選</button>':''}</p>`;
-      $('#clrF') && ($('#clrF').onclick=()=>{ $('#fCity').value=''; $('#fAge').value=''; $('#fBudget').value=''; reload(); }); return; }
+      $('#clrF') && ($('#clrF').onclick=()=>{ $('#fCity').value=''; $('#fAge').value=''; $('#fBudget').value=''; $('#fWealth').value=''; reload(); }); return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
-        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}</div></div>`).join('');
+        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${wealthBadge(r)}</div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.textContent=''; } });
   };
-  ['#fRole','#fCity','#fAge','#fBudget'].forEach(s=>$(s).onchange=reload);
+  ['#fRole','#fCity','#fAge','#fBudget','#fWealth'].forEach(s=>$(s).onchange=reload);
   await reload();
 }
 
@@ -974,7 +982,7 @@ async function openProfile(id){
     <div class="row mt" style="justify-content:space-between;align-items:flex-start">
       <div>${p.role?`<div class="rtag" style="margin-bottom:4px">${ROLES[p.role]}</div>`:''}<h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
         <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}${seen(p.last_active_at)?' · '+seen(p.last_active_at):''}</div>
-        ${p.budget?`<div class="budget mt" style="font-size:14px">${budgetText(p.budget)}</div>`:''}</div>
+        ${p.budget||p.wealth_verified_at?`<div class="mt row" style="gap:10px;align-items:center">${p.budget?`<span class="budget" style="font-size:14px">${budgetText(p.budget)}</span>`:''}${wealthBadge(p,true)}</div>`:''}</div>
       ${theirLike?'<span class="chip ok">♥ 對你心動</span>':''}
     </div>
     ${(p.tags||[]).length?`<div class="tags mt">${p.tags.map(t=>`<span class="tag on">${esc(t)}</span>`).join('')}</div>`:''}
@@ -1162,12 +1170,26 @@ async function viewChat(matchId){
    ===================================================================== */
 async function viewMe(){
   await loadMe();
-  const [{ data: photos }, { data: reqs }, { data: grants }, { data: blocks }] = await Promise.all([
+  const [{ data: photos }, { data: reqs }, { data: grants }, { data: blocks }, { data: wv }] = await Promise.all([
     sb.from('photos').select('*').eq('user_id', me.id).order('created_at'),
     sb.from('photo_requests').select('requester_id').eq('owner_id', me.id).eq('status','pending'),
     sb.from('photo_grants').select('viewer_id').eq('owner_id', me.id),
     sb.from('blocks').select('blocked_id').eq('blocker_id', me.id),
+    sb.from('wealth_verifications').select('*').eq('user_id', me.id).order('created_at',{ascending:false}).limit(1),
   ]);
+  const lastWv = (wv||[])[0];
+  const isSugar = me.role==='daddy' || me.role==='mommy';
+  const wealthCard = !isSugar ? '' : `<div class="card mt" id="wCard"><h3 style="font-size:17px">財力認證 ${wealthBadge(me)}</h3>
+    ${me.wealth_verified_at ? `<p class="small muted mt">你已在 ${new Date(me.wealth_verified_at).toLocaleDateString('zh-TW')} 通過財力認證，檔案和探索卡片上會顯示「✓ 財力認證」。</p>`
+    : lastWv?.status==='pending' ? `<p class="small mt">文件審核中，通常 1–2 天內完成。審核後文件會立即刪除。</p>`
+    : `<p class="small muted mt">通過認證後，你的檔案會顯示「✓ 財力認證」，甜心可以只看有認證的會員，回覆率通常比較高。</p>
+      ${lastWv?.status==='rejected'?`<div class="banner warn mt">上一份文件沒有通過：${esc(lastWv.review_note||'')}</div>`:''}
+      <p class="tiny dim mt">上傳<b>任一種</b>能看出經濟能力的文件照片即可，不需要很正式：</p>
+      <ul class="tiny dim" style="margin:6px 0 0 18px;line-height:1.9">${Object.values(WEALTH_KINDS).map(v=>`<li>${v}</li>`).join('')}</ul>
+      <p class="tiny dim mt">帳號、身分證字號、地址可以先遮住，只要看得到你的姓名，以及大概的金額或資產就好。<b>文件只有管理員看得到，審核完立即刪除</b>，不會留存、不會給任何會員看。</p>
+      <label class="mt">文件種類</label><select id="wKind">${Object.entries(WEALTH_KINDS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <label class="btn primary mt2" style="margin-top:14px">選擇文件照片並送出<input type="file" accept="image/*" id="wFile" class="hidden"></label>`}
+  </div>`;
   const ids = [...(reqs||[]).map(r=>r.requester_id), ...(grants||[]).map(g=>g.viewer_id), ...(blocks||[]).map(b=>b.blocked_id)];
   const names = {};
   if(ids.length){ const { data: nm } = await sb.rpc('related_names', { ids }); (Array.isArray(nm)?nm:[]).forEach(n=>names[n.id]=n.nickname); }
@@ -1190,6 +1212,7 @@ async function viewMe(){
     </div>
     ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(r.requester_id)}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
     ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(g.viewer_id)}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
+    ${wealthCard}
     <div class="card mt"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
       <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你心動過的人、或正在和你聊天的人看得到你。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvAccept" ${me.accept_from==='liked'?'checked':''}><span><b>只接受我心動過的人傳訊息</b><small>開啟後，只有你按過「心動」的人能主動傳第一則訊息給你，可以減少陌生訊息。</small></span></label>
@@ -1207,6 +1230,15 @@ async function viewMe(){
     try{ const path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error; toast('頭像已更新，重新送審'); viewMe(); }catch(err){ toast(err.message); } };
   document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=9) return toast('相簿最多 9 張'); toast('上傳中…', 60000); document.querySelectorAll('.mePh').forEach(x=>x.disabled=true);
     try{ const path=await uploadPhoto(f); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1' }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }catch(err){ toast(err.message); } });
+  $('#wFile') && ($('#wFile').onchange = async e => { const f=e.target.files[0]; if(!f) return;
+    if(!['approved','pending'].includes(me.status)) return toast('請先完成建立檔案');
+    toast('上傳中…', 60000); e.target.disabled = true; let path;
+    try{
+      const blob = await compressImage(f, 1800, .85); path = `${me.id}/${Date.now()}.jpg`;
+      const { error: ue } = await sb.storage.from('verify').upload(path, blob, { contentType:'image/jpeg', upsert:false }); if(ue) throw ue;
+      const { error: ie } = await sb.from('wealth_verifications').insert({ user_id: me.id, kind: $('#wKind').value, path }); if(ie){ await sb.storage.from('verify').remove([path]); throw ie; }
+      toast('已送出，審核後會在這裡顯示結果'); viewMe();
+    }catch(err){ e.target.disabled=false; toast(err.message||err); } });
   const act = async (fn, ok) => { const r = await fn(); if(r && r.error){ toast('沒有完成：'+r.error.message); return false; } if(ok) toast(ok); return true; };
   $('#meGal').querySelectorAll('.del').forEach(b=>b.onclick=async()=>{ if(!confirm('刪除這張照片？')) return;
     if(await act(()=>sb.from('photos').delete().eq('id',b.dataset.id))){ await sb.storage.from('photos').remove([b.dataset.path]); toast('已刪除'); } viewMe(); });
@@ -1242,9 +1274,9 @@ function bindAccount(){
         // 1. 先解除照片登記，才能刪掉檔案
         let r = await sb.rpc('begin_account_deletion'); if(r.error) throw r.error;
         // 2. 刪掉自己資料夾裡的所有檔案
-        for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from('photos').list(me.id, { limit:100 }); if(error) throw error;
+        for(const bk of ['photos','verify']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(me.id, { limit:100 }); if(error) throw error;
           const names = (files||[]).filter(f=>f.id).map(f=>`${me.id}/${f.name}`); if(!names.length) break;
-          const { error: e2 } = await sb.storage.from('photos').remove(names); if(e2) throw e2; if(names.length<100) break; }
+          const { error: e2 } = await sb.storage.from(bk).remove(names); if(e2) throw e2; if(names.length<100) break; }
         // 3. 刪除帳號（含手機、信箱與所有資料）
         r = await sb.rpc('delete_my_account'); if(r.error) throw r.error;
         await sb.auth.signOut({ scope:'local' }).catch(()=>{}); me=null; session=null; authUser=null; closeModal(); location.hash='#/bye';
@@ -1260,7 +1292,7 @@ async function viewAdmin(){
   let tab = 'profiles';
   const adm = async q => { const { error } = await q; if(error) toast('沒有完成：'+error.message); return !error; };
   const draw = async ()=>{
-    $('#app').innerHTML = `<div class="tabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button></div><div id="adm"><div class="spinner"></div></div>`;
+    $('#app').innerHTML = `<div class="tabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='wealth'?'on':''}" data-t="wealth">財力認證</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button></div><div id="adm"><div class="spinner"></div></div>`;
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
     const box = $('#adm');
     if(tab==='profiles'){
@@ -1302,16 +1334,39 @@ async function viewAdmin(){
         if(error) return toast(error.message);
         modal(`<h3 style="font-size:16px">檢舉當下雙方的對話（${(ms||[]).length} 則）</h3><p class="tiny dim">送出檢舉時自動備份，對方刪除帳號或結束對話也不會消失。</p>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--rule);padding:6px 0"><b class="tiny ${x.sender_id===b.dataset.id?'bad':''}">${x.sender_id===b.dataset.id?'被檢舉人':'檢舉人'}</b>　<span class="tiny dim">${fmtTime(x.created_at)}</span><br>${esc(x.body)}</p>`).join('')||'<p class="muted mt">兩人之間沒有對話紀錄</p>'}`); });
     }
+    if(tab==='wealth'){
+      const { data: rows, error } = await sb.from('wealth_verifications').select('*').eq('status','pending').order('created_at');
+      if(error) return toast(error.message);
+      if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審的財力文件 ✓</p>'; return; }
+      const { data: ps } = await sb.from('profiles').select('id,nickname,role,budget').in('id', rows.map(r=>r.user_id));
+      const pm = Object.fromEntries((ps||[]).map(p=>[p.id,p]));
+      box.innerHTML = `<p class="tiny dim mb">標準不用太嚴格：看得出是本人名字、有一定的存款、收入或資產即可。按下通過或退件後，文件會立即刪除。</p>` + rows.map(r=>{ const p=pm[r.user_id]||{};
+        return `<div class="card mb" data-id="${r.id}"><div class="row" style="align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <a class="wdoc" data-path="${esc(r.path||'')}" target="_blank" rel="noopener" style="width:220px;max-width:100%;aspect-ratio:3/4;background:#ECEAE6 center/contain no-repeat;display:block"></a>
+          <div class="grow"><b>${esc(p.nickname||'')}</b> <span class="rtag">${ROLES[p.role]||''}</span><div class="small muted mt">${budgetText(p.budget)}</div>
+            <div class="small mt">文件：${WEALTH_KINDS[r.kind]||r.kind}</div><div class="tiny dim">送出：${fmtTime(r.created_at)}</div>
+            <input class="note mt" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px">
+            <div class="row mt" style="gap:8px"><button class="btn sm primary wa" data-id="${r.id}" data-path="${esc(r.path||'')}">✓ 通過</button><button class="btn sm ghost wr" data-id="${r.id}" data-path="${esc(r.path||'')}">退件</button></div></div></div></div>`; }).join('');
+      box.querySelectorAll('.wdoc').forEach(async a=>{ if(!a.dataset.path) return; const { data } = await sb.storage.from('verify').createSignedUrl(a.dataset.path, 600); if(data?.signedUrl){ a.href=data.signedUrl; a.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; } });
+      const review = async (b, approve) => { b.disabled = true; const card=b.closest('.card');
+        if(b.dataset.path) await sb.storage.from('verify').remove([b.dataset.path]);
+        const { error } = await sb.rpc('admin_review_wealth', { vid: b.dataset.id, approve, note: card.querySelector('.note').value||null });
+        if(error){ b.disabled=false; return toast(error.message); }
+        toast(approve?'已通過，文件已刪除':'已退件，文件已刪除'); card.style.opacity=.3; setTimeout(()=>{ card.remove(); if(!box.querySelector('.card')) draw(); },300); };
+      box.querySelectorAll('.wa').forEach(b=>b.onclick=()=>review(b,true));
+      box.querySelectorAll('.wr').forEach(b=>b.onclick=()=>review(b,false));
+    }
     if(tab==='members'){
       box.innerHTML = `<p class="tiny dim mb">「對話行為」標紅 ⚠ 表示可能在大量群發或騷擾：近 7 天主動開啟 7 個以上、對方幾乎都不回、常被結束對話或被封鎖。</p><div class="row mb"><input id="q" placeholder="暱稱關鍵字" style="padding:9px 12px"><select id="qs" style="width:auto;padding:9px 12px"><option value="">所有狀態</option>${Object.entries(STATUS_TXT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><button class="btn sm primary" id="qb">搜尋</button></div><div id="qr"></div>`;
       const run = async ()=>{ const { data: rows, error } = await sb.rpc('admin_profiles', { p_status: $('#qs').value||null, p_q: $('#q').value.trim()||null });
         if(error) return toast(error.message);
         const st = {}; if(rows?.length){ const { data: ss } = await sb.rpc('admin_member_stats', { ids: rows.map(r=>r.id) }); (ss||[]).forEach(x=>st[x.id]=x); }
         const flag = x => x && (x.starts_7d>=7 || (x.unreplied_pct>=80 && x.starts_7d>=4) || x.closed_by_others>=3 || x.blocked_by>=2);
-        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
-          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}</td></tr>`).join('')}</table></div>`;
+        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
+          <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}${p.wealth_verified_at?`<button class="btn sm ghost wrv" data-id="${p.id}">取消財力認證</button>`:''}</td></tr>`).join('')}</table></div>`;
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
         $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id))) toast('已解除停權，檔案回到待審，請重新審核'); run(); });
+        $('#qr').querySelectorAll('.wrv').forEach(b=>b.onclick=async()=>{ if(!confirm('取消這位會員的財力認證？')) return; const { error } = await sb.rpc('admin_revoke_wealth', { target: b.dataset.id }); toast(error?error.message:'已取消財力認證'); run(); });
         $('#qr').querySelectorAll('.dl').forEach(b=>b.onclick=async()=>{
           if(!confirm(`永久刪除「${b.dataset.n}」的帳號？\n檔案、照片、對話都會刪除，這支手機之後不能再註冊。無法復原。`)) return;
           try{ const uid=b.dataset.id;
@@ -1356,7 +1411,7 @@ terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 
 <h3>第十二條　條款修改</h3><p>本平台得隨時修改本條款，修改後將公告於本頁；你於修改後繼續使用服務即視為同意修改後之條款。</p>`,
 
 privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
-<h3>蒐集之資料</h3><ul><li>帳號資料：Email、密碼（加密儲存）。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：心動、對話、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
+<h3>蒐集之資料</h3><ul><li>財力文件（僅限自願申請財力認證者）：只供管理人員審核，審核完成即刪除，不留存、不提供給任何會員。</li><li>帳號資料：Email、密碼（加密儲存）。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：心動、對話、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
 <h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
 <h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方。管理人員只在處理檢舉、或發現疑似詐騙與違規時查看相關對話。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
 <h3>資料儲存與保護</h3><p>資料儲存於 Supabase 雲端服務，傳輸全程加密（HTTPS）。照片以私有儲存空間存放，只透過加密的限時連結讀取，查看時疊加檢視者代號浮水印。資料庫以列級權限控管，會員只能讀取規則允許的資料。</p><h3>我們不做的事</h3><ul><li>不販售、出租或分享任何會員資料給第三方。</li><li>不使用第三方廣告追蹤。</li><li>管理人員只在處理檢舉時查看相關對話。</li></ul>
@@ -1387,7 +1442,7 @@ function viewPlans(){
       <div class="plan"><div class="who">甜心</div><h3>甜心會員</h3><div class="price">免費</div><div class="alt">通過真人審核即開通</div>
         <ul><li>建立檔案、公開與私密相簿</li><li>探索、心動、回覆所有訊息</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>看誰對我心動</li><li>不出現在探索、隱藏上線狀態</li><li>真人審核與檢舉優先處理</li></ul>${join}</div>
       <div class="plan"><div class="who">Sugar Daddy／Mommy</div><h3>基本會員</h3><div class="price">免費</div><div class="alt">先認識看看</div>
-        <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>回覆所有訊息</li><li>看誰對我心動</li><li class="no">優先曝光</li></ul>${join}</div>
+        <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>免費申請財力認證</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>回覆所有訊息</li><li>看誰對我心動</li><li class="no">優先曝光</li></ul>${join}</div>
       <div class="plan hl"><div class="who">Sugar Daddy／Mommy</div><h3>微糖會員</h3><div class="price">NT$1,680<small>／月</small></div><div class="alt">三個月 NT$3,980（每月約 NT$1,327）</div>
         <ul><li>基本會員全部功能</li><li>主動開啟新對話不限次數</li><li>探索結果優先曝光</li><li>不出現在探索、隱藏上線狀態</li><li>審核優先處理</li></ul>
         <button class="btn primary block" id="planSoon">即將開放</button></div>
