@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>半糖 HALF SWEET｜台灣甜心交友・Sugar Dating 甜心網</title>
+<title>半糖 HALF SUGAR｜台灣甜心交友・Sugar Dating 甜心網</title>
 <meta name="description" content="半糖是重視隱私的台灣甜心交友（Sugar Dating）平台。Sugar Daddy、Sugar Mommy 與甜心在真人審核的環境中，坦誠彼此期待、認真認識彼此。">
 <meta name="robots" content="index,follow">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzExMSIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTU4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTQiLz48cGF0aCBkPSJNOTggMjU2IEw0MTQgMjU2IEExNTggMTU4IDAgMCAxIDk4IDI1NloiIGZpbGw9IiNCMDRBNjIiLz48L3N2Zz4=">
@@ -58,17 +58,17 @@ label{display:block;font-size:12px;letter-spacing:.14em;color:var(--grey);margin
 .topbar .in{max-width:1320px;margin:0 auto;padding:0 30px;height:66px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
 .logo{grid-column:2;font-family:"Noto Serif TC",serif;font-weight:400;font-size:22px;letter-spacing:.6em;padding-left:.6em;color:var(--ink);text-decoration:none}
 .logo small{display:none}
-.logo{display:inline-flex;align-items:center;gap:14px}
-.logo .lm{width:24px;height:24px;flex:none}
-.logo span{padding-left:.6em}
-.logo em{font-style:normal;font-family:"Noto Sans TC",sans-serif;font-size:11px;letter-spacing:.3em;color:var(--grey);margin-left:-4px}
+.logo{display:inline-flex;align-items:center;gap:10px;letter-spacing:.12em!important;padding-left:0!important}
+.logo .lm{width:20px;height:20px;flex:none}
+.logo span{font-size:21px;letter-spacing:.12em}
+.logo em{font-style:normal;font-family:"Noto Sans TC",sans-serif;font-size:11px;letter-spacing:.24em;color:var(--grey);padding-left:12px;margin-left:2px;border-left:1px solid currentColor;line-height:1}
 body.home:not(.scrolled) .logo em{color:rgba(255,255,255,.75)}
 @media(max-width:380px){.logo em{display:none}}
 .nav{grid-column:3;justify-self:end;display:flex;gap:4px}
 .nav a{padding:6px 12px;font-size:12px;letter-spacing:.2em;color:var(--ink);text-decoration:none}
 .nav a.active{text-decoration:underline;text-underline-offset:8px;text-decoration-color:var(--ink)}
 .nav .badge{display:inline-block;min-width:16px;height:16px;line-height:16px;border-radius:8px;background:var(--wine);color:#fff;font-size:10px;text-align:center;padding:0 4px;margin-left:4px}
-body.home .topbar{position:fixed;left:0;right:0;background:transparent;border-bottom-color:rgba(255,255,255,.25)}
+body.home .topbar{position:fixed;left:0;right:0;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0));border-bottom-color:transparent}
 body.home .topbar .logo,body.home .topbar .nav a{color:#fff}
 body.home.scrolled .topbar{background:rgba(255,255,255,.96);border-bottom-color:var(--rule)}
 body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--ink)}
@@ -92,7 +92,7 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.1) 35%,rgba(0,0,0,.55) 100%)}
 .hero .over{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:0 22px 12vh}
 .hero .hm{width:clamp(48px,5vw,72px);height:auto;margin-bottom:26px;color:#fff}
-.hero .mark{font-family:"Noto Serif TC",serif;font-weight:300;font-size:clamp(64px,11vw,168px);letter-spacing:.3em;padding-left:.3em;line-height:1}
+.hero .mark{font-family:"Noto Serif TC",serif;font-weight:300;font-size:clamp(64px,10vw,150px);letter-spacing:.18em;padding-left:.18em;line-height:1}
 .hero .tagline{margin:26px 0 38px;font-size:15px;letter-spacing:.32em;padding-left:.32em}
 .hero .row{gap:14px;justify-content:center}
 
@@ -271,7 +271,7 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 <!-- 18+ 閘門 -->
 <div id="gate" class="gate hidden">
   <div class="box">
-    <div class="logo"><svg class="lm" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M6 32 L58 32 A26 26 0 0 1 6 32Z" fill="#B04A62"/></svg><span>半 糖</span></div>
+    <div class="logo"><svg class="lm" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M6 32 L58 32 A26 26 0 0 1 6 32Z" fill="#B04A62"/></svg><span>半糖</span></div>
     <h2 style="margin:26px 0 12px;font-size:22px;font-weight:500">僅限年滿 18 歲的成年人</h2>
     <p class="muted small">進入即表示你已年滿 18 歲（或你所在地之法定成年年齡），並同意本站<a href="#/terms">使用條款</a>與<a href="#/privacy">隱私政策</a>。本站為成人交友平台，禁止任何形式之金錢交易與色情服務招攬。</p>
     <div class="row mt2" style="justify-content:center">
@@ -283,7 +283,7 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <div class="topbar">
   <div class="in">
-    <a href="#/" class="logo" aria-label="半糖 首頁"><svg class="lm" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M6 32 L58 32 A26 26 0 0 1 6 32Z" fill="#B04A62"/></svg><span>半 糖</span><em>甜心交友</em></a>
+    <a href="#/" class="logo" aria-label="半糖 首頁"><svg class="lm" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M6 32 L58 32 A26 26 0 0 1 6 32Z" fill="#B04A62"/></svg><span>半糖</span><em>甜心交友</em></a>
     <nav class="nav" id="nav"></nav>
   </div>
 </div>
@@ -294,7 +294,7 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <footer>
   <div><a href="#/terms">使用條款</a>·<a href="#/privacy">隱私政策</a>·<a href="#/guidelines">社群守則</a>·<a href="#/safety">安全須知</a></div>
-  <div class="mt" style="margin-top:10px">© 2026 半糖 HALF SWEET · 僅限 18 歲以上成年人使用 · <span id="ver"></span></div>
+  <div class="mt" style="margin-top:10px">© 2026 半糖 HALF SUGAR · 僅限 18 歲以上成年人使用 · <span id="ver"></span></div>
 </footer>
 
 <div id="modal"></div>
@@ -302,13 +302,13 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SWEET  前端  build v1.0.0
+   半糖 HALF SUGAR  前端  build v1.0.0
    ===================================================================== */
 const BUILD = 'v1.0.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
-  SITE_NAME: '半糖 HALF SWEET',
+  SITE_NAME: '半糖 HALF SUGAR',
 };
 document.getElementById('ver').textContent = BUILD;
 
@@ -447,7 +447,7 @@ async function viewLanding(){
     <div class="pn" style="background-image:url('${IMG.h2}')"></div>
     <div class="pn" style="background-image:url('${IMG.h3}')"></div>
     <div class="over">
-      <svg class="hm" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M6 32 L58 32 A26 26 0 0 1 6 32Z" fill="#B04A62"/></svg><div class="mark">半糖</div>
+      <div class="mark">半糖</div>
       <div class="tagline">台灣甜心交友　剛剛好的甜</div><div class="sub">事業有成的你，與值得被照顧的甜心，<br class="d">在真人審核的空間裡，坦誠地認識彼此。</div>
       <div class="row flexwrap">${two(true)}</div>
     </div>
@@ -911,7 +911,7 @@ async function viewAdmin(){
    ===================================================================== */
 const DOCS = {
 terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日（草稿，正式上線前請由律師審閱）</p>
-<h3>第一條　契約主體與服務性質</h3><p>本條款為半糖 HALF SWEET（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友服務（包括 Sugar Dating 甜心交友）。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
+<h3>第一條　契約主體與服務性質</h3><p>本條款為半糖 HALF SUGAR（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友服務（包括 Sugar Dating 甜心交友）。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
 <h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
 <h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。</p>
 <h3>第四條　禁止行為</h3><p>你同意不得於本平台從事以下行為，違者本平台得逕行停權、刪除內容，並保留法律追訴權：</p><ol>
