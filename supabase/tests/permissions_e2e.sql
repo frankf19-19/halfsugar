@@ -11,11 +11,11 @@ begin
     (A,'e2e-a@test.invalid','authenticated','authenticated'),(B,'e2e-b@test.invalid','authenticated','authenticated'),
     (C,'e2e-c@test.invalid','authenticated','authenticated'),(D,'e2e-d@test.invalid','authenticated','authenticated'),
     (E,'e2e-e@test.invalid','authenticated','authenticated');
-  update public.profiles set nickname='A', gender='male', looking_for='female', role='daddy', birth_year=1985, city='台北市', status='approved', avatar_path=A||'/av.jpg', age_confirmed=true, agreed_terms_at=now() where id=A;
+  update public.profiles set nickname='A', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1985, city='台北市', status='approved', avatar_path=A||'/av.jpg', age_confirmed=true, agreed_terms_at=now() where id=A;
   update public.profiles set nickname='B', gender='female', looking_for='male', role='baby', birth_year=1998, city='台北市', status='approved', avatar_path=B||'/av.jpg', age_confirmed=true, agreed_terms_at=now() where id=B;
   update public.profiles set gender='female', looking_for='male' where id=C; -- incomplete
   update public.profiles set nickname='D', gender='female', looking_for='male', role='baby', birth_year=1997, city='台北市', status='approved', hidden=true where id=D;
-  update public.profiles set nickname='E', gender='male', looking_for='male', role='daddy', birth_year=1980, city='台北市', status='approved' where id=E;
+  update public.profiles set nickname='E', gender='male', looking_for='male', role='daddy', budget='50to80k', birth_year=1980, city='台北市', status='approved' where id=E;
   insert into public.photos (user_id, path, is_private, status) values (B, B||'/1.jpg', false, 'approved'), (B, B||'/2.jpg', true, 'approved'), (A, A||'/p.jpg', true, 'approved');
   insert into storage.objects (bucket_id, name) values ('photos', B||'/1.jpg'), ('photos', B||'/2.jpg'), ('photos', B||'/av.jpg');
 
@@ -236,7 +236,7 @@ begin
   -- 20 審核中聊天、檢舉證據、重新送審、年齡、停權關閉配對
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   insert into auth.users (id, email, aud, role) values (G,'e2e-g@test.invalid','authenticated','authenticated'),(H,'e2e-h@test.invalid','authenticated','authenticated');
-  update public.profiles set nickname='G', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市', status='approved' where id=G;
+  update public.profiles set nickname='G', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1980, city='台北市', status='approved' where id=G;
   update public.profiles set nickname='H', gender='female', looking_for='male', role='baby', birth_year=1999, city='台北市', status='approved' where id=H;
   insert into public.matches (user_a, user_b) values (least(G,H), greatest(G,H)) returning id into mid;
   insert into public.messages (match_id, sender_id, body) values (mid, G, '你好'), (mid, H, '嗨');
@@ -272,7 +272,7 @@ begin
   -- 21 直接傳訊息：回覆前只能一則、每天 10 個新對話
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   insert into auth.users (id, email, aud, role) values (K,'e2e-k@test.invalid','authenticated','authenticated');
-  update public.profiles set nickname='K', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市', status='approved' where id=K;
+  update public.profiles set nickname='K', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1980, city='台北市', status='approved' where id=K;
   for i in 1..11 loop
     T := gen_random_uuid();
     insert into auth.users (id, email, aud, role) values (T, 'e2e-t'||i||'@test.invalid','authenticated','authenticated');
@@ -339,7 +339,7 @@ begin
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   insert into auth.users (id, email, aud, role) values (P,'e2e-p@test.invalid','authenticated','authenticated'),(Q,'e2e-q@test.invalid','authenticated','authenticated'),
     (R,'e2e-r@test.invalid','authenticated','authenticated'),(S2,'e2e-s@test.invalid','authenticated','authenticated');
-  update public.profiles set nickname='P', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市', status='approved' where id=P;
+  update public.profiles set nickname='P', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1980, city='台北市', status='approved' where id=P;
   update public.profiles set nickname='Q', gender='female', looking_for='male', role='baby', birth_year=1998, city='台北市', status='approved' where id in (Q,R,S2);
   update public.profiles set accept_from='liked' where id=R;
   perform set_config('request.jwt.claims', json_build_object('sub',P,'role','authenticated')::text, true);
