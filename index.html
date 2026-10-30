@@ -102,6 +102,10 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .fsheet .two{display:flex;gap:10px;align-items:center}.fsheet .two select{flex:1;min-width:0}
 .fbtn{border:1px solid var(--ink);background:#fff;padding:10px 14px;font-size:13px;letter-spacing:.1em;white-space:nowrap}
 .fbtn b{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--wine);color:#fff;font-size:11px;text-align:center;margin-left:6px;font-weight:500}
+.aphs .g{position:relative}
+.aphb{position:absolute;left:0;right:0;bottom:0;display:flex}
+.aphb button{flex:1;padding:8px 0;border:0;font-size:15px;color:#fff;cursor:pointer}
+.aphb .pok{background:rgba(26,26,26,.82)}.aphb .pno{background:rgba(176,74,98,.88)}
 .obsteps{display:flex;gap:28px;margin:0 0 22px;font-size:13px;letter-spacing:.12em;color:var(--grey)}
 .obsteps span{padding-bottom:6px;border-bottom:1px solid transparent}
 .obsteps span.on{color:var(--ink);border-bottom-color:var(--ink)}
@@ -411,9 +415,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   微糖 SUGAR 30  前端  build v1.19.0
+   微糖 SUGAR 30  前端  build v1.20.0
    ===================================================================== */
-const BUILD = 'v1.19.0';
+const BUILD = 'v1.20.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -622,7 +626,7 @@ function statusBanner(){
   if(!me) return '';
   if(me.status==='pending') return me.approved_at
     ? `<div class="banner info">⏳ 你修改的檔案正在重新審核。期間新的會員暫時看不到你，正在聊的對話不受影響。</div>`
-    : `<div class="banner info">⏳ 你的檔案正在審核中。通過後其他會員才看得到你，你也才能傳訊息與心動。通常在 24 小時內完成。</div>`;
+    : `<div class="banner info">⏳ 你的檔案與照片正在審核中，通常在 24 小時內完成。至少一張照片通過後，就能開始瀏覽會員、傳訊息與心動。</div>`;
   if(me.status==='rejected') return `<div class="banner warn">✎ 你的檔案未通過審核${me.review_note?`：${esc(me.review_note)}`:''}。請到「我的」修改後重新送審。</div>`;
   if(me.status==='suspended') return `<div class="banner bad">⛔ 你的帳號已被停權。如有疑問請聯絡客服${CONFIG.SUPPORT_EMAIL?`：<a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a>`:''}。</div>`;
   return '';
@@ -958,12 +962,19 @@ async function viewOnboarding(){
       ${profileFormHtml(me)}
       <label>頭像照片 *</label>
       <div class="row"><div class="avatar lg" id="avPrev">＋</div><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><input type="file" accept="image/*" id="avFile" style="margin-top:8px"></div></div>
+      <label>更多照片（選填，可一次選多張，最多 20 張）</label>
+      <div class="gallery" id="obGal"></div>
+      <label class="btn sm ghost" style="margin-top:8px">＋ 選擇照片<input type="file" accept="image/*" multiple id="obFiles" class="hidden"></label>
+      <p class="tiny dim">每一張照片都會由真人審核，通過後才會出現在你的檔案上。至少要有一張照片（頭像）通過，才能開始使用網站。</p>
       <button class="btn primary block mt2" type="submit">送出審核</button>
       <p class="tiny dim mt center">送出即表示你再次確認已年滿 18 歲並同意<a href="#/terms" target="_blank">使用條款</a></p>
     </form><p class="tiny dim center mt2">不是你的帳號？<a href="javascript:void 0" class="obOut">登出</a>　·　<a href="#/me">帳號與刪除</a></p></div>`;
   document.querySelectorAll('.obOut').forEach(a=>a.onclick=async()=>{ await sb.auth.signOut(); location.hash='#/'; });
   bindTagPick();
-  let avatarFile=null;
+  let avatarFile=null, extra=[];
+  const drawExtra = () => { $('#obGal').innerHTML = extra.map((f,i)=>`<div class="g" style="background-image:url(${URL.createObjectURL(f)})"><button type="button" class="del" data-i="${i}" aria-label="移除">✕</button></div>`).join('');
+    $('#obGal').querySelectorAll('.del').forEach(b=>b.onclick=()=>{ extra.splice(+b.dataset.i,1); drawExtra(); }); };
+  $('#obFiles').onchange = e => { extra = extra.concat([...e.target.files]).slice(0,19); e.target.value=''; drawExtra(); };
   $('#avFile').onchange = e => { avatarFile = e.target.files[0]; if(avatarFile){ $('#avPrev').style.backgroundImage=`url(${URL.createObjectURL(avatarFile)})`; $('#avPrev').textContent=''; } };
   $('#obForm').onsubmit = async e => {
     e.preventDefault(); const p = readProfileForm(e.target); if(!p) return;
@@ -986,7 +997,10 @@ async function viewOnboarding(){
       const { data: upd, error } = await sb.from('profiles').update({ ...p, avatar_path: path, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id).select('status').maybeSingle();
       if(error) throw error;
       if(upd && upd.status==='incomplete'){ await loadMe(); throw new Error(phoneOk()?'資料還不完整，請檢查每個必填欄位':'請先完成手機驗證'); }
-      await loadMe(); toast('已送出審核'); location.hash='#/browse';
+      let failed = 0;
+      for(let i=0;i<extra.length;i++){ btn.textContent=`上傳照片 ${i+1}／${extra.length}…`;
+        try{ const ph = await uploadPhoto(extra[i]); const { error: pe } = await sb.from('photos').insert({ user_id:me.id, path:ph, is_private:false }); if(pe) failed++; }catch(_){ failed++; } }
+      await loadMe(); toast(failed?`已送出審核（有 ${failed} 張照片沒上傳成功，可以之後在「我的」補上）`:'已送出審核', 5000); location.hash='#/me';
     }catch(err){ toast('失敗：'+err.message); btn.disabled=false; btn.textContent='送出審核'; }
   };
 }
@@ -998,6 +1012,7 @@ const browseState = { role: null, region:'', city:'', amin:'', amax:'', hmin:'',
 const resetBrowse = () => Object.assign(browseState, { region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'' });
 const advCount = () => ['amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0);
 async function viewBrowse(){
+  if(me.status==='pending' && !me.approved_at){ $('#app').innerHTML = `${statusBanner()}<div class="center" style="padding:50px 0"><p class="muted">審核通過後，這裡就會出現和你方向吻合的會員。<br class="d">等待的時間，可以先到「我的」多放幾張照片、把自介寫完整。</p><a class="btn mt2" href="#/me">前往「我的」</a></div>`; return; }
   if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); }
   const sugarView = () => browseState.role!=='baby';
   const cities = () => browseState.region ? REGIONS[browseState.region] : CITIES;
@@ -1365,7 +1380,7 @@ async function viewMe(){
   $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
   $('#meAvFile').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; toast('上傳中…', 60000);
     try{ const path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error; toast('頭像已更新，重新送審'); viewMe(); }catch(err){ toast(err.message); } };
-  document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=9) return toast('相簿最多 9 張'); toast('上傳中…', 60000); document.querySelectorAll('.mePh').forEach(x=>x.disabled=true);
+  document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=20) return toast('相簿最多 20 張'); toast('上傳中…', 60000); document.querySelectorAll('.mePh').forEach(x=>x.disabled=true);
     try{ const path=await uploadPhoto(f); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1' }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }catch(err){ toast(err.message); } });
   $('#wFile') && ($('#wFile').onchange = async e => { const f=e.target.files[0]; if(!f) return;
     if(!['approved','pending'].includes(me.status)) return toast('請先完成建立檔案');
@@ -1442,6 +1457,8 @@ async function viewAdmin(){
     const box = $('#adm');
     if(tab==='profiles'){
       const { data: rows } = await sb.rpc('admin_profiles', { p_status:'pending' });
+      const { data: pphs } = rows?.length ? await sb.from('photos').select('id,user_id,path,is_private,status').in('user_id', rows.map(r=>r.id)).eq('status','pending').order('created_at') : { data: [] };
+      const phBy = {}; (pphs||[]).forEach(x=>(phBy[x.user_id] ||= []).push(x));
       if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審會員 ✓</p>'; return; }
       box.innerHTML = rows.map(p=>`<div class="card mb" data-id="${p.id}">
         <div class="row" style="align-items:flex-start"><div class="avatar lg" data-ph="${esc(p.avatar_path||'')}"></div>
@@ -1450,8 +1467,15 @@ async function viewAdmin(){
             <p class="small mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
             ${containsBadWords(p.bio+' '+p.nickname).length?`<p class="tiny bad">⚠ 含敏感字：${containsBadWords(p.bio+' '+p.nickname).join('、')}</p>`:''}
             <div class="tags mt">${(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div></div>
+        ${(phBy[p.id]||[]).length?`<div class="tiny dim mt">其他待審照片（${phBy[p.id].length}）　<button class="btn sm ghost phAll" data-u="${p.id}">全部通過</button></div>
+          <div class="gallery mt aphs">${phBy[p.id].map(x=>`<div class="g" data-ph="${esc(x.path)}" data-id="${x.id}"><span class="st chip warn">${x.is_private?'🔒 私密':'公開'}</span><div class="aphb"><button class="pok" data-id="${x.id}" aria-label="通過">✓</button><button class="pno" data-id="${x.id}" aria-label="退件">✕</button></div></div>`).join('')}</div>`:''}
         <div class="row mt flexwrap"><button class="btn sm primary ap" data-id="${p.id}">✓ 通過</button><input class="grow note" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px"><button class="btn sm ghost rj" data-id="${p.id}">退件</button><button class="btn sm danger sp" data-id="${p.id}">停權</button></div></div>`).join('');
       box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
+      box.querySelectorAll('.aphs .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; } });
+      const phDone = (id, ok) => { const g = box.querySelector(`.aphs .g[data-id="${id}"]`); if(g){ g.style.opacity=.35; g.querySelector('.st').textContent = ok?'已通過':'已退件'; g.querySelector('.aphb')?.remove(); } };
+      box.querySelectorAll('.pok').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id))) phDone(b.dataset.id,true); });
+      box.querySelectorAll('.pno').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id))) phDone(b.dataset.id,false); });
+      box.querySelectorAll('.phAll').forEach(b=>b.onclick=async()=>{ const ids=(phBy[b.dataset.u]||[]).map(x=>x.id); if(await adm(sb.from('photos').update({ status:'approved' }).in('id', ids))){ ids.forEach(i=>phDone(i,true)); toast('照片已全部通過'); } });
       const done = (b,msg) => { toast(msg); const c=b.closest('.card'); c.style.opacity=.3; setTimeout(()=>{ c.remove(); if(!box.querySelector('.card')) draw(); },300); };
       box.querySelectorAll('.ap').forEach(b=>b.onclick=async()=>{ b.disabled=true; if(await adm(sb.from('profiles').update({ status:'approved', review_note:null }).eq('id',b.dataset.id))) done(b,'已通過'); else b.disabled=false; });
       box.querySelectorAll('.rj').forEach(b=>b.onclick=async()=>{ const note=b.closest('.card').querySelector('.note').value||'請修改後重新送審'; if(await adm(sb.from('profiles').update({ status:'rejected', review_note:note }).eq('id',b.dataset.id))) done(b,'已退件'); });
