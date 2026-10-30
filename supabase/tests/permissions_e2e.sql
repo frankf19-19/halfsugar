@@ -489,10 +489,10 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub',Y,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', Y::text, true);
   execute 'set local role authenticated';
-  update public.profiles set approved_at = now(), submitted_at = '2000-01-01' where id=Y;
-  select count(*) into n from public.profiles where id=Y and (approved_at is not null or submitted_at < '2001-01-01'); out := array_append(out, ('29 自己填 approved_at / submitted_at = '||n||' (應為0)')::text);
+  begin update public.profiles set approved_at = now(), submitted_at = '2000-01-01' where id=Y; exception when others then null; end;
   select count(*) into n from public.profiles where id=P; out := array_append(out, ('29b 自己改完後看到其他會員 = '||n||' (應為0)')::text);
   execute 'reset role';
+  select count(*) into n from public.profiles where id=Y and (approved_at is not null or submitted_at < '2001-01-01'); out := array_append(out, ('29 自己填 approved_at / submitted_at = '||n||' (應為0)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   -- 30 客服留言：只有自己和管理員看得到，不能冒名
