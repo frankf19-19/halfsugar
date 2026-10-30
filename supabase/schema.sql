@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.20.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.21.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -60,7 +60,8 @@ alter table public.profiles add column if not exists hidden boolean not null def
 alter table public.profiles add column if not exists show_online boolean not null default true;
 alter table public.profiles add column if not exists submitted_at timestamptz;
 alter table public.profiles add column if not exists approved_at timestamptz;
-alter table public.profiles add column if not exists wealth_verified_at timestamptz;   -- 財力認證通過時間
+alter table public.profiles add column if not exists wealth_verified_at timestamptz;
+alter table public.profiles add column if not exists person_verified_at timestamptz;   -- 真人認證通過時間   -- 財力認證通過時間
 -- 身材、罩杯（選填、只限女性）、相處方式、見面頻率、甜心期望預算
 alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
 alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
@@ -106,7 +107,8 @@ begin
   new.id          := old.id;
   new.is_admin    := old.is_admin;
   new.review_note := old.review_note;
-  new.wealth_verified_at := old.wealth_verified_at;   -- 財力認證只有管理員能設定
+  new.wealth_verified_at := old.wealth_verified_at;
+  new.person_verified_at := old.person_verified_at;   -- 真人認證只有管理員能設定   -- 財力認證只有管理員能設定
   new.created_at  := old.created_at;
   if new.last_active_at is not null then new.last_active_at := least(new.last_active_at, now()); end if;
   -- 性別與想認識的對象：第一次設定後不可更改
@@ -715,7 +717,7 @@ $$;
 
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
-grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
+grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, person_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
               avatar_path, status, hidden, last_active_at, created_at, updated_at) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
@@ -828,6 +830,7 @@ begin
   update public.profiles set hidden = true, avatar_path = null where id = uid;
   delete from public.photos where user_id = uid;
   delete from public.wealth_verifications where user_id = uid;
+  delete from public.person_verifications where user_id = uid;
   perform set_config('halfsugar.deleting', '0', true);
 end $$;
 revoke execute on function public.begin_account_deletion() from anon, public;
@@ -843,7 +846,7 @@ begin
      or exists (select 1 from public.reports where reported_id = uid and status = 'open') then
     raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
   end if;
-  if exists (select 1 from storage.objects where bucket_id in ('photos','verify') and name like uid::text || '/%') then
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person') and name like uid::text || '/%') then
     raise exception '照片檔案還沒刪完，請再按一次刪除';
   end if;
   delete from public.photos where user_id = uid;
@@ -1107,6 +1110,120 @@ exception when duplicate_object then null; end $$;
 -- ---------------------------------------------------------------------
 -- update public.profiles set is_admin = true, status = 'approved'
 --  where id = (select id from auth.users where email = 'you@example.com');
+
+
+-- ---------------------------------------------------------------------
+-- 真人認證：系統隨機指定動作，會員交一張自拍＋一段 10 秒內短影片，管理員比對頭像後給「真人認證」標章；檔案審核後立即刪除
+-- ---------------------------------------------------------------------
+create table if not exists public.person_verifications (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  photo_task  text not null,
+  video_task  text not null,
+  code        text not null,
+  photo_path  text,
+  video_path  text,
+  status      text not null default 'awaiting' check (status in ('awaiting','pending','approved','rejected')),
+  review_note text,
+  created_at  timestamptz not null default now(),
+  submitted_at timestamptz,
+  reviewed_at timestamptz
+);
+create index if not exists person_verifications_idx on public.person_verifications(status, submitted_at);
+alter table public.person_verifications enable row level security;
+drop policy if exists "pv_select" on public.person_verifications;
+create policy "pv_select" on public.person_verifications for select to authenticated
+  using (user_id = auth.uid() or public.is_admin());
+
+-- 取得指定動作（由伺服器隨機產生，會員無法自己選）
+create or replace function public.start_person_verification()
+returns public.person_verifications language plpgsql security definer set search_path = public as $$
+declare r public.person_verifications;
+  photos text[] := array['右手比 3，摸左耳','左手比讚，放在下巴旁','右手比 OK，放在右臉旁','雙手在胸前比愛心','左手比 YA，放在額頭旁','右手摸頭頂，閉上左眼'];
+  videos text[] := array['先看鏡頭，慢慢把頭轉向左邊再轉回來','對鏡頭眨兩次眼，再揮揮手','先比 1，再比 5，最後比讚','把手機拿近再拿遠，最後微笑','先抬頭看上面，再低頭看下面，最後看鏡頭'];
+begin
+  if auth.uid() is null then raise exception '請先登入'; end if;
+  if public.my_status() not in ('pending','approved') then raise exception '建立檔案後才能申請真人認證'; end if;
+  if exists (select 1 from public.person_verifications where user_id = auth.uid() and status = 'pending') then
+    raise exception '你已經有一份在審核中';
+  end if;
+  if (select count(*) from public.person_verifications where user_id = auth.uid() and created_at > now() - interval '1 day') >= 5 then
+    raise exception '今天申請太多次了，明天再試';
+  end if;
+  delete from public.person_verifications where user_id = auth.uid() and status = 'awaiting';
+  insert into public.person_verifications (user_id, photo_task, video_task, code)
+  values (auth.uid(), photos[1 + floor(random()*array_length(photos,1))::int], videos[1 + floor(random()*array_length(videos,1))::int],
+          lpad((floor(random()*9000)+1000)::int::text, 4, '0'))
+  returning * into r;
+  return r;
+end $$;
+revoke execute on function public.start_person_verification() from anon, public;
+grant execute on function public.start_person_verification() to authenticated;
+
+-- 交件（檔案已上傳到 person 空間）
+create or replace function public.submit_person_verification(vid uuid, photo text, video text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if photo !~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$') or video !~ ('^' || auth.uid()::text || '/[0-9]+\.(mp4|mov|webm)$') then
+    raise exception '檔案格式不正確';
+  end if;
+  if not exists (select 1 from storage.objects where bucket_id = 'person' and name = photo)
+     or not exists (select 1 from storage.objects where bucket_id = 'person' and name = video) then
+    raise exception '檔案還沒上傳完成';
+  end if;
+  update public.person_verifications set photo_path = photo, video_path = video, status = 'pending', submitted_at = now()
+   where id = vid and user_id = auth.uid() and status = 'awaiting' and created_at > now() - interval '2 hours';
+  if not found then raise exception '這次的指定動作已過期，請重新開始'; end if;
+end $$;
+revoke execute on function public.submit_person_verification(uuid, text, text) from anon, public;
+grant execute on function public.submit_person_verification(uuid, text, text) to authenticated;
+
+-- 管理員審核（前端會先刪掉檔案）
+create or replace function public.admin_review_person(vid uuid, approve boolean, note text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.person_verifications;
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  select * into v from public.person_verifications where id = vid for update;
+  if not found then raise exception '找不到這筆申請'; end if;
+  update public.person_verifications
+     set status = case when approve then 'approved' else 'rejected' end,
+         review_note = case when approve then null else coalesce(nullif(note,''), '動作或長相和頭像對不起來，請重新拍攝') end,
+         reviewed_at = now(), photo_path = null, video_path = null
+   where id = vid;
+  if approve then update public.profiles set person_verified_at = now() where id = v.user_id; end if;
+end $$;
+revoke execute on function public.admin_review_person(uuid, boolean, text) from anon, public;
+grant execute on function public.admin_review_person(uuid, boolean, text) to authenticated;
+
+create or replace function public.admin_revoke_person(target uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  update public.profiles set person_verified_at = null where id = target;
+end $$;
+revoke execute on function public.admin_revoke_person(uuid) from anon, public;
+grant execute on function public.admin_revoke_person(uuid) to authenticated;
+
+-- 真人認證檔案空間：私有，只有本人與管理員看得到，審核後刪除
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('person', 'person', false, 26214400, array['image/jpeg','video/mp4','video/quicktime','video/webm'])
+on conflict (id) do update set public = false, file_size_limit = 26214400,
+  allowed_mime_types = array['image/jpeg','video/mp4','video/quicktime','video/webm'];
+create or replace function private.my_person_file_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from storage.objects where bucket_id = 'person' and name like auth.uid()::text || '/%';
+$$;
+drop policy if exists "person_storage_insert" on storage.objects;
+create policy "person_storage_insert" on storage.objects for insert to authenticated
+  with check (bucket_id = 'person' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.(jpg|mp4|mov|webm)$')
+              and public.my_status() in ('pending','approved') and private.my_person_file_count() < 6);
+drop policy if exists "person_storage_select" on storage.objects;
+create policy "person_storage_select" on storage.objects for select to authenticated
+  using (bucket_id = 'person' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
+drop policy if exists "person_storage_delete" on storage.objects;
+create policy "person_storage_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'person' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
 
 -- ---------------------------------------------------------------------
 -- 財力文件讀取規則（放最後：用到上面才定義的函式）

@@ -464,5 +464,24 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 28 真人認證
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set person_verified_at = now() where id=Q;
+  select count(*) into n from public.profiles where id=Q and person_verified_at is not null; out := array_append(out, ('28 自己標記真人認證 = '||n||' (應為0)')::text);
+  select (public.start_person_verification()).id into rid;
+  begin perform public.submit_person_verification(rid, Q||'/1.jpg', Q||'/2.mp4'); out := array_append(out, '28b 沒上傳檔案就送出：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '28b 檔案沒上傳不能送出 ✓'::text); end;
+  begin insert into public.person_verifications (user_id, photo_task, video_task, code) values (Q,'自選','自選','0000'); out := array_append(out, '28c 自己指定動作：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '28c 動作只能由系統指定 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',R,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', R::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.person_verifications; out := array_append(out, ('28d 別人看到真人認證資料 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
