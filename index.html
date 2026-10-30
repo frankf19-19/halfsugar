@@ -57,7 +57,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 .nav a:hover{text-decoration:none;color:var(--text)}
 .nav a.active{color:var(--text);border-bottom-color:var(--gold)}
 .nav .badge{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--rose);color:#fff;font-size:11px;text-align:center;padding:0 5px;margin-left:4px}
-.wrap{max-width:1120px;margin:0 auto;padding:26px 22px 110px}
+.wrap{max-width:1120px;margin:0 auto;padding:26px 22px 60px}
 .narrow{max-width:520px;margin:0 auto}
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px}
@@ -74,7 +74,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 @media(min-width:900px){.hero .copy{padding:80px 48px 72px 0;margin-left:max(22px,calc((100vw - 1120px)/2 + 22px))}}
 .hero .pic{position:relative;min-height:52vh;background:center 40%/cover no-repeat}
 .hero .pic::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#120e10 0%,rgba(18,14,16,.25) 35%,rgba(18,14,16,0) 70%),linear-gradient(0deg,#171215 0%,rgba(23,18,21,0) 30%)}
-@media(max-width:899px){.hero .pic{order:-1;min-height:60vh}.hero .pic::before{background:linear-gradient(0deg,#171215 0%,rgba(23,18,21,.2) 50%,rgba(23,18,21,.1) 100%)}}
+@media(max-width:899px){.hero{min-height:0}.hero .copy{padding:8px 22px 56px}.hero .pic{order:-1;min-height:62vh}.hero .kicker{font-size:19px;margin-bottom:14px}.hero p.lead{margin:18px 0 26px}.hero .pic::before{background:linear-gradient(0deg,#171215 0%,rgba(23,18,21,.2) 50%,rgba(23,18,21,.1) 100%)}}
 .hero .kicker{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:22px;color:var(--gold);margin-bottom:22px}
 .hero h1{font-size:clamp(30px,3.7vw,54px);line-height:1.3;color:var(--cream);font-weight:500;white-space:nowrap}
 .hero p.lead{max-width:460px;margin:26px 0 36px;color:var(--muted);font-size:16px;line-height:1.95}
@@ -85,6 +85,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 @media(min-width:1180px){.vert{display:block;position:absolute;right:28px;top:90px;z-index:3;writing-mode:vertical-rl;font-family:"Noto Serif TC",serif;font-size:14px;letter-spacing:.42em;color:rgba(239,230,216,.72);line-height:1.8;white-space:nowrap}}
 
 .sec{padding:96px 22px;max-width:1120px;margin:0 auto}
+@media(max-width:719px){.sec{padding:64px 22px}.quote{padding-bottom:64px}}
 .sec h2{font-size:clamp(26px,3.4vw,40px);color:var(--cream);line-height:1.35;font-weight:500}
 .sec .sub{color:var(--muted);max-width:520px;margin-top:16px;font-size:15px;line-height:1.95}
 .split{display:grid;grid-template-columns:1fr;gap:38px;align-items:start}
@@ -92,11 +93,11 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 .split .img{aspect-ratio:4/5;border-radius:6px;background:var(--bg2) center/cover;box-shadow:var(--shadow)}
 .split .img.wide{aspect-ratio:5/4}
 .cap{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:15px;color:var(--dim);margin-top:12px}
-.list{border-top:1px solid var(--hair);margin-top:34px}
-.list .li{display:grid;grid-template-columns:1fr;gap:4px;padding:22px 0;border-bottom:1px solid var(--hair)}
-@media(min-width:560px){.list .li{grid-template-columns:170px 1fr;gap:24px}}
-.list .li h3{font-size:17px;color:var(--cream);font-weight:500}
-.list .li p{color:var(--muted);font-size:14px;line-height:1.85}
+.facts{border-top:1px solid var(--hair);margin-top:34px}
+.facts .li{display:grid;grid-template-columns:1fr;gap:4px;padding:22px 0;border-bottom:1px solid var(--hair)}
+@media(min-width:560px){.facts .li{grid-template-columns:170px 1fr;gap:24px}}
+.facts .li h3{font-size:17px;color:var(--cream);font-weight:500}
+.facts .li p{color:var(--muted);font-size:14px;line-height:1.85}
 .strip{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:40px 22px 8px;margin:0 -22px;scrollbar-width:none}
 .strip::-webkit-scrollbar{display:none}
 .strip .ph{flex:0 0 auto;scroll-snap-align:start}
@@ -134,26 +135,28 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 .authwrap .form{padding:34px 32px}
 
 /* cards grid */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-@media(min-width:720px){.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:720px){.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:pointer;transition:.2s;position:relative}
 .pcard:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:var(--shadow)}
 .pcard .ph{aspect-ratio:3/4;background:var(--bg2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:40px;position:relative}
 .pcard .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(20,17,26,.9))}
 .pcard .info{position:relative;margin-top:-44px;padding:10px 12px!important;background:transparent}
 .pcard .info{padding:10px 12px}
-.pcard .name{font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.pcard .name{font-family:"Noto Serif TC",serif;font-weight:500;font-size:17px;display:flex;justify-content:space-between;align-items:baseline;color:var(--cream)}
 .pcard .meta{font-size:12px;color:var(--muted)}
-.pcard .liked{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);border-radius:999px;padding:3px 8px;font-size:12px;color:var(--rose)}
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
-.filters label{margin:0 0 4px}
-.filters input,.filters select{padding:9px 12px;font-size:14px}
+.pcard .liked{position:absolute;top:8px;right:8px;background:rgba(23,18,21,.7);backdrop-filter:blur(6px);border-radius:999px;padding:3px 9px;font-size:11px;color:var(--cream);letter-spacing:.05em}
+.filters{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.filters::-webkit-scrollbar{display:none}
+.filters select{flex:0 0 auto;width:auto;min-width:96px;padding:9px 32px 9px 12px;font-size:14px;border-radius:999px;background:var(--bg2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23b3a497' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;-webkit-appearance:none;appearance:none;border-color:var(--line)}
+.filters select:focus{border-color:var(--gold)}
 
 .avatar{width:48px;height:48px;border-radius:50%;background:var(--bg2) center/cover;flex:none;display:flex;align-items:center;justify-content:center;color:var(--dim)}
-.avatar.lg{width:120px;height:120px;font-size:40px}
-.list .item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.avatar.lg{width:104px;height:104px;font-size:40px}
+.list .item{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--hair);cursor:pointer}
+.list .item .avatar{width:54px;height:54px}
 .list .item:last-child{border-bottom:0}
-.list .item .t{font-weight:500} .list .item .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+.list .item .t{font-family:"Noto Serif TC",serif;font-weight:500;font-size:16px;color:var(--cream)} .list .item .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
 
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tag{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
@@ -164,9 +167,13 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:0}
 @media(min-width:720px){.modal{align-items:center;padding:20px}}
-.modal .box{background:var(--card);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:22px}
+.modal .box{background:var(--card);border:1px solid var(--line);border-radius:18px 18px 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:22px 22px calc(26px + env(safe-area-inset-bottom));position:relative}
+.modal .box::before{content:"";display:block;width:36px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 14px}
+@media(min-width:720px){.modal .box::before{display:none}}
+.sheet .it{display:block;width:100%;text-align:left;padding:15px 4px;border-bottom:1px solid var(--hair);font-size:16px;color:var(--text)}
+.sheet .it.bad{color:var(--bad)}
 @media(min-width:720px){.modal .box{border-radius:20px}}
-.modal .x{position:sticky;top:0;float:right;background:var(--bg2);border-radius:50%;width:34px;height:34px;font-size:18px;line-height:34px;text-align:center}
+.modal .x{position:absolute;top:14px;right:14px;background:var(--bg2);border-radius:50%;width:32px;height:32px;font-size:18px;line-height:32px;text-align:center;z-index:2}
 .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .gallery .g{aspect-ratio:1;border-radius:10px;background:var(--bg2) center/cover;position:relative;overflow:hidden}
 .gallery .g.lock{display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:24px}
@@ -175,14 +182,19 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 .photo-big{width:100%;aspect-ratio:3/4;border-radius:14px;background:var(--bg2) center/cover}
 
 /* chat */
-.chat{display:flex;flex-direction:column;height:calc(100vh - 140px);min-height:420px}
+.chat{display:flex;flex-direction:column;height:calc(100dvh - 112px);min-height:420px}
+.chat .hd{display:flex;align-items:center;gap:10px;padding:0 0 12px;border-bottom:1px solid var(--hair)}
+.chat .hd .name{font-family:"Noto Serif TC",serif;font-size:17px;color:var(--cream)}
+.chat .hd .ib{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px}
+.chat .hd .ib:hover{color:var(--cream)}
 .chat .msgs{flex:1;overflow:auto;padding:10px 4px;display:flex;flex-direction:column;gap:8px}
 .msg{max-width:78%;padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.5;word-break:break-word}
-.msg.me{align-self:flex-end;background:linear-gradient(135deg,#6a4f2a,#8a6a3a);border-bottom-right-radius:4px}
-.msg.them{align-self:flex-start;background:var(--bg2);border-bottom-left-radius:4px}
+.msg.me{align-self:flex-end;background:#55412f;color:var(--cream);border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;background:var(--bg2);border:1px solid var(--line);border-bottom-left-radius:4px}
 .msg .time{display:block;font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;text-align:right}
-.chat form{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
-.chat form input{flex:1}
+.chat form{display:flex;gap:8px;padding:10px 0 calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--hair);background:var(--bg)}
+.chat form input{flex:1;border-radius:999px;padding:11px 16px}
+.chat form .btn{border-radius:999px;padding:11px 18px}
 
 /* tabs */
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow:auto}
@@ -190,10 +202,13 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 .tabs button.on{color:var(--cream);border-color:var(--gold)}
 
 /* bottom nav (mobile) */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,17,26,.95);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:49;padding-bottom:env(safe-area-inset-bottom)}
-.bnav a{flex:1;text-align:center;padding:10px 0 8px;font-size:11px;color:var(--muted)}
-.bnav a .i{font-size:20px;display:block;line-height:1.2}
-.bnav a.active{color:var(--gold)}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(23,18,21,.94);backdrop-filter:blur(14px);border-top:1px solid var(--hair);display:flex;z-index:49;padding-bottom:env(safe-area-inset-bottom)}
+.bnav a{flex:1;text-align:center;padding:9px 0 7px;font-size:10.5px;letter-spacing:.06em;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:3px}
+.bnav a:hover{text-decoration:none}
+.bnav a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.bnav a.active{color:var(--cream)}
+.bnav a.active svg{stroke:var(--gold)}
+body.nobnav .bnav{display:none}
 @media(min-width:720px){.bnav{display:none}}
 @media(max-width:719px){.nav{display:none}}
 
@@ -204,7 +219,8 @@ label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
 .doc{max-width:760px;margin:0 auto;font-size:15px}
 .doc h2{font-size:26px;color:var(--gold2);margin-bottom:6px} .doc h3{font-size:17px;color:var(--gold);margin:26px 0 8px}
 .doc p,.doc li{color:#d9d3e0;margin-bottom:8px} .doc ol,.doc ul{padding-left:22px}
-footer{border-top:1px solid var(--line);padding:26px 18px;text-align:center;font-size:12px;color:var(--dim)}
+footer{border-top:1px solid var(--hair);padding:28px 18px;text-align:center;font-size:12px;color:var(--dim)}
+@media(max-width:719px){body:not(.nobnav) footer{padding-bottom:calc(90px + env(safe-area-inset-bottom))}body.nobnav footer{display:none}}
 footer a{color:var(--muted);margin:0 8px}
 .spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;margin:40px auto}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -250,9 +266,9 @@ footer a{color:var(--muted);margin:0 8px}
 
 <script type="module">
 /* =====================================================================
-   悅遇 YUEYU  前端  build v0.3.0
+   悅遇 YUEYU  前端  build v0.4.0
    ===================================================================== */
-const BUILD = 'v0.3.0';
+const BUILD = 'v0.4.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -324,8 +340,15 @@ function renderNav(){
   }
   const admin = me.is_admin ? link('#/admin','後台') : '';
   $('#nav').innerHTML = link('#/browse','探索') + link('#/likes','喜歡') + link('#/matches','訊息') + link('#/me','我的') + admin;
-  const bl = (href, i, txt) => `<a href="${href}" class="${h.startsWith(href)?'active':''}"><span class="i">${i}</span>${txt}</a>`;
-  $('#bnav').innerHTML = bl('#/browse','✦','探索') + bl('#/likes','♡','喜歡') + bl('#/matches','✉','訊息') + bl('#/me','◉','我的') + (me.is_admin? bl('#/admin','⚙','後台'):'');
+  const IC = {
+    browse:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5-5 2.2 2.2-5z"/></svg>',
+    likes:'<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.4-7 10-7 10z"/></svg>',
+    matches:'<svg viewBox="0 0 24 24"><path d="M4 6h16v10H9l-5 4z"/></svg>',
+    me:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>',
+    admin:'<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>' };
+  const bl = (href, i, txt) => `<a href="${href}" class="${h.startsWith(href)?'active':''}">${IC[i]}${txt}</a>`;
+  $('#bnav').innerHTML = bl('#/browse','browse','探索') + bl('#/likes','likes','喜歡') + bl('#/matches','matches','訊息') + bl('#/me','me','我的') + (me.is_admin? bl('#/admin','admin','後台'):'');
+  document.body.classList.toggle('nobnav', h.startsWith('#/chat/'));
   $('#bnav').classList.remove('hidden');
 }
 
@@ -397,7 +420,7 @@ async function viewLanding(){
       <div>
         <h2>少一點噪音，<br>多一點值得的對話。</h2>
         <p class="sub">我們不追求會員數字。你在這裡遇到的，是願意花時間、也值得你花時間的人。</p>
-        <div class="list">
+        <div class="facts">
           <div class="li"><h3>真人審核</h3><p>照片與自介都由真人看過才公開。假照片、網路圖片、留聯絡方式的，不會出現在這裡。</p></div>
           <div class="li"><h3>互相喜歡才對話</h3><p>只有彼此都按下喜歡，對話才會開啟。你不會收到不想要的訊息。</p></div>
           <div class="li"><h3>私密照由你決定</h3><p>私密相簿只給你授權的人看，隨時可以收回。</p></div>
@@ -572,14 +595,13 @@ async function viewBrowse(){
   if(browseState.gender===null) browseState.gender = me.looking_for==='any' ? '' : (me.looking_for || '');
   $('#app').innerHTML = `${statusBanner()}
     <div class="filters">
-      <div><label>性別</label><select id="fGender"><option value="">不限</option><option value="female" ${browseState.gender==='female'?'selected':''}>女性</option><option value="male" ${browseState.gender==='male'?'selected':''}>男性</option></select></div>
-      <div><label>地區</label><select id="fCity"><option value="">不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select></div>
-      <div><label>年齡從</label><input id="fMin" type="number" min="18" max="99" placeholder="18" value="${browseState.amin}"></div>
-      <div><label>到</label><input id="fMax" type="number" min="18" max="99" placeholder="99" value="${browseState.amax}"></div>
+      <select id="fGender" aria-label="性別"><option value="">性別不限</option><option value="female" ${browseState.gender==='female'?'selected':''}>女性</option><option value="male" ${browseState.gender==='male'?'selected':''}>男性</option></select>
+      <select id="fCity" aria-label="地區"><option value="">地區不限</option>${CITIES.map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join('')}</select>
+      <select id="fAge" aria-label="年齡"><option value="">年齡不限</option>${[['18','25'],['26','30'],['31','35'],['36','40'],['41','50'],['51','99']].map(([a,b])=>`<option value="${a}-${b}" ${browseState.amin===a?'selected':''}>${b==='99'?a+' 歲以上':a+'–'+b+' 歲'}</option>`).join('')}</select>
     </div>
     <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
   const reload = async () => {
-    browseState.gender=$('#fGender').value; browseState.city=$('#fCity').value; browseState.amin=$('#fMin').value; browseState.amax=$('#fMax').value;
+    browseState.gender=$('#fGender').value; browseState.city=$('#fCity').value; const ag=$('#fAge').value.split('-'); browseState.amin=ag[0]||''; browseState.amax=ag[1]||'';
     const y = new Date().getFullYear();
     let q = sb.from('profiles').select('id,nickname,gender,birth_year,city,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).order('last_active_at',{ascending:false}).limit(60);
     if(browseState.gender) q = q.eq('gender', browseState.gender);
@@ -596,7 +618,7 @@ async function viewBrowse(){
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url(${u})`; el.textContent=''; } });
   };
-  ['#fGender','#fCity','#fMin','#fMax'].forEach(s=>$(s).onchange=reload);
+  ['#fGender','#fCity','#fAge'].forEach(s=>$(s).onchange=reload);
   await reload();
 }
 
@@ -702,12 +724,12 @@ async function viewChat(matchId){
   const { data: o } = await sb.from('profiles').select('id,nickname,avatar_path').eq('id', oid).maybeSingle();
   const { data: msgs } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at').limit(300);
   $('#app').innerHTML = `<div class="chat">
-    <div class="row" style="padding-bottom:10px;border-bottom:1px solid var(--line)"><a href="#/matches" class="btn sm ghost">‹</a>
-      <div class="avatar" id="chAv" style="width:36px;height:36px"></div><div class="grow t" style="font-weight:500">${o?esc(o.nickname):'（已下架）'}</div>
-      ${o?`<button class="btn sm ghost" id="chProf">檔案</button><button class="btn sm ghost" id="chUnmatch">解除配對</button>`:''}</div>
+    <div class="hd"><a href="#/matches" class="ib" aria-label="返回">‹</a>
+      <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${o?esc(o.nickname):'（已下架）'}</div>
+      ${o?`<button class="ib" id="chMore" aria-label="更多">⋯</button>`:''}</div>
     <div class="msgs" id="msgs"></div>
-    <form id="chForm"><input id="chIn" maxlength="2000" placeholder="輸入訊息…" autocomplete="off" ${me.status==='approved'?'':'disabled'}><button class="btn primary" ${me.status==='approved'?'':'disabled'}>送出</button></form>
-    <p class="tiny dim center" style="padding-top:6px">請勿在對話中要求或提供任何金錢。遇到不當內容請封鎖並檢舉。</p></div>`;
+    <form id="chForm"><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off" ${me.status==='approved'?'':'disabled'}><button class="btn primary" ${me.status==='approved'?'':'disabled'}>送出</button></form>
+</div>`;
   if(o) signed(o.avatar_path).then(u=>{ if(u) $('#chAv').style.backgroundImage=`url(${u})`; });
   const box = $('#msgs');
   const add = (x) => { box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${fmtTime(x.created_at)}</span></div>`); box.scrollTop = box.scrollHeight; };
@@ -721,8 +743,14 @@ async function viewChat(matchId){
     $('#chIn').value='';
     const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body }).select().single();
     if(error) return toast(error.message); add(data); };
-  $('#chProf') && ($('#chProf').onclick=()=>openProfile(oid));
-  $('#chUnmatch') && ($('#chUnmatch').onclick=async()=>{ if(!confirm('解除配對後對話將刪除，確定？')) return; await sb.from('matches').delete().eq('id',matchId); location.hash='#/matches'; });
+  $('#chMore') && ($('#chMore').onclick=()=>{ modal(`<div class="sheet">
+      <button class="it" id="shProf">查看檔案</button>
+      <button class="it" id="shReport">檢舉</button>
+      <button class="it bad" id="shUnmatch">解除配對</button>
+      <p class="tiny dim" style="padding:14px 4px 0">請勿在對話中要求或提供任何金錢。遇到不當內容請封鎖並檢舉。</p></div>`);
+    $('#shProf').onclick=()=>openProfile(oid);
+    $('#shReport').onclick=()=>openReport(oid, o.nickname);
+    $('#shUnmatch').onclick=async()=>{ if(!confirm('解除配對後對話將刪除，確定？')) return; await sb.from('matches').delete().eq('id',matchId); closeModal(); location.hash='#/matches'; }; });
 }
 
 /* =====================================================================
