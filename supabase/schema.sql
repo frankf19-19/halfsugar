@@ -1,5 +1,5 @@
 -- =====================================================================
--- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.7.0)
+-- 半糖 HALF SUGAR — Supabase 資料庫結構  (schema v0.8.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -98,7 +98,8 @@ begin
   if old.status = 'incomplete' then
     if new.nickname is not null and new.gender is not null and new.looking_for is not null and new.role is not null
        and new.birth_year is not null and new.city is not null and new.avatar_path is not null
-       and new.age_confirmed and new.agreed_terms_at is not null then
+       and new.age_confirmed and new.agreed_terms_at is not null
+       and exists (select 1 from auth.users u where u.id = new.id and u.phone is not null and u.phone_confirmed_at is not null) then
       new.status := 'pending';
     else
       new.status := 'incomplete';
@@ -525,6 +526,19 @@ returns table (id uuid, nickname text) language sql stable security definer set 
        or exists (select 1 from public.photo_grants where owner_id = auth.uid() and viewer_id = p.id)
        or exists (select 1 from public.photo_requests where owner_id = auth.uid() and requester_id = p.id));
 $$;
+
+-- 會員自行刪除帳號：刪除 auth.users（連同手機、信箱），其餘資料經由外鍵一併刪除
+-- 前端會先刪掉照片登記與 storage 檔案，再呼叫這個函式
+create or replace function public.delete_my_account()
+returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception '請先登入'; end if;
+  delete from public.photos where user_id = uid;
+  delete from auth.users where id = uid;
+end $$;
+revoke execute on function public.delete_my_account() from anon, public;
+grant execute on function public.delete_my_account() to authenticated;
 
 -- 舊函式（可查詢任意兩人之間的封鎖）移除
 drop function if exists public.is_blocked_between(uuid, uuid);

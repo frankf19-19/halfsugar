@@ -3,6 +3,7 @@ do $t$
 declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
+  F uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
 begin
   perform set_config('storage.allow_delete_query','true',true);
@@ -122,6 +123,45 @@ begin
   select count(*) into n from public.matches where id=mid; out := array_append(out, (('6c 被封鎖者看到配對 = '||n||' (應為0)'))::text);
   select count(*) into n from public.profiles where id=A; out := array_append(out, (('6d 被封鎖者看到 A 的檔案 = '||n||' (應為0)'))::text);
   execute 'reset role';
+
+  -- 14 手機驗證：沒驗證手機就算資料填完也不能送審
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into auth.users (id, email, aud, role) values (F,'e2e-f@test.invalid','authenticated','authenticated');
+  perform set_config('request.jwt.claims', json_build_object('sub',F,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', F::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set nickname='F', gender='male', looking_for='female', role='daddy', birth_year=1980, city='台北市',
+    avatar_path=F||'/a.jpg', age_confirmed=true, agreed_terms_at=now() where id=F;
+  select status into v from public.profiles where id=F; out := array_append(out, ('14 沒驗證手機送審後狀態 = '||v||' (應為incomplete)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update auth.users set phone='886900000001', phone_confirmed_at=now() where id=F;
+  perform set_config('request.jwt.claims', json_build_object('sub',F,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', F::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set bio='hi' where id=F;
+  select status into v from public.profiles where id=F; out := array_append(out, ('14b 驗證手機後送審狀態 = '||v||' (應為pending)')::text);
+  execute 'reset role';
+  -- 15 一支手機只能綁一個帳號
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  begin update auth.users set phone='886900000001' where id=E; out := array_append(out, '15 同一支手機綁第二個帳號：沒被擋 ✗'::text);
+  exception when unique_violation then out := array_append(out, '15 同一支手機綁第二個帳號被擋 ✓'::text); end;
+  -- 16 刪除帳號
+  update auth.users set phone='886900000002', phone_confirmed_at=now() where id=B;
+  perform set_config('request.jwt.claims', json_build_object('sub',B,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', B::text, true);
+  execute 'set local role authenticated';
+  perform public.delete_my_account();
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from auth.users where id=B; out := array_append(out, ('16 刪除後帳號殘留 = '||n||' (應為0)')::text);
+  select count(*) into n from public.profiles where id=B; out := array_append(out, ('16b 刪除後檔案殘留 = '||n||' (應為0)')::text);
+  select count(*) into n from public.photos where user_id=B; out := array_append(out, ('16c 刪除後照片殘留 = '||n||' (應為0)')::text);
+  select count(*) into n from public.messages where sender_id=B; out := array_append(out, ('16d 刪除後訊息殘留 = '||n||' (應為0)')::text);
+  begin update auth.users set phone='886900000002' where id=E; out := array_append(out, '16e 刪除後手機可重新綁定 ✓'::text);
+  exception when others then out := array_append(out, ('16e 刪除後手機仍被占用 ✗ '||sqlerrm)::text); end;
+  begin perform public.delete_my_account(); out := array_append(out, '16f 沒登入也能刪除：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '16f 沒登入呼叫刪除被擋 ✓'::text); end;
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

@@ -86,6 +86,17 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a{color:var(--i
 .card h3{font-size:18px;font-weight:400}
 .banner{padding:14px 18px;font-size:14px;margin-bottom:24px;background:var(--paper);border-left:2px solid var(--ink)}
 .banner.warn{border-left-color:var(--warn)} .banner.bad{border-left-color:var(--bad)}
+.obsteps{display:flex;gap:28px;margin:0 0 22px;font-size:13px;letter-spacing:.12em;color:var(--grey)}
+.obsteps span{padding-bottom:6px;border-bottom:1px solid transparent}
+.obsteps span.on{color:var(--ink);border-bottom-color:var(--ink)}
+.obsteps span.done{color:var(--grey)}
+.phrow{display:flex;gap:8px;align-items:stretch}
+.phrow .cc{display:flex;align-items:center;padding:0 12px 0 0;border:0;border-bottom:1px solid var(--rule);font-size:15px;color:var(--grey);white-space:nowrap}
+.phrow input{flex:1;min-width:0}
+input.otp{font-size:24px;letter-spacing:.5em;text-align:center;font-variant-numeric:tabular-nums}
+.delwarn{margin:14px 0 0;padding:0;list-style:none;font-size:14px;line-height:1.9}
+.delwarn li{padding-left:16px;position:relative}
+.delwarn li:before{content:"";position:absolute;left:0;top:.85em;width:6px;height:1px;background:var(--bad)}
 
 /* ===== 首頁 ===== */
 .landing{width:100vw;margin:-40px 0 0 calc(50% - 50vw)}
@@ -349,9 +360,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 
 <script type="module">
 /* =====================================================================
-   半糖 HALF SUGAR  前端  build v1.6.0
+   半糖 HALF SUGAR  前端  build v1.7.0
    ===================================================================== */
-const BUILD = 'v1.6.0';
+const BUILD = 'v1.7.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',                      // ← 換成你的 anon public key
@@ -572,7 +583,7 @@ async function viewLanding(){
         <div><h3>不留電話、不留 LINE</h3><p>站內就能聊，不必交換任何聯絡方式。你的 Email 永遠不會顯示給其他會員。</p></div>
         <div><h3>想隱身就隱身</h3><p>可以不出現在探索，只讓你按過喜歡的人看到你；也可以隱藏上線狀態。</p></div>
         <div><h3>私密照，親自授權</h3><p>私密相簿只給你點頭的人看，隨時收回；封鎖之後，對方再也找不到你。</p></div>
-        <div><h3>說刪就刪</h3><p>要求刪除帳號後，檔案、照片與對話會從資料庫移除。我們不販售、不分享任何會員資料。</p></div>
+        <div><h3>說刪就刪</h3><p>在「我的」頁面就能自己刪除帳號，檔案、照片、對話與綁定手機立即永久刪除。我們不販售、不分享任何會員資料。</p></div>
       </div>
     </div>
   </section>
@@ -709,9 +720,63 @@ async function uploadPhoto(file){
   if(error) throw error; return path;
 }
 
+/* ---------- 手機驗證 ---------- */
+const phoneOk = () => !!session?.user?.phone_confirmed_at && !!session?.user?.phone;
+const maskPhone = ph => { const d=String(ph||'').replace(/^886/,'0'); return d.length>=10 ? d.slice(0,4)+'-***-'+d.slice(-3) : d; };
+function smsErr(e){
+  const m = (e?.code||'')+' '+(e?.message||'');
+  if(/phone_exists|already.*(registered|exists)|already been registered/i.test(m)) return '這支手機已經綁定其他帳號。一支手機只能綁定一個帳號。';
+  if(/rate|security purposes|after \d+ seconds/i.test(m)) return '發送太頻繁，請稍等 60 秒再試。';
+  if(/expired|invalid|otp/i.test(m)) return '驗證碼錯誤或已過期，請重新輸入或重新發送。';
+  if(/provider|sms|phone.*(disabled|not enabled)|unsupported/i.test(m)) return '手機驗證服務即將開放，請稍後再回來完成註冊。';
+  return '沒有成功：'+(e?.message||'請稍後再試');
+}
+function viewPhoneVerify(){
+  $('#app').innerHTML = `<div class="narrow">
+    <div class="obsteps"><span class="on">1　手機驗證</span><span>2　建立檔案</span></div>
+    <h2 style="font-size:24px">驗證你的手機</h2>
+    <p class="muted small mt mb">每個帳號都要綁定一支手機，一支手機只能綁定一個帳號，用來確認你是真人、減少假帳號。號碼不會顯示給任何會員，刪除帳號時一併刪除。</p>
+    <form id="phForm" class="card">
+      <label>手機號碼</label>
+      <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="10" required></div>
+      <p class="tiny dim mt">目前僅支援台灣手機門號。</p>
+      <button class="btn primary block mt2" id="phSend" type="submit">傳送驗證碼</button>
+    </form>
+    <form id="otpForm" class="card mt hidden">
+      <label>簡訊驗證碼</label>
+      <input id="otpIn" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" required>
+      <p class="tiny dim mt" id="otpHint"></p>
+      <button class="btn primary block mt2" type="submit">完成驗證</button>
+      <button class="btn ghost block mt" type="button" id="otpResend" disabled>重新傳送</button>
+    </form></div>`;
+  let phone='', timer=null;
+  const cool = () => { let t=60; const b=$('#otpResend'); b.disabled=true; clearInterval(timer);
+    timer=setInterval(()=>{ if(!document.body.contains(b)) return clearInterval(timer); t--; b.textContent = t>0?`重新傳送（${t}）`:'重新傳送'; if(t<=0){ b.disabled=false; clearInterval(timer); } },1000); };
+  const send = async () => {
+    const { error } = await sb.auth.updateUser({ phone });
+    if(error){ toast(smsErr(error)); return false; }
+    $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，10 分鐘內有效。`;
+    $('#otpIn').focus(); cool(); return true;
+  };
+  $('#phForm').onsubmit = async e => { e.preventDefault();
+    const n = $('#phNum').value.replace(/[\s-]/g,'');
+    if(!/^09\d{8}$/.test(n)) return toast('請輸入 09 開頭的 10 碼手機號碼');
+    phone = '+886'+n.slice(1);
+    const b=$('#phSend'); b.disabled=true; b.textContent='傳送中…';
+    const ok = await send(); b.disabled=false; b.textContent = ok?'改用其他號碼重新傳送':'傳送驗證碼'; };
+  $('#otpResend').onclick = send;
+  $('#otpForm').onsubmit = async e => { e.preventDefault();
+    const token = $('#otpIn').value.replace(/\D/g,''); if(token.length<6) return toast('請輸入 6 位數驗證碼');
+    const { error } = await sb.auth.verifyOtp({ phone, token, type:'phone_change' });
+    if(error) return toast(smsErr(error));
+    await sb.auth.refreshSession(); await loadMe(); toast('手機驗證完成'); route(); };
+}
+
 async function viewOnboarding(){
   if(me.status!=='incomplete'){ location.hash='#/me'; return; }
+  if(!phoneOk()) return viewPhoneVerify();
   $('#app').innerHTML = `<div class="narrow">
+    <div class="obsteps"><span class="done">1　手機驗證 ✓</span><span class="on">2　建立檔案</span></div>
     <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
     <div class="banner">「想認識的對象」與「性別」送出後就<b>無法修改</b>，探索時只會看到方向和你互相吻合的會員。請先確認再送出。</div>
@@ -962,7 +1027,7 @@ async function viewMe(){
     <form class="card mt" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改暱稱、自介、職業或興趣後會重新送審，期間檔案暫時下架。</p>
       ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存並送審</button></form>
     ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(b.blocked_id)}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
-    <div class="card mt"><h3 style="font-size:17px">帳號</h3><p class="small muted">${esc(session.user.email)}</p>
+    <div class="card mt"><h3 style="font-size:17px">帳號</h3><p class="small muted">${esc(session.user.email)}<br>手機　${phoneOk()?esc(maskPhone(session.user.phone))+'（已驗證）':'尚未驗證'}</p>
       <div class="row mt flexwrap"><button class="btn sm ghost" id="pwBtn">更改密碼</button><button class="btn sm ghost" id="logoutBtn">登出</button><button class="btn sm danger" id="delBtn">刪除帳號</button></div></div>
   </div>`;
   bindTagPick();
@@ -986,7 +1051,29 @@ async function viewMe(){
     const { error } = await sb.from('profiles').update(p).eq('id',me.id); if(error) return toast(error.message); toast('已儲存'); viewMe(); };
   $('#pwBtn').onclick = async ()=>{ const pw = prompt('輸入新密碼（至少 8 碼）'); if(!pw||pw.length<8) return; const { error } = await sb.auth.updateUser({ password:pw }); toast(error?error.message:'密碼已更新'); };
   $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.hash='#/'; };
-  $('#delBtn').onclick = ()=>{ modal(`<h3 style="font-size:18px">刪除帳號</h3><p class="muted small mt">為保障安全，刪除帳號需由客服處理。請用你的註冊信箱寄信至 <b>support@halfsugar.tw</b>，主旨「刪除帳號」，我們會在 7 個工作天內刪除你的所有資料。如果只想暫時隱藏檔案，也可以在信中說明，我們會先幫你下架。</p>`); };
+  $('#delBtn').onclick = ()=>{ modal(`<h2>刪除帳號</h2>
+      <div class="banner bad mt">刪除後<b>立即生效、無法復原</b>，客服也救不回來。</div>
+      <p class="small">以下資料會全部永久刪除：</p>
+      <ul class="delwarn"><li>你的檔案、頭像、公開照與私密照</li><li>所有喜歡、配對與對話（對方那邊也會一起消失）</li><li>私密照授權、索取與封鎖名單</li><li>綁定的手機號碼與登入信箱</li></ul>
+      <p class="small muted mt">如果只是想暫時休息，可以改用「隱私設定 → 不出現在探索」。</p>
+      <label class="mt2">請輸入「刪除」兩個字確認</label><input id="delIn" autocomplete="off">
+      <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="delNo">取消</button><button class="btn danger" id="delYes" disabled>永久刪除我的帳號</button></div>`);
+    $('#delIn').oninput = ()=>{ $('#delYes').disabled = $('#delIn').value.trim()!=='刪除'; };
+    $('#delNo').onclick = closeModal;
+    $('#delYes').onclick = async ()=>{ const b=$('#delYes'); b.disabled=true; b.textContent='刪除中…';
+      try{
+        // 1. 先解除照片登記，才能刪掉檔案
+        let r = await sb.from('photos').delete().eq('user_id', me.id); if(r.error) throw r.error;
+        if(me.avatar_path){ r = await sb.from('profiles').update({ avatar_path:null }).eq('id', me.id); if(r.error) throw r.error; }
+        // 2. 刪掉自己資料夾裡的所有檔案
+        for(;;){ const { data: files, error } = await sb.storage.from('photos').list(me.id, { limit:100 }); if(error) throw error;
+          if(!files?.length) break; const { error: e2 } = await sb.storage.from('photos').remove(files.map(f=>`${me.id}/${f.name}`)); if(e2) throw e2; if(files.length<100) break; }
+        // 3. 刪除帳號（含手機、信箱與所有資料）
+        r = await sb.rpc('delete_my_account'); if(r.error) throw r.error;
+        await sb.auth.signOut({ scope:'local' }).catch(()=>{}); me=null; session=null; closeModal(); location.hash='#/';
+        modal(`<h2>帳號已刪除</h2><p class="muted mt">你的所有資料都已永久刪除。謝謝你曾經來過半糖。</p>`);
+      }catch(err){ b.disabled=false; b.textContent='永久刪除我的帳號'; toast('刪除沒有完成：'+(err.message||err)+'，請再試一次'); }
+    }; };
 }
 
 /* =====================================================================
@@ -1075,7 +1162,7 @@ terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 
 <h3>第六條　會員間互動與責任</h3><p>本平台不對任何會員之身分、陳述、意圖或行為做任何擔保。你與其他會員之線上或線下互動，其風險由你自行承擔。因會員間互動產生之任何爭議、損失或損害，本平台一律不負責任。請詳閱<a href="#/safety">安全須知</a>。</p>
 <h3>第七條　付費服務</h3><p>註冊與建立檔案免費。本平台未來得提供付費會籍或加值功能，其內容、價格與退費規定將於購買頁面另行公告。付費服務僅提供平台功能，不保證任何配對結果。</p>
 <h3>第八條　智慧財產與授權</h3><p>你保證對上傳之內容擁有合法權利，並授權本平台於提供服務之必要範圍內使用、重製與展示。本平台之名稱、標識、介面與程式碼為本平台所有。</p>
-<h3>第九條　服務之變更與終止</h3><p>本平台得隨時修改、暫停或終止全部或部分服務。你得隨時聯絡客服要求刪除帳號。本平台得因你違反本條款而終止服務，且不退還任何已支付之費用。</p>
+<h3>第九條　服務之變更與終止</h3><p>本平台得隨時修改、暫停或終止全部或部分服務。你得隨時於「我的」頁面自行刪除帳號，刪除後所有資料立即永久刪除且無法復原。本平台得因你違反本條款而終止服務，且不退還任何已支付之費用。</p>
 <h3>第十條　免責聲明與責任限制</h3><p>本服務依「現狀」及「現有」基礎提供，本平台不保證服務不中斷、無錯誤或絕對安全。於法律允許之最大範圍內，本平台對任何間接、附隨、衍生或懲罰性損害不負賠償責任，且對你之累計賠償責任總額以新臺幣壹仟元為限。</p>
 <h3>第十一條　準據法與管轄</h3><p>本條款以中華民國法律為準據法。因本條款所生之爭議，雙方同意以臺灣臺北地方法院為第一審管轄法院，但不排除法律規定之專屬管轄。</p>
 <h3>第十二條　條款修改</h3><p>本平台得隨時修改本條款，修改後將公告於本頁；你於修改後繼續使用服務即視為同意修改後之條款。</p>`,
@@ -1085,7 +1172,8 @@ privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 �
 <h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
 <h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方與處理檢舉之管理人員。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
 <h3>資料儲存與保護</h3><p>資料儲存於 Supabase 雲端服務，傳輸全程加密（HTTPS）。照片以私有儲存空間存放，只透過一小時內有效的限時連結讀取，查看時疊加檢視者代號浮水印。資料庫以列級權限控管，會員只能讀取規則允許的資料。</p><h3>我們不做的事</h3><ul><li>不販售、出租或分享任何會員資料給第三方。</li><li>不使用第三方廣告追蹤。</li><li>管理人員只在處理檢舉時查看相關對話。</li></ul>
-<h3>你的權利</h3><p>你得隨時查詢、更正、下架或要求刪除你的個人資料。請以註冊信箱來信客服，我們將於 7 個工作天內處理。</p>
+<h3>手機號碼</h3><p>註冊時需以簡訊驗證手機，一支手機僅能綁定一個帳號。手機號碼僅用於確認真人與防止重複註冊，不會顯示給任何會員，也不會用於行銷。</p>
+<h3>你的權利</h3><p>你得隨時查詢、更正或下架你的資料，並可在「我的」頁面自行刪除帳號；刪除後檔案、照片、對話、手機號碼與信箱立即永久刪除，無法復原。其他問題請以註冊信箱來信客服。</p>
 <h3>Cookie 與本機儲存</h3><p>本平台使用瀏覽器本機儲存以維持登入狀態與年齡確認紀錄，不使用第三方廣告追蹤。</p>`,
 
 guidelines: `<h2>社群守則</h2><p>半糖希望成為一個讓成熟成年人可以安心、坦誠認識彼此的地方。以下是我們對每一位會員的要求。</p>
