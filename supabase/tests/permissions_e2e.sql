@@ -404,5 +404,35 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 25 甜心申請查看財力文件
+  update public.wealth_verifications set status='approved', reviewed_at=now() where user_id=P;
+  update public.profiles set wealth_verified_at=now() where id=P;
+  insert into storage.objects (bucket_id, name) values ('verify', P||'/123.jpg');
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  select state into v from public.wealth_doc_status(P); out := array_append(out, ('25 甜心看到的狀態 = '||v||' (應為can_request)')::text);
+  select count(*) into n from storage.objects where bucket_id='verify' and name = P||'/123.jpg'; out := array_append(out, ('25b 未允許前讀到文件 = '||n||' (應為0)')::text);
+  perform public.request_wealth_view(P);
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',P,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', P::text, true);
+  execute 'set local role authenticated';
+  update public.wealth_requests set status='granted' where owner_id=P and requester_id=Q;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from storage.objects where bucket_id='verify' and name = P||'/123.jpg'; out := array_append(out, ('25c 允許後讀到文件 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',R,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', R::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from storage.objects where bucket_id='verify' and name = P||'/123.jpg'; out := array_append(out, ('25d 沒被允許的人讀到文件 = '||n||' (應為0)')::text);
+  begin update public.wealth_requests set status='granted' where owner_id=P; get diagnostics n = row_count; out := array_append(out, ('25e 別人替自己核准 = '||n||' 筆 (應為0)')::text);
+  exception when others then out := array_append(out, '25e 別人替自己核准被擋 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

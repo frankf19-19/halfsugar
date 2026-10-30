@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.17.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.18.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -236,6 +236,7 @@ begin
   delete from public.likes where (from_id = a and to_id = b) or (from_id = b and to_id = a);
   delete from public.photo_grants where (owner_id = a and viewer_id = b) or (owner_id = b and viewer_id = a);
   delete from public.photo_requests where (requester_id = a and owner_id = b) or (requester_id = b and owner_id = a);
+  delete from public.wealth_requests where (requester_id = a and owner_id = b) or (requester_id = b and owner_id = a);
   return new;
 end $$;
 drop trigger if exists blocks_after_trg on public.blocks;
@@ -597,7 +598,7 @@ returns int language sql stable security definer set search_path = public as $$
   select count(*)::int from storage.objects where bucket_id = 'verify' and name like auth.uid()::text || '/%';
 $$;
 
--- 財力文件：私有空間，只有管理員與本人看得到，審核後刪除
+-- 財力文件：私有空間。管理員審核；通過的文件只給本人與本人允許的會員看，退件的刪除
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('verify', 'verify', false, 8388608, array['image/jpeg'])
 on conflict (id) do update set public = false, file_size_limit = 8388608, allowed_mime_types = array['image/jpeg'];
@@ -608,7 +609,8 @@ create policy "verify_storage_insert" on storage.objects for insert to authentic
               and private.my_verify_file_count() < 4);
 drop policy if exists "verify_storage_select" on storage.objects;
 create policy "verify_storage_select" on storage.objects for select to authenticated
-  using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
+  using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text
+                                   or private.can_view_wealth_doc(name)));   -- 本人允許的甜心
 drop policy if exists "verify_storage_delete" on storage.objects;
 create policy "verify_storage_delete" on storage.objects for delete to authenticated
   using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
@@ -685,6 +687,7 @@ returns table (id uuid, nickname text) language sql stable security definer set 
      and (exists (select 1 from public.blocks where blocker_id = auth.uid() and blocked_id = p.id)
        or exists (select 1 from public.photo_grants where owner_id = auth.uid() and viewer_id = p.id)
        or exists (select 1 from public.photo_requests where owner_id = auth.uid() and requester_id = p.id)
+       or exists (select 1 from public.wealth_requests where owner_id = auth.uid() and requester_id = p.id)
        or exists (select 1 from public.matches m where m.user_a = least(auth.uid(), p.id) and m.user_b = greatest(auth.uid(), p.id)
                     and (m.closed_at is null or (m.closed_by is not null and m.closed_by <> auth.uid()))));
 $$;
@@ -875,7 +878,7 @@ revoke execute on function public.resubmit_profile() from anon, public;
 grant execute on function public.resubmit_profile() to authenticated;
 
 -- ---------------------------------------------------------------------
--- 財力認證：Sugar Daddy／Mommy 上傳一份財力文件，管理員看過後給「財力認證」標章，文件審核後立即刪除
+-- 財力認證：Sugar Daddy／Mommy 上傳一份財力文件（姓名等個資可遮住），管理員看過後給「財力認證」標章；通過的文件只給本人允許的會員看
 -- ---------------------------------------------------------------------
 create table if not exists public.wealth_verifications (
   id          uuid primary key default gen_random_uuid(),
@@ -921,7 +924,92 @@ drop policy if exists "wealth_delete" on public.wealth_verifications;
 create policy "wealth_delete" on public.wealth_verifications for delete to authenticated
   using ((user_id = auth.uid() and status = 'pending') or public.is_admin());
 
--- 管理員審核財力文件（前端會先刪掉檔案）
+-- 甜心申請查看財力文件；Daddy／Mommy 按允許後才看得到
+create table if not exists public.wealth_requests (
+  requester_id uuid not null references public.profiles(id) on delete cascade,
+  owner_id     uuid not null references public.profiles(id) on delete cascade,
+  status       text not null default 'pending' check (status in ('pending','granted','denied')),
+  created_at   timestamptz not null default now(),
+  primary key (requester_id, owner_id)
+);
+alter table public.wealth_requests enable row level security;
+drop policy if exists "wreq_select" on public.wealth_requests;
+create policy "wreq_select" on public.wealth_requests for select to authenticated
+  using (requester_id = auth.uid() or owner_id = auth.uid() or public.is_admin());
+drop policy if exists "wreq_update_owner" on public.wealth_requests;
+create policy "wreq_update_owner" on public.wealth_requests for update to authenticated
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid() and status in ('granted','denied'));
+drop policy if exists "wreq_delete" on public.wealth_requests;
+create policy "wreq_delete" on public.wealth_requests for delete to authenticated
+  using (owner_id = auth.uid() or (requester_id = auth.uid() and status = 'pending'));
+
+-- 某人目前可分享的財力文件路徑（已通過且未刪除的最新一份）
+create or replace function private.wealth_doc_path(owner uuid)
+returns text language sql stable security definer set search_path = public as $$
+  select path from public.wealth_verifications where user_id = owner and status = 'approved' and path is not null
+   order by reviewed_at desc nulls last limit 1;
+$$;
+
+-- 我能不能看這個檔案（storage 規則用）
+create or replace function private.can_view_wealth_doc(fname text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.wealth_verifications w
+                   join public.wealth_requests r on r.owner_id = w.user_id and r.requester_id = auth.uid() and r.status = 'granted'
+                  where w.path = fname and w.status = 'approved'
+                    and not private.is_blocked_with(w.user_id)
+                    and exists (select 1 from public.profiles p where p.id = w.user_id and p.status = 'approved'));
+$$;
+
+-- 查看狀態：回傳 none（沒有可看的文件）、can_request、pending、denied、granted（附路徑）
+create or replace function public.wealth_doc_status(owner uuid)
+returns table (state text, path text) language plpgsql stable security definer set search_path = public as $$
+declare r public.wealth_requests; doc text;
+begin
+  doc := private.wealth_doc_path(owner);
+  if doc is null or private.is_blocked_with(owner) then return query select 'none'::text, null::text; return; end if;
+  if owner = auth.uid() then return query select 'own'::text, doc; return; end if;
+  select * into r from public.wealth_requests where requester_id = auth.uid() and owner_id = owner;
+  if not found then return query select 'can_request'::text, null::text;
+  elsif r.status = 'granted' then return query select 'granted'::text, doc;
+  else return query select r.status, null::text; end if;
+end $$;
+revoke execute on function public.wealth_doc_status(uuid) from anon, public;
+grant execute on function public.wealth_doc_status(uuid) to authenticated;
+
+create or replace function public.request_wealth_view(owner uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare r public.wealth_requests;
+begin
+  if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能申請查看'; end if;
+  if owner = auth.uid() or private.is_blocked_with(owner) or not private.is_compatible(owner)
+     or not exists (select 1 from public.profiles where id = owner and status = 'approved')
+     or private.wealth_doc_path(owner) is null then
+    raise exception '這位會員目前沒有可查看的財力證明';
+  end if;
+  select * into r from public.wealth_requests where requester_id = auth.uid() and owner_id = owner;
+  if found then
+    if r.status = 'pending' then raise exception '已送出申請，等待對方同意'; end if;
+    if r.status = 'granted' then return; end if;
+    if r.created_at > now() - interval '3 days' then raise exception '對方剛婉拒，3 天後才能再申請'; end if;
+    update public.wealth_requests set status = 'pending', created_at = now() where requester_id = auth.uid() and owner_id = owner;
+  else
+    insert into public.wealth_requests (requester_id, owner_id) values (auth.uid(), owner);
+  end if;
+end $$;
+revoke execute on function public.request_wealth_view(uuid) from anon, public;
+grant execute on function public.request_wealth_view(uuid) to authenticated;
+
+-- 本人刪除已保存的財力文件（標章保留；前端會先刪檔案）
+create or replace function public.delete_my_wealth_doc()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  update public.wealth_verifications set path = null where user_id = auth.uid();
+  delete from public.wealth_requests where owner_id = auth.uid();
+end $$;
+revoke execute on function public.delete_my_wealth_doc() from anon, public;
+grant execute on function public.delete_my_wealth_doc() to authenticated;
+
+-- 管理員審核財力文件（退件時前端會先刪掉檔案）
 create or replace function public.admin_review_wealth(vid uuid, approve boolean, note text default null)
 returns void language plpgsql security definer set search_path = public as $$
 declare v public.wealth_verifications;
@@ -932,7 +1020,7 @@ begin
   update public.wealth_verifications
      set status = case when approve then 'approved' else 'rejected' end,
          review_note = case when approve then null else coalesce(nullif(note,''), '文件看不出財力，請換一份更清楚的文件') end,
-         reviewed_at = now(), path = null
+         reviewed_at = now(), path = case when approve then path else null end   -- 通過的文件保留（只給本人允許的人看），退件的刪除
    where id = vid;
   if approve then update public.profiles set wealth_verified_at = now() where id = v.user_id; end if;
 end $$;
