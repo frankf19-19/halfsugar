@@ -3,7 +3,7 @@ do $t$
 declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
-  P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
+  Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid;
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
 begin
   perform set_config('storage.allow_delete_query','true',true);
@@ -442,6 +442,25 @@ begin
   select coalesce(cup,'無') into v from public.profiles where id=P; out := array_append(out, ('26 男性罩杯 = '||v||' (應為無)')::text);
   begin update public.profiles set relation_types=array['sex'] where id=P; out := array_append(out, '26b 相處方式亂填：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '26b 相處方式只能選清單 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 27 新會員第一次審核通過前不能瀏覽
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into auth.users (id, email, aud, role) values (Z,'e2e-z@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='Z', gender='female', looking_for='male', role='baby', birth_year=1999, city='台北市', status='pending' where id=Z;
+  perform set_config('request.jwt.claims', json_build_object('sub',Z,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Z::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.profiles where id=P; out := array_append(out, ('27 新會員審核前看到其他會員 = '||n||' (應為0)')::text);
+  select count(*) into n from public.photos where user_id<>Z; out := array_append(out, ('27b 新會員審核前看到別人照片 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update public.profiles set status='approved' where id=Z;
+  perform set_config('request.jwt.claims', json_build_object('sub',Z,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Z::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.profiles where id=P; out := array_append(out, ('27c 通過後看到其他會員 = '||n||' (應為1)')::text);
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 

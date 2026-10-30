@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.19.0)
+-- 微糖 SUGAR 30 — Supabase 資料庫結構  (schema v0.20.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -191,7 +191,7 @@ begin
   if auth.uid() is null or public.is_admin() then return new; end if;
   if tg_op = 'INSERT' then
     new.user_id := auth.uid(); new.status := 'pending'; new.review_note := null; new.created_at := now();
-    if (select count(*) from public.photos where user_id = auth.uid()) >= 9 then raise exception '相簿最多 9 張'; end if;
+    if (select count(*) from public.photos where user_id = auth.uid()) >= 20 then raise exception '相簿最多 20 張'; end if;
   else
     new.user_id := old.user_id; new.path := old.path; new.status := old.status;
     new.review_note := old.review_note; new.created_at := old.created_at;
@@ -354,6 +354,13 @@ drop trigger if exists messages_guard_trg on public.messages;
 create trigger messages_guard_trg before insert or update on public.messages
   for each row execute function public.messages_guard();
 
+-- 可以瀏覽其他會員：已上架，或曾經上架、目前因修改資料重新審核中（新註冊的人要等第一次審核通過）
+create or replace function private.can_browse()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid()
+                 and (status = 'approved' or (status = 'pending' and approved_at is not null)));
+$$;
+
 -- 我和某人之間是否有未解除的配對
 create or replace function private.has_open_match(other uuid)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -391,7 +398,7 @@ $$;
 -- 私密照數量（看不到私密照的人也能知道對方有幾張，才能索取）
 create or replace function public.private_photo_count(uid uuid)
 returns int language sql stable security definer set search_path = public as $$
-  select case when private.is_blocked_with(uid) or public.my_status() not in ('pending','approved')
+  select case when private.is_blocked_with(uid) or not private.can_browse()
               or not private.is_compatible(uid)
               or not exists (select 1 from public.profiles where id = uid and status = 'approved') then 0
          else (select count(*)::int from public.photos where user_id = uid and is_private and status = 'approved') end;
@@ -479,7 +486,7 @@ drop policy if exists "profiles_select" on public.profiles;
 create policy "profiles_select" on public.profiles for select to authenticated
   using (
     id = auth.uid() or public.is_admin()
-    or (public.my_status() in ('pending','approved')
+    or (private.can_browse()
         and private.is_compatible(id)          -- 只看得到方向互相吻合的會員（保護同志會員隱私）
         and not private.is_blocked_with(id)
         and ((status = 'approved'
@@ -498,7 +505,7 @@ drop policy if exists "photos_select" on public.photos;
 create policy "photos_select" on public.photos for select to authenticated
   using (
     user_id = auth.uid() or public.is_admin()
-    or (status = 'approved' and public.my_status() in ('pending','approved')
+    or (status = 'approved' and private.can_browse()
         and exists (select 1 from public.profiles p where p.id = photos.user_id)   -- 套用 profiles_select（上架、隱身、封鎖）
         and (not is_private or exists (select 1 from public.photo_grants g
                                        where g.owner_id = user_id and g.viewer_id = auth.uid())))
@@ -645,7 +652,7 @@ drop policy if exists "photos_storage_insert" on storage.objects;
 create policy "photos_storage_insert" on storage.objects for insert to authenticated
   with check (bucket_id = 'photos' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
               and exists (select 1 from public.profiles where id = auth.uid() and status <> 'suspended')
-              and private.my_file_count() < 15            -- 每人最多 15 個檔案（相簿 9 + 頭像與更換的餘裕）
+              and private.my_file_count() < 30            -- 每人最多 15 個檔案（相簿 9 + 頭像與更換的餘裕）
               and not private.photo_path_in_use(name));   -- 不可用同檔名覆蓋已登記的照片
 
 drop policy if exists "photos_storage_delete" on storage.objects;
