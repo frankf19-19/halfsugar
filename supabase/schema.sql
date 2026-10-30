@@ -607,10 +607,6 @@ create policy "verify_storage_insert" on storage.objects for insert to authentic
   with check (bucket_id = 'verify' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
               and exists (select 1 from public.profiles where id = auth.uid() and role in ('daddy','mommy') and status in ('pending','approved'))
               and private.my_verify_file_count() < 4);
-drop policy if exists "verify_storage_select" on storage.objects;
-create policy "verify_storage_select" on storage.objects for select to authenticated
-  using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text
-                                   or private.can_view_wealth_doc(name)));   -- 本人允許的甜心
 drop policy if exists "verify_storage_delete" on storage.objects;
 create policy "verify_storage_delete" on storage.objects for delete to authenticated
   using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
@@ -1086,3 +1082,13 @@ exception when duplicate_object then null; end $$;
 -- ---------------------------------------------------------------------
 -- update public.profiles set is_admin = true, status = 'approved'
 --  where id = (select id from auth.users where email = 'you@example.com');
+
+-- ---------------------------------------------------------------------
+-- 財力文件讀取規則（放最後：用到上面才定義的函式）
+-- ---------------------------------------------------------------------
+drop policy if exists "verify_storage_select" on storage.objects;
+create policy "verify_storage_select" on storage.objects for select to authenticated
+  using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text
+                                   or private.can_view_wealth_doc(name)));   -- 本人允許的甜心
+revoke all on all functions in schema private from public, anon;
+grant execute on all functions in schema private to authenticated;
