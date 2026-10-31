@@ -649,6 +649,8 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 .msg.hasimg .time{padding:4px 2px 0}
 .msg.recalled{background:none!important;color:var(--grey2)!important;border:1px dashed var(--rule);font-size:13px;padding:8px 14px}
 .msg.me:not(.recalled){cursor:pointer}
+/* 照片不提供下載：不能長按存圖、不能右鍵另存、不能拖曳 */
+.mimg,.wm,.photo-big,.gallery .g,.thumbs .g,.ph{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
 </style>
 </head>
 <body>
@@ -907,6 +909,8 @@ function openSupport(){
     if(error){ $('#spSend').disabled=false; return toast(/row-level/i.test(error.message)?'今天留言次數已達上限，請明天再試':zh(error.message)); }
     closeModal(); toast('已送出，我們會盡快回信給你'); };
 }
+document.addEventListener('contextmenu', e=>{ if(e.target.closest('.mimg,.wm,.photo-big,.gallery .g,.thumbs .g,.ph')) e.preventDefault(); });
+document.addEventListener('dragstart', e=>{ if(e.target.closest('.mimg,.wm,.photo-big,.gallery,.thumbs,.ph')) e.preventDefault(); });
 document.addEventListener('click', e=>{ const a=e.target.closest('[data-support]'); if(a){ e.preventDefault(); openSupport(); } });
 
 /* ---------- 路由 ---------- */
