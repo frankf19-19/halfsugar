@@ -7,6 +7,7 @@ declare
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
 begin
   perform set_config('storage.allow_delete_query','true',true);
+  update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
   insert into auth.users (id, email, aud, role) values
     (A,'e2e-a@test.invalid','authenticated','authenticated'),(B,'e2e-b@test.invalid','authenticated','authenticated'),
     (C,'e2e-c@test.invalid','authenticated','authenticated'),(D,'e2e-d@test.invalid','authenticated','authenticated'),
@@ -531,6 +532,17 @@ begin
   update public.profiles set status='approved' where id=Y;
   select count(*) into n from public.profiles where id=Y and founder_no is not null; out := array_append(out, ('32b 第一次通過審核拿到創始編號 = '||n||' (應為1)')::text);
   select count(*) into n from public.profiles where id=Y and founder_boost_until > now() + interval '50 days'; out := array_append(out, ('32c 甜心創始會員有優先曝光期 = '||n||' (應為1)')::text);
+
+  -- 33 免費開站期：主動開新對話不限次數
+  update public.app_config set value='on' where key='free_launch';
+  perform set_config('request.jwt.claims', json_build_object('sub',K,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', K::text, true);
+  execute 'set local role authenticated';
+  select public.my_start_quota() into n; out := array_append(out, ('33 免費開站期的新對話額度 = '||n||' (應為999)')::text);
+  begin update public.app_config set value='off' where key='free_launch'; exception when others then null; end;
+  execute 'reset role';
+  select count(*) into n from public.app_config where key='free_launch' and value='on'; out := array_append(out, ('33b 會員自己關掉免費期 = '||(1-n)||' (應為0)')::text);
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

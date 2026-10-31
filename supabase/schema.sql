@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.24.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.25.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -772,6 +772,21 @@ alter table public.conversation_starts enable row level security;
 revoke all on public.conversation_starts from anon, authenticated;
 
 -- 主動開新對話的額度：前 10 個隨時可用；用完後每天（台灣時間）只能再開 1 個
+-- 網站設定（目前只有「免費開站期」開關）
+create table if not exists public.app_config (key text primary key, value text not null);
+alter table public.app_config enable row level security;
+drop policy if exists "app_config_read" on public.app_config;
+create policy "app_config_read" on public.app_config for select to anon, authenticated using (true);
+insert into public.app_config (key, value) values ('free_launch', 'on') on conflict (key) do nothing;
+grant select on public.app_config to anon, authenticated;
+create or replace function private.free_launch()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select value = 'on' from public.app_config where key = 'free_launch'), false);
+$$;
+
+-- 主動開啟新對話的額度：
+--   免費開站期（所有人都是微糖會員）：不限次數，只留每天 30 個的防濫發上限，回傳 999 代表不限
+--   正式收費後：前 10 個，之後每天 1 個
 create or replace function public.my_start_quota()
 returns int language plpgsql stable security definer set search_path = public as $$
 declare total int; today_n int; today timestamptz;
@@ -780,6 +795,7 @@ begin
   today := (date_trunc('day', now() at time zone 'Asia/Taipei')) at time zone 'Asia/Taipei';
   select count(*), count(*) filter (where created_at >= today) into total, today_n
     from public.conversation_starts where user_id = auth.uid();
+  if private.free_launch() then return case when today_n < 30 then 999 else 0 end; end if;
   if total < 10 then return 10 - total; end if;
   return greatest(0, 1 - today_n);
 end $$;
@@ -821,7 +837,7 @@ begin
     end if;
   end if;
   if public.my_start_quota() <= 0 then
-    raise exception '前 10 個新對話已經用完，之後每天可以再開啟 1 個，明天再來吧';
+    raise exception '%', case when private.free_launch() then '今天主動開啟的新對話已達上限，明天再來吧' else '前 10 個新對話已經用完，之後每天可以再開啟 1 個，明天再來吧' end;
   end if;
   insert into public.conversation_starts (user_id) values (me);
   if existed then
