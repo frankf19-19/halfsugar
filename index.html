@@ -26,6 +26,15 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;400&display=swap" rel="stylesheet">
+<script>
+// 外觀：light／dark／auto（跟隨手機），存在這台裝置
+window.applyTheme = t => { t = t || (function(){ try{ return localStorage.getItem('yy_theme') }catch(e){ return null } })() || 'light';
+  const dark = t==='dark' || (t==='auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = dark ? '#121111' : '#FFFFFF'; return t; };
+applyTheme();
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>applyTheme()); }catch(e){}
+</script>
 <style>
 :root{
   --white:#FFFFFF; --paper:#F7F6F4; --black:#000; --ink:#1A1A1A; --grey:#5F5F5F; --grey2:#767676;
@@ -669,6 +678,41 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 @media(hover:hover){.pcard{transition:transform .35s ease}.pcard .ph{transition:filter .35s ease}.pcard:hover .ph{filter:brightness(1.04)}.pcard:hover{transform:translateY(-2px)}}
 @media(max-width:719px){.filters select,.filters .fbtn,#fMore{min-height:44px;height:44px;font-size:15px;padding-top:0;padding-bottom:0}.filters{gap:8px}}
 @media(prefers-reduced-motion:reduce){.pcard,.pcard .ph{transition:none!important}.pcard:hover{transform:none}}
+
+/* =====================================================================
+   深色模式：黑底、暖白字、酒紅點綴；保留精品風的細線與直角
+   ===================================================================== */
+html[data-theme=dark]{color-scheme:dark;
+  --white:#121111; --paper:#1A1918; --black:#ECE7E1; --ink:#ECE7E1; --grey:#A9A39D; --grey2:#8E8882;
+  --rule:#2F2C2A; --hair:#262321; --wine:#D27D92; --ok:#72BC8D; --warn:#D6A95E; --bad:#E58080; --navy3:#24211F}
+html[data-theme=dark] ::selection{background:#4A2F37}
+html[data-theme=dark] .topbar,html[data-theme=dark] body.home.scrolled .topbar{background:rgba(18,17,17,.94)}
+html[data-theme=dark] .bnav{background:rgba(18,17,17,.96)}
+html[data-theme=dark] .modal{background:rgba(0,0,0,.66)}
+html[data-theme=dark] :is(.pactions,.fact,.modal .box,.modal .x,.gate,.pmL .thumbs,.fbtn,.pbadge,.gallery .g .st,.meav em,.dcard){background:var(--white)}
+html[data-theme=dark] :is(.pcard .liked,.pcard .seen,.dph .seen,.dph .stamp){background:rgba(18,17,17,.86)}
+html[data-theme=dark] :is(.pcard .ph,.avatar,.gallery .g,.photo-big,.thumbs .g,.msg .mimg,.dph,.pvimg,.avpick,.chapter .img,.authwrap .side,.admchat .amimg){background-color:#24211F}
+html[data-theme=dark] .pcard .ph{outline-color:rgba(255,255,255,.05)}
+html[data-theme=dark] .msg.them{background:#1F1D1B}
+html[data-theme=dark] .msg.me:not(.hasimg):not(.recalled){background:#ECE7E1;color:#121111}
+html[data-theme=dark] .msg.hasimg{color:var(--ink)!important}
+html[data-theme=dark] .pmL{background:#1A1918}
+html[data-theme=dark] .admchat .am{background:#1F1D1B}html[data-theme=dark] .admchat .am.b{background:#262321}
+html[data-theme=dark] .banner{background:#1A1918}
+html[data-theme=dark] .toast{background:#ECE7E1;color:#121111}
+html[data-theme=dark] :is(.pledge,.safe){background:#0A0909;color:#ECE7E1}
+html[data-theme=dark] .btn.ghost{border-color:#3A3633}
+html[data-theme=dark] input,html[data-theme=dark] select,html[data-theme=dark] textarea{border-bottom-color:#4A4541}
+html[data-theme=dark] :is(input,select,textarea):focus{border-color:var(--ink)!important}
+html[data-theme=dark] select option{background:#1A1918;color:#ECE7E1}
+html[data-theme=dark] .chat form input{border-bottom-color:#4A4541}
+html[data-theme=dark] footer{border-top-color:var(--hair)}
+html[data-theme=dark] img.logo-img,html[data-theme=dark] .gbtn{filter:none}
+html[data-theme=dark] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ECE7E1' fill='none'/%3E%3C/svg%3E")}
+/* 外觀切換 */
+.themesw{display:inline-flex;border:1px solid var(--rule);margin-top:12px}
+.themesw button{padding:6px 14px;font-size:12px;letter-spacing:.14em;color:var(--grey);min-height:34px}
+.themesw button.on{background:var(--ink);color:var(--white)}
 </style>
 </head>
 <body>
@@ -700,6 +744,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 
 <footer>
   <div><a href="#/terms">使用條款</a>·<a href="#/privacy">隱私政策</a>·<a href="#/guidelines">社群守則</a>·<a href="#/safety">安全須知</a>·<a href="#/plans">會員方案</a></div>
+  <div class="themesw" role="group" aria-label="外觀"><button type="button" data-th="light">淺色</button><button type="button" data-th="dark">深色</button><button type="button" data-th="auto">跟隨手機</button></div>
   <div class="mt" style="margin-top:10px">© 2026 微糖 1/3 Sugar · 僅限 18 歲以上成年人使用 · <span id="ver"></span></div>
 </footer>
 
@@ -710,7 +755,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.47.0';
+const BUILD = 'v1.48.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -927,6 +972,10 @@ function openSupport(){
     if(error){ $('#spSend').disabled=false; return toast(/row-level/i.test(error.message)?'今天留言次數已達上限，請明天再試':zh(error.message)); }
     closeModal(); toast('已送出，我們會盡快回信給你'); };
 }
+const syncThemeBtns = () => { let t='light'; try{ t=localStorage.getItem('yy_theme')||'light'; }catch(e){} document.querySelectorAll('.themesw button').forEach(b=>b.classList.toggle('on', b.dataset.th===t)); };
+document.addEventListener('click', e=>{ const b=e.target.closest('.themesw button'); if(!b) return; try{ localStorage.setItem('yy_theme', b.dataset.th); }catch(_){} applyTheme(b.dataset.th); syncThemeBtns(); });
+new MutationObserver(()=>{ if(document.querySelector('.themesw button:not([data-sync])')){ document.querySelectorAll('.themesw button').forEach(b=>b.dataset.sync=1); syncThemeBtns(); } }).observe(document.getElementById('app'), { childList:true, subtree:false });
+syncThemeBtns();
 document.addEventListener('contextmenu', e=>{ if(e.target.closest('.mimg,.wm,.photo-big,.gallery .g,.thumbs .g,.ph')) e.preventDefault(); });
 document.addEventListener('dragstart', e=>{ if(e.target.closest('.mimg,.wm,.photo-big,.gallery,.thumbs,.ph')) e.preventDefault(); });
 document.addEventListener('click', e=>{ const a=e.target.closest('[data-support]'); if(a){ e.preventDefault(); openSupport(); } });
@@ -1918,6 +1967,8 @@ async function viewMe(){
       ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存</button></form>
     </section>
     <section class="mt-pane" data-mt="settings">
+    <div class="card"><h3 style="font-size:17px">外觀</h3><p class="tiny dim">只影響這台裝置。</p>
+      <div class="themesw" role="group" aria-label="外觀"><button type="button" data-th="light">淺色</button><button type="button" data-th="dark">深色</button><button type="button" data-th="auto">跟隨手機</button></div></div>
     <div class="card"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
       <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你心動過的人、或正在和你聊天的人看得到你。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvAccept" ${me.accept_from==='liked'?'checked':''}><span><b>只接受我心動過的人傳訊息</b><small>開啟後，只有你按過「心動」的人能主動傳第一則訊息給你，可以減少陌生訊息。</small></span></label>
