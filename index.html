@@ -659,6 +659,16 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 .admchat .amimg{width:200px;aspect-ratio:3/4;background:#ddd center/cover;margin-top:6px;cursor:zoom-in;font-size:12px;color:var(--grey);display:flex;align-items:center;justify-content:center}
 .tblwrap .table{min-width:780px}
 .chempty{margin:auto;text-align:center;padding:30px 16px;color:var(--grey)}.chempty .serif{font-size:18px;color:var(--ink);margin-bottom:6px}
+/* v1.47 視覺細修 */
+.list .item .mside{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;align-self:flex-start;padding-top:4px}
+.ucount{min-width:20px;height:20px;line-height:20px;padding:0 6px;border-radius:10px;background:var(--wine);color:#fff;font-size:11px;font-weight:500;text-align:center;letter-spacing:0}
+.list .item.unread .t{font-weight:500}.list .item.unread .s{color:var(--ink)}
+.list .item .s{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.pcard .ph,.avatar,.thumbs .g,.gallery .g,.msg .mimg{transition:background-image .01s}
+.pcard .ph{background-color:#EEEAE5}
+@media(hover:hover){.pcard{transition:transform .35s ease}.pcard .ph{transition:filter .35s ease}.pcard:hover .ph{filter:brightness(1.04)}.pcard:hover{transform:translateY(-2px)}}
+@media(max-width:719px){.filters select,.filters .fbtn,#fMore{min-height:44px;height:44px;font-size:15px;padding-top:0;padding-bottom:0}.filters{gap:8px}}
+@media(prefers-reduced-motion:reduce){.pcard,.pcard .ph{transition:none!important}.pcard:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -700,7 +710,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.46.0';
+const BUILD = 'v1.47.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1675,12 +1685,12 @@ async function viewMatches(){
   ms.forEach(m=>{ const k=kind(m); (k==='closed' ? groups.chat : groups[k]).push(m); });
   const row = m => { const oid = m.user_a===me.id?m.user_b:m.user_a; const o = pm[oid] || { nickname: names[oid] || '對方', avatar_path:'' }; const k = kind(m);
     const sub = k==='closed' ? '<i>對方已結束對話</i>' : k==='waiting' ? '<i>等待對方回覆</i>' : (m.last_message?esc(m.last_message):'');
-    return `<div class="item ${k==='closed'?'closed':''}" data-id="${m.id}"><div class="avatar" data-ph="${esc(o.avatar_path||'')}"></div>
-      <div class="grow"><div class="t">${esc(o.nickname)} ${o.birth_year?`<span class="muted small">${age(o.birth_year)}</span>`:''} ${uc[m.id]?`<span class="chip" style="background:var(--rose);color:#fff">${uc[m.id]}</span>`:''}</div>
+    return `<div class="item ${k==='closed'?'closed':''}${uc[m.id]?' unread':''}" data-id="${m.id}"><div class="avatar" data-ph="${esc(o.avatar_path||'')}"></div>
+      <div class="grow"><div class="t">${esc(o.nickname)} ${o.birth_year?`<span class="muted small">${age(o.birth_year)}</span>`:''}</div>
       ${k==='request'?`<div class="tiny dim">${o.role?ROLES[o.role]+' · ':''}${esc(o.city||'')}</div><div class="req">${esc(m.last_message||'')}</div>
         <div class="row mt" style="gap:8px"><button class="btn sm primary rq-reply" data-id="${m.id}">回覆</button><button class="btn sm ghost rq-no" data-id="${m.id}">不感興趣</button></div>`
       :`<div class="s">${sub}</div>`}</div>
-      <span class="tiny dim">${m.last_message_at?fmtTime(m.last_message_at):''}</span></div>`; };
+      <div class="mside"><span class="tiny dim">${m.last_message_at?fmtTime(m.last_message_at):''}</span>${uc[m.id]?`<b class="ucount">${uc[m.id]>99?'99+':uc[m.id]}</b>`:''}</div></div>`; };
   const tab = sessionStorage.getItem('inboxTab') || (groups.request.length ? 'request' : 'chat');
   const T = [['request','訊息請求'],['chat','聊天中'],['waiting','等待回覆']];
   const empty = { request:'目前沒有新的訊息請求。', chat:'還沒有正在聊的對話。', waiting:'沒有等待回覆的訊息。' };
