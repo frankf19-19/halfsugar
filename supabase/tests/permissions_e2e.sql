@@ -5,6 +5,7 @@ declare
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
+  AD uuid := gen_random_uuid(); W uuid := gen_random_uuid();
 begin
   perform set_config('storage.allow_delete_query','true',true);
   update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
@@ -229,8 +230,8 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub',F,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', F::text, true);
   execute 'set local role authenticated';
-  begin perform public.begin_account_deletion(); out := array_append(out, '19d 被檢舉中自己刪除：沒被擋 ✗'::text);
-  exception when others then out := array_append(out, '19d 被檢舉中不能自己刪除 ✓'::text); end;
+  begin perform public.begin_account_deletion(); raise exception 'e2e_rollback';
+  exception when others then out := array_append(out, (case when sqlerrm='e2e_rollback' then '19d 被檢舉中仍可自己刪除帳號（證據已備份） ✓' else '19d 被檢舉中自己刪除被擋：'||sqlerrm||' ✗' end)::text); end;
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   delete from auth.users where id=A;
@@ -543,6 +544,26 @@ begin
   execute 'reset role';
   select count(*) into n from public.app_config where key='free_launch' and value='on'; out := array_append(out, ('33b 會員自己關掉免費期 = '||(1-n)||' (應為0)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 34 v0.26：不能檢舉自己；管理員用一般登入身分核准會員要成功（觸發器以定義者權限執行）
+  insert into auth.users (id, email, aud, role) values (AD,'e2e-ad@test.invalid','authenticated','authenticated'),(W,'e2e-w@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='AD', is_admin=true, status='approved' where id=AD;
+  update public.profiles set nickname='W', gender='female', looking_for='male', role='baby', birth_year=1999, city='台北市', status='pending' where id=W;
+  perform set_config('request.jwt.claims', json_build_object('sub',K,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', K::text, true);
+  execute 'set local role authenticated';
+  begin insert into public.reports (reporter_id, reported_id, reason) values (K, K, 'other'); out := array_append(out, '34 檢舉自己：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '34 不能檢舉自己 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',AD,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', AD::text, true);
+  execute 'set local role authenticated';
+  begin update public.profiles set status='approved' where id=W; exception when others then out := array_append(out, ('34b 管理員核准時出錯：'||sqlerrm||' ✗')::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from public.profiles where id=W and status='approved' and approved_at is not null; out := array_append(out, ('34c 管理員核准成功 = '||n||' (應為1)')::text);
+  update public.profiles set status='suspended' where id=W; update public.profiles set status='pending' where id=W;
+  select count(*) into n from public.profiles where id=W and approved_at is null; out := array_append(out, ('34d 解除停權後要重新審核 = '||n||' (應為1)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

@@ -678,7 +678,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.41.0';
+const BUILD = 'v1.42.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -863,6 +863,9 @@ async function refreshUnread(){
   if(!me || !['approved','pending'].includes(me.status)) return;
   const { data: ms } = await sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`);
   const setBadge = n => (document.title = (n>0?`(${n>99?'99+':n}) `:'') + document.title.replace(/^\(\S+\) /,''), document.querySelectorAll('a[href="#/matches"]')).forEach(a=>{ a.querySelector('.badge')?.remove(); if(n>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${n>99?'99+':n}</span>`); });
+  const seenL = localStorage.getItem('yy_likes_seen_'+me.id) || '1970-01-01T00:00:00Z';
+  if(!location.hash.startsWith('#/likes')) sb.from('likes').select('from_id',{count:'exact',head:true}).eq('to_id', me.id).gt('created_at', seenL).then(({ count: lc })=>{
+    document.querySelectorAll('a[href="#/likes"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(lc>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${lc>99?'99+':lc}</span>`); }); });
   if(!ms || !ms.length) return setBadge(0);
   const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id));
   setBadge(count||0);
@@ -903,10 +906,11 @@ const routes = {
   'guidelines': ()=>viewDoc('guidelines'), 'safety': ()=>viewDoc('safety'), 'plans': viewPlans,
   'bye': ()=>{ $('#app').innerHTML = `<div class="narrow center" style="padding:80px 0"><h2>帳號已刪除</h2><p class="muted mt">你的檔案、照片、對話與手機號碼都已永久刪除。<br class="d">謝謝你曾經來過微糖。</p><a class="btn mt2" href="#/">回到首頁</a></div>`; },
 };
-let chatChannel = null, routeSeq = 0;
+let chatChannel = null, routeSeq = 0, onChatVisible = null;
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ onChatVisible && onChatVisible(); refreshUnread(); } });
 async function route(){
   routeSeq++;
-  if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; }
+  if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; } onChatVisible = null;
   if(!recovering) closeModal();
   const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
   renderNav();
@@ -1607,6 +1611,7 @@ function openReport(id, name){
    ===================================================================== */
 async function viewLikes(){
   const rs = routeSeq;
+  localStorage.setItem('yy_likes_seen_'+me.id, new Date().toISOString()); document.querySelectorAll('a[href="#/likes"] .badge').forEach(b=>b.remove());
   const [{ data: toMe, error: le1 }, { data: fromMe, error: le2 }] = await Promise.all([
     sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('to_id', me.id).order('created_at',{ascending:false}),
     sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('from_id', me.id).order('created_at',{ascending:false}),
@@ -1689,8 +1694,8 @@ async function viewChat(matchId){
 </div>`;
   if(o) signed(o.avatar_path).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
-  let lastDay='';
-  const add = (x) => { const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); } box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}</span></div>`); box.scrollTop = box.scrollHeight; };
+  let lastDay='', lastAt=null; const seenIds=new Set();
+  const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); } if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); } box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}</span></div>`); box.scrollTop = box.scrollHeight; };
   (msgs||[]).forEach(add);
   const lastMine = [...msgs].reverse().find(x=>x.sender_id===me.id);
   if(lastMine && lastMine.read_at && msgs[msgs.length-1]===lastMine) box.insertAdjacentHTML('beforeend', `<div class="tiny dim" style="text-align:right;margin:-4px 2px 8px">已讀 ${fmtTime(lastMine.read_at)}</div>`), box.scrollTop=box.scrollHeight;
@@ -1705,6 +1710,14 @@ async function viewChat(matchId){
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     if(payload.new.sender_id!==me.id){ add(payload.new); otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
   }).subscribe();
+  // 手機切到背景再回來時，即時連線可能斷過：補抓這段時間的新訊息
+  onChatVisible = async () => { if(my!==routeSeq || !$('#msgs')) return;
+    let q = sb.from('messages').select('*').eq('match_id', matchId).order('created_at');
+    if(lastAt) q = q.gt('created_at', lastAt);
+    const { data: nw } = await q; if(my!==routeSeq || !nw?.length) return;
+    const theirs = nw.filter(x=>x.sender_id!==me.id); nw.forEach(add);
+    if(theirs.length){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread()); }
+    box.scrollTop = box.scrollHeight; };
   let sending = false;
   $('#chForm').onsubmit = async e => { e.preventDefault(); if(sending) return; const body=$('#chIn').value.trim(); if(!body) return;
     const bad = containsBadWords(body, true); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);

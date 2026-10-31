@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.25.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.26.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -168,9 +168,11 @@ begin
   return new;
 end $$;
 create or replace function public.profiles_submitted_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.status = 'pending' and old.status is distinct from 'pending' then new.submitted_at := now(); end if;
+  -- 解除停權後要重新審核：清掉舊的通過時間，審核前不能瀏覽其他會員
+  if old.status = 'suspended' and new.status <> 'suspended' and new.status <> 'approved' then new.approved_at := null; end if;
   if new.status = 'approved' and new.approved_at is null then
     new.approved_at := now();
     -- 前 100 位第一次通過審核的會員，記錄為創始會員（管理員不算）
@@ -364,7 +366,9 @@ begin
     if not private.can_send(new.match_id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
     if not private.partner_active(new.match_id) then raise exception '對方目前無法接收訊息'; end if;
     if exists (select 1 from public.matches m where m.id = new.match_id and m.initiator = auth.uid() and m.replied_at is null)
-       and new.body ~* '(https?://|www\.|line\s*id|加\s*賴|加\s*line|微信|wechat|telegram|instagram|\yig\y|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}|車馬|包月|月費|價碼|一次多少|零用錢)' then
+       and (new.body ~* '(https?://|www\.|line\s*id|加\s*賴|加\s*line|微信|wechat|telegram|instagram|\yig\y|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}|車馬|包月|月費|價碼|一次多少|零用錢)'
+            or regexp_replace(translate(lower(new.body), '０１２３４５６７８９ｌｉｎｅＬＩＮＥ', '0123456789lineline'), '[^0-9a-z\u4e00-\u9fff]', '', 'g')
+               ~ '(lineid|加line|加賴|賴我|微信|wechat|telegram|09[0-9]{8}|[0-9]{8,})') then
       raise exception '第一則訊息不能留聯絡方式或談金錢，請先好好介紹自己';
     end if;
   else
@@ -623,9 +627,16 @@ create policy "messages_update_read" on public.messages for update to authentica
                  and (m.user_a = auth.uid() or m.user_b = auth.uid())));
 
 -- reports
+create or replace function private.my_reports_today()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from public.reports where reporter_id = auth.uid() and created_at > now() - interval '1 day';
+$$;
 drop policy if exists "reports_insert" on public.reports;
 create policy "reports_insert" on public.reports for insert to authenticated
-  with check (reporter_id = auth.uid() and status = 'open' and public.my_status() in ('pending','approved','rejected'));
+  with check (reporter_id = auth.uid() and status = 'open' and reported_id <> auth.uid()
+              and public.my_status() in ('pending','approved','rejected')
+              and char_length(coalesce(detail,'')) <= 1000
+              and private.my_reports_today() < 5);
 drop policy if exists "reports_select" on public.reports;
 create policy "reports_select" on public.reports for select to authenticated
   using (reporter_id = auth.uid() or public.is_admin());
@@ -654,7 +665,8 @@ drop policy if exists "verify_storage_insert" on storage.objects;
 create policy "verify_storage_insert" on storage.objects for insert to authenticated
   with check (bucket_id = 'verify' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
               and exists (select 1 from public.profiles where id = auth.uid() and role in ('daddy','mommy') and status in ('pending','approved'))
-              and private.my_verify_file_count() < 4);
+              and private.my_verify_file_count() < 4
+              and not exists (select 1 from public.wealth_verifications w where w.path = name));   -- 已送審的檔名不能刪掉再換檔
 drop policy if exists "verify_storage_delete" on storage.objects;
 create policy "verify_storage_delete" on storage.objects for delete to authenticated
   using (bucket_id = 'verify' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
@@ -709,7 +721,7 @@ create or replace function public.request_private_photos(owner uuid)
 returns void language plpgsql security definer set search_path = public as $$
 declare r public.photo_requests;
 begin
-  if public.my_status() <> 'approved' then raise exception '資料審核通過後才能索取'; end if;
+  if public.my_status() is distinct from 'approved' then raise exception '資料審核通過後才能索取'; end if;
   if owner = auth.uid() or private.is_blocked_with(owner) or not private.is_compatible(owner)
      or not exists (select 1 from public.profiles where id = owner and status = 'approved') then
     raise exception '無法向這位會員索取';
@@ -741,7 +753,7 @@ $$;
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
 grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, person_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
-              avatar_path, status, hidden, last_active_at, created_at, updated_at, founder_boost_until) on public.profiles to authenticated;
+              avatar_path, status, hidden, last_active_at, created_at, founder_boost_until) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
 create or replace function public.get_me()
@@ -820,7 +832,7 @@ begin
     insert into public.messages (match_id, sender_id, body) values (m.id, me, body);
     return m.id;
   end if;
-  if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能主動傳訊息'; end if;
+  if public.my_status() is distinct from 'approved' then raise exception '檔案審核通過後才能主動傳訊息'; end if;
   if private.is_blocked_with(other) or not private.is_compatible(other)
      or not exists (select 1 from public.profiles p where p.id = other and p.status = 'approved'
                     and (not p.hidden or exists (select 1 from public.likes l where l.from_id = other and l.to_id = me))) then
@@ -861,8 +873,7 @@ returns void language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid();
 begin
   if uid is null then raise exception '請先登入'; end if;
-  if public.my_status() = 'suspended'
-     or exists (select 1 from public.reports where reported_id = uid and status = 'open') then
+  if public.my_status() = 'suspended' then
     raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
   end if;
   perform set_config('halfsugar.deleting', '1', true);
@@ -881,8 +892,7 @@ returns void language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid();
 begin
   if uid is null then raise exception '請先登入'; end if;
-  if public.my_status() = 'suspended'
-     or exists (select 1 from public.reports where reported_id = uid and status = 'open') then
+  if public.my_status() = 'suspended' then
     raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
   end if;
   if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person') and name like uid::text || '/%') then
@@ -1019,7 +1029,7 @@ returns boolean language sql stable security definer set search_path = public as
   select exists (select 1 from public.wealth_verifications w
                    join public.wealth_requests r on r.owner_id = w.user_id and r.requester_id = auth.uid() and r.status = 'granted'
                   where w.path = fname and w.status = 'approved'
-                    and not private.is_blocked_with(w.user_id)
+                    and not private.is_blocked_with(w.user_id) and private.can_browse()
                     and exists (select 1 from public.profiles p where p.id = w.user_id and p.status = 'approved'));
 $$;
 
@@ -1028,6 +1038,7 @@ create or replace function public.wealth_doc_status(owner uuid)
 returns table (state text, path text) language plpgsql stable security definer set search_path = public as $$
 declare r public.wealth_requests; doc text;
 begin
+  if owner <> auth.uid() and (not private.can_browse() or not private.is_compatible(owner)) then return query select 'none'::text, null::text; return; end if;
   doc := private.wealth_doc_path(owner);
   if doc is null or private.is_blocked_with(owner) then return query select 'none'::text, null::text; return; end if;
   if owner = auth.uid() then return query select 'own'::text, doc; return; end if;
@@ -1043,7 +1054,7 @@ create or replace function public.request_wealth_view(owner uuid)
 returns void language plpgsql security definer set search_path = public as $$
 declare r public.wealth_requests;
 begin
-  if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能申請查看'; end if;
+  if public.my_status() is distinct from 'approved' then raise exception '檔案審核通過後才能申請查看'; end if;
   if owner = auth.uid() or private.is_blocked_with(owner) or not private.is_compatible(owner)
      or not exists (select 1 from public.profiles where id = owner and status = 'approved')
      or private.wealth_doc_path(owner) is null then
@@ -1315,3 +1326,10 @@ create policy "verify_storage_select" on storage.objects for select to authentic
                                    or private.can_view_wealth_doc(name)));   -- 本人允許的甜心
 revoke all on all functions in schema private from public, anon;
 grant execute on all functions in schema private to authenticated;
+
+-- v0.26.0：收回匿名訪客對公開函式的執行權（函式內本來就有檢查，這是多一層保險）
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname in ('is_admin','my_status','unmatch','request_private_photos','related_names','get_me','admin_profiles')
+  loop execute format('revoke execute on function %s from anon, public', f.sig); execute format('grant execute on function %s to authenticated', f.sig); end loop;
+end $$;
