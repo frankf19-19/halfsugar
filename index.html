@@ -424,6 +424,9 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 details.more summary{cursor:pointer;font-size:13px;color:var(--grey);text-decoration:underline;text-underline-offset:4px;list-style:none;padding:6px 0}details.more summary::-webkit-details-marker{display:none}details.more p{margin-top:6px}
 .swipehint{display:none;text-align:center;font-size:12px;letter-spacing:.14em;color:var(--grey2);margin-top:10px}
 
+.sortbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:-14px 0 18px}
+.sortsel{display:flex;align-items:center;gap:8px;margin:0;font-size:12px;letter-spacing:.14em;color:var(--grey);white-space:nowrap}
+.sortsel select{width:auto;border:0;border-bottom:1px solid var(--ink);padding:6px 22px 6px 2px;font-size:13px;letter-spacing:.06em;background-position:right 2px center}
 /* 版面修正（保留）：桌機探索格線、註冊頁頭像選取框 */
 @media(min-width:760px){.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:40px 22px}}
 .avpick{font-size:34px;color:var(--grey2);background-color:#ECEAE6;background-size:cover;background-position:center;border:1px dashed var(--grey2)}
@@ -473,7 +476,7 @@ details.more summary{cursor:pointer;font-size:13px;color:var(--grey);text-decora
 /* =====================================================================
    微糖 JUST SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.25.2';
+const BUILD = 'v1.26.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1104,9 +1107,20 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
+const browseState = { sort:'rec', agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
 const resetBrowse = () => Object.assign(browseState, { region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' });
 const advCount = () => ['amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth','person'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0);
+const SORTS = { rec:'近期上線＋附近', online:'最近上線', near:'離我最近', new:'最新註冊' };
+const regionOf = c => Object.keys(REGIONS).find(k=>REGIONS[k].includes(c)) || '';
+const nearScore = c => !me?.city ? 0 : c===me.city ? 2 : (regionOf(c) && regionOf(c)===regionOf(me.city)) ? 1 : 0;
+const activeBucket = t => { if(!t) return 9; const m=(Date.now()-new Date(t))/60000; return m<15?0 : m<60*24?1 : m<60*24*3?2 : m<60*24*7?3 : m<60*24*30?4 : 5; };
+const isNew = r => r.created_at && (Date.now()-new Date(r.created_at)) < 7*864e5;
+// 推薦：先看最近上線（分段），同一段裡離你近的排前面；離我最近：同城市 → 同地區 → 其他，再看上線時間
+function sortRows(rows, mode){
+  const t = r => r.last_active_at ? +new Date(r.last_active_at) : 0, c = r => +new Date(r.created_at||0);
+  const cmp = { rec:(a,b)=> activeBucket(a.last_active_at)-activeBucket(b.last_active_at) || nearScore(b.city)-nearScore(a.city) || t(b)-t(a),
+    online:(a,b)=> t(b)-t(a) || c(b)-c(a), near:(a,b)=> nearScore(b.city)-nearScore(a.city) || t(b)-t(a), new:(a,b)=> c(b)-c(a) }[mode] || (()=>0);
+  rows.sort(cmp); return rows; }
 const isAdminBrowse = () => !!(me && me.is_admin && (!me.gender || !me.looking_for));
 const lookF = () => isAdminBrowse() ? browseState.agender!=='male' : me.looking_for==='female';
 async function viewBrowse(){
@@ -1126,6 +1140,7 @@ async function viewBrowse(){
       <select id="fCity" aria-label="城市"><option value="">城市不限</option></select>
       <button type="button" class="fbtn" id="fMore">更多篩選${advCount()?`<b>${advCount()}</b>`:''}</button>
     </div>
+    <div class="sortbar"><span id="fCount" class="tiny dim"></span><label class="sortsel">排序<select id="fSort" aria-label="排序">${Object.entries(SORTS).map(([k,v])=>`<option value="${k}" ${browseState.sort===k?'selected':''}>${v}</option>`).join('')}</select></label></div>
     <div id="grid" class="grid"><div class="spinner" style="grid-column:1/-1"></div></div>`;
   const fillCity = () => { $('#fCity').innerHTML = `<option value="">城市不限</option>` + cities().map(c=>`<option ${browseState.city===c?'selected':''}>${c}</option>`).join(''); };
   fillCity();
@@ -1135,7 +1150,9 @@ async function viewBrowse(){
     $('#grid').style.opacity = .45;
     $('#fMore').innerHTML = '更多篩選' + (advCount()?`<b>${advCount()}</b>`:'');
     const y = new Date().getFullYear(); const B = browseState;
-    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,person_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
+    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,person_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,last_active_at,created_at').eq('status','approved').neq('id', me.id).eq('hidden',false);
+    q = B.sort==='new' ? q.order('created_at',{ascending:false}) : q.order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false});
+    q = q.limit(150);
     if(B.role==='baby') q = q.eq('role','baby'); else if(B.role==='sugar') q = q.in('role',['daddy','mommy']);
     if(adminView){ if(B.agender) q = q.eq('gender', B.agender); } else q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
     if(B.city) q = q.eq('city', B.city); else if(B.region) q = q.in('city', REGIONS[B.region]);
@@ -1157,17 +1174,20 @@ async function viewBrowse(){
     $('#grid').style.opacity = '';
     if(error){ toast(zh(error.message)); return; }
     const liked = new Set((myLikes||[]).map(l=>l.to_id));
+    sortRows(rows, B.sort);
+    $('#fCount').textContent = rows.length ? `${rows.length>=150?'150+':rows.length} 位會員` : '';
     if(!rows.length){ const filtered = B.city||B.region||advCount();
       $('#grid').innerHTML = me.status==='suspended' ? `<p class="muted center" style="grid-column:1/-1;padding:40px 0">帳號停權中，無法探索其他會員。<br><a href="#" data-support>聯絡客服</a></p>` : me.status==='rejected' ? `<p class="muted center" style="grid-column:1/-1;padding:40px 0">你的檔案需要修改後才能探索。<br><a class="btn mt2" href="#/me">前往修改</a></p>`
         : `<p class="muted center" style="grid-column:1/-1;padding:40px 0">${filtered?'這個條件下暫時沒有會員。':'會員陸續加入中，晚點再回來看看。'}${filtered?'<br><button class="btn mt2" id="clrF">清除篩選</button>':''}</p>`;
       $('#clrF') && ($('#clrF').onclick=()=>{ resetBrowse(); viewBrowse(); }); return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
-        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:''}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${personBadge(r)}${wealthBadge(r)}</div></div>`).join('');
+        ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:(isNew(r)?'<span class="seen">新會員</span>':'')}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${personBadge(r)}${wealthBadge(r)}</div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.textContent=''; } });
   };
   $('#fGender') && ($('#fGender').onchange = ()=>{ browseState.agender=$('#fGender').value; reload(); });
+  $('#fSort').onchange = ()=>{ browseState.sort=$('#fSort').value; reload(); };
   $('#fRole').onchange = ()=>{ browseState.role=$('#fRole').value; reload(); };
   $('#fRegion').onchange = ()=>{ browseState.region=$('#fRegion').value; browseState.city=''; fillCity(); reload(); };
   $('#fCity').onchange = ()=>{ browseState.city=$('#fCity').value; reload(); };
