@@ -366,9 +366,7 @@ begin
     if not private.can_send(new.match_id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
     if not private.partner_active(new.match_id) then raise exception '對方目前無法接收訊息'; end if;
     if exists (select 1 from public.matches m where m.id = new.match_id and m.initiator = auth.uid() and m.replied_at is null)
-       and (new.body ~* '(https?://|www\.|line\s*id|加\s*賴|加\s*line|微信|wechat|telegram|instagram|\yig\y|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}|車馬|包月|月費|價碼|一次多少|零用錢)'
-            or regexp_replace(translate(lower(new.body), '０１２３４５６７８９ｌｉｎｅＬＩＮＥ', '0123456789lineline'), '[^0-9a-z\u4e00-\u9fff]', '', 'g')
-               ~ '(lineid|加line|加賴|賴我|微信|wechat|telegram|09[0-9]{8}|[0-9]{8,})') then
+       and new.body ~* '(https?://|www\.|line\s*id|加\s*賴|加\s*line|微信|wechat|telegram|instagram|\yig\y|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}|車馬|包月|月費|價碼|一次多少|零用錢)' then
       raise exception '第一則訊息不能留聯絡方式或談金錢，請先好好介紹自己';
     end if;
   else
