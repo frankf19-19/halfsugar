@@ -511,6 +511,34 @@ footer a{letter-spacing:.22em}
 .sw input{accent-color:var(--ink)}
 .toast{letter-spacing:.14em;font-size:12px;padding:14px 26px}
 body[data-page=matches] #app,body[data-page=likes] #app{max-width:820px}
+.fsec{display:flex;align-items:baseline;gap:12px;margin:40px 0 -6px;padding-top:22px;border-top:1px solid var(--hair);font-family:"Noto Serif TC",serif;font-size:17px;letter-spacing:.2em}
+.fsec:first-child{margin-top:4px;padding-top:0;border-top:0}
+.fsec span{font-size:12px;color:var(--wine);letter-spacing:0;font-family:"Noto Serif TC",serif}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.06)}100%{transform:scale(1)}}
+.btn.pop{animation:pop .5s ease}
+/* 會員檔案視窗 */
+.thumbs{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none}
+.thumbs::-webkit-scrollbar{display:none}
+.thumbs .g{flex:0 0 58px;height:72px;background:#EEECE8 center/cover;cursor:pointer;opacity:.55;transition:opacity .2s;outline:1px solid transparent;outline-offset:-1px}
+.thumbs .g.on{opacity:1;outline-color:var(--ink)}
+.thumbs .g::after{display:none}
+.phead{margin-top:22px}
+.phead h2{font-size:28px;font-weight:300;letter-spacing:.14em;margin-top:6px}
+.phead h2 span{font-size:16px;color:var(--grey);letter-spacing:.06em;margin-left:12px}
+.phead .sub{font-size:13px;letter-spacing:.1em;color:var(--grey);margin-top:4px}
+.psec{margin-top:26px;padding-top:20px;border-top:1px solid var(--hair)}
+.psec h4{font-family:"Noto Serif TC",serif;font-weight:400;font-size:13px;letter-spacing:.32em;color:var(--grey);margin-bottom:12px}
+.psec .bio{white-space:pre-wrap;font-size:15px;line-height:2}
+.pdl{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}
+.pdl>div{display:flex;flex-direction:column}.pdl .full{grid-column:1/-1}
+.pdl dt{font-size:11px;letter-spacing:.2em;color:var(--grey2)}
+.pdl dd{font-size:15px;margin-top:2px}
+.ptags{display:flex;flex-wrap:wrap;gap:6px 0;font-size:14px}
+.ptags span:not(:last-child)::after{content:"／";color:#C9C4BD;margin:0 8px}
+.plinks{display:flex;justify-content:center;gap:10px;margin:30px 0 6px;font-size:12px;letter-spacing:.2em;color:var(--grey2)}
+.plinks i{width:1px;height:12px;background:#D6D1CA;align-self:center}
+.plinks button{color:var(--grey);letter-spacing:.2em;padding:8px 6px}
+.plinks button:hover{color:var(--ink);text-decoration:underline;text-underline-offset:5px}
 /* 版面修正（保留）：桌機探索格線、註冊頁頭像選取框 */
 @media(min-width:760px){.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:40px 22px}}
 .avpick{font-size:34px;color:var(--grey2);background-color:#ECEAE6;background-size:cover;background-position:center;border:1px dashed var(--grey2)}
@@ -560,7 +588,7 @@ body[data-page=matches] #app,body[data-page=likes] #app{max-width:820px}
 /* =====================================================================
    微糖 JUST SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.27.0';
+const BUILD = 'v1.28.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -997,6 +1025,7 @@ const budgetText = b => b ? (b==='negotiable' ? '每月預算 見面再談' : `�
 function profileFormHtml(p={}){
   const years = []; const y0 = new Date().getFullYear()-18; for(let y=y0;y>=y0-62;y--) years.push(y);
   return `
+    <div class="fsec"><span>1</span>身分與期待</div>
     ${p.gender && p.looking_for ? `
     <label>想認識的對象</label>
     <div class="locked"><b>${orientText(p)}</b><small>這項設定送出後就無法修改。如有特殊需要，請<a href="#" data-support>聯絡客服</a>。</small></div>` : `
@@ -1010,6 +1039,7 @@ function profileFormHtml(p={}){
       <select name="budget"><option value="">請選擇</option>${Object.entries(BUDGETS).map(([k,v])=>`<option value="${k}" ${p.budget===k?'selected':''}>${v}</option>`).join('')}</select>
       <p class="tiny dim">一起用餐、旅行、禮物與生活上照顧的大約預算，會顯示在你的檔案上，讓彼此一開始就清楚期待。這不是任何性服務的對價，平台也不經手會員之間的任何款項。</p>
     </div>
+    <div class="fsec"><span>2</span>基本資料</div>
     ${p.nickname && !['incomplete','rejected'].includes(p.status) ? `<label>暱稱</label><div class="locked"><b>${esc(p.nickname)}</b><small>暱稱確定後就無法修改。</small></div><input type="hidden" name="nickname" value="${esc(p.nickname)}">`
     : `<label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="tiny" style="color:var(--wine);margin-top:6px">送出審核後，暱稱就<b>無法再修改</b>，請想好再填。</p>`}
 
@@ -1025,12 +1055,14 @@ function profileFormHtml(p={}){
       <div class="grow"><label>身材 *</label><select name="body_type" required><option value="">請選擇</option>${Object.entries(BODY).map(([k,v])=>`<option value="${k}" ${p.body_type===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="grow" id="cupBox" ${p.gender==='male'?'style="display:none"':''}><label>罩杯（選填）</label><select name="cup"><option value="">不填</option>${CUPS.map(c=>`<option ${p.cup===c?'selected':''}>${c}</option>`).join('')}</select></div>
     </div>
+    <div class="fsec"><span>3</span>想要的相處</div>
     <label>相處方式（可複選）</label>
     <div class="tags" id="relPick">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${(p.relation_types||[]).includes(k)?'on':''}" data-r="${k}">${v}</button>`).join('')}</div>
     <div class="row">
       <div class="grow"><label>見面頻率</label><select name="meet_freq"><option value="">不填</option>${Object.entries(FREQ).map(([k,v])=>`<option value="${k}" ${p.meet_freq===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="grow" id="ebBox" ${p.role&&p.role!=='baby'?'style="display:none"':''}><label>期望每月預算（甜心選填）</label><select name="expect_budget"><option value="">不填</option>${Object.entries(BUDGETS).map(([k,v])=>`<option value="${k}" ${p.expect_budget===k?'selected':''}>${v}</option>`).join('')}</select></div>
     </div>
+    <div class="fsec"><span>4</span>介紹你自己</div>
     <label>興趣（最多 8 個）</label>
     <div class="tags" id="tagPick">${TAGS.map(t=>`<button type="button" class="tag ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
     <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額或價碼。">${esc(p.bio||'')}</textarea>
@@ -1142,6 +1174,7 @@ async function viewOnboarding(){
     <div class="banner">以下基本資料都要填完才能送出。<b>暱稱</b>、<b>性別</b>與<b>想認識的對象</b>送出後就<b>無法修改</b>，請先確認再送出。</div>
     <form id="obForm" class="card">
       ${profileFormHtml(me)}
+      <div class="fsec"><span>5</span>照片</div>
       <label>頭像照片 *</label>
       <div class="row"><label class="avatar lg avpick" id="avPrev" style="margin:0;cursor:pointer" aria-label="選擇頭像照片">＋<input type="file" accept="image/*" id="avFile" class="hidden"></label><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><label class="btn sm ghost" style="margin:10px 0 0;color:var(--ink)">選擇頭像<input type="file" accept="image/*" class="hidden avFile2"></label></div></div>
       <label>更多照片（選填，可一次選多張，最多 20 張）</label>
@@ -1325,21 +1358,27 @@ async function openProfile(id){
   const privCount = typeof privN==='number' ? privN : (photos||[]).filter(x=>x.is_private).length;
   const body = `
     <div class="photo-big wm" id="bigPh" data-wm="${wmText()}"></div>
-    <div class="row mt" style="justify-content:space-between;align-items:flex-start">
-      <div>${p.role?`<div class="rtag" style="margin-bottom:4px">${ROLES[p.role]}</div>`:''}<h2 style="font-size:24px">${esc(p.nickname)} <span class="muted" style="font-size:16px;font-weight:400">${age(p.birth_year)} 歲</span></h2>
-        <div class="muted small">${esc(p.city||'')}${p.height_cm?' · '+p.height_cm+' cm':''}${p.occupation?' · '+esc(p.occupation):''}${seen(p.last_active_at)?' · '+seen(p.last_active_at):''}</div>
-        ${p.budget||p.wealth_verified_at||p.person_verified_at?`<div class="mt row" style="gap:10px;align-items:center;flex-wrap:wrap">${p.budget?`<span class="budget" style="font-size:14px">${budgetText(p.budget)}</span>`:''}${personBadge(p,true)}${wealthBadge(p,true)}</div>`:''}
-        <div id="wDoc" class="small mt"></div></div>
-      ${theirLike?'<span class="chip ok">♥ 對你心動</span>':''}
+    ${pubPhotos.length?`<div class="thumbs wmg" data-wm="${wmText()}"><div class="g on" data-av="1"></div>${pubPhotos.map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}
+    <div class="phead">
+      <div class="row" style="justify-content:space-between;align-items:center">${p.role?`<span class="rtag">${ROLES[p.role]}</span>`:'<span></span>'}${theirLike?'<span class="chip ok">♥ 對你心動</span>':''}</div>
+      <h2>${esc(p.nickname)}<span>${age(p.birth_year)}</span></h2>
+      <p class="sub">${[esc(p.city||''), p.occupation?esc(p.occupation):'', seen(p.last_active_at)].filter(Boolean).join('　')}</p>
+      ${p.person_verified_at||p.wealth_verified_at?`<div class="row" style="gap:6px;margin-top:10px">${personBadge(p,true)}${wealthBadge(p,true)}</div>`:''}
     </div>
-    ${p.body_type||p.cup||p.meet_freq||p.expect_budget?`<div class="pfacts mt">${p.body_type?`<span>身材 ${BODY[p.body_type]}</span>`:''}${p.cup?`<span>罩杯 ${esc(p.cup)}</span>`:''}${p.meet_freq?`<span>見面 ${FREQ[p.meet_freq]}</span>`:''}${p.expect_budget?`<span class="budget">期望每月預算 ${BUDGETS[p.expect_budget]}</span>`:''}</div>`:''}
-    ${(p.relation_types||[]).length?`<div class="tags mt">${p.relation_types.map(r=>`<span class="tag rel">${RELS[r]||''}</span>`).join('')}</div>`:''}
-    ${(p.tags||[]).length?`<div class="tags mt">${p.tags.map(t=>`<span class="tag on">${esc(t)}</span>`).join('')}</div>`:''}
-    <p class="mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
-    ${pubPhotos.length?`<div class="gallery wmg" data-wm="${wmText()}">${pubPhotos.map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}
-    ${privCount?`<div class="mt small muted">🔒 ${privCount} 張私密照 · ${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?`對方這次沒有同意 <button class="btn sm ghost" id="reqPriv" data-again="1" ${canAct?'':'disabled'}>再問一次</button>`:`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
-      ${grant?`<div class="gallery wmg" data-wm="${wmText()}">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}`:''}
-    <div class="row mt2" style="justify-content:flex-end;gap:6px"><button class="btn sm ghost" id="blockBtn">封鎖</button><button class="btn sm ghost" id="reportBtn">檢舉</button></div>
+    ${p.bio?`<section class="psec"><h4>關於我</h4><p class="bio">${esc(p.bio)}</p></section>`:''}
+    <section class="psec"><h4>基本資料</h4><dl class="pdl">
+      ${[['所在地',esc(p.city||'')],['年齡',age(p.birth_year)?age(p.birth_year)+' 歲':''],['身高',p.height_cm?p.height_cm+' cm':''],['身材',p.body_type?BODY[p.body_type]:''],['罩杯',p.cup?esc(p.cup):''],['職業',p.occupation?esc(p.occupation):'']].filter(x=>x[1]).map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+    </dl></section>
+    ${(p.relation_types||[]).length||p.meet_freq||p.budget||p.expect_budget?`<section class="psec"><h4>期待的相處</h4><dl class="pdl">
+      ${p.budget?`<div><dt>每月預算</dt><dd class="budget">${p.budget==='negotiable'?'見面再談':BUDGETS[p.budget]}</dd></div>`:''}
+      ${p.expect_budget?`<div><dt>期望每月預算</dt><dd class="budget">${BUDGETS[p.expect_budget]||'見面再談'}</dd></div>`:''}
+      ${p.meet_freq?`<div><dt>見面頻率</dt><dd>${FREQ[p.meet_freq]}</dd></div>`:''}
+      ${(p.relation_types||[]).length?`<div class="full"><dt>相處方式</dt><dd>${p.relation_types.map(r=>RELS[r]||'').filter(Boolean).join('、')}</dd></div>`:''}
+    </dl><div id="wDoc" class="small mt"></div></section>`:'<div id="wDoc" class="small"></div>'}
+    ${(p.tags||[]).length?`<section class="psec"><h4>興趣</h4><p class="ptags">${p.tags.map(t=>`<span>${esc(t)}</span>`).join('')}</p></section>`:''}
+    ${privCount?`<section class="psec"><h4>私密相簿</h4><div class="small muted">🔒 ${privCount} 張私密照　${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?`對方這次沒有同意 <button class="btn sm ghost" id="reqPriv" data-again="1" ${canAct?'':'disabled'}>再問一次</button>`:`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
+      ${grant?`<div class="gallery wmg" data-wm="${wmText()}">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}</section>`:''}
+    <div class="plinks"><button type="button" id="blockBtn">封鎖</button><i></i><button type="button" id="reportBtn">檢舉</button></div>
     ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能心動或傳訊息</p>'}
     <div class="pactions">
       <div class="row" style="gap:10px;align-items:center;flex-wrap:nowrap"><button class="btn primary" style="flex:1" id="msgBtn" ${canAct||conv?'':'disabled'}>${conv?'繼續聊天':'傳訊息'}</button><button class="btn ${myLike?'ghost':'rose'}" style="flex:1" id="likeBtn" ${canAct&&(p.status==='approved'||myLike)?'':'disabled'} aria-pressed="${!!myLike}">${myLike?'♥ 已心動':'♡ 心動'}</button></div>
@@ -1359,7 +1398,9 @@ async function openProfile(id){
         <div class="wm mt" data-wm="${wmText()}" style="position:relative;aspect-ratio:3/4;background:#ECEAE6 center/contain no-repeat;background-image:url('${cssu(u.signedUrl)}')"></div>
         <button class="btn mt2" id="wBack">返回檔案</button>`); $('#wBack').onclick=()=>openProfile(id); });
   });
-  $('#modal').querySelectorAll('.gallery .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>{ const b=$('#bigPh'); if(b){ b.style.backgroundImage=el.style.backgroundImage; b.scrollIntoView({behavior:'smooth',block:'center'}); } }; } });
+  const showBig = el => { const b=$('#bigPh'); if(!b || !el.style.backgroundImage) return; b.style.backgroundImage=el.style.backgroundImage; document.querySelectorAll('#modal .thumbs .g, #modal .gallery .g').forEach(x=>x.classList.toggle('on', x===el)); if(el.closest('.gallery')) b.scrollIntoView({behavior:'smooth',block:'center'}); };
+  const avEl = $('#modal .thumbs .g[data-av]'); if(avEl){ avEl.onclick=()=>showBig(avEl); signed(p.avatar_path).then(u=>{ if(u && avEl.isConnected) avEl.style.backgroundImage=`url("${cssu(u)}")`; }); }
+  $('#modal').querySelectorAll('.gallery .g, .thumbs .g[data-ph]').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>showBig(el); } });
   $('#msgBtn').onclick = ()=>{
     if(conv){ closeModal(); location.hash='#/chat/'+conv.id; return; }
     modal(`<h2>傳訊息給 ${esc(p.nickname)}</h2>
@@ -1381,12 +1422,16 @@ async function openProfile(id){
       if(error){ b.disabled=false; b.textContent='送出'; return toast(error.message); }
       delete drafts[id]; closeModal(); toast('已送出，等對方回覆'); location.hash='#/chat/'+mid; };
   };
+  let liked = !!myLike;
   $('#likeBtn').onclick = async ()=>{
-    $('#likeBtn').disabled = true;
-    if(myLike){ const { error } = await sb.from('likes').delete().eq('from_id',me.id).eq('to_id',id); if(error){ $('#likeBtn').disabled=false; return toast(error.message); } toast('已取消心動'); }
-    else { const { error } = await sb.from('likes').insert({ from_id:me.id, to_id:id }); if(error && error.code!=='23505'){ $('#likeBtn').disabled=false; return toast(error.message); }
-      toast(theirLike?'你們互相心動了，傳個訊息吧':'已送出心動，對方會在「心動」看到你'); }
-    openProfile(id);
+    const b = $('#likeBtn'); b.disabled = true;
+    if(liked){ const { error } = await sb.from('likes').delete().eq('from_id',me.id).eq('to_id',id); b.disabled=false; if(error) return toast(error.message); liked=false; toast('已取消心動'); }
+    else { const { error } = await sb.from('likes').insert({ from_id:me.id, to_id:id }); b.disabled=false; if(error && error.code!=='23505') return toast(error.message);
+      liked=true; toast(theirLike?'你們互相心動了，傳個訊息吧':'已送出心動，對方會在「心動」看到你'); }
+    b.textContent = liked ? '♥ 已心動' : '♡ 心動'; b.className = 'btn ' + (liked?'ghost':'rose'); b.style.flex='1'; b.setAttribute('aria-pressed', liked);
+    if(liked){ b.classList.add('pop'); setTimeout(()=>b.classList.remove('pop'), 600); }
+    document.querySelector(`.pcard[data-id="${id}"]`)?.querySelector('.liked')?.remove();
+    if(liked) document.querySelector(`.pcard[data-id="${id}"] .ph`)?.insertAdjacentHTML('afterend','<span class="liked">♥ 已心動</span>');
   };
   $('#reqPriv') && ($('#reqPriv').onclick = async ()=>{ const { error } = await sb.rpc('request_private_photos', { owner:id }); toast(error?error.message:'已送出索取'); if(!error) openProfile(id); });
   $('#blockBtn').onclick = async ()=>{ if(!confirm(`封鎖 ${p.nickname}？對方將無法再看到你或傳訊息給你。`)) return;
