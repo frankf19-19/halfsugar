@@ -617,7 +617,8 @@ begin
   insert into public.reports (reporter_id, reported_id, reason) values (X1, X2, 'harass') returning id into rid2;
   delete from auth.users where id = X2;
   select count(*) into n from public.reports where id=rid2 and reported_id is null and reported_nickname='X2'; out := array_append(out, ('36b 被檢舉人刪帳號後檢舉仍保留 = '||n||' (應為1)')::text);
-  select count(*) into n from public.report_evidence where report_id=rid2; out := array_append(out, ('36c 檢舉證據含照片與收回原文 = '||n||' (應為4)')::text);
+  select count(*) into n from public.report_evidence where report_id=rid2; out := array_append(out, ('36c 檢舉時備份的訊息數 = '||n||' (應為3)')::text);
+  select count(*) into n from public.report_evidence where report_id=rid2 and recalled and (image_path is not null or body='想收回的話'); out := array_append(out, ('36d 證據含收回的照片與原文 = '||n||' (應為2)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
