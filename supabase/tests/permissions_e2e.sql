@@ -5,7 +5,7 @@ declare
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
-  AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid;
+  AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid; V1 uuid := gen_random_uuid(); V2 uuid := gen_random_uuid(); cm3 uuid; iv uuid; tk text;
 begin
   perform set_config('storage.allow_delete_query','true',true);
   update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
@@ -619,6 +619,64 @@ begin
   select count(*) into n from public.reports where id=rid2 and reported_id is null and reported_nickname='X2'; out := array_append(out, ('36b 被檢舉人刪帳號後檢舉仍保留 = '||n||' (應為1)')::text);
   select count(*) into n from public.report_evidence where report_id=rid2; out := array_append(out, ('36c 檢舉時備份的訊息數 = '||n||' (應為3)')::text);
   select count(*) into n from public.report_evidence where report_id=rid2 and recalled and (image_path is not null or body='想收回的話'); out := array_append(out, ('36d 證據含收回的照片與原文 = '||n||' (應為2)')::text);
+
+  -- 37 v0.30 約會邀請、報備、評價、回覆率、語音
+  insert into auth.users (id, email, aud, role) values (V1,'e2e-v1@test.invalid','authenticated','authenticated'),(V2,'e2e-v2@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='V1', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1985, city='台北市', status='approved', approved_at=now() where id=V1;
+  update public.profiles set nickname='V2', gender='female', looking_for='male', role='baby', birth_year=1998, city='台北市', status='approved', approved_at=now() where id=V2;
+  insert into public.matches (user_a, user_b, initiator, replied_at) values (least(V1,V2), greatest(V1,V2), V1, now()) returning id into cm3;
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  iv := public.create_date_invite(cm3, now() + interval '1 day', 'dinner', '信義區');
+  select count(*) into n from public.messages where match_id=cm3 and invite_id=iv; out := array_append(out, ('37 送出邀請並出現在對話 = '||n||' (應為1)')::text);
+  begin perform public.create_date_invite(cm3, now() + interval '2 day', 'coffee', null); out := array_append(out, '37b 重複送邀請：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '37b 等待回覆時不能重複送邀請 ✓'::text); end;
+  begin insert into public.messages (match_id, sender_id, body, invite_id) values (cm3, V1, '假邀請', iv); out := array_append(out, '37c 自己偽造邀請訊息：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '37c 邀請訊息只能用邀請卡送 ✓'::text); end;
+  begin perform public.respond_date_invite(iv, true); out := array_append(out, '37d 自己接受自己的邀請：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '37d 不能接受自己的邀請 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V2::text, true);
+  execute 'set local role authenticated';
+  perform public.respond_date_invite(iv, true);
+  select count(*) into n from public.date_invites where id=iv and status='accepted'; out := array_append(out, ('37e 對方接受邀請 = '||n||' (應為1)')::text);
+  tk := public.create_safety_check(iv, 3);
+  out := array_append(out, ('37f 報備連結長度 = '||length(tk)||' (應為64)')::text);
+  begin perform public.submit_meet_review(iv, 3, '{準時赴約}', null); out := array_append(out, '37g 還沒見面就評價：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '37g 見面後才能評價 ✓'::text); end;
+  select count(*) into n from public.reply_stats(array[V1]); out := array_append(out, ('37h 看得到對方回覆率 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  execute 'set local role anon';
+  select count(*) into n from public.safety_view(tk); out := array_append(out, ('37i 朋友不用登入看得到報備 = '||n||' (應為1)')::text);
+  select count(*) into n from public.safety_view(repeat('0',64)); out := array_append(out, ('37j 亂猜連結看不到 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  update public.date_invites set date_at = now() - interval '2 hours' where id = iv;
+  perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V2::text, true);
+  execute 'set local role authenticated';
+  perform public.submit_meet_review(iv, 1, '{要求金錢交易}', '見面就談價錢');
+  begin perform public.submit_meet_review(iv, 3, '{}', null); out := array_append(out, '37k 重複評價：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '37k 同一次見面只能評價一次 ✓'::text); end;
+  select count(*) into n from public.meet_reviews; out := array_append(out, ('37l 會員讀得到評價 = '||n||' (應為0)')::text);
+  -- 語音：自己送的一律待審，審核前別人聽不到
+  begin insert into public.voice_intros (user_id, path, duration, status) values (V2, V2||'/1.webm', 10, 'approved'); exception when others then out := array_append(out, ('37m 上傳語音出錯：'||sqlerrm||' ✗')::text); end;
+  execute 'reset role';
+  select count(*) into n from public.voice_intros where user_id=V2 and status='pending'; out := array_append(out, ('37m 自己上傳的語音一律待審 = '||n||' (應為1)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.voice_intros where user_id=V2; out := array_append(out, ('37n 審核前別人聽得到 = '||n||' (應為0)')::text);
+  begin insert into public.voice_intros (user_id, path) values (V2, V2||'/2.webm'); out := array_append(out, '37o 替別人上傳語音：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '37o 不能替別人上傳語音 ✓'::text); end;
+  execute 'reset role';
+  update public.voice_intros set status='approved' where user_id=V2;
+  execute 'set local role authenticated';
+  select count(*) into n from public.voice_intros where user_id=V2; out := array_append(out, ('37p 審核後方向吻合的會員聽得到 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

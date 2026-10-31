@@ -713,6 +713,29 @@ html[data-theme=dark] :is(.doc p,.doc li,.lex dd){color:#CFC9C2}
 html[data-theme=dark] .wbadge{border-color:#8C7344;color:#D9BE85;background:#1F1A12}
 html[data-theme=dark] .ptags span:not(:last-child)::after{color:#5A5550}
 html[data-theme=dark] .todo .td.done span{color:var(--ok)}
+/* v1.50 約會邀請、報備、評價、語音、防詐提醒 */
+.invcard{align-self:center;width:min(340px,92%);border:1px solid var(--ink);padding:16px 18px;background:var(--white)}
+.invcard .ih{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.3em;color:var(--grey);margin-bottom:10px}
+.invcard .iw{font-family:"Noto Serif TC",serif;font-size:20px;letter-spacing:.12em}
+.invcard .iday{font-size:15px;margin-top:2px}
+.invcard .ia{font-size:13px;color:var(--grey)}
+.invcard .iact{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.sysline{align-self:center;font-size:12px;letter-spacing:.06em;color:var(--grey2);padding:2px 0}
+.scamtip{align-self:flex-start;max-width:86%;font-size:12px;line-height:1.7;color:var(--bad);border:1px solid currentColor;padding:8px 12px;background:transparent}
+.revbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--hair);font-size:13px}
+.rvopts{display:flex;gap:8px}.rvopts button{flex:1;min-height:48px;border:1px solid var(--rule);font-size:14px;letter-spacing:.12em}
+.rvopts button.on{border-color:var(--ink);background:var(--ink);color:var(--white)}
+.rstat{font-size:12px;letter-spacing:.08em;color:var(--ok);margin-top:6px}
+.vbtn{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:10px 16px;border:1px solid var(--rule);font-size:13px;letter-spacing:.08em;min-height:44px}
+.vbtn .vi{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--white);font-size:10px;align-items:center;justify-content:center}
+.vrec{display:flex;flex-direction:column;align-items:center;gap:14px}
+.vtime{font-family:"Noto Serif TC",serif;font-size:40px;letter-spacing:.1em}
+.safepg h1{font-family:"Noto Serif TC",serif;font-weight:300;font-size:26px;letter-spacing:.12em;margin:6px 0 18px}
+.safest{padding:16px 18px;border-left:3px solid var(--grey2);background:var(--paper);font-size:15px;line-height:1.8}
+.safest.ok{border-left-color:var(--ok)}.safest.warn{border-left-color:var(--warn)}.safest.bad{border-left-color:var(--bad);color:var(--bad);font-weight:500}
+.lnk{text-decoration:underline;text-underline-offset:4px;font-size:12px}.lnk.bad{color:var(--bad)}
+.chph.off{opacity:.3}
+.chat form .chph{margin:0;padding:0;background:none;border:0;height:44px;width:40px;align-self:center}
 /* 外觀切換 */
 .themesw{display:inline-flex;border:1px solid var(--rule);margin-top:12px}
 .themesw button{padding:6px 14px;font-size:12px;letter-spacing:.14em;color:var(--grey);min-height:34px}
@@ -759,7 +782,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.49.0';
+const BUILD = 'v1.50.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -803,6 +826,13 @@ const urlCache = new Map();
 const $ = (s, el=document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const age = y => y ? (new Date().getFullYear() - y) : '';
+const INV_KIND = { coffee:'喝咖啡', tea:'下午茶', dinner:'吃晚餐', drink:'小酌', activity:'出去走走', other:'其他' };
+const INV_ST = { pending:'等待回覆', accepted:'已接受', declined:'已婉拒', cancelled:'已取消' };
+const fmtDate = t => new Date(t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});
+const SCAM_RE = /匯款|轉帳|投資|虛擬幣|加密貨幣|usdt|比特幣|泰達幣|點數卡|遊戲點數|代收|代購|保證獲利|穩賺|博弈|娛樂城|借錢|借我|急用|保證金|解凍金/i;
+const replyLabel = r => { if(!r || r.n < 3) return ''; const rate = Math.round(r.replied/r.n*100); const m = r.median_min;
+  const sp = m==null ? '' : m < 60 ? '通常 1 小時內回覆' : m < 360 ? '通常幾小時內回覆' : m < 1440 ? '通常 1 天內回覆' : '回覆較慢';
+  return `回覆率 ${rate}%${sp?'・'+sp:''}`; };
 const fmtTime = t => { const d = new Date(t); const now = new Date();
   return d.toDateString()===now.toDateString() ? d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}); };
 const seen = t => { if(!t) return ''; const m=(Date.now()-new Date(t))/60000;
@@ -984,6 +1014,27 @@ document.addEventListener('contextmenu', e=>{ if(e.target.closest('.mimg,.wm,.ph
 document.addEventListener('dragstart', e=>{ if(e.target.closest('.mimg,.wm,.photo-big,.gallery,.thumbs,.ph')) e.preventDefault(); });
 document.addEventListener('click', e=>{ const a=e.target.closest('[data-support]'); if(a){ e.preventDefault(); openSupport(); } });
 
+/* ---------- 見面報備（朋友打開的頁面，不用登入） ---------- */
+async function viewSafe(token){
+  const rs = routeSeq;
+  const draw = async () => { if(rs!==routeSeq) return;
+    const { data, error } = await sb.rpc('safety_view', { p_token: token||'' }); if(rs!==routeSeq) return;
+    const v = Array.isArray(data) ? data[0] : null;
+    if(error || !v){ $('#app').innerHTML = `<div class="narrow center" style="padding:60px 0"><h2>找不到這個報備</h2><p class="muted mt">連結可能不完整，請向傳給你的人確認。</p></div>`; return; }
+    const now = new Date(), end = new Date(v.ends_at), start = new Date(v.date_at);
+    const state = v.invite_status==='cancelled' ? ['','這次約會已經取消了。'] : v.checked_in_at ? ['ok',`已在 ${fmtTime(v.checked_in_at)} 報平安。`]
+      : now > end ? ['bad',`已超過預計結束時間（${fmtDate(v.ends_at)}），還沒有報平安。請主動聯絡 ${esc(v.owner_name||'對方')}，確認是否平安。`]
+      : now >= start ? ['warn',`約會進行中，預計 ${fmtDate(v.ends_at)} 結束。`] : ['',`約會還沒開始。`];
+    $('#app').innerHTML = `<div class="narrow safepg"><p class="tiny dim">微糖 見面安全報備</p><h1>${esc(v.owner_name||'你的朋友')} 的見面報備</h1>
+      <div class="safest ${state[0]}">${state[1]}</div>
+      <dl class="pdl mt2"><div><dt>見面時間</dt><dd>${fmtDate(v.date_at)}</dd></div><div><dt>見面方式</dt><dd>${INV_KIND[v.kind]||''}</dd></div>
+        <div><dt>大概地點</dt><dd>${esc(v.area||'未填寫')}</dd></div><div><dt>對方暱稱</dt><dd>${esc(v.partner_name||'（已刪除帳號）')}</dd></div>
+        <div><dt>預計結束</dt><dd>${fmtDate(v.ends_at)}</dd></div></dl>
+      <p class="tiny dim mt2">這個頁面每分鐘自動更新。如果遇到緊急狀況，請直接撥打 110。</p></div>`; };
+  await draw();
+  const iv = setInterval(()=>{ if(rs!==routeSeq) return clearInterval(iv); draw(); }, 60000);
+}
+
 /* ---------- 路由 ---------- */
 let reloadSeq = 0;
 const routes = {
@@ -991,6 +1042,7 @@ const routes = {
   'browse': viewBrowse, 'likes': viewLikes, 'matches': viewMatches, 'chat': viewChat, 'me': viewMe,
   'admin': viewAdmin, 'terms': ()=>viewDoc('terms'), 'privacy': ()=>viewDoc('privacy'),
   'guidelines': ()=>viewDoc('guidelines'), 'safety': ()=>viewDoc('safety'), 'plans': viewPlans,
+  'safe': viewSafe,
   'bye': ()=>{ $('#app').innerHTML = `<div class="narrow center" style="padding:80px 0"><h2>帳號已刪除</h2><p class="muted mt">你的檔案、照片、對話與手機號碼都已永久刪除。<br class="d">謝謝你曾經來過微糖。</p><a class="btn mt2" href="#/">回到首頁</a></div>`; },
 };
 let chatChannel = null, routeSeq = 0, onChatVisible = null;
@@ -1008,7 +1060,7 @@ async function route(){
   if(protectedPages.includes(path) && !me){ if(path!=='onboarding') sessionStorage.setItem('yy_next', location.hash); location.hash='#/auth?mode=login'; return; }
   if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat'].includes(path||'')){ location.hash='#/onboarding'; return; }
   if(me && !me.is_admin && me.status!=='incomplete' && missingBasics(me).length && ['browse','likes','matches','chat'].includes(path)){ sessionStorage.setItem('meTab','profile'); toast('請先完成基本資料'); location.hash='#/me'; return; }
-  if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety'].includes(path));
+  if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety','safe'].includes(path));
   const fn = routes[path] || viewLanding;
   const seq = routeSeq;
   try { await fn(arg); } catch(e){ console.error(e); if(seq!==routeSeq) return;
@@ -1628,6 +1680,13 @@ async function openProfile(id){
     `;
   modal(body);
   signed(p.avatar_path).then(u=>{ if(u && $('#bigPh')) $('#bigPh').style.backgroundImage=`url("${cssu(u)}")`; });
+  if(p.id!==me.id) sb.rpc('reply_stats', { ids:[id] }).then(({ data })=>{ const t = replyLabel(Array.isArray(data)?data[0]:null); const h=$('#modal .phead .sub'); if(t && h && tok===profSeq) h.insertAdjacentHTML('afterend', `<p class="rstat">${t}</p>`); });
+  sb.from('voice_intros').select('path,duration').eq('user_id', id).eq('status','approved').maybeSingle().then(({ data: vc })=>{ const h=$('#modal .phead'); if(!vc || !h || tok!==profSeq) return;
+    h.insertAdjacentHTML('beforeend', `<button type="button" class="vbtn" id="vPlay"><span class="vi">▶</span>聽聽 ${esc(p.nickname)} 的聲音${vc.duration?`<span class="tiny dim">0:${String(vc.duration).padStart(2,'0')}</span>`:''}</button>`);
+    let au=null; $('#vPlay').onclick = async ()=>{ const b=$('#vPlay');
+      if(au && !au.paused){ au.pause(); b.querySelector('.vi').textContent='▶'; return; }
+      if(!au){ const { data: u } = await sb.storage.from('voice').createSignedUrl(vc.path, 600); if(!u?.signedUrl) return toast('目前無法播放'); au = new Audio(u.signedUrl); au.onended=()=>{ if(b.isConnected) b.querySelector('.vi').textContent='▶'; }; }
+      au.play().then(()=>{ b.querySelector('.vi').textContent='❚❚'; }).catch(()=>toast('無法播放這段語音')); }; });
   if(p.wealth_verified_at && p.id!==me.id) sb.rpc('wealth_doc_status', { owner:id }).then(({ data })=>{ const st=(Array.isArray(data)?data[0]:data)||{}; const el=$('#wDoc'); if(!el) return;
     if(st.state==='can_request') el.innerHTML = `<button class="btn sm ghost" id="wReq" ${canAct?'':'disabled'}>申請查看財力證明</button>`;
     else if(st.state==='pending') el.innerHTML = `<span class="muted">已申請查看財力證明，等待對方同意</span>`;
@@ -1769,6 +1828,11 @@ async function viewChat(matchId){
   const closed = !!m.closed_at;
   const { data: last } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at',{ascending:false}).limit(300);
   const msgs = (last||[]).reverse();
+  const [{ data: invRows }, { data: chkRows }] = await Promise.all([
+    sb.from('date_invites').select('*').eq('match_id', matchId),
+    sb.from('safety_checks').select('invite_id,token,ends_at,checked_in_at') ]);
+  const inv = {}; (invRows||[]).forEach(v=>inv[v.id]=v);
+  const myChk = {}; (chkRows||[]).forEach(c=>myChk[c.invite_id]=c);
   if(my!==routeSeq) return;   // 使用者已經離開這個對話
   $('#app').innerHTML = `<div class="chat">
     <div class="hd"><a href="#/matches" class="ib" aria-label="返回">‹</a>
@@ -1777,13 +1841,32 @@ async function viewChat(matchId){
     <div class="msgs" id="msgs"></div>
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
     <div class="banner ${closed?'':'hidden'}" id="chClosed" style="margin:8px 0 0">對方已結束這段對話，無法再傳訊息。如果有不當內容，仍可以從右上角「⋯」檢舉或封鎖。</div>
-    <form id="chForm" class="${closed?'hidden':''}"><label class="chph" id="chPh" aria-label="傳照片" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="hidden"></label><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
+    <div class="revbar hidden" id="revBar"></div>
+    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><label class="chph" id="chPh" aria-label="傳照片" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="hidden"></label><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
 </div>`;
   if(o) signed(o.avatar_path).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
   let lastDay='', lastAt=null; const seenIds=new Set();
   const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+  const invInner = id => { const v = inv[id]; if(!v) return '<p class="tiny dim">載入中…</p>';
+    const mineV = v.from_id===me.id, past = new Date(v.date_at) < new Date(), c = myChk[id];
+    const st = v.status==='accepted' && past ? '已見面' : INV_ST[v.status];
+    let act = '';
+    if(!closed && v.status==='pending' && !mineV) act = `<button class="btn sm primary" data-act="accept">接受</button><button class="btn sm ghost" data-act="decline">婉拒</button><p class="tiny dim" style="flex-basis:100%">想改時間？婉拒後送一張新的邀請給對方。</p>`;
+    else if(!closed && v.status==='pending' && mineV) act = `<button class="btn sm ghost" data-act="cancel">取消邀請</button>`;
+    else if(v.status==='accepted'){
+      if(c && !c.checked_in_at) act += `<button class="btn sm primary" data-act="safe-ok">✓ 我平安</button>`;
+      else if(c && c.checked_in_at) act += `<span class="tiny ok">已報平安 ${fmtTime(c.checked_in_at)}</span>`;
+      if(!past || (c && !c.checked_in_at)) act += `<button class="btn sm ghost" data-act="safe">${c?'報備連結':'見面安全報備'}</button>`;
+      if(!past && !closed) act += `<button class="btn sm ghost" data-act="cancel">取消約會</button>`; }
+    return `<div class="ih"><span>約會邀請</span><span class="chip ${v.status==='accepted'?'ok':v.status==='pending'?'warn':''}">${st}</span></div>
+      <div class="iw">${INV_KIND[v.kind]||''}</div><div class="iday">${fmtDate(v.date_at)}</div>${v.area?`<div class="ia">${esc(v.area)}</div>`:''}
+      <div class="tiny dim">${mineV?'你送出的邀請':esc(oname)+' 送出的邀請'}</div>${act?`<div class="iact">${act}</div>`:''}`; };
+  const refreshInv = async id => { const [{ data: v }, { data: c }] = await Promise.all([sb.from('date_invites').select('*').eq('id', id).maybeSingle(), sb.from('safety_checks').select('invite_id,token,ends_at,checked_in_at').eq('invite_id', id).maybeSingle()]);
+    if(my!==routeSeq) return; if(v) inv[id]=v; if(c) myChk[id]=c; else delete myChk[id]; box.querySelectorAll(`.invcard[data-inv="${id}"]`).forEach(el=>el.innerHTML=invInner(id)); };
   const msgHtml = x => { const mine = x.sender_id===me.id;
+    if(x.invite_id){ if(x.body==='送出了約會邀請') return `<div class="invcard ${mine?'me':'them'}" data-inv="${x.invite_id}" data-mid="${x.id}" data-t="${x.created_at}">${invInner(x.invite_id)}</div>`;
+      return `<div class="sysline" data-mid="${x.id}" data-t="${x.created_at}">${mine?'你':esc(oname)} ${esc(x.body)}・${tm(x)}</div>`; }
     if(x.recalled_at) return `<div class="msg ${mine?'me':'them'} recalled" data-mid="${x.id}" data-t="${x.created_at}">${mine?'你收回了一則訊息':'對方收回了一則訊息'}</div>`;
     return `<div class="msg ${mine?'me':'them'}${x.image_path?' hasimg':''}" data-mid="${x.id}" data-t="${x.created_at}">${x.image_path?`<div class="mimg wm" data-wm="${wmText()}" data-p="${esc(x.image_path)}"></div>`:''}${x.body?`<div>${esc(x.body)}</div>`:''}<span class="time">${tm(x)}</span></div>`; };
   const loadImg = el => { const im=el.querySelector('.mimg'); if(!im) return; sb.storage.from('chat').createSignedUrl(im.dataset.p, 900).then(({ data })=>{ if(data?.signedUrl && im.isConnected){ im.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; im.dataset.u=data.signedUrl; } }); };
@@ -1791,15 +1874,72 @@ async function viewChat(matchId){
     box.querySelector('.chempty')?.remove();
     const later = prevLast && x.created_at < prevLast ? [...box.querySelectorAll('.msg[data-t]')].find(e=>e.dataset.t > x.created_at) : null;   // 補抓到較早的訊息：插到正確位置
     if(later){ later.insertAdjacentHTML('beforebegin', msgHtml(x)); loadImg(later.previousElementSibling); }
-    else { box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); box.scrollTop = box.scrollHeight; } };
+    else { box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); box.scrollTop = box.scrollHeight; }
+    if(x.invite_id && (!inv[x.invite_id] || x.body!=='送出了約會邀請')) refreshInv(x.invite_id);
+    if(x.sender_id!==me.id && !x.recalled_at && SCAM_RE.test(x.body||'') && !box.querySelector('.scamtip')){
+      const el = box.querySelector(`[data-mid="${x.id}"]`); el && el.insertAdjacentHTML('afterend', `<div class="scamtip">提醒：微糖不經手任何金錢。要求匯款、投資、買點數或借錢的，幾乎都是詐騙。請不要轉帳，可以從右上角「⋯」檢舉。</div>`); } };
   const markRecalled = x => { const el = box.querySelector(`[data-mid="${x.id}"]`); if(el && el.nextElementSibling?.id==='readLbl') el.nextElementSibling.remove(); if(el){ el.outerHTML = msgHtml({ ...x, recalled_at: x.recalled_at || new Date().toISOString() }); } };
   // 點自己的訊息：收回；點照片：放大
   box.addEventListener('click', async ev => {
+    const ab = ev.target.closest('.invcard [data-act]');
+    if(ab){ const id = ab.closest('.invcard').dataset.inv, a = ab.dataset.act; ab.disabled = true;
+      let r = { error:null };
+      if(a==='accept' || a==='decline') r = await sb.rpc('respond_date_invite', { iid:id, accept: a==='accept' });
+      else if(a==='cancel'){ if(!confirm(inv[id]?.status==='accepted'?'確定取消這次約會？':'確定取消這張邀請？')){ ab.disabled=false; return; } r = await sb.rpc('cancel_date_invite', { iid:id }); }
+      else if(a==='safe'){ ab.disabled=false; return openSafety(id); }
+      else if(a==='safe-ok'){ r = await sb.rpc('safety_checkin', { iid:id }); if(!r.error) toast('已報平安，朋友打開連結就會看到'); }
+      if(r.error){ ab.disabled=false; return toast(zh(r.error.message)); }
+      refreshInv(id); return; }
     const im = ev.target.closest('.mimg');
     const own = ev.target.closest('.msg.me:not(.recalled)');
     if(im && im.dataset.u){ modal(`<div class="wm" data-wm="${wmText()}" style="position:relative;background:#111 center/contain no-repeat;background-image:url('${cssu(im.dataset.u)}');height:min(74vh,900px)"></div><p class="tiny dim mt">請勿截圖外流。畫面上的浮水印是你的會員代號。</p>${own?'<button class="btn ghost mt" id="imRc">收回這張照片</button>':''}`);
       if(own) $('#imRc').onclick = ()=>askRecall(own); return; }
     if(own) askRecall(own); });
+  const openInvite = () => {
+    const today = new Date(); const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const max = new Date(Date.now()+59*864e5); let kind = 'dinner';
+    modal(`<h2>約會邀請</h2><p class="tiny dim mt">選一個時間和見面方式送給 ${esc(oname)}，對方可以接受或婉拒。第一次見面建議約在人多的公開場所。</p>
+      <form id="invF" class="mt"><div class="two" style="display:flex;gap:12px"><div style="flex:1"><label>日期</label><input type="date" name="d" required min="${ymd(today)}" max="${ymd(max)}"></div>
+      <div style="flex:1"><label>時間</label><input type="time" name="t" required step="900" value="19:00"></div></div>
+      <label>見面方式</label><div class="tags" id="invK">${Object.entries(INV_KIND).map(([k,v])=>`<button type="button" class="tag ${k===kind?'on':''}" data-k="${k}">${v}</button>`).join('')}</div>
+      <label>大概地點（可不填）</label><input name="a" maxlength="40" placeholder="例如：信義區、東區，不用寫店名">
+      <p class="small bad mt" data-err></p><button class="btn primary block mt2" type="submit">送出邀請</button></form>`);
+    document.querySelectorAll('#invK .tag').forEach(b=>b.onclick=()=>{ kind=b.dataset.k; document.querySelectorAll('#invK .tag').forEach(x=>x.classList.toggle('on', x===b)); });
+    $('#invF').onsubmit = async e => { e.preventDefault(); const f=new FormData(e.target); const btn=e.target.querySelector('button[type=submit]');
+      const when = new Date(`${f.get('d')}T${f.get('t')}`); if(isNaN(when)) return;
+      btn.disabled=true; const { error } = await sb.rpc('create_date_invite', { mid:matchId, p_date: when.toISOString(), p_kind: kind, p_area: f.get('a')||null });
+      if(error){ btn.disabled=false; e.target.querySelector('[data-err]').textContent = zh(error.message); return; }
+      closeModal(); toast('邀請已送出'); onChatVisible && onChatVisible(); }; };
+  const openSafety = async id => { const v = inv[id]; if(!v) return; const c = myChk[id];
+    const show = token => { const url = `${location.origin}${location.pathname}#/safe/${token}`;
+      const txt = `我 ${fmtDate(v.date_at)} 有約會（${INV_KIND[v.kind]}${v.area?'，'+v.area:''}）。這是我的見面報備，結束後我會按「我平安」，如果超過時間還沒回報，麻煩聯絡我：${url}`;
+      modal(`<h2>見面安全報備</h2><p class="small muted mt">把這個連結傳給你信任的朋友。朋友打開就看得到這次見面的時間、地點和對方暱稱。</p>
+        <input class="mt" value="${esc(url)}" readonly id="sfUrl" style="font-size:13px">
+        <div class="row mt flexwrap" style="gap:8px"><button class="btn sm primary" id="sfCopy">複製連結</button><a class="btn sm ghost" href="https://line.me/R/msg/text/?${encodeURIComponent(txt)}" target="_blank" rel="noopener">用 LINE 傳給朋友</a></div>
+        <p class="tiny dim mt2">見面結束後，回到這張邀請卡按「我平安」。超過預計結束時間還沒按，朋友打開連結會看到紅色提醒，請他主動聯絡你。</p>`);
+      $('#sfCopy').onclick = async ()=>{ try{ await navigator.clipboard.writeText(txt); toast('已複製，可以貼給朋友'); }catch(_){ $('#sfUrl').select(); document.execCommand('copy'); toast('已複製'); } }; };
+    if(c) return show(c.token);
+    modal(`<h2>見面安全報備</h2><p class="small muted mt">會產生一個連結，讓你信任的朋友知道你去哪裡、跟誰見面。見面結束後按「我平安」。</p>
+      <label class="mt">預計多久後結束</label><select id="sfH">${[1,2,3,4,5,6].map(h=>`<option value="${h}" ${h===3?'selected':''}>${h} 小時</option>`).join('')}</select>
+      <button class="btn primary block mt2" id="sfGo">產生報備連結</button>`);
+    $('#sfGo').onclick = async ()=>{ $('#sfGo').disabled=true; const { data: token, error } = await sb.rpc('create_safety_check', { iid:id, p_hours: +$('#sfH').value });
+      if(error){ $('#sfGo').disabled=false; return toast(zh(error.message)); } await refreshInv(id); show(token); }; };
+  const openReview = r => {
+    const POS = ['準時赴約','與照片相符','有禮貌','聊得愉快'], NEG = ['與照片不符','要求金錢交易','不尊重人','沒有出現','讓人不舒服'];
+    let rating = 0;
+    modal(`<h2>這次見面還好嗎？</h2><p class="tiny dim mt">${fmtDate(r.date_at)} 和 ${esc(oname)} 的見面。評價只有平台看得到，對方不會知道你寫了什麼，用來幫我們發現騙子或不當行為。</p>
+      <div class="rvopts mt2"><button type="button" data-r="3">很愉快</button><button type="button" data-r="2">普通</button><button type="button" data-r="1">不舒服</button></div>
+      <div class="tags mt2" id="rvTags">${[...POS,...NEG].map(t=>`<button type="button" class="tag" data-t="${t}">${t}</button>`).join('')}</div>
+      <label class="mt">想讓平台知道的事（選填）</label><textarea id="rvNote" maxlength="500" rows="3"></textarea>
+      <button class="btn primary block mt2" id="rvGo" disabled>送出評價</button>`);
+    document.querySelectorAll('.rvopts button').forEach(b=>b.onclick=()=>{ rating=+b.dataset.r; document.querySelectorAll('.rvopts button').forEach(x=>x.classList.toggle('on', x===b)); $('#rvGo').disabled=false; });
+    document.querySelectorAll('#rvTags .tag').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+    $('#rvGo').onclick = async ()=>{ $('#rvGo').disabled=true; const tags=[...document.querySelectorAll('#rvTags .tag.on')].map(b=>b.dataset.t);
+      const { error } = await sb.rpc('submit_meet_review', { iid:r.id, p_rating:rating, p_tags:tags, p_note:$('#rvNote').value||null });
+      if(error){ $('#rvGo').disabled=false; return toast(zh(error.message)); } closeModal(); $('#revBar').classList.add('hidden'); toast('謝謝你，評價已送出'); }; };
+  sb.rpc('pending_reviews', { mid: matchId }).then(({ data })=>{ const r = Array.isArray(data)?data[0]:null; if(!r || my!==routeSeq || !$('#revBar')) return;
+    $('#revBar').innerHTML = `<span>你們 ${fmtDate(r.date_at)} 見面了，這次還好嗎？</span><button class="btn sm ghost">私下評價</button>`; $('#revBar').classList.remove('hidden');
+    $('#revBar button').onclick = ()=>openReview(r); });
   const askRecall = el => { if(!el || !el.dataset.mid) return;
     if(m.initiator===me.id && !otherReplied) return toast('對方回覆前不能收回第一則訊息');
     modal(`<div class="sheet"><button class="it bad" id="rcBtn">收回這則訊息</button><p class="tiny dim" style="padding:14px 4px 0">收回後雙方都看不到這則訊息；對方會看到「對方收回了一則訊息」。</p></div>`);
@@ -1815,7 +1955,7 @@ async function viewChat(matchId){
   let otherReplied = !!m.replied_at || msgs.some(x=>x.sender_id!==me.id), mySent = msgs.some(x=>x.sender_id===me.id);
   const showClosed = () => { $('#chClosed').classList.remove('hidden'); $('#chForm').classList.add('hidden'); $('#chWait').classList.add('hidden'); };
   const gate = () => { const wait = m.initiator===me.id && !otherReplied && mySent; const blocked = !['approved','pending'].includes(me.status); const off = wait || blocked;
-    $('#chIn').disabled = off; $('#chSend').disabled = off; $('#chFile').disabled = off || !otherReplied; $('#chPh').classList.toggle('off', off || !otherReplied);
+    $('#chIn').disabled = off; $('#chSend').disabled = off; $('#chFile').disabled = off || !otherReplied; $('#chPh').classList.toggle('off', off || !otherReplied); $('#chInv').classList.toggle('off', off || !otherReplied);
     $('#chPh').title = otherReplied ? '傳照片' : '對方回覆後就能傳照片';
     $('#chWait').textContent = blocked ? (me.status==='suspended' ? '帳號停權中，無法傳訊息。' : '你的檔案需要修改並通過審核後，才能繼續傳訊息。') : '已送出第一則訊息，對方回覆後就能繼續聊。';
     $('#chWait').classList.toggle('hidden', !off); };
@@ -1839,6 +1979,7 @@ async function viewChat(matchId){
     const theirs = nw.filter(x=>x.sender_id!==me.id); nw.forEach(add);
     if(theirs.length){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread()); }
     box.scrollTop = box.scrollHeight; };
+  $('#chInv').onclick = () => { if($('#chInv').classList.contains('off')) return toast(otherReplied?'目前無法送出邀請':'對方回覆後就能送出約會邀請'); openInvite(); };
   $('#chPh').onclick = e => { window.__pickingPhoto = true; if($('#chFile').disabled){ window.__pickingPhoto = false; e.preventDefault(); toast(otherReplied?'目前無法傳照片':'對方回覆後就能傳照片'); } };
   $('#chFile').onchange = async e => { const f=e.target.files[0]; e.target.value=''; if(!f || sending) return;
     sending = true; $('#chPh').classList.add('busy'); toast('照片傳送中…', 30000); let path;
@@ -1955,6 +2096,7 @@ async function viewMe(){
       <div class="todo">${todo.map(([tab,done,txt])=>`<button type="button" class="td ${done?'done':''}" data-go="${tab==='相簿'?'album':'verify'}"><span>${done?'✓':'○'}</span>${txt}</button>`).join('')}</div></div>`:''}
     <div class="tabs metabs" role="tablist">${TABS.map(([k,v,n])=>`<button type="button" class="${k===meTab?'on':''}" data-mt="${k}">${v}${n?`<i class="dot">${n}</i>`:''}</button>`).join('')}</div>
     <section class="mt-pane" data-mt="album">
+    <div class="card" id="voiceCard"><h3 style="font-size:17px;margin-bottom:6px">語音自我介紹</h3><p class="tiny dim">錄一段 15 秒內的聲音，說說你是怎樣的人。審核通過後，方向吻合的會員打開你的檔案就能聽。</p><div id="vcBody" class="mt"><div class="spinner"></div></div></div>
     <div class="card"><h3 style="font-size:17px;margin-bottom:6px">相簿</h3><p class="tiny dim">公開照所有會員可見；私密照需你授權。每張照片都需審核。</p>
       <div class="gallery" id="meGal">${(photos||[]).map(x=>`<div class="g" data-ph="${esc(x.path)}"><span class="st chip ${x.status==='approved'?'ok':x.status==='rejected'?'bad':'warn'}">${x.is_private?'🔒 ':''}${({pending:'審核中',approved:'已通過',rejected:'未通過'})[x.status]}</span><button class="del" data-id="${x.id}" data-path="${esc(x.path)}" aria-label="刪除照片">✕</button></div>`).join('')}</div>
       <div class="row mt flexwrap"><label class="btn sm ghost" style="margin:0">＋ 公開照<input type="file" accept="image/*" data-priv="0" class="hidden mePh"></label><label class="btn sm ghost" style="margin:0">＋ 私密照<input type="file" accept="image/*" data-priv="1" class="hidden mePh"></label></div>
@@ -1996,6 +2138,45 @@ async function viewMe(){
       if(oldAv && !(photos||[]).some(x=>x.path===oldAv)) sb.storage.from('photos').remove([oldAv]).catch(()=>{});
       toast('頭像已更新，重新送審'); viewMe(); }
     catch(err){ if(path) sb.storage.from('photos').remove([path]).catch(()=>{}); toast(zh(err.message)); e.target.value=''; } });
+  const drawVoice = async () => { const box = $('#vcBody'); if(!box) return;
+    const { data: vc } = await sb.from('voice_intros').select('*').eq('user_id', me.id).maybeSingle(); if(!$('#vcBody')) return;
+    const ST = { pending:['warn','審核中'], approved:['ok','已通過'], rejected:['bad','未通過，請重錄'] };
+    box.innerHTML = vc ? `<div class="row flexwrap" style="gap:10px;align-items:center"><span class="chip ${ST[vc.status][0]}">${ST[vc.status][1]}</span><audio controls preload="none" id="vcAu" style="height:36px;max-width:100%"></audio></div>
+        <div class="row mt flexwrap" style="gap:8px"><button class="btn sm ghost" id="vcRec">重新錄音</button><button class="btn sm ghost" id="vcDel">刪除</button></div>`
+      : `<button class="btn sm primary" id="vcRec">🎙 錄一段語音</button>`;
+    if(vc) sb.storage.from('voice').createSignedUrl(vc.path, 600).then(({ data })=>{ if(data?.signedUrl && $('#vcAu')) $('#vcAu').src = data.signedUrl; });
+    $('#vcRec').onclick = () => recordVoice(vc);
+    $('#vcDel') && ($('#vcDel').onclick = async ()=>{ if(!confirm('刪除語音自我介紹？')) return; const { error } = await sb.from('voice_intros').delete().eq('user_id', me.id); if(error) return toast(zh(error.message)); sb.storage.from('voice').remove([vc.path]).catch(()=>{}); toast('已刪除'); drawVoice(); }); };
+  const recordVoice = (old) => {
+    if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return toast('這個瀏覽器不支援錄音，請改用手機的 Safari 或 Chrome');
+    modal(`<h2>錄一段語音</h2><p class="tiny dim mt">15 秒內。說說你的生活、喜歡什麼、想認識怎樣的人；請不要留聯絡方式。</p>
+      <div class="vrec mt2"><div class="vtime" id="vrT">0:15</div><button class="btn primary" id="vrGo">開始錄音</button></div>
+      <div id="vrDone" class="hidden mt2"><audio controls id="vrAu" style="width:100%"></audio><div class="row mt" style="gap:8px"><button class="btn ghost" id="vrAgain">重錄</button><button class="btn primary" id="vrUp" style="flex:1">使用這段</button></div></div>`);
+    let rec=null, chunks=[], t0=0, timer=null, blob=null, mime='', dur=0, stream=null;
+    const stop = () => { clearInterval(timer); if(rec && rec.state!=='inactive') rec.stop(); stream && stream.getTracks().forEach(t=>t.stop()); };
+    $('#mx').addEventListener('click', stop);
+    $('#vrGo').onclick = async () => { const b=$('#vrGo');
+      if(rec && rec.state==='recording'){ stop(); return; }
+      try{ stream = await navigator.mediaDevices.getUserMedia({ audio:true }); }catch(_){ return toast('沒有取得麥克風權限，請到瀏覽器設定允許使用麥克風'); }
+      mime = ['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(m=>MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+      rec = new MediaRecorder(stream, mime?{ mimeType:mime }:undefined); chunks=[];
+      rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+      rec.onstop = () => { dur = Math.max(1, Math.min(15, Math.round((Date.now()-t0)/1000))); blob = new Blob(chunks, { type: (rec.mimeType||mime||'audio/webm').split(';')[0] });
+        if(!$('#vrAu')) return; $('#vrAu').src = URL.createObjectURL(blob); $('#vrDone').classList.remove('hidden'); b.textContent='開始錄音'; b.classList.remove('rose'); $('#vrT').textContent='0:15'; };
+      rec.start(); t0 = Date.now(); b.textContent='停止'; b.classList.add('rose');
+      timer = setInterval(()=>{ const left = 15 - Math.floor((Date.now()-t0)/1000); if($('#vrT')) $('#vrT').textContent = `0:${String(Math.max(0,left)).padStart(2,'0')}`; if(left<=0) stop(); }, 250); };
+    $('#vrAgain') && ($('#vrAgain').onclick = ()=>{ $('#vrDone').classList.add('hidden'); blob=null; });
+    $('#vrUp').onclick = async () => { if(!blob) return; const b=$('#vrUp'); b.disabled=true; b.textContent='上傳中…';
+      const type = blob.type.includes('mp4') ? 'audio/mp4' : blob.type.includes('ogg') ? 'audio/ogg' : 'audio/webm';
+      const ext = type==='audio/mp4' ? 'm4a' : type==='audio/ogg' ? 'ogg' : 'webm';
+      const path = `${me.id}/${Date.now()}.${ext}`;
+      const { error: ue } = await sb.storage.from('voice').upload(path, blob, { contentType:type, upsert:false });
+      if(ue){ b.disabled=false; b.textContent='使用這段'; return toast('上傳失敗：'+zh(ue.message)); }
+      const { error } = await sb.from('voice_intros').upsert({ user_id: me.id, path, duration: dur }, { onConflict:'user_id' });
+      if(error){ sb.storage.from('voice').remove([path]).catch(()=>{}); b.disabled=false; b.textContent='使用這段'; return toast(zh(error.message)); }
+      if(old?.path) sb.storage.from('voice').remove([old.path]).catch(()=>{});
+      closeModal(); toast('已上傳，等待審核'); drawVoice(); }; };
+  drawVoice();
   document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=20) return toast('相簿最多 20 張'); toast('上傳中…', 60000); document.querySelectorAll('.mePh').forEach(x=>x.disabled=true);
     let path;
     try{ path=await uploadPhoto(f); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1' }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }
@@ -2090,7 +2271,7 @@ function bindAccount(){
         // 1. 先解除照片登記，才能刪掉檔案
         let r = await sb.rpc('begin_account_deletion'); if(r.error) throw r.error;
         // 2. 刪掉自己資料夾裡的所有檔案
-        for(const bk of ['photos','verify','person','chat']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(me.id, { limit:100 }); if(error) throw error;
+        for(const bk of ['photos','verify','person','chat','voice']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(me.id, { limit:100 }); if(error) throw error;
           const names = (files||[]).filter(f=>f.id).map(f=>`${me.id}/${f.name}`); if(!names.length) break;
           const { error: e2 } = await sb.storage.from(bk).remove(names); if(e2) throw e2; if(names.length<100) break; }
         // 3. 刪除帳號（含手機、信箱與所有資料）
@@ -2175,11 +2356,14 @@ async function viewAdmin(){
       box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('確定停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); draw(); });
     }
     if(tab==='photos'){
-      const { data: rows } = await sb.from('photos').select('*, p:profiles(nickname)').eq('status','pending').order('created_at');
-      if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審照片 ✓</p>'; return; }
-      box.innerHTML = `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
+      const [{ data: rows }, { data: vrows }] = await Promise.all([sb.from('photos').select('*, p:profiles(nickname)').eq('status','pending').order('created_at'), sb.from('voice_intros').select('*, p:profiles(nickname)').eq('status','pending').order('created_at')]);
+      if(!rows?.length && !vrows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審照片或語音 ✓</p>'; return; }
+      const vHtml = vrows?.length ? `<h3 style="font-size:16px;margin-bottom:10px">待審語音（${vrows.length}）</h3><div class="list mb">${vrows.map(v=>`<div class="item" style="cursor:default;flex-wrap:wrap"><div class="grow t">${esc(v.p?.nickname||'')}<span class="tiny dim">　${v.duration||''} 秒</span></div><audio controls preload="none" data-vp="${esc(v.path)}" style="height:34px;max-width:100%"></audio><button class="btn sm primary va" data-u="${v.user_id}">通過</button><button class="btn sm ghost vr" data-u="${v.user_id}">退件</button></div>`).join('')}</div>` : '';
+      box.innerHTML = vHtml + (rows?.length ? '' : '<p class="muted center">沒有待審照片 ✓</p>') + `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
         <div class="row mt" style="gap:6px"><button class="btn sm primary pa" data-id="${x.id}">通過</button><button class="btn sm ghost pr" data-id="${x.id}">退件</button></div></div></div>`).join('')}</div>`;
       box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
+      box.querySelectorAll('audio[data-vp]').forEach(async au=>{ const { data } = await sb.storage.from('voice').createSignedUrl(au.dataset.vp, 900); if(data?.signedUrl) au.src = data.signedUrl; });
+      box.querySelectorAll('.va,.vr').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('voice_intros').update({ status: b.classList.contains('va')?'approved':'rejected' }).eq('user_id', b.dataset.u))){ b.closest('.item').style.opacity=.3; } });
       const pdone = b => { const c=b.closest('.pcard'); c.style.opacity=.3; setTimeout(()=>{ c.remove(); if(!box.querySelector('.pcard')) draw(); },300); };
       box.querySelectorAll('.pa').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id))) pdone(b); });
       box.querySelectorAll('.pr').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id))) pdone(b); });
@@ -2249,10 +2433,12 @@ async function viewAdmin(){
       box.innerHTML = `<p class="tiny dim mb">「對話行為」標紅 ⚠ 表示可能在大量群發或騷擾：近 7 天主動開啟 7 個以上、對方幾乎都不回、常被結束對話或被封鎖。</p><div class="row mb"><input id="q" placeholder="暱稱關鍵字" style="padding:9px 12px"><select id="qs" style="width:auto;padding:9px 12px"><option value="">所有狀態</option>${Object.entries(STATUS_TXT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><button class="btn sm primary" id="qb">搜尋</button></div><div id="qr"></div>`;
       const run = async ()=>{ const { data: rows, error } = await sb.rpc('admin_profiles', { p_status: $('#qs').value||null, p_q: $('#q').value.trim()||null });
         if(error) return toast(error.message);
-        const st = {}, ct = {}; if(rows?.length){ const [{ data: ss }, { data: cs }] = await Promise.all([sb.rpc('admin_member_stats', { ids: rows.map(r=>r.id) }), sb.rpc('admin_contacts', { ids: rows.map(r=>r.id) })]); (ss||[]).forEach(x=>st[x.id]=x); (cs||[]).forEach(x=>ct[x.id]=x); }
+        const st = {}, ct = {}, rv = {}; if(rows?.length){ const [{ data: ss }, { data: cs }, { data: rs2 }] = await Promise.all([sb.rpc('admin_member_stats', { ids: rows.map(r=>r.id) }), sb.rpc('admin_contacts', { ids: rows.map(r=>r.id) }), sb.rpc('admin_review_stats', { ids: rows.map(r=>r.id) })]); (ss||[]).forEach(x=>st[x.id]=x); (cs||[]).forEach(x=>ct[x.id]=x); (Array.isArray(rs2)?rs2:[]).forEach(x=>rv[x.id]=x); }
         const flag = x => x && (x.starts_7d>=7 || (x.unreplied_pct>=80 && x.starts_7d>=4) || x.closed_by_others>=3 || x.blocked_by>=2);
-        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>Email／手機</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.founder_no?` <span class="chip" title="創始會員（不對外顯示）">創始 #${p.founder_no}</span>`:''}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.person_verified_at?' <span class="pbadge">✓ 真人</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td class="tiny">${ct[p.id]?`${esc(ct[p.id].email||'—')}<br>${ct[p.id].phone?esc('0'+String(ct[p.id].phone).replace(/^886/,'')):'—'}`:''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
+        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>見面評價</th><th>Email／手機</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.founder_no?` <span class="chip" title="創始會員（不對外顯示）">創始 #${p.founder_no}</span>`:''}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.person_verified_at?' <span class="pbadge">✓ 真人</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td class="tiny">${rv[p.id]?`<button class="lnk rvw ${rv[p.id].bad?'bad':''}" data-id="${p.id}" data-n="${esc(p.nickname||'')}">${rv[p.id].n} 則・好 ${rv[p.id].good}・差 ${rv[p.id].bad}</button>`:'—'}</td><td class="tiny">${ct[p.id]?`${esc(ct[p.id].email||'—')}<br>${ct[p.id].phone?esc('0'+String(ct[p.id].phone).replace(/^886/,'')):'—'}`:''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
           <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}${p.wealth_verified_at?`<button class="btn sm ghost wrv" data-id="${p.id}">取消財力認證</button>`:''}${p.person_verified_at?`<button class="btn sm ghost prv" data-id="${p.id}">取消真人認證</button>`:''}</td></tr>`).join('')}</table></div>`;
+        $('#qr').querySelectorAll('.rvw').forEach(b=>b.onclick=async()=>{ const { data, error } = await sb.rpc('admin_reviews', { target: b.dataset.id }); if(error) return toast(error.message);
+          modal(`<h3 style="font-size:16px">${esc(b.dataset.n)} 收到的見面評價</h3><p class="tiny dim">只有管理員看得到。</p>${(data||[]).map(r=>`<div style="border-bottom:1px solid var(--rule);padding:10px 0"><div class="tiny dim">${fmtTime(r.created_at)}・評價人 ${esc(r.reviewer)}・見面 ${r.date_at?fmtDate(r.date_at):''}</div><div class="small ${r.rating===1?'bad':r.rating===3?'ok':''}">${['','不舒服','普通','很愉快'][r.rating]}　${(r.tags||[]).map(esc).join('、')}</div>${r.note?`<p class="small mt" style="white-space:pre-wrap">${esc(r.note)}</p>`:''}</div>`).join('')||'<p class="muted">沒有評價</p>'}`); });
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
         $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id))) toast('已解除停權，檔案回到待審，請重新審核'); run(); });
         $('#qr').querySelectorAll('.prv').forEach(b=>b.onclick=async()=>{ if(!confirm('取消這位會員的真人認證？')) return; const { error } = await sb.rpc('admin_revoke_person', { target: b.dataset.id }); toast(error?error.message:'已取消真人認證'); run(); });
@@ -2260,7 +2446,7 @@ async function viewAdmin(){
         $('#qr').querySelectorAll('.dl').forEach(b=>b.onclick=async()=>{
           if(!confirm(`永久刪除「${b.dataset.n}」的帳號？\n檔案、照片、對話都會刪除，這支手機之後不能再註冊。無法復原。`)) return;
           try{ const uid=b.dataset.id;
-            for(const bk of ['photos','verify','person','chat']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(uid,{limit:100}); if(error) throw error;
+            for(const bk of ['photos','verify','person','chat','voice']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(uid,{limit:100}); if(error) throw error;
               const names=(files||[]).filter(f=>f.id).map(f=>`${uid}/${f.name}`); if(!names.length) break;
               const { error:e2 } = await sb.storage.from(bk).remove(names); if(e2) throw e2; if(names.length<100) break; }
             const { error } = await sb.rpc('admin_delete_account',{ target: uid }); if(error) throw error; toast('已刪除帳號'); run();

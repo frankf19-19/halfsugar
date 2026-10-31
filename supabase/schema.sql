@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.29.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.30.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -345,6 +345,7 @@ create index if not exists messages_match_idx on public.messages(match_id, creat
 -- v0.27：聊天可以傳照片、可以收回訊息
 alter table public.messages add column if not exists image_path text;
 alter table public.messages add column if not exists recalled_at timestamptz;
+alter table public.messages add column if not exists invite_id uuid;   -- v0.30 約會邀請卡
 alter table public.messages drop constraint if exists messages_body_check;
 create table if not exists public.message_recalls (
   message_id  bigint primary key,
@@ -396,6 +397,9 @@ begin
     if not private.can_send(new.match_id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
     if not private.partner_active(new.match_id) then raise exception '對方目前無法接收訊息'; end if;
     new.recalled_at := null;
+    if new.invite_id is not null and current_setting('halfsugar.invite', true) is distinct from '1' then
+      raise exception '約會邀請只能用邀請卡送出';
+    end if;
     if new.image_path is not null and new.image_path !~ ('^' || auth.uid()::text || '/' || new.match_id::text || '-[0-9]+\.jpg$') then
       raise exception '照片路徑不正確';
     end if;
@@ -407,6 +411,7 @@ begin
         if exists (select 1 from public.matches m where m.id = old.match_id and m.initiator = auth.uid() and m.replied_at is null) then
           raise exception '對方回覆前不能收回第一則訊息';
         end if;
+        if old.invite_id is not null then raise exception '約會邀請不能收回，請改用「取消邀請」'; end if;
         insert into public.message_recalls (message_id, match_id, sender_id, body, image_path, sent_at)
         values (old.id, old.match_id, old.sender_id, old.body, old.image_path, old.created_at) on conflict do nothing;
         new.recalled_at := now(); new.body := ''; new.image_path := null;
@@ -946,7 +951,7 @@ begin
   if public.my_status() = 'suspended' then
     raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
   end if;
-  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat') and name like uid::text || '/%') then
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat','voice') and name like uid::text || '/%') then
     raise exception '照片檔案還沒刪完，請再按一次刪除';
   end if;
   delete from public.photos where user_id = uid;
@@ -1193,7 +1198,7 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
   if target = auth.uid() then raise exception '不能刪除自己的管理員帳號'; end if;
-  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat') and name like target::text || '/%') then
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat','voice') and name like target::text || '/%') then
     raise exception '這位會員的照片或認證檔案還沒刪完';
   end if;
   update public.reports set status = 'resolved' where reported_id = target and status = 'open';
@@ -1488,3 +1493,280 @@ begin
 end $$;
 revoke execute on function public.admin_contacts(uuid[]) from anon, public;
 grant execute on function public.admin_contacts(uuid[]) to authenticated;
+
+-- =====================================================================
+-- v0.30  約會邀請卡、見面安全報備、見面後私下評價、回覆率、語音自我介紹
+-- =====================================================================
+
+-- 約會邀請 -------------------------------------------------------------
+create table if not exists public.date_invites (
+  id           uuid primary key default gen_random_uuid(),
+  match_id     uuid not null references public.matches(id) on delete cascade,
+  from_id      uuid not null references public.profiles(id) on delete cascade,
+  to_id        uuid not null references public.profiles(id) on delete cascade,
+  date_at      timestamptz not null,
+  kind         text not null check (kind in ('coffee','dinner','drink','tea','activity','other')),
+  area         text check (char_length(area) <= 40),
+  status       text not null default 'pending' check (status in ('pending','accepted','declined','cancelled')),
+  created_at   timestamptz not null default now(),
+  responded_at timestamptz
+);
+create index if not exists date_invites_match_idx on public.date_invites(match_id, created_at);
+alter table public.date_invites enable row level security;
+drop policy if exists "date_invites_select" on public.date_invites;
+create policy "date_invites_select" on public.date_invites for select to authenticated
+  using (from_id = auth.uid() or to_id = auth.uid() or public.is_admin());
+
+create or replace function private.invite_msg(mid uuid, iid uuid, txt text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform set_config('halfsugar.invite', '1', true);
+  insert into public.messages (match_id, sender_id, body, invite_id) values (mid, auth.uid(), txt, iid);
+  perform set_config('halfsugar.invite', '0', true);
+end $$;
+
+create or replace function public.create_date_invite(mid uuid, p_date timestamptz, p_kind text, p_area text default null)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid(); m public.matches; other uuid; iid uuid;
+begin
+  if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() not in ('approved','pending') then raise exception '目前無法送出邀請'; end if;
+  select * into m from public.matches where id = mid and (user_a = uid or user_b = uid) for update;
+  if not found or m.closed_at is not null then raise exception '這段對話已經結束'; end if;
+  if m.replied_at is null and m.initiator is not null then raise exception '對方回覆之後才能送出約會邀請'; end if;
+  other := case when m.user_a = uid then m.user_b else m.user_a end;
+  if private.is_blocked_with(other) or not private.partner_active(mid) then raise exception '對方目前無法接收邀請'; end if;
+  if p_date < now() + interval '30 minutes' or p_date > now() + interval '60 days' then raise exception '請選擇 30 分鐘後到 60 天內的時間'; end if;
+  if exists (select 1 from public.date_invites where match_id = mid and from_id = uid and status = 'pending') then
+    raise exception '你已經送出一張邀請了，等對方回覆，或先取消再重送';
+  end if;
+  insert into public.date_invites (match_id, from_id, to_id, date_at, kind, area)
+  values (mid, uid, other, p_date, p_kind, nullif(btrim(coalesce(p_area,'')), '')) returning id into iid;
+  perform private.invite_msg(mid, iid, '送出了約會邀請');
+  return iid;
+end $$;
+revoke execute on function public.create_date_invite(uuid, timestamptz, text, text) from anon, public;
+grant execute on function public.create_date_invite(uuid, timestamptz, text, text) to authenticated;
+
+create or replace function public.respond_date_invite(iid uuid, accept boolean)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.date_invites;
+begin
+  select * into v from public.date_invites where id = iid and to_id = auth.uid() for update;
+  if not found or v.status <> 'pending' then raise exception '這張邀請已經處理過了'; end if;
+  if exists (select 1 from public.matches where id = v.match_id and closed_at is not null) then raise exception '這段對話已經結束'; end if;
+  update public.date_invites set status = case when accept then 'accepted' else 'declined' end, responded_at = now() where id = iid;
+  perform private.invite_msg(v.match_id, iid, case when accept then '接受了約會邀請' else '婉拒了約會邀請' end);
+end $$;
+revoke execute on function public.respond_date_invite(uuid, boolean) from anon, public;
+grant execute on function public.respond_date_invite(uuid, boolean) to authenticated;
+
+create or replace function public.cancel_date_invite(iid uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.date_invites;
+begin
+  select * into v from public.date_invites where id = iid and (from_id = auth.uid() or to_id = auth.uid()) for update;
+  if not found or v.status not in ('pending','accepted') then raise exception '這張邀請已經不能取消'; end if;
+  if v.status = 'pending' and v.from_id <> auth.uid() then raise exception '請改用「婉拒」'; end if;
+  update public.date_invites set status = 'cancelled', responded_at = now() where id = iid;
+  if not exists (select 1 from public.matches where id = v.match_id and closed_at is not null) then
+    perform private.invite_msg(v.match_id, iid, '取消了約會');
+  end if;
+end $$;
+revoke execute on function public.cancel_date_invite(uuid) from anon, public;
+grant execute on function public.cancel_date_invite(uuid) to authenticated;
+
+-- 見面安全報備：產生一個連結給朋友看；結束時按「我平安」 ----------------
+create table if not exists public.safety_checks (
+  id            uuid primary key default gen_random_uuid(),
+  invite_id     uuid not null references public.date_invites(id) on delete cascade,
+  owner_id      uuid not null references public.profiles(id) on delete cascade,
+  token         text not null unique default (replace(gen_random_uuid()::text,'-','') || replace(gen_random_uuid()::text,'-','')),
+  ends_at       timestamptz not null,
+  checked_in_at timestamptz,
+  created_at    timestamptz not null default now(),
+  unique (invite_id, owner_id)
+);
+alter table public.safety_checks enable row level security;
+drop policy if exists "safety_select" on public.safety_checks;
+create policy "safety_select" on public.safety_checks for select to authenticated using (owner_id = auth.uid() or public.is_admin());
+
+create or replace function public.create_safety_check(iid uuid, p_hours int default 3)
+returns text language plpgsql security definer set search_path = public as $$
+declare v public.date_invites; t text;
+begin
+  select * into v from public.date_invites where id = iid and (from_id = auth.uid() or to_id = auth.uid());
+  if not found or v.status <> 'accepted' then raise exception '約會被接受後才能建立報備'; end if;
+  insert into public.safety_checks (invite_id, owner_id, ends_at)
+  values (iid, auth.uid(), v.date_at + make_interval(hours => greatest(1, least(coalesce(p_hours,3), 12))))
+  on conflict (invite_id, owner_id) do update set ends_at = excluded.ends_at, checked_in_at = null
+  returning token into t;
+  return t;
+end $$;
+revoke execute on function public.create_safety_check(uuid, int) from anon, public;
+grant execute on function public.create_safety_check(uuid, int) to authenticated;
+
+create or replace function public.safety_checkin(iid uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  update public.safety_checks set checked_in_at = now() where invite_id = iid and owner_id = auth.uid();
+  if not found then raise exception '找不到這次的報備'; end if;
+end $$;
+revoke execute on function public.safety_checkin(uuid) from anon, public;
+grant execute on function public.safety_checkin(uuid) to authenticated;
+
+-- 朋友打開報備連結看到的內容（不用登入；只有拿到連結的人看得到）
+create or replace function public.safety_view(p_token text)
+returns table (owner_name text, partner_name text, date_at timestamptz, kind text, area text, ends_at timestamptz, checked_in_at timestamptz, invite_status text)
+language sql stable security definer set search_path = public as $$
+  select po.nickname, pp.nickname, v.date_at, v.kind, v.area, sc.ends_at, sc.checked_in_at, v.status
+    from public.safety_checks sc
+    join public.date_invites v on v.id = sc.invite_id
+    left join public.profiles po on po.id = sc.owner_id
+    left join public.profiles pp on pp.id = case when v.from_id = sc.owner_id then v.to_id else v.from_id end
+   where length(p_token) = 64 and sc.token = p_token;
+$$;
+revoke execute on function public.safety_view(text) from public;
+grant execute on function public.safety_view(text) to anon, authenticated;
+
+-- 見面後私下評價（只有管理員看得到） -----------------------------------
+create table if not exists public.meet_reviews (
+  id          uuid primary key default gen_random_uuid(),
+  invite_id   uuid not null references public.date_invites(id) on delete cascade,
+  reviewer_id uuid references public.profiles(id) on delete set null,
+  reviewee_id uuid not null references public.profiles(id) on delete cascade,
+  rating      smallint not null check (rating between 1 and 3),   -- 3 很愉快 2 普通 1 不舒服
+  tags        text[] not null default '{}',
+  note        text check (char_length(note) <= 500),
+  created_at  timestamptz not null default now(),
+  unique (invite_id, reviewer_id)
+);
+alter table public.meet_reviews enable row level security;
+drop policy if exists "meet_reviews_admin" on public.meet_reviews;
+create policy "meet_reviews_admin" on public.meet_reviews for select to authenticated using (public.is_admin());
+
+create or replace function public.pending_reviews(mid uuid)
+returns table (id uuid, date_at timestamptz) language sql stable security definer set search_path = public as $$
+  select v.id, v.date_at from public.date_invites v
+   where v.match_id = mid and v.status = 'accepted' and (v.from_id = auth.uid() or v.to_id = auth.uid())
+     and v.date_at < now() and v.date_at > now() - interval '30 days'
+     and not exists (select 1 from public.meet_reviews r where r.invite_id = v.id and r.reviewer_id = auth.uid())
+   order by v.date_at desc limit 1;
+$$;
+revoke execute on function public.pending_reviews(uuid) from anon, public;
+grant execute on function public.pending_reviews(uuid) to authenticated;
+
+create or replace function public.submit_meet_review(iid uuid, p_rating int, p_tags text[] default '{}', p_note text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.date_invites;
+begin
+  select * into v from public.date_invites where id = iid and (from_id = auth.uid() or to_id = auth.uid());
+  if not found or v.status <> 'accepted' or v.date_at > now() then raise exception '見面之後才能評價'; end if;
+  if v.date_at < now() - interval '30 days' then raise exception '已超過可以評價的時間'; end if;
+  insert into public.meet_reviews (invite_id, reviewer_id, reviewee_id, rating, tags, note)
+  values (iid, auth.uid(), case when v.from_id = auth.uid() then v.to_id else v.from_id end,
+          greatest(1, least(p_rating, 3)), coalesce(p_tags[1:8], '{}'), nullif(btrim(coalesce(p_note,'')), ''));
+exception when unique_violation then raise exception '你已經評價過這次見面了';
+end $$;
+revoke execute on function public.submit_meet_review(uuid, int, text[], text) from anon, public;
+grant execute on function public.submit_meet_review(uuid, int, text[], text) to authenticated;
+
+create or replace function public.admin_review_stats(ids uuid[])
+returns table (id uuid, n bigint, good bigint, bad bigint, tags text[])
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select r.reviewee_id, count(*), count(*) filter (where r.rating = 3), count(*) filter (where r.rating = 1),
+                      array(select distinct t from public.meet_reviews r2, unnest(r2.tags) t where r2.reviewee_id = r.reviewee_id)
+                 from public.meet_reviews r where r.reviewee_id = any(ids) group by r.reviewee_id;
+end $$;
+revoke execute on function public.admin_review_stats(uuid[]) from anon, public;
+grant execute on function public.admin_review_stats(uuid[]) to authenticated;
+
+create or replace function public.admin_reviews(target uuid)
+returns table (created_at timestamptz, reviewer text, rating smallint, tags text[], note text, date_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select r.created_at, coalesce(p.nickname, '（已刪除）'), r.rating, r.tags, r.note, v.date_at
+                 from public.meet_reviews r left join public.profiles p on p.id = r.reviewer_id
+                 left join public.date_invites v on v.id = r.invite_id
+                where r.reviewee_id = target order by r.created_at desc;
+end $$;
+revoke execute on function public.admin_reviews(uuid) from anon, public;
+grant execute on function public.admin_reviews(uuid) to authenticated;
+
+-- 回覆率：別人主動開啟的對話中，有回覆的比例與回覆時間的中位數（近 90 天） ------
+create or replace function public.reply_stats(ids uuid[])
+returns table (id uuid, n bigint, replied bigint, median_min int)
+language sql stable security definer set search_path = public as $$
+  select p.id, count(m.id), count(m.replied_at),
+         (percentile_cont(0.5) within group (order by extract(epoch from (m.replied_at - m.created_at)) / 60)
+            filter (where m.replied_at is not null))::int
+    from public.profiles p
+    left join public.matches m on (m.user_a = p.id or m.user_b = p.id) and m.initiator is not null and m.initiator <> p.id
+                              and m.created_at > now() - interval '90 days'
+   where p.id = any(ids) and (p.id = auth.uid() or public.is_admin() or (private.can_browse() and private.is_compatible(p.id)))
+   group by p.id;
+$$;
+revoke execute on function public.reply_stats(uuid[]) from anon, public;
+grant execute on function public.reply_stats(uuid[]) to authenticated;
+
+-- 語音自我介紹（15 秒內，管理員審核後才公開） ----------------------------
+create table if not exists public.voice_intros (
+  user_id     uuid primary key references public.profiles(id) on delete cascade,
+  path        text not null,
+  duration    int check (duration between 1 and 20),
+  status      text not null default 'pending' check (status in ('pending','approved','rejected')),
+  created_at  timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+alter table public.voice_intros enable row level security;
+create or replace function public.voice_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if public.is_admin() and auth.uid() is not null and (tg_op = 'UPDATE' and new.path = old.path) then
+    if new.status <> old.status then new.reviewed_at := now(); end if; return new;
+  end if;
+  if auth.uid() is not null and new.user_id <> auth.uid() then raise exception '只能上傳自己的語音'; end if;
+  if new.path !~ ('^' || new.user_id::text || '/[0-9]+\.(webm|m4a|mp4|ogg|aac|mp3)$') then raise exception '語音路徑不正確'; end if;
+  if tg_op = 'INSERT' or new.path <> old.path then new.status := 'pending'; new.reviewed_at := null; new.created_at := now();
+  else new.status := old.status; new.reviewed_at := old.reviewed_at; end if;
+  return new;
+end $$;
+drop trigger if exists voice_guard_trg on public.voice_intros;
+create trigger voice_guard_trg before insert or update on public.voice_intros for each row execute function public.voice_guard();
+drop policy if exists "voice_select" on public.voice_intros;
+create policy "voice_select" on public.voice_intros for select to authenticated
+  using (user_id = auth.uid() or public.is_admin()
+         or (status = 'approved' and private.can_browse() and private.is_compatible(user_id) and not private.is_blocked_with(user_id)
+             and exists (select 1 from public.profiles p where p.id = user_id and p.status = 'approved')));
+drop policy if exists "voice_insert" on public.voice_intros;
+create policy "voice_insert" on public.voice_intros for insert to authenticated
+  with check (user_id = auth.uid() and public.my_status() in ('approved','pending','rejected'));
+drop policy if exists "voice_update" on public.voice_intros;
+create policy "voice_update" on public.voice_intros for update to authenticated
+  using (user_id = auth.uid() or public.is_admin()) with check (user_id = auth.uid() or public.is_admin());
+drop policy if exists "voice_delete" on public.voice_intros;
+create policy "voice_delete" on public.voice_intros for delete to authenticated using (user_id = auth.uid() or public.is_admin());
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('voice', 'voice', false, 2097152, array['audio/webm','audio/mp4','audio/x-m4a','audio/aac','audio/mpeg','audio/ogg'])
+on conflict (id) do update set public = false, file_size_limit = 2097152,
+  allowed_mime_types = array['audio/webm','audio/mp4','audio/x-m4a','audio/aac','audio/mpeg','audio/ogg'];
+create or replace function private.my_voice_file_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from storage.objects where bucket_id = 'voice' and name like auth.uid()::text || '/%';
+$$;
+drop policy if exists "voice_storage_insert" on storage.objects;
+create policy "voice_storage_insert" on storage.objects for insert to authenticated
+  with check (bucket_id = 'voice' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.(webm|m4a|mp4|ogg|aac|mp3)$')
+              and private.my_voice_file_count() < 3);
+drop policy if exists "voice_storage_select" on storage.objects;
+create policy "voice_storage_select" on storage.objects for select to authenticated
+  using (bucket_id = 'voice' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()
+         or exists (select 1 from public.voice_intros v where v.path = name and v.status = 'approved'
+                      and private.can_browse() and private.is_compatible(v.user_id) and not private.is_blocked_with(v.user_id))));
+drop policy if exists "voice_storage_delete" on storage.objects;
+create policy "voice_storage_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'voice' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
