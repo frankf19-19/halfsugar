@@ -1597,7 +1597,7 @@ async function viewMe(){
   const miss = missingBasics(me);
   let meTab = miss.length ? 'profile' : (sessionStorage.getItem('meTab') || (nAlbum?'album':nVerify?'verify':'profile'));
   if(!TABS.some(t=>t[0]===meTab)) meTab='profile';
-  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}<div class="narrow">
+  if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="narrow">${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}
     <div class="card">
       <div class="row"><div class="avatar lg" id="meAv"></div><div class="grow"><h2 style="font-size:22px">${esc(me.nickname||'（未命名）')}</h2><span class="chip ${st}">${STATUS_TXT[me.status]}</span> ${personBadge(me)} ${wealthBadge(me)}
         <div class="mt"><label class="btn sm ghost" style="margin:0">更換頭像<input type="file" accept="image/*" id="meAvFile" class="hidden"></label></div></div></div>
