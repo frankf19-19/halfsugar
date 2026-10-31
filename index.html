@@ -587,7 +587,7 @@ body.home:not(.scrolled) .nav a.active{background:rgba(255,255,255,.18);color:#f
 /* =====================================================================
    微糖 JUST SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.25.0';
+const BUILD = 'v1.25.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -800,7 +800,7 @@ async function route(){
   const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding'];
   if(protectedPages.includes(path) && !me){ location.hash='#/auth'; return; }
   if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat'].includes(path||'')){ location.hash='#/onboarding'; return; }
-  if(me && me.status!=='incomplete' && missingBasics(me).length && ['browse','likes','matches','chat'].includes(path)){ sessionStorage.setItem('meTab','profile'); toast('請先完成基本資料'); location.hash='#/me'; return; }
+  if(me && !me.is_admin && me.status!=='incomplete' && missingBasics(me).length && ['browse','likes','matches','chat'].includes(path)){ sessionStorage.setItem('meTab','profile'); toast('請先完成基本資料'); location.hash='#/me'; return; }
   if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety'].includes(path));
   const fn = routes[path] || viewLanding;
   const seq = routeSeq;
@@ -1218,18 +1218,23 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
+const browseState = { agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
 const resetBrowse = () => Object.assign(browseState, { region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' });
 const advCount = () => ['amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth','person'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0);
+const isAdminBrowse = () => !!(me && me.is_admin && (!me.gender || !me.looking_for));
+const lookF = () => isAdminBrowse() ? browseState.agender!=='male' : me.looking_for==='female';
 async function viewBrowse(){
   const rs = routeSeq;
   if(me.status==='pending' && !me.approved_at){ if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<div class="center" style="padding:50px 0"><p class="muted">審核通過後，這裡就會出現和你方向吻合的會員。<br class="d">等待的時間，可以先到「我的」多放幾張照片、把自介寫完整。</p><a class="btn mt2" href="#/me">前往「我的」</a></div>`; return; }
   if(browseState.role===null){ browseState.role = me.role==='baby' ? 'sugar' : (me.role ? 'baby' : ''); }
   const sugarView = () => browseState.role!=='baby';
+  const adminView = isAdminBrowse();
   const cities = () => browseState.region ? REGIONS[browseState.region] : CITIES;
   if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}
-    <p class="tiny dim" style="margin:-8px 0 14px;letter-spacing:.1em">${orientText(me)}　·　只顯示方向互相吻合的會員</p>
+    ${adminView ? `<div class="banner info">管理員瀏覽模式：看得到所有已上架的會員，不限方向。只能瀏覽，不能傳訊息或心動。</div>`
+    : `<p class="tiny dim" style="margin:-8px 0 14px;letter-spacing:.1em">${orientText(me)}　·　只顯示方向互相吻合的會員</p>`}
     <div class="filters">
+      ${adminView?`<select id="fGender" aria-label="性別"><option value="">男女都看</option><option value="female" ${browseState.agender==='female'?'selected':''}>只看女生</option><option value="male" ${browseState.agender==='male'?'selected':''}>只看男生</option></select>`:''}
       <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
       <select id="fRegion" aria-label="地區"><option value="">地區不限</option>${Object.keys(REGIONS).map(r=>`<option ${browseState.region===r?'selected':''}>${r}</option>`).join('')}</select>
       <select id="fCity" aria-label="城市"><option value="">城市不限</option></select>
@@ -1246,14 +1251,14 @@ async function viewBrowse(){
     const y = new Date().getFullYear(); const B = browseState;
     let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,person_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,last_active_at').eq('status','approved').neq('id', me.id).eq('hidden',false).order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(60);
     if(B.role==='baby') q = q.eq('role','baby'); else if(B.role==='sugar') q = q.in('role',['daddy','mommy']);
-    q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
+    if(adminView){ if(B.agender) q = q.eq('gender', B.agender); } else q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
     if(B.city) q = q.eq('city', B.city); else if(B.region) q = q.in('city', REGIONS[B.region]);
     if(B.amin) q = q.lte('birth_year', y - +B.amin);
     if(B.amax) q = q.gte('birth_year', y - +B.amax);
     if(B.hmin) q = q.gte('height_cm', +B.hmin);
     if(B.hmax) q = q.lte('height_cm', +B.hmax);
     if(B.body.length) q = q.in('body_type', B.body);
-    if(me.looking_for==='female' && (B.cmin||B.cmax)){ const i0 = B.cmin?CUPS.indexOf(B.cmin):0, i1 = B.cmax?CUPS.indexOf(B.cmax):CUPS.length-1; q = q.in('cup', CUPS.slice(i0, i1+1)); }
+    if(lookF() && (B.cmin||B.cmax)){ const i0 = B.cmin?CUPS.indexOf(B.cmin):0, i1 = B.cmax?CUPS.indexOf(B.cmax):CUPS.length-1; q = q.in('cup', CUPS.slice(i0, i1+1)); }
     if(B.rel.length) q = q.overlaps('relation_types', B.rel);
     if(B.freq) q = q.eq('meet_freq', B.freq);
     if(B.person) q = q.not('person_verified_at','is',null);
@@ -1276,6 +1281,7 @@ async function viewBrowse(){
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.textContent=''; } });
   };
+  $('#fGender') && ($('#fGender').onchange = ()=>{ browseState.agender=$('#fGender').value; reload(); });
   $('#fRole').onchange = ()=>{ browseState.role=$('#fRole').value; reload(); };
   $('#fRegion').onchange = ()=>{ browseState.region=$('#fRegion').value; browseState.city=''; fillCity(); reload(); };
   $('#fCity').onchange = ()=>{ browseState.city=$('#fCity').value; reload(); };
@@ -1286,7 +1292,7 @@ async function viewBrowse(){
       <div class="fg"><label>年齡</label><div class="two"><select id="xAmin"><option value="">不限</option>${opt(ages,B.amin)}</select><span>—</span><select id="xAmax"><option value="">不限</option>${opt(ages,B.amax)}</select><span class="small muted">歲</span></div></div>
       <div class="fg"><label>身高</label><div class="two"><select id="xHmin"><option value="">不限</option>${opt(hs,B.hmin)}</select><span>—</span><select id="xHmax"><option value="">不限</option>${opt(hs,B.hmax)}</select><span class="small muted">cm</span></div></div>
       <div class="fg"><label>身材（可複選）</label><div class="tags" id="xBody">${Object.entries(BODY).map(([k,v])=>`<button type="button" class="tag ${B.body.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
-      ${me.looking_for==='female'?`<div class="fg"><label>罩杯</label><div class="two"><select id="xCmin"><option value="">不限</option>${opt(CUPS,B.cmin)}</select><span>—</span><select id="xCmax"><option value="">不限</option>${opt(CUPS,B.cmax)}</select></div><p class="tiny dim">只會篩選到有填寫罩杯的會員。</p></div>`:''}
+      ${lookF()?`<div class="fg"><label>罩杯</label><div class="two"><select id="xCmin"><option value="">不限</option>${opt(CUPS,B.cmin)}</select><span>—</span><select id="xCmax"><option value="">不限</option>${opt(CUPS,B.cmax)}</select></div><p class="tiny dim">只會篩選到有填寫罩杯的會員。</p></div>`:''}
       <div class="fg"><label>相處方式（符合任一項）</label><div class="tags" id="xRel">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${B.rel.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
       <div class="fg"><label class="sw" style="margin:0"><input type="checkbox" id="xPerson" ${B.person?'checked':''}><span><b>只看真人認證</b></span></label></div>
       <div class="fg"><label>見面頻率</label><select id="xFreq"><option value="">不限</option>${Object.entries(FREQ).map(([k,v])=>`<option value="${k}" ${B.freq===k?'selected':''}>${v}</option>`).join('')}</select></div>
@@ -1323,7 +1329,7 @@ async function openProfile(id){
   const { data: conv } = await sb.from('matches').select('id').or(`and(user_a.eq.${me.id},user_b.eq.${id}),and(user_a.eq.${id},user_b.eq.${me.id})`).maybeSingle();
   if(!$('#mbg')) return;   // 使用者在載入時已經關掉視窗
   if(error || !p){ modal('<p class="muted">找不到這位會員，可能已下架。</p>'); return; }
-  const canAct = me.status==='approved';
+  const canAct = me.status==='approved' && !isAdminBrowse();
   const pubPhotos = (photos||[]).filter(x=>!x.is_private);
   const privCount = typeof privN==='number' ? privN : (photos||[]).filter(x=>x.is_private).length;
   const body = `
@@ -1594,7 +1600,7 @@ async function viewMe(){
   ];
   const nAlbum=(reqs||[]).length, nVerify=wPend.length;
   const TABS=[['profile','檔案',0],['album','相簿',nAlbum],['verify','認證',nVerify],['settings','設定',0]];
-  const miss = missingBasics(me);
+  const miss = me.is_admin ? [] : missingBasics(me);
   let meTab = miss.length ? 'profile' : (sessionStorage.getItem('meTab') || (nAlbum?'album':nVerify?'verify':'profile'));
   if(!TABS.some(t=>t[0]===meTab)) meTab='profile';
   if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="narrow">${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}
