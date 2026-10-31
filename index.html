@@ -796,7 +796,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.52.0';
+const BUILD = 'v1.52.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1034,12 +1034,13 @@ function openMeetReview(r, oname, done){
     let rating = 0;
     modal(`<h2>這次見面還好嗎？</h2><p class="tiny dim mt">${fmtDate(r.date_at)} 和 ${esc(oname)} 的見面。評價只有平台看得到，對方不會知道你寫了什麼，用來幫我們發現騙子或不當行為。</p>
       <div class="rvopts mt2"><button type="button" data-r="3">很愉快</button><button type="button" data-r="2">普通</button><button type="button" data-r="1">不舒服</button></div>
-      <div class="tags mt2" id="rvTags">${[...POS,...NEG].map(t=>`<button type="button" class="tag" data-t="${t}">${t}</button>`).join('')}</div>
+      <div class="tags mt2 hidden" id="rvTags">${POS.map(t=>`<button type="button" class="tag" data-t="${t}" data-g="p">${t}</button>`).join('')}${NEG.map(t=>`<button type="button" class="tag" data-t="${t}" data-g="n">${t}</button>`).join('')}</div>
       <label class="mt">想讓平台知道的事（選填）</label><textarea id="rvNote" maxlength="500" rows="3"></textarea>
       <button class="btn primary block mt2" id="rvGo" disabled>送出評價</button>`);
-    document.querySelectorAll('.rvopts button').forEach(b=>b.onclick=()=>{ rating=+b.dataset.r; document.querySelectorAll('.rvopts button').forEach(x=>x.classList.toggle('on', x===b)); $('#rvGo').disabled=false; });
+    document.querySelectorAll('.rvopts button').forEach(b=>b.onclick=()=>{ rating=+b.dataset.r; document.querySelectorAll('.rvopts button').forEach(x=>x.classList.toggle('on', x===b)); $('#rvGo').disabled=false;
+      $('#rvTags').classList.remove('hidden'); document.querySelectorAll('#rvTags .tag').forEach(t=>{ const hide = (rating===3 && t.dataset.g==='n') || (rating===1 && t.dataset.g==='p'); t.classList.toggle('hidden', hide); if(hide) t.classList.remove('on'); }); });
     document.querySelectorAll('#rvTags .tag').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
-    $('#rvGo').onclick = async ()=>{ $('#rvGo').disabled=true; const tags=[...document.querySelectorAll('#rvTags .tag.on')].map(b=>b.dataset.t);
+    $('#rvGo').onclick = async ()=>{ $('#rvGo').disabled=true; const tags=[...document.querySelectorAll('#rvTags .tag.on:not(.hidden)')].map(b=>b.dataset.t);
       const { error } = await sb.rpc('submit_meet_review', { iid:r.id, p_rating:rating, p_tags:tags, p_note:$('#rvNote').value||null });
       if(error){ $('#rvGo').disabled=false; return toast(zh(error.message)); } closeModal(); done && done(); toast('謝謝你，評價已送出'); }; }
 
@@ -1904,7 +1905,7 @@ async function viewChat(matchId){
   const loadImg = el => { const im=el.querySelector('.mimg'); if(!im) return; sb.storage.from('chat').createSignedUrl(im.dataset.p, 900).then(({ data })=>{ if(data?.signedUrl && im.isConnected){ im.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; im.dataset.u=data.signedUrl; } }); };
   const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); } const prevLast = lastAt; if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay && !(prevLast && x.created_at < prevLast)){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); }
     box.querySelector('.chempty')?.remove();
-    const later = prevLast && x.created_at < prevLast ? [...box.querySelectorAll('.msg[data-t]')].find(e=>e.dataset.t > x.created_at) : null;   // 補抓到較早的訊息：插到正確位置
+    const later = prevLast && x.created_at < prevLast ? [...box.querySelectorAll('[data-t]')].find(e=>e.dataset.t > x.created_at) : null;   // 補抓到較早的訊息：插到正確位置
     if(later){ later.insertAdjacentHTML('beforebegin', msgHtml(x)); loadImg(later.previousElementSibling); }
     else { box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); box.scrollTop = box.scrollHeight; }
     if(x.invite_id && (!inv[x.invite_id] || x.body!=='送出了約會邀請')) refreshInv(x.invite_id);
@@ -1938,7 +1939,8 @@ async function viewChat(matchId){
       <p class="small bad mt" data-err></p><button class="btn primary block mt2" type="submit">送出邀請</button></form>`);
     document.querySelectorAll('#invK .tag').forEach(b=>b.onclick=()=>{ kind=b.dataset.k; document.querySelectorAll('#invK .tag').forEach(x=>x.classList.toggle('on', x===b)); });
     $('#invF').onsubmit = async e => { e.preventDefault(); const f=new FormData(e.target); const btn=e.target.querySelector('button[type=submit]');
-      const when = new Date(`${f.get('d')}T${f.get('t')}`); if(isNaN(when)) return;
+      const when = new Date(`${f.get('d')}T${f.get('t')}`); if(isNaN(when)) return; const errEl=e.target.querySelector('[data-err]');
+      if(when < new Date(Date.now()+30*60e3)){ errEl.textContent='這個時間太近或已經過了，請選至少半小時後的時間'; return; } errEl.textContent='';
       btn.disabled=true; const { error } = await sb.rpc('create_date_invite', { mid:matchId, p_date: when.toISOString(), p_kind: kind, p_area: f.get('a')||null });
       if(error){ btn.disabled=false; e.target.querySelector('[data-err]').textContent = zh(error.message); return; }
       closeModal(); toast('邀請已送出'); onChatVisible && onChatVisible(); }; };
@@ -2112,7 +2114,7 @@ async function viewMe(){
       <label class="meav" title="更換頭像"><span class="avatar" id="meAv"></span><input type="file" accept="image/*" id="meAvFile" class="hidden"><em>更換</em></label>
       <div class="grow"><h1>${esc(me.nickname||'（未命名）')}</h1>
         <p class="sub"><span class="chip ${st}">${STATUS_TXT[me.status]}</span>${personBadge(me)}${wealthBadge(me)}</p>
-        ${me.role?`<p class="tiny dim" style="letter-spacing:.14em;margin-top:6px">${ROLES[me.role]}${me.city?'　'+esc(me.city):''}${age(me.birth_year)?'　'+age(me.birth_year)+' 歲':''}</p>`:''}</div>
+        ${me.role?`<p class="tiny dim" style="letter-spacing:.14em;margin-top:6px"><span style="white-space:nowrap">${ROLES[me.role]}</span>${me.city?'　<span style="white-space:nowrap">'+esc(me.city)+'</span>':''}${age(me.birth_year)?'　<span style="white-space:nowrap">'+age(me.birth_year)+' 歲</span>':''}</p>`:''}</div>
     </header>
     ${todo.some(t=>!t[1])?`<div class="prog"><div class="pl"><span>完成你的檔案</span><span>${todo.filter(t=>t[1]).length} ／ ${todo.length}</span></div><div class="bar"><i style="width:${Math.round(todo.filter(t=>t[1]).length/todo.length*100)}%"></i></div>
       <div class="todo">${todo.map(([tab,done,txt])=>`<button type="button" class="td ${done?'done':''}" data-go="${tab==='相簿'?'album':'verify'}"><span>${done?'✓':'○'}</span>${txt}</button>`).join('')}</div></div>`:''}
@@ -2205,7 +2207,7 @@ async function viewMe(){
   sb.rpc('my_open_items').then(({ data })=>{ const box=$('#openItems'); if(!box || !Array.isArray(data) || !data.length) return;
     box.innerHTML = `<div class="card mb oitems"><h3 style="font-size:16px">約會待辦</h3>${data.map(x=>`<div class="oi"><div class="grow"><div class="small">${x.kind==='checkin'?'還沒報平安':'見面後私下評價'}・${esc(x.partner||'（已刪除）')}</div><div class="tiny dim">${fmtDate(x.date_at)}</div></div>${x.kind==='checkin'?`<button class="btn sm primary" data-ck="${x.invite_id}">✓ 我平安</button>`:`<button class="btn sm ghost" data-rv="${x.invite_id}" data-d="${x.date_at}" data-p="${esc(x.partner||'')}">評價</button>`}</div>`).join('')}</div>`;
     box.querySelectorAll('[data-ck]').forEach(b=>b.onclick=async()=>{ b.disabled=true; const { error } = await sb.rpc('safety_checkin', { iid:b.dataset.ck }); if(error){ b.disabled=false; return toast(zh(error.message)); } b.outerHTML='<span class="tiny ok">已報平安</span>'; toast('已報平安'); });
-    box.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>openMeetReview({ id:b.dataset.rv, date_at:b.dataset.d }, b.dataset.p, ()=>b.closest('.oi').remove())); });
+    box.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>openMeetReview({ id:b.dataset.rv, date_at:b.dataset.d }, b.dataset.p, ()=>{ const c=b.closest('.oitems'); b.closest('.oi').remove(); if(c && !c.querySelector('.oi')) c.remove(); })); });
   document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=20) return toast('相簿最多 20 張'); toast('上傳中…', 60000); document.querySelectorAll('.mePh').forEach(x=>x.disabled=true);
     let path;
     try{ path=await uploadPhoto(f); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1' }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }
