@@ -233,7 +233,7 @@ br.d{display:none}
 .authwrap .side .q{display:none}
 .authwrap .form{padding:20px 0}
 @media(min-width:880px){.authwrap .form{padding:40px 64px}}
-.authwrap .form::before{content:"微 糖";display:block;font-family:"Noto Serif TC",serif;font-size:26px;letter-spacing:.5em;margin-bottom:30px}
+.authwrap .form::before{content:"歡迎來到微糖";display:block;font-family:"Noto Serif TC",serif;font-size:24px;letter-spacing:.12em;margin-bottom:26px}
 
 /* ===== 探索 ===== */
 .filters{display:flex;gap:10px;margin-bottom:30px;overflow-x:auto;scrollbar-width:none}
@@ -423,6 +423,124 @@ footer a{color:var(--ink);margin:0 10px;text-decoration:none}
 }
 details.more summary{cursor:pointer;font-size:13px;color:var(--grey);text-decoration:underline;text-underline-offset:4px;list-style:none;padding:6px 0}details.more summary::-webkit-details-marker{display:none}details.more p{margin-top:6px}
 .swipehint{display:none;text-align:center;font-size:12px;letter-spacing:.14em;color:var(--grey2);margin-top:10px}
+
+/* =====================================================================
+   v1.25 精緻化：瓷白粉 × 酒紅（logo 色），圓角層級、填色輸入框、分段式分頁
+   方向：像一杯微糖的奶茶 — 柔、乾淨、不甜膩；主要動作一律用品牌酒紅
+   ===================================================================== */
+:root{--ink:#2A2226;--grey:#6B6166;--grey2:#8A8085;--rule:#ECE3E6;--paper:#F8F2F4;--blush:#F5E6EB;--page:#FCFAFA;--wine2:#953C52;--sh:0 10px 30px rgba(74,40,52,.10)}
+body{background:var(--page);color:var(--ink)}
+:focus-visible{outline:2px solid var(--wine);outline-offset:2px}
+h1,h2,h3,.serif{letter-spacing:.04em}
+/* 按鈕：膠囊形，主要動作酒紅 */
+.btn{border-radius:999px;letter-spacing:.12em;font-size:14px;padding:0 28px;border-color:var(--rule);background:#fff;transition:background .2s,border-color .2s,color .2s}
+.btn:hover{background:var(--blush);border-color:var(--blush);color:var(--ink)}
+.btn.primary{background:var(--wine);border-color:var(--wine);color:#fff;font-weight:500}
+.btn.primary:hover{background:var(--wine2);border-color:var(--wine2);color:#fff}
+.btn.rose{background:var(--blush);border-color:var(--blush);color:var(--wine2);font-weight:500} .btn.rose:hover{background:#EED6DE;border-color:#EED6DE;color:var(--wine2)}
+.btn.ghost{background:#fff;border-color:var(--rule)} .btn.ghost:hover{background:var(--blush);border-color:var(--blush)}
+.btn.danger{background:#fff}
+.btn.sm{font-size:13px;letter-spacing:.06em;padding:0 16px}
+.btn.light{background:transparent} .btn.light.primary{background:#fff;color:var(--ink);border-color:#fff} .btn.light.primary:hover{background:var(--blush);color:var(--ink)}
+/* 輸入框：填色圓角，比底線好點、好看 */
+input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{background-color:#F6F0F2;border:1px solid transparent;border-radius:12px;padding:12px 14px;transition:border-color .2s,background-color .2s}
+input:not([type=checkbox]):not([type=radio]):not([type=file]):focus,select:focus,textarea:focus{background-color:#fff;border-color:var(--wine)}
+select{background-position:right 14px center;padding-right:36px}
+label{font-size:13px;letter-spacing:.04em;color:var(--grey);font-weight:500;margin:20px 0 7px}
+input[type=checkbox]{accent-color:var(--wine)}
+.phrow .cc{border:0;background:#F6F0F2;border-radius:12px;padding:0 14px}
+input.otp{letter-spacing:.4em}
+.pwshow{bottom:8px;right:8px}
+/* 卡片與提示 */
+.card{border-radius:20px;border-color:var(--rule);padding:26px}
+@media(max-width:719px){.card{padding:22px 20px}}
+.banner{border-left:0;border-radius:14px;background:var(--paper);padding:14px 18px}
+.banner.warn{background:#FBF2E4} .banner.bad{background:#FBEBEC} .banner.info{background:#EEF3F7}
+.locked{border:0;background:var(--paper);border-radius:12px}
+/* 分頁：分段式膠囊 */
+.tabs{background:#F2EAED;border:0;border-radius:999px;padding:4px;gap:2px;margin-bottom:22px}
+.tabs button{flex:1;border:0!important;margin:0;border-radius:999px;padding:9px 12px;letter-spacing:.06em;font-size:14px;color:var(--grey);text-align:center;transition:background .2s,color .2s}
+.tabs button.on{background:#fff;color:var(--ink);font-weight:500;box-shadow:0 1px 4px rgba(74,40,52,.14)}
+.metabs{top:66px;background:#F2EAED}
+@media(max-width:719px){.metabs{top:66px}}
+.admtabs{border-radius:16px}
+@media(max-width:640px){.admtabs{gap:2px}.admtabs button{border-radius:12px;letter-spacing:.02em}}
+/* 選項 */
+.roles .rl span{border-radius:14px;background:#fff;transition:border-color .2s,background .2s}
+.roles .rl input:checked+span{border-color:var(--wine);background:var(--blush);box-shadow:inset 0 0 0 1px var(--wine)}
+.tag{border-radius:999px;letter-spacing:.04em;background:#fff}
+.tag.on{border-color:var(--wine);background:var(--blush);color:var(--wine2)}
+.chip{border-radius:999px;padding:2px 10px}
+.todo{border-top:0;padding-top:4px}
+.todo .td{border-radius:999px;background:#fff}
+.todo .td.done{background:var(--paper);border-color:transparent}
+.fbtn{border-radius:12px;border-color:var(--rule)}
+.filters select{border-color:transparent;border-radius:12px;letter-spacing:.04em}
+/* 開關：隱私設定用滑動開關 */
+.sw input{-webkit-appearance:none;appearance:none;width:46px;height:28px;border-radius:999px;background:#DCD1D5;position:relative;flex:none;margin-top:0;cursor:pointer;transition:background .2s}
+.sw input::before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.sw input:checked{background:var(--wine)} .sw input:checked::before{transform:translateX(18px)}
+.sw{padding:14px 0;margin:0;border-bottom:1px solid var(--rule)} .sw:last-child{border-bottom:0}
+/* 標章 */
+.pbadge{border:0;background:#E9F3EC;color:#2F6B47;border-radius:999px;padding:2px 9px}
+.wbadge{border:0;background:#F8EFDF;color:#7A5B22;border-radius:999px;padding:2px 9px}
+/* 探索卡片：照片圓角，名字疊在照片上 */
+.grid{gap:18px 12px}
+@media(min-width:760px){.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:34px 22px}}
+.pcard{container-type:inline-size}
+.pcard .ph{border-radius:18px;position:relative}
+.pcard .ph::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg,rgba(42,34,38,0),rgba(42,34,38,.62));border-radius:0 0 18px 18px;pointer-events:none}
+.pcard .info{padding:10px 4px 0}
+.pcard .name{position:absolute;left:12px;right:12px;top:calc(133.333cqw - 42px);color:#fff;z-index:2;font-size:18px;text-shadow:0 1px 6px rgba(0,0,0,.25)}
+.pcard .name .muted{color:rgba(255,255,255,.9)}
+.pcard .seen,.pcard .liked{border-radius:999px;backdrop-filter:blur(6px);background:rgba(255,255,255,.88)}
+.pcard .meta{line-height:1.6}
+.pcard .budget{margin-top:2px}
+.pcard:hover .ph{opacity:1;filter:brightness(1.03)}
+/* 清單 */
+.list .item{padding:16px 4px}
+/* 視窗 */
+.modal{background:rgba(42,26,32,.45);backdrop-filter:blur(2px)}
+.modal .box{border-radius:24px 24px 0 0;box-shadow:var(--sh)}
+@media(min-width:760px){.modal .box{border-radius:24px}}
+.modal .box::before{border-radius:3px;width:40px;height:4px}
+.modal .x{border-radius:999px;border-color:var(--rule);background:rgba(255,255,255,.92);backdrop-filter:blur(6px)}
+.photo-big{border-radius:18px}
+.gallery .g{border-radius:12px}
+.gallery .g .del{border-radius:999px;top:6px;right:6px;width:32px;height:32px;line-height:32px}
+.gallery .g .st{border-radius:999px}
+.pactions{border-top:0;box-shadow:0 -8px 24px rgba(74,40,52,.08)}
+.pactions .btn{min-height:50px}
+.sheet .it{letter-spacing:.04em}
+/* 聊天 */
+.msg{border-radius:20px;padding:10px 16px}
+.msg.me{background:var(--wine);border-bottom-right-radius:6px}
+.msg.them{background:#F2EAED;border-bottom-left-radius:6px}
+.chat form{border-top:0}
+.chat form input{border-radius:999px;border:1px solid transparent}
+.chat form .btn{border-radius:999px}
+.req{border-radius:12px}
+/* 頂部與底部導覽 */
+.topbar{background:rgba(252,250,250,.88);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom-color:var(--rule)}
+body.home.scrolled .topbar{background:rgba(252,250,250,.9)}
+.bnav{background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:0;box-shadow:0 -6px 24px rgba(74,40,52,.07)}
+.bnav a{letter-spacing:.06em;padding:8px 0 7px;gap:3px}
+.bnav a svg{width:54px;height:30px;padding:4px 16px;border-radius:999px;stroke-width:1.5;transition:background .2s}
+.bnav a.active{color:var(--wine);font-weight:500}
+.bnav a.active svg{background:var(--blush)}
+.bnav .badge{top:2px;left:calc(50% + 8px)}
+.nav a{letter-spacing:.12em;border-radius:999px;padding:7px 14px}
+.nav a.active{text-decoration:none;background:var(--blush);color:var(--wine2)}
+body.home:not(.scrolled) .nav a.active{background:rgba(255,255,255,.18);color:#fff}
+/* 其他 */
+.toast{border-radius:999px;background:var(--ink);letter-spacing:.04em;padding:12px 22px;box-shadow:var(--sh)}
+.plan{border-radius:20px;background:#fff}
+.plan.hl{border-color:var(--wine);box-shadow:inset 0 0 0 1px var(--wine)}
+.dcard{border-radius:20px;overflow:hidden}
+.spinner{border-color:var(--rule);border-top-color:var(--wine)}
+.obsteps span.on{border-bottom:2px solid var(--wine);color:var(--ink)}
+.pvimg,.pvvid{border-radius:12px}
+.avpick{font-size:34px;color:var(--wine);background-color:var(--blush);background-size:cover;background-position:center;border:1px dashed #E2BFCB}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .table{width:100%;border-collapse:collapse;font-size:14px}
 .table td,.table th{padding:12px 8px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
@@ -469,7 +587,7 @@ details.more summary{cursor:pointer;font-size:13px;color:var(--grey);text-decora
 /* =====================================================================
    微糖 JUST SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.24.0';
+const BUILD = 'v1.25.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -852,7 +970,7 @@ async function viewAuth(){
         ${mode==='register' ? `
         <label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--text);font-size:14px"><input type="checkbox" name="age" required style="width:auto;margin-top:4px"><span>我確認已年滿 18 歲（或所在地法定成年年齡）</span></label>
         <label style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--text);font-size:14px"><input type="checkbox" name="terms" required style="width:auto;margin-top:4px"><span>我已閱讀並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>，並了解本站禁止任何金錢交易與色情招攬</span></label>` : ''}
-        ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定性別與想認識的對象，送出後無法修改。</p>':''}
+        ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定暱稱、性別與想認識的對象，送出後無法修改。</p>':''}
         <button class="btn primary block mt2" type="submit">${mode==='register'?'建立帳號':'登入'}</button>
         ${mode==='login' ? `<button class="btn ghost block mt" type="button" id="forgot">忘記密碼</button>`:''}
         <p class="small bad mt" id="authErr"></p>
@@ -1051,7 +1169,7 @@ async function viewOnboarding(){
     <form id="obForm" class="card">
       ${profileFormHtml(me)}
       <label>頭像照片 *</label>
-      <div class="row"><div class="avatar lg" id="avPrev">＋</div><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><input type="file" accept="image/*" id="avFile" style="margin-top:8px"></div></div>
+      <div class="row"><label class="avatar lg avpick" id="avPrev" style="margin:0;cursor:pointer" aria-label="選擇頭像照片">＋<input type="file" accept="image/*" id="avFile" class="hidden"></label><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><label class="btn sm ghost" style="margin:10px 0 0;color:var(--ink)">選擇頭像<input type="file" accept="image/*" class="hidden avFile2"></label></div></div>
       <label>更多照片（選填，可一次選多張，最多 20 張）</label>
       <div class="gallery" id="obGal"></div>
       <label class="btn sm ghost" style="margin-top:8px">＋ 選擇照片<input type="file" accept="image/*" multiple id="obFiles" class="hidden"></label>
@@ -1065,7 +1183,8 @@ async function viewOnboarding(){
   const drawExtra = () => { $('#obGal').innerHTML = extra.map((f,i)=>`<div class="g" style="background-image:url(${URL.createObjectURL(f)})"><button type="button" class="del" data-i="${i}" aria-label="移除">✕</button></div>`).join('');
     $('#obGal').querySelectorAll('.del').forEach(b=>b.onclick=()=>{ extra.splice(+b.dataset.i,1); drawExtra(); }); };
   $('#obFiles').onchange = e => { extra = extra.concat([...e.target.files]).slice(0,19); e.target.value=''; drawExtra(); };
-  $('#avFile').onchange = e => { avatarFile = e.target.files[0]; if(avatarFile){ $('#avPrev').style.backgroundImage=`url(${URL.createObjectURL(avatarFile)})`; $('#avPrev').textContent=''; } };
+  const pickAv = e => { avatarFile = e.target.files[0]; if(avatarFile){ $('#avPrev').style.backgroundImage=`url(${URL.createObjectURL(avatarFile)})`; $('#avPrev').childNodes[0].textContent=''; } };
+  $('#avFile').onchange = pickAv; document.querySelector('.avFile2').onchange = pickAv;
   $('#obForm').onsubmit = async e => {
     e.preventDefault(); const p = readProfileForm(e.target); if(!p) return;
     if(!avatarFile) return toast('請上傳頭像照片');
