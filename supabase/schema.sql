@@ -365,10 +365,6 @@ begin
     perform 1 from public.matches where id = new.match_id for update;   -- 同一段對話的送出排隊，避免連點繞過規則
     if not private.can_send(new.match_id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
     if not private.partner_active(new.match_id) then raise exception '對方目前無法接收訊息'; end if;
-    if exists (select 1 from public.matches m where m.id = new.match_id and m.initiator = auth.uid() and m.replied_at is null)
-       and new.body ~* '(https?://|www\.|line\s*id|加\s*賴|加\s*line|微信|wechat|telegram|instagram|\yig\y|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}|車馬|包月|月費|價碼|一次多少|零用錢)' then
-      raise exception '第一則訊息不能留聯絡方式或談金錢，請先好好介紹自己';
-    end if;
   else
     new.body := old.body; new.sender_id := old.sender_id; new.match_id := old.match_id; new.created_at := old.created_at;
     if old.sender_id = auth.uid() then new.read_at := old.read_at; end if;
