@@ -349,8 +349,8 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub',P,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', P::text, true);
   execute 'set local role authenticated';
-  begin perform public.send_first_message(Q, '加我 line 0912-345-678'); out := array_append(out, '22 第一則留聯絡方式：沒被擋 ✗'::text);
-  exception when others then out := array_append(out, '22 第一則不能留聯絡方式 ✓'::text); end;
+  begin perform public.send_first_message(Q, '加我 line 0912-345-678'); raise exception 'e2e_rollback';
+  exception when others then out := array_append(out, (case when sqlerrm='e2e_rollback' then '22 第一則可以留聯絡方式（站長決定開放） ✓' else '22 第一則留聯絡方式被擋：'||sqlerrm||' ✗' end)::text); end;
   select public.send_first_message(Q, '你好，想認識你') into mid;
   begin perform public.send_first_message(R, '你好'); out := array_append(out, '22b 對方只收心動過的人：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '22b 對方只收心動過的人 ✓'::text); end;
