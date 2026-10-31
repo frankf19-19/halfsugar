@@ -427,6 +427,90 @@ details.more summary{cursor:pointer;font-size:13px;color:var(--grey);text-decora
 .sortbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:-14px 0 18px}
 .sortsel{display:flex;align-items:center;gap:8px;margin:0;font-size:12px;letter-spacing:.14em;color:var(--grey);white-space:nowrap}
 .sortsel select{width:auto;border:0;border-bottom:1px solid var(--ink);padding:6px 22px 6px 2px;font-size:13px;letter-spacing:.06em;background-position:right 2px center}
+
+/* =====================================================================
+   精品風精修：保留黑白、直角、細線；調整比例、留白、字距與細節
+   ===================================================================== */
+:root{--rule:#E8E5E0;--hair:#EFEDE9}
+body{letter-spacing:.02em}
+::selection{background:#EADCE0}
+/* 頁面標題：像精品型錄的章節頁 */
+.phd{margin:4px 0 30px;padding-bottom:20px;border-bottom:1px solid var(--rule)}
+.phd h1{font-size:30px;font-weight:300;letter-spacing:.32em;line-height:1.3}
+.phd p{margin-top:10px;font-size:13px;letter-spacing:.08em;color:var(--grey)}
+@media(max-width:719px){.phd{margin:0 0 22px;padding-bottom:16px}.phd h1{font-size:24px}}
+.empty{text-align:center;padding:64px 0 40px}
+.empty .serif{font-size:22px;letter-spacing:.2em;margin-bottom:10px}
+/* 按鈕：更細緻的字距與過場 */
+.btn{font-size:12px;letter-spacing:.3em;padding:0 34px;transition:background .25s,color .25s,border-color .25s}
+.btn.sm{font-size:12px;letter-spacing:.16em}
+.btn.ghost{border-color:#D9D5CF}
+/* 輸入框：底線變細、聚焦時加深 */
+input:not([type=checkbox]):not([type=radio]):not([type=file]),select{border-bottom-color:#CFCAC3}
+input:focus,select:focus,textarea:focus{border-color:var(--ink)!important}
+textarea{border-color:var(--rule)}
+label{font-size:11px;letter-spacing:.2em;margin:26px 0 4px}
+/* 卡片：線更輕、留白更多、標題有細線 */
+.card{border-color:var(--hair);padding:32px}
+.card>h3:first-child,.card>h2:first-child{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--hair);letter-spacing:.14em}
+@media(max-width:719px){.card{padding:24px 20px}}
+.banner{font-size:13px;letter-spacing:.04em;line-height:1.9;background:#F8F7F5}
+/* 分頁：細線指示 */
+.tabs{border-bottom-color:var(--hair);gap:0}
+.tabs button{font-size:12px;letter-spacing:.22em;padding:14px 14px 13px;transition:color .2s,border-color .2s}
+.tabs button{margin-bottom:0;border-bottom:0}
+.tabs button.on{box-shadow:inset 0 -1px 0 var(--ink)}
+/* 探索卡片：型錄式排版 */
+.pcard .ph{background-color:#EEECE8;outline:1px solid rgba(0,0,0,.04);outline-offset:-1px}
+.pcard .info{padding:14px 2px 0}
+.pcard .name{font-size:18px;letter-spacing:.14em}
+.pcard .name .muted{font-family:"Noto Serif TC",serif;font-size:14px;letter-spacing:.06em;color:var(--grey)}
+.pcard .meta{font-size:12px;letter-spacing:.1em;margin-top:3px}
+.pcard .rtag{letter-spacing:.14em}
+.pcard .seen,.pcard .liked{font-size:10px;letter-spacing:.16em;padding:4px 10px;background:rgba(255,255,255,.94)}
+.pcard:hover .name>span:first-child{text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:1px}
+/* 標章：細線、小字 */
+.pbadge,.wbadge{font-size:10px;letter-spacing:.14em;padding:2px 8px;font-weight:400}
+.pbadge{border-color:#BDB8B1;color:var(--ink)}
+.wbadge{border-color:#C9B48A;color:#7A6232;background:#FCFAF5}
+.chip{font-size:10px;letter-spacing:.16em}
+/* 待完成清單 */
+.todo{border-top-color:var(--hair)}
+.todo .td{font-size:12px;letter-spacing:.08em;border-color:var(--hair)}
+/* 清單 */
+.list .item{padding:22px 0;border-bottom-color:var(--hair)}
+.list .item .t{font-size:18px;letter-spacing:.12em}
+/* 排序列 */
+.sortbar{margin:-6px 0 22px}
+#fCount{letter-spacing:.16em}
+/* 視窗 */
+.modal{background:rgba(20,18,18,.42)}
+.modal .box{padding:34px 30px calc(34px + env(safe-area-inset-bottom))}
+@media(max-width:719px){.modal .box{padding:26px 22px calc(28px + env(safe-area-inset-bottom))}}
+.modal .x{border-color:var(--hair);font-size:16px;font-weight:300}
+/* 聊天 */
+.msg{font-size:15px;letter-spacing:.03em;padding:12px 18px}
+.msg.me{background:var(--ink)}
+.msg.them{background:#F4F2EF}
+.chat .hd{border-bottom-color:var(--hair)}
+.chat form{border-top-color:var(--hair)}
+.chat form input{border:0;border-bottom:1px solid #CFCAC3;padding:12px 4px}
+/* 導覽 */
+.topbar{border-bottom-color:var(--hair)}
+.nav a{font-size:11px;letter-spacing:.3em}
+.nav a.active{text-decoration-thickness:1px;text-underline-offset:10px}
+.bnav{border-top-color:var(--hair)}
+.bnav a{font-size:10px;letter-spacing:.2em;position:relative}
+.bnav a svg{stroke-width:1.1}
+.bnav a.active::before{content:"";position:absolute;top:0;left:50%;width:22px;height:1px;background:var(--ink);transform:translateX(-50%)}
+/* 頁尾 */
+footer{border-top-color:var(--hair);font-size:10px;letter-spacing:.22em}
+footer a{letter-spacing:.22em}
+/* 開關：隱私設定的勾選框做成細線方塊 */
+.sw{padding:16px 0;margin:0;border-bottom:1px solid var(--hair)} .sw:last-child{border-bottom:0}
+.sw input{accent-color:var(--ink)}
+.toast{letter-spacing:.14em;font-size:12px;padding:14px 26px}
+body[data-page=matches] #app,body[data-page=likes] #app{max-width:820px}
 /* 版面修正（保留）：桌機探索格線、註冊頁頭像選取框 */
 @media(min-width:760px){.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:40px 22px}}
 .avpick{font-size:34px;color:var(--grey2);background-color:#ECEAE6;background-size:cover;background-position:center;border:1px dashed var(--grey2)}
@@ -476,7 +560,7 @@ details.more summary{cursor:pointer;font-size:13px;color:var(--grey);text-decora
 /* =====================================================================
    微糖 JUST SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.26.0';
+const BUILD = 'v1.27.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -685,6 +769,7 @@ async function route(){
   const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
   renderNav();
   document.body.classList.toggle('home', !path || path==='about');
+  document.body.dataset.page = path || 'home';
   const app = $('#app'); app.innerHTML = '<div class="spinner"></div>';
   const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding'];
   if(protectedPages.includes(path) && !me){ location.hash='#/auth'; return; }
@@ -1132,7 +1217,7 @@ async function viewBrowse(){
   const cities = () => browseState.region ? REGIONS[browseState.region] : CITIES;
   if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}
     ${adminView ? `<div class="banner info">管理員瀏覽模式：看得到所有已上架的會員，不限方向。只能瀏覽，不能傳訊息或心動。</div>`
-    : `<p class="tiny dim" style="margin:-8px 0 14px;letter-spacing:.1em">${orientText(me)}　·　只顯示方向互相吻合的會員</p>`}
+    : `<header class="phd"><h1>探索</h1><p>${orientText(me)}，只顯示方向互相吻合的會員</p></header>`}
     <div class="filters">
       ${adminView?`<select id="fGender" aria-label="性別"><option value="">男女都看</option><option value="female" ${browseState.agender==='female'?'selected':''}>只看女生</option><option value="male" ${browseState.agender==='male'?'selected':''}>只看男生</option></select>`:''}
       <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
@@ -1334,7 +1419,7 @@ async function viewLikes(){
   const ok = rows => (rows||[]).filter(r=>r.p&&r.p.status==='approved');
   const list = (rows, key) => ok(rows).length ? `<div class="list">${ok(rows).map(r=>`<div class="item" data-id="${r.p.id}">
       <div class="avatar" data-ph="${esc(r.p.avatar_path||'')}"></div><div class="grow"><div class="t">${esc(r.p.nickname)} <span class="muted small">${age(r.p.birth_year)}</span></div><div class="s">${esc(r.p.city||'')}</div></div><span class="tiny dim">${fmtTime(r.created_at)}</span></div>`).join('')}</div>` : `<p class="muted center" style="padding:30px 0">還沒有</p>`;
-  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<div class="tabs"><button class="on" data-t="a">對我心動（${ok(toMe).length}）</button><button data-t="b">我心動的（${ok(fromMe).length}）</button></div>
+  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>心動</h1><p>對你心動的人，和你心動過的人。</p></header><div class="tabs"><button class="on" data-t="a">對我心動（${ok(toMe).length}）</button><button data-t="b">我心動的（${ok(fromMe).length}）</button></div>
     <div id="ta">${list(toMe)}</div><div id="tb" class="hidden">${list(fromMe)}</div>`;
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); });
   $('#app').querySelectorAll('.item').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
@@ -1347,7 +1432,7 @@ async function viewLikes(){
 async function viewMatches(){
   const rs = routeSeq;
   const { data: ms } = await sb.from('matches').select('*').or(`user_a.eq.${me.id},user_b.eq.${me.id}`).order('last_message_at',{ascending:false,nullsFirst:false});
-  if(!ms || !ms.length){ if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<div class="center" style="padding:60px 0"><p class="muted">還沒有對話。<br class="d">到「探索」看看，遇到想認識的人就直接傳訊息吧。</p><a class="btn mt2" href="#/browse">去探索</a></div>`; return; }
+  if(!ms || !ms.length){ if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>訊息</h1></header><div class="empty"><p class="serif">還沒有對話</p><p class="muted small">到「探索」看看，遇到想認識的人，就直接傳一則訊息。</p><a class="btn mt2" href="#/browse">去探索</a></div>`; return; }
   const ids = ms.map(m=> m.user_a===me.id ? m.user_b : m.user_a);
   const [{ data: ps }, { data: nm }, { data: unread }] = await Promise.all([
     sb.from('profiles').select('id,nickname,avatar_path,status,role,birth_year,city').in('id', ids),
@@ -1371,7 +1456,7 @@ async function viewMatches(){
   const tab = sessionStorage.getItem('inboxTab') || (groups.request.length ? 'request' : 'chat');
   const T = [['request','訊息請求'],['chat','聊天中'],['waiting','等待回覆']];
   const empty = { request:'目前沒有新的訊息請求。', chat:'還沒有正在聊的對話。', waiting:'沒有等待回覆的訊息。' };
-  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<div class="tabs">${T.map(([k,v])=>`<button class="${k===tab?'on':''}" data-t="${k}">${v}（${groups[k].length}）</button>`).join('')}</div>
+  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>訊息</h1><p>對方回覆之前，你只能先傳一則訊息。</p></header><div class="tabs">${T.map(([k,v])=>`<button class="${k===tab?'on':''}" data-t="${k}">${v}（${groups[k].length}）</button>`).join('')}</div>
     ${T.map(([k])=>`<div class="list ibx ${k===tab?'':'hidden'}" data-t="${k}">${groups[k].length?groups[k].map(row).join(''):`<p class="muted center" style="padding:40px 0">${empty[k]}</p>`}</div>`).join('')}
     ${tab==='request'&&groups.request.length?'':''}`;
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ sessionStorage.setItem('inboxTab', b.dataset.t); document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on', x===b)); document.querySelectorAll('.ibx').forEach(x=>x.classList.toggle('hidden', x.dataset.t!==b.dataset.t)); });
