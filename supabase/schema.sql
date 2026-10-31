@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.26.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.27.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -342,11 +342,17 @@ create table if not exists public.messages (
   read_at    timestamptz
 );
 create index if not exists messages_match_idx on public.messages(match_id, created_at);
+-- v0.27：聊天可以傳照片、可以收回訊息
+alter table public.messages add column if not exists image_path text;
+alter table public.messages add column if not exists recalled_at timestamptz;
+alter table public.messages drop constraint if exists messages_body_check;
+alter table public.messages add constraint messages_body_check
+  check (char_length(body) <= 2000 and (char_length(body) >= 1 or image_path is not null or recalled_at is not null));
 
 create or replace function public.handle_message()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  update public.matches set last_message_at = new.created_at, last_message = left(new.body, 80),
+  update public.matches set last_message_at = new.created_at, last_message = case when new.image_path is not null and new.body = '' then '[照片]' else left(new.body, 80) end,
          replied_at = case when replied_at is null and initiator is not null and new.sender_id <> initiator then new.created_at else replied_at end
    where id = new.match_id;
   return new;
@@ -354,6 +360,19 @@ end $$;
 drop trigger if exists messages_after_trg on public.messages;
 create trigger messages_after_trg after insert on public.messages
   for each row execute function public.handle_message();
+
+-- 收回最後一則訊息時，訊息列表的預覽也跟著改
+create or replace function public.handle_message_recall()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.recalled_at is not null and old.recalled_at is null then
+    update public.matches set last_message = '訊息已收回' where id = new.match_id and last_message_at = new.created_at;
+  end if;
+  return new;
+end $$;
+drop trigger if exists messages_recall_trg on public.messages;
+create trigger messages_recall_trg after update of recalled_at on public.messages
+  for each row execute function public.handle_message_recall();
 
 -- 訊息：時間由伺服器決定；之後只能標記已讀，內容與寄件人不得修改
 create or replace function public.messages_guard()
@@ -365,9 +384,22 @@ begin
     perform 1 from public.matches where id = new.match_id for update;   -- 同一段對話的送出排隊，避免連點繞過規則
     if not private.can_send(new.match_id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
     if not private.partner_active(new.match_id) then raise exception '對方目前無法接收訊息'; end if;
+    new.recalled_at := null;
+    if new.image_path is not null and new.image_path !~ ('^' || auth.uid()::text || '/' || new.match_id::text || '-[0-9]+\.jpg$') then
+      raise exception '照片路徑不正確';
+    end if;
   else
-    new.body := old.body; new.sender_id := old.sender_id; new.match_id := old.match_id; new.created_at := old.created_at;
-    if old.sender_id = auth.uid() then new.read_at := old.read_at; end if;
+    new.sender_id := old.sender_id; new.match_id := old.match_id; new.created_at := old.created_at;
+    if old.sender_id = auth.uid() then
+      new.read_at := old.read_at;
+      if new.recalled_at is not null and old.recalled_at is null then   -- 寄件人收回：清掉內容與照片
+        new.recalled_at := now(); new.body := ''; new.image_path := null;
+      else
+        new.recalled_at := old.recalled_at; new.body := old.body; new.image_path := old.image_path;
+      end if;
+    else
+      new.body := old.body; new.image_path := old.image_path; new.recalled_at := old.recalled_at;
+    end if;
   end if;
   return new;
 end $$;
@@ -615,6 +647,9 @@ create policy "messages_insert" on public.messages for insert to authenticated
                 and not private.is_blocked_with(case when m.user_a = auth.uid() then m.user_b else m.user_a end))
     and private.can_send(match_id)
   );
+drop policy if exists "messages_update_recall" on public.messages;
+create policy "messages_update_recall" on public.messages for update to authenticated
+  using (sender_id = auth.uid()) with check (sender_id = auth.uid());
 drop policy if exists "messages_update_read" on public.messages;
 create policy "messages_update_read" on public.messages for update to authenticated
   using (sender_id <> auth.uid() and exists (select 1 from public.matches m where m.id = match_id
@@ -889,7 +924,7 @@ begin
   if public.my_status() = 'suspended' then
     raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
   end if;
-  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person') and name like uid::text || '/%') then
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat') and name like uid::text || '/%') then
     raise exception '照片檔案還沒刪完，請再按一次刪除';
   end if;
   delete from public.photos where user_id = uid;
@@ -1129,7 +1164,7 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
   if target = auth.uid() then raise exception '不能刪除自己的管理員帳號'; end if;
-  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person') and name like target::text || '/%') then
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat') and name like target::text || '/%') then
     raise exception '這位會員的照片或認證檔案還沒刪完';
   end if;
   update public.reports set status = 'resolved' where reported_id = target and status = 'open';
@@ -1327,3 +1362,47 @@ do $$ declare f record; begin
            where n.nspname = 'public' and p.proname in ('is_admin','my_status','unmatch','request_private_photos','related_names','get_me','admin_profiles')
   loop execute format('revoke execute on function %s from anon, public', f.sig); execute format('grant execute on function %s to authenticated', f.sig); end loop;
 end $$;
+
+-- ---------------------------------------------------------------------
+-- v0.27 聊天照片：私有空間，路徑 <寄件人>/<對話id>-<時間>.jpg
+--   上傳：自己的資料夾、自己是這段對話的成員、對話還開著
+--   讀取：自己上傳的，或對話中還沒被收回的照片（對話成員才看得到）
+--   刪除：只有寄件人（收回時）和管理員
+-- ---------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('chat', 'chat', false, 5242880, array['image/jpeg'])
+on conflict (id) do update set public = false, file_size_limit = 5242880, allowed_mime_types = array['image/jpeg'];
+
+create or replace function private.chat_can_upload(fname text)
+returns boolean language plpgsql stable security definer set search_path = public as $$
+declare mid uuid; uid uuid := auth.uid();
+begin
+  if uid is null or fname !~ ('^' || uid::text || '/[0-9a-f-]{36}-[0-9]+\.jpg$') then return false; end if;
+  mid := substring(fname from '^[^/]+/([0-9a-f-]{36})-')::uuid;
+  return exists (select 1 from public.matches m where m.id = mid and m.closed_at is null and (m.user_a = uid or m.user_b = uid)
+                   and not private.is_blocked_with(case when m.user_a = uid then m.user_b else m.user_a end))
+     and public.my_status() in ('approved','pending')
+     and (select count(*) from storage.objects o where o.bucket_id = 'chat' and o.name like uid::text || '/%' and o.created_at > now() - interval '1 day') < 60;
+exception when others then return false;
+end $$;
+
+create or replace function private.chat_can_read(fname text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select fname like auth.uid()::text || '/%'
+      or exists (select 1 from public.messages ms join public.matches m on m.id = ms.match_id
+                  where ms.image_path = fname and ms.recalled_at is null
+                    and (m.user_a = auth.uid() or m.user_b = auth.uid())
+                    and (m.closed_at is null or (m.closed_by is not null and m.closed_by <> auth.uid()))
+                    and (m.reopened_at is null or ms.created_at >= m.reopened_at))
+      or public.is_admin();
+$$;
+
+drop policy if exists "chat_storage_insert" on storage.objects;
+create policy "chat_storage_insert" on storage.objects for insert to authenticated
+  with check (bucket_id = 'chat' and private.chat_can_upload(name));
+drop policy if exists "chat_storage_select" on storage.objects;
+create policy "chat_storage_select" on storage.objects for select to authenticated
+  using (bucket_id = 'chat' and private.chat_can_read(name));
+drop policy if exists "chat_storage_delete" on storage.objects;
+create policy "chat_storage_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'chat' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));

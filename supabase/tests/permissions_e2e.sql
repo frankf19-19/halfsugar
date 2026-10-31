@@ -5,7 +5,7 @@ declare
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
-  AD uuid := gen_random_uuid(); W uuid := gen_random_uuid();
+  AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; m1 bigint; m2 bigint;
 begin
   perform set_config('storage.allow_delete_query','true',true);
   update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
@@ -564,6 +564,31 @@ begin
   select count(*) into n from public.profiles where id=W and status='approved' and approved_at is not null; out := array_append(out, ('34c 管理員核准成功 = '||n||' (應為1)')::text);
   update public.profiles set status='suspended' where id=W; update public.profiles set status='pending' where id=W;
   select count(*) into n from public.profiles where id=W and approved_at is null; out := array_append(out, ('34d 解除停權後要重新審核 = '||n||' (應為1)')::text);
+
+  -- 35 v0.27 聊天照片與收回
+  insert into auth.users (id, email, aud, role) values (X1,'e2e-x1@test.invalid','authenticated','authenticated'),(X2,'e2e-x2@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='X1', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1985, city='台北市', status='approved' where id=X1;
+  update public.profiles set nickname='X2', gender='female', looking_for='male', role='baby', birth_year=1998, city='台北市', status='approved' where id=X2;
+  insert into public.matches (user_a, user_b, initiator, replied_at) values (least(X1,X2), greatest(X1,X2), X1, now()) returning id into cm;
+  perform set_config('request.jwt.claims', json_build_object('sub',X1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', X1::text, true);
+  execute 'set local role authenticated';
+  begin insert into public.messages (match_id, sender_id, body, image_path) values (cm, X1, '', X2||'/'||cm||'-1.jpg'); out := array_append(out, '35 用別人的路徑傳照片：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '35 照片路徑必須是自己的 ✓'::text); end;
+  insert into public.messages (match_id, sender_id, body, image_path) values (cm, X1, '', X1||'/'||cm||'-1.jpg') returning id into m1;
+  insert into public.messages (match_id, sender_id, body) values (cm, X1, '想收回的話') returning id into m2;
+  update public.messages set recalled_at = now() where id in (m1, m2);
+  execute 'reset role';
+  select count(*) into n from public.messages where id in (m1,m2) and recalled_at is not null and body = '' and image_path is null; out := array_append(out, ('35b 寄件人收回後內容清空 = '||n||' (應為2)')::text);
+  select count(*) into n from public.matches where id=cm and last_message='訊息已收回'; out := array_append(out, ('35c 收回最後一則後預覽更新 = '||n||' (應為1)')::text);
+  insert into public.messages (match_id, sender_id, body) values (cm, X1, '對方不能收回我的訊息') returning id into m2;
+  perform set_config('request.jwt.claims', json_build_object('sub',X2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', X2::text, true);
+  execute 'set local role authenticated';
+  update public.messages set recalled_at = now(), body = 'x' where id = m2;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from public.messages where id=m2 and recalled_at is null and body='對方不能收回我的訊息'; out := array_append(out, ('35d 對方無法收回或改我的訊息 = '||n||' (應為1)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

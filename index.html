@@ -637,6 +637,18 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
   .modal .box:has(.pm) .x{position:absolute;top:10px;right:10px;margin:0;float:none;z-index:3}
   .chat{height:calc(100dvh - 90px);min-height:0}
 }
+/* v1.44 聊天照片與收回 */
+.chat form{align-items:center}
+.chph{flex:0 0 auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.chph svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.4}
+.chph.off{opacity:.3}.chph.busy{opacity:.4;pointer-events:none}
+.msg.hasimg{padding:0;max-width:68%;background:none!important;color:var(--ink)!important}
+.msg.hasimg>div:not(.mimg){padding:8px 2px 0}
+.msg.hasimg .time{opacity:1;color:var(--grey2)}
+.msg .mimg{width:min(240px,58vw);aspect-ratio:3/4;background:#ECEAE6 center/cover;cursor:zoom-in;position:relative}
+.msg.hasimg .time{padding:4px 2px 0}
+.msg.recalled{background:none!important;color:var(--grey2)!important;border:1px dashed var(--rule);font-size:13px;padding:8px 14px}
+.msg.me:not(.recalled){cursor:pointer}
 </style>
 </head>
 <body>
@@ -678,7 +690,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.43.0';
+const BUILD = 'v1.44.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -862,7 +874,7 @@ function renderNav(){
 async function refreshUnread(){
   if(!me || !['approved','pending'].includes(me.status)) return;
   const { data: ms } = await sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`);
-  const setBadge = n => (document.title = (n>0?`(${n>99?'99+':n}) `:'') + document.title.replace(/^\(\S+\) /,''), document.querySelectorAll('a[href="#/matches"]')).forEach(a=>{ a.querySelector('.badge')?.remove(); if(n>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${n>99?'99+':n}</span>`); });
+  const setBadge = n => (document.title = (n>0?`(${n>99?'99+':n}) `:'') + document.title.replace(/^\(\S+\) /,''), document.querySelectorAll('a[href="#/matches"]:not(.ib)')).forEach(a=>{ a.querySelector('.badge')?.remove(); if(n>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${n>99?'99+':n}</span>`); });
   const seenL = localStorage.getItem('yy_likes_seen_'+me.id) || '1970-01-01T00:00:00Z';
   if(!location.hash.startsWith('#/likes')) sb.from('likes').select('from_id',{count:'exact',head:true}).eq('to_id', me.id).gt('created_at', seenL).then(({ count: lc })=>{
     document.querySelectorAll('a[href="#/likes"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(lc>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${lc>99?'99+':lc}</span>`); }); });
@@ -1690,25 +1702,47 @@ async function viewChat(matchId){
     <div class="msgs" id="msgs"></div>
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
     <div class="banner ${closed?'':'hidden'}" id="chClosed" style="margin:8px 0 0">對方已結束這段對話，無法再傳訊息。如果有不當內容，仍可以從右上角「⋯」檢舉或封鎖。</div>
-    <form id="chForm" class="${closed?'hidden':''}"><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
+    <form id="chForm" class="${closed?'hidden':''}"><label class="chph" id="chPh" aria-label="傳照片" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="hidden"></label><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
 </div>`;
   if(o) signed(o.avatar_path).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
   let lastDay='', lastAt=null; const seenIds=new Set();
-  const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); } if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); } box.insertAdjacentHTML('beforeend', `<div class="msg ${x.sender_id===me.id?'me':'them'}">${esc(x.body)}<span class="time">${new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}</span></div>`); box.scrollTop = box.scrollHeight; };
+  const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+  const msgHtml = x => { const mine = x.sender_id===me.id;
+    if(x.recalled_at) return `<div class="msg ${mine?'me':'them'} recalled" data-mid="${x.id}">${mine?'你收回了一則訊息':'對方收回了一則訊息'}</div>`;
+    return `<div class="msg ${mine?'me':'them'}${x.image_path?' hasimg':''}" data-mid="${x.id}">${x.image_path?`<div class="mimg wm" data-wm="${wmText()}" data-p="${esc(x.image_path)}"></div>`:''}${x.body?`<div>${esc(x.body)}</div>`:''}<span class="time">${tm(x)}</span></div>`; };
+  const loadImg = el => { const im=el.querySelector('.mimg'); if(!im) return; sb.storage.from('chat').createSignedUrl(im.dataset.p, 900).then(({ data })=>{ if(data?.signedUrl && im.isConnected){ im.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; im.dataset.u=data.signedUrl; } }); };
+  const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); } if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); }
+    box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); box.scrollTop = box.scrollHeight; };
+  const markRecalled = x => { const el = box.querySelector(`[data-mid="${x.id}"]`); if(el){ el.outerHTML = msgHtml({ ...x, recalled_at: x.recalled_at || new Date().toISOString() }); } };
+  // 點自己的訊息：收回；點照片：放大
+  box.addEventListener('click', async ev => {
+    const im = ev.target.closest('.mimg');
+    if(im && im.dataset.u){ modal(`<div class="wm" data-wm="${wmText()}" style="position:relative;background:#111 center/contain no-repeat;background-image:url('${cssu(im.dataset.u)}');height:min(78vh,900px)"></div><p class="tiny dim mt">請勿截圖外流。畫面上的浮水印是你的會員代號。</p>`); return; }
+    const el = ev.target.closest('.msg.me:not(.recalled)'); if(!el || !el.dataset.mid) return;
+    modal(`<div class="sheet"><button class="it bad" id="rcBtn">收回這則訊息</button><p class="tiny dim" style="padding:14px 4px 0">收回後雙方都看不到內容，照片也會一併刪除；對方會看到「對方收回了一則訊息」。</p></div>`);
+    $('#rcBtn').onclick = async ()=>{ $('#rcBtn').disabled=true; const p = el.querySelector('.mimg')?.dataset.p;
+      const { error } = await sb.from('messages').update({ recalled_at: new Date().toISOString() }).eq('id', el.dataset.mid);
+      if(error){ $('#rcBtn').disabled=false; return toast('沒有收回成功：'+zh(error.message)); }
+      if(p) sb.storage.from('chat').remove([p]).catch(()=>{});
+      closeModal(); markRecalled({ id: el.dataset.mid, sender_id: me.id }); toast('已收回'); };
+  });
   (msgs||[]).forEach(add);
   const lastMine = [...msgs].reverse().find(x=>x.sender_id===me.id);
   if(lastMine && lastMine.read_at && msgs[msgs.length-1]===lastMine) box.insertAdjacentHTML('beforeend', `<div class="tiny dim" style="text-align:right;margin:-4px 2px 8px">已讀 ${fmtTime(lastMine.read_at)}</div>`), box.scrollTop=box.scrollHeight;
   let otherReplied = !!m.replied_at || msgs.some(x=>x.sender_id!==me.id), mySent = msgs.some(x=>x.sender_id===me.id);
   const showClosed = () => { $('#chClosed').classList.remove('hidden'); $('#chForm').classList.add('hidden'); $('#chWait').classList.add('hidden'); };
   const gate = () => { const wait = m.initiator===me.id && !otherReplied && mySent; const blocked = !['approved','pending'].includes(me.status); const off = wait || blocked;
-    $('#chIn').disabled = off; $('#chSend').disabled = off;
+    $('#chIn').disabled = off; $('#chSend').disabled = off; $('#chFile').disabled = off || !otherReplied; $('#chPh').classList.toggle('off', off || !otherReplied);
+    $('#chPh').title = otherReplied ? '傳照片' : '對方回覆後就能傳照片';
     $('#chWait').textContent = blocked ? (me.status==='suspended' ? '帳號停權中，無法傳訊息。' : '你的檔案需要修改並通過審核後，才能繼續傳訊息。') : '已送出第一則訊息，對方回覆後就能繼續聊。';
     $('#chWait').classList.toggle('hidden', !off); };
   gate();
   sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread());
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     if(payload.new.sender_id!==me.id){ add(payload.new); otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
+  }).on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
+    if(payload.new.recalled_at) markRecalled(payload.new);
   }).subscribe();
   // 手機切到背景再回來時，即時連線可能斷過：補抓這段時間的新訊息
   onChatVisible = async () => { if(my!==routeSeq || !$('#msgs')) return;
@@ -1718,6 +1752,19 @@ async function viewChat(matchId){
     const theirs = nw.filter(x=>x.sender_id!==me.id); nw.forEach(add);
     if(theirs.length){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread()); }
     box.scrollTop = box.scrollHeight; };
+  $('#chPh').onclick = e => { if($('#chFile').disabled){ e.preventDefault(); toast(otherReplied?'目前無法傳照片':'對方回覆後就能傳照片'); } };
+  $('#chFile').onchange = async e => { const f=e.target.files[0]; e.target.value=''; if(!f || sending) return;
+    sending = true; $('#chPh').classList.add('busy'); toast('照片傳送中…', 30000); let path;
+    try{
+      const blob = await compressImage(f, 1280, .82);
+      path = `${me.id}/${matchId}-${Date.now()}.jpg`;
+      const { error: ue } = await sb.storage.from('chat').upload(path, blob, { contentType:'image/jpeg', upsert:false });
+      if(ue) throw new Error(/row-level|security|403/i.test(ue.message||'')?'今天傳的照片太多了，明天再試':ue.message);
+      const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body:'', image_path:path }).select().single();
+      if(error) throw error;
+      add(data); mySent=true; gate(); toast('已傳送', 1200);
+    }catch(err){ if(path) sb.storage.from('chat').remove([path]).catch(()=>{}); toast('照片沒有送出：'+zh(err.message)); }
+    finally{ sending=false; $('#chPh')?.classList.remove('busy'); } };
   let sending = false;
   $('#chForm').onsubmit = async e => { e.preventDefault(); if(sending) return; const body=$('#chIn').value.trim(); if(!body) return;
     const bad = containsBadWords(body, true); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);
@@ -1952,7 +1999,7 @@ function bindAccount(){
         // 1. 先解除照片登記，才能刪掉檔案
         let r = await sb.rpc('begin_account_deletion'); if(r.error) throw r.error;
         // 2. 刪掉自己資料夾裡的所有檔案
-        for(const bk of ['photos','verify','person']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(me.id, { limit:100 }); if(error) throw error;
+        for(const bk of ['photos','verify','person','chat']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(me.id, { limit:100 }); if(error) throw error;
           const names = (files||[]).filter(f=>f.id).map(f=>`${me.id}/${f.name}`); if(!names.length) break;
           const { error: e2 } = await sb.storage.from(bk).remove(names); if(e2) throw e2; if(names.length<100) break; }
         // 3. 刪除帳號（含手機、信箱與所有資料）
@@ -2096,7 +2143,7 @@ async function viewAdmin(){
         $('#qr').querySelectorAll('.dl').forEach(b=>b.onclick=async()=>{
           if(!confirm(`永久刪除「${b.dataset.n}」的帳號？\n檔案、照片、對話都會刪除，這支手機之後不能再註冊。無法復原。`)) return;
           try{ const uid=b.dataset.id;
-            for(const bk of ['photos','verify','person']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(uid,{limit:100}); if(error) throw error;
+            for(const bk of ['photos','verify','person','chat']) for(let i=0;i<20;i++){ const { data: files, error } = await sb.storage.from(bk).list(uid,{limit:100}); if(error) throw error;
               const names=(files||[]).filter(f=>f.id).map(f=>`${uid}/${f.name}`); if(!names.length) break;
               const { error:e2 } = await sb.storage.from(bk).remove(names); if(e2) throw e2; if(names.length<100) break; }
             const { error } = await sb.rpc('admin_delete_account',{ target: uid }); if(error) throw error; toast('已刪除帳號'); run();
