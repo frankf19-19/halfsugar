@@ -609,6 +609,7 @@ body[data-page=matches] #app,body[data-page=likes] #app{max-width:820px}
 .phead h2 span{white-space:nowrap}
 @media(max-width:400px){.tabs button{padding:12px 9px;letter-spacing:.06em}}
 @media(max-width:719px){.pactions{margin-left:-22px;margin-right:-22px;padding-left:22px;padding-right:22px;bottom:calc(-28px - env(safe-area-inset-bottom))}}
+html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 </style>
 </head>
 <body>
@@ -650,7 +651,7 @@ body[data-page=matches] #app,body[data-page=likes] #app{max-width:820px}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.37.0';
+const BUILD = 'v1.38.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -885,7 +886,7 @@ async function route(){
   document.body.dataset.page = path || 'home';
   const app = $('#app'); app.innerHTML = '<div class="spinner"></div>';
   const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding'];
-  if(protectedPages.includes(path) && !me){ location.hash='#/auth'; return; }
+  if(protectedPages.includes(path) && !me){ if(path!=='onboarding') sessionStorage.setItem('yy_next', location.hash); location.hash='#/auth?mode=login'; return; }
   if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat'].includes(path||'')){ location.hash='#/onboarding'; return; }
   if(me && !me.is_admin && me.status!=='incomplete' && missingBasics(me).length && ['browse','likes','matches','chat'].includes(path)){ sessionStorage.setItem('meTab','profile'); toast('請先完成基本資料'); location.hash='#/me'; return; }
   if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety'].includes(path));
@@ -1044,7 +1045,7 @@ async function viewLanding(){
    頁面：登入／註冊
    ===================================================================== */
 async function viewAuth(){
-  if(me){ location.hash = me.status==='incomplete' ? '#/onboarding' : '#/browse'; return; }
+  if(me){ const nx=sessionStorage.getItem('yy_next'); sessionStorage.removeItem('yy_next'); location.hash = me.status==='incomplete' ? '#/onboarding' : (nx && /^#\/(browse|likes|matches|chat|me|admin)/.test(nx) ? nx : '#/browse'); return; }
   let mode = (location.hash.includes('mode=login')) ? 'login' : 'register';
   const draw = () => {
     $('#app').innerHTML = `<div class="authwrap">
@@ -1318,9 +1319,11 @@ async function viewOnboarding(){
     const btn = e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='上傳中…';
     let path = null;
     try{
+      const prevAv = me.avatar_path;
       path = await uploadPhoto(avatarFile);
       const { data: upd, error } = await sb.from('profiles').update({ ...p, avatar_path: path, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id).select('status').maybeSingle();
       if(error){ sb.storage.from('photos').remove([path]).catch(()=>{}); throw error; }
+      if(prevAv && prevAv!==path) sb.storage.from('photos').remove([prevAv]).catch(()=>{});   // 重送時清掉上一次的頭像，避免占用空間
       if(upd && upd.status==='incomplete'){ await loadMe(); throw new Error(phoneOk()?'資料還不完整，請檢查每個必填欄位':'請先完成手機驗證'); }
       let failed = 0;
       for(let i=0;i<extra.length;i++){ btn.textContent=`上傳照片 ${i+1}／${extra.length}…`;
