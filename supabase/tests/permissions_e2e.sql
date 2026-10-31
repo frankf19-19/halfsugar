@@ -653,7 +653,17 @@ begin
   select count(*) into n from public.safety_view(tk); out := array_append(out, ('37i 朋友不用登入看得到報備 = '||n||' (應為1)')::text);
   select count(*) into n from public.safety_view(repeat('0',64)); out := array_append(out, ('37j 亂猜連結看不到 = '||n||' (應為0)')::text);
   execute 'reset role';
-  update public.date_invites set date_at = now() - interval '2 hours' where id = iv;
+  update public.date_invites set date_at = now() - interval '4 hours' where id = iv;
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  begin perform public.cancel_date_invite(iv); out := array_append(out, '38 約會開始後取消：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '38 約會開始後不能取消 ✓'::text); end;
+  insert into public.messages (match_id, sender_id, body) values (cm3, V1, '普通訊息') returning id into m1;
+  update public.messages set invite_id = iv where id = m1;
+  select count(*) into n from public.messages where id=m1 and invite_id is null; out := array_append(out, ('38b 改訊息偽裝成系統訊息被擋 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', V2::text, true);
   execute 'set local role authenticated';
