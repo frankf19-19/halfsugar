@@ -520,5 +520,16 @@ begin
   select nickname into v from public.profiles where id=Q; out := array_append(out, ('31 上架後改暱稱 = '||v||' (應為Q)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 32 創始會員編號：自己不能改，第一次通過審核時由系統給
+  perform set_config('request.jwt.claims', json_build_object('sub',Q,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', Q::text, true);
+  execute 'set local role authenticated';
+  begin update public.profiles set founder_no = 99999 where id=Q; exception when others then null; end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from public.profiles where id=Q and founder_no = 99999; out := array_append(out, ('32 自己填創始會員編號 = '||n||' (應為0)')::text);
+  update public.profiles set status='approved' where id=Y;
+  select count(*) into n from public.profiles where id=Y and founder_no is not null; out := array_append(out, ('32b 第一次通過審核拿到創始編號 = '||n||' (應為1)')::text);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

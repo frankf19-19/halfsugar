@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.23.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.24.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -63,6 +63,8 @@ alter table public.profiles add column if not exists approved_at timestamptz;
 alter table public.profiles add column if not exists wealth_verified_at timestamptz;
 alter table public.profiles add column if not exists person_verified_at timestamptz;   -- 真人認證通過時間   -- 財力認證通過時間
 -- 身材、罩杯（選填、只限女性）、相處方式、見面頻率、甜心期望預算
+-- 創始會員：前 100 位第一次通過審核的會員（不對外顯示，正式收費後給優惠用）
+alter table public.profiles add column if not exists founder_no int unique;
 alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
 alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
 alter table public.profiles add column if not exists relation_types text[] not null default '{}'
@@ -110,6 +112,7 @@ begin
   new.wealth_verified_at := old.wealth_verified_at;
   new.person_verified_at := old.person_verified_at;   -- 真人認證只有管理員能設定   -- 財力認證只有管理員能設定
   new.created_at  := old.created_at;
+  new.founder_no  := old.founder_no;     -- 創始會員編號只由系統給
   new.approved_at  := old.approved_at;    -- 只能由審核流程設定（下一個 trigger 處理）
   new.submitted_at := old.submitted_at;
   if new.last_active_at is not null then new.last_active_at := least(new.last_active_at, now()); end if;
@@ -166,7 +169,16 @@ create or replace function public.profiles_submitted_at()
 returns trigger language plpgsql as $$
 begin
   if new.status = 'pending' and old.status is distinct from 'pending' then new.submitted_at := now(); end if;
-  if new.status = 'approved' and new.approved_at is null then new.approved_at := now(); end if;
+  if new.status = 'approved' and new.approved_at is null then
+    new.approved_at := now();
+    -- 前 100 位第一次通過審核的會員，記錄為創始會員（管理員不算）
+    if new.founder_no is null and not coalesce(new.is_admin, false) then
+      perform pg_advisory_xact_lock(hashtext('founder_no'));
+      if (select count(*) from public.profiles where founder_no is not null) < 100 then
+        new.founder_no := coalesce((select max(founder_no) from public.profiles), 0) + 1;
+      end if;
+    end if;
+  end if;
   return new;
 end $$;
 drop trigger if exists profiles_zz_submitted_trg on public.profiles;
