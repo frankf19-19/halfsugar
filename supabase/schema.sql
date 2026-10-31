@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.28.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.29.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -404,6 +404,9 @@ begin
     if old.sender_id = auth.uid() then
       new.read_at := old.read_at;
       if new.recalled_at is not null and old.recalled_at is null then   -- 寄件人收回：會員看不到，原內容另存一份給管理員
+        if exists (select 1 from public.matches m where m.id = old.match_id and m.initiator = auth.uid() and m.replied_at is null) then
+          raise exception '對方回覆前不能收回第一則訊息';
+        end if;
         insert into public.message_recalls (message_id, match_id, sender_id, body, image_path, sent_at)
         values (old.id, old.match_id, old.sender_id, old.body, old.image_path, old.created_at) on conflict do nothing;
         new.recalled_at := now(); new.body := ''; new.image_path := null;
@@ -499,6 +502,12 @@ alter table public.reports alter column reporter_id drop not null;
 alter table public.reports drop constraint if exists reports_reporter_id_fkey;
 alter table public.reports add constraint reports_reporter_id_fkey
   foreign key (reporter_id) references public.profiles(id) on delete set null;
+-- v0.29：被檢舉的人刪帳號，檢舉與證據也要留著（被檢舉人欄位清空，另存當時的暱稱）
+alter table public.reports alter column reported_id drop not null;
+alter table public.reports drop constraint if exists reports_reported_id_fkey;
+alter table public.reports add constraint reports_reported_id_fkey
+  foreign key (reported_id) references public.profiles(id) on delete set null;
+alter table public.reports add column if not exists reported_nickname text;
 
 -- 停權手機黑名單：只存手機號碼的加密指紋（看不出原號碼），任何會員都讀不到
 create table if not exists public.banned_phones (
@@ -964,14 +973,21 @@ create index if not exists report_evidence_idx on public.report_evidence(report_
 alter table public.report_evidence enable row level security;
 drop policy if exists "evidence_admin" on public.report_evidence;
 create policy "evidence_admin" on public.report_evidence for select to authenticated using (public.is_admin());
+alter table public.report_evidence add column if not exists image_path text;
+alter table public.report_evidence add column if not exists recalled boolean not null default false;
 
 create or replace function public.handle_report()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.report_evidence (report_id, sender_id, body, created_at)
-  select new.id, x.sender_id, x.body, x.created_at from (
-    select ms.sender_id, ms.body, ms.created_at from public.messages ms
+  update public.reports set reported_nickname = (select nickname from public.profiles where id = new.reported_id) where id = new.id;
+  -- 備份對話（含照片路徑與已收回訊息的原內容）
+  insert into public.report_evidence (report_id, sender_id, body, image_path, recalled, created_at)
+  select new.id, x.sender_id, x.body, x.image_path, x.recalled, x.created_at from (
+    select ms.sender_id, coalesce(r.body, ms.body, '') as body, coalesce(r.image_path, ms.image_path) as image_path,
+           ms.recalled_at is not null as recalled, ms.created_at
+      from public.messages ms
       join public.matches m on m.id = ms.match_id
+      left join public.message_recalls r on r.message_id = ms.id
      where m.user_a = least(new.reporter_id, new.reported_id) and m.user_b = greatest(new.reporter_id, new.reported_id)
      order by ms.created_at desc limit 500) x;
   return new;
@@ -1438,7 +1454,9 @@ begin
       from public.matches m
       left join public.profiles pa on pa.id = m.user_a
       left join public.profiles pb on pb.id = m.user_b
-     where p_q is null or p_q = '' or pa.nickname ilike '%' || p_q || '%' or pb.nickname ilike '%' || p_q || '%'
+     where p_q is null or p_q = ''
+        or pa.nickname ilike '%' || replace(replace(p_q, '%', '\%'), '_', '\_') || '%'
+        or pb.nickname ilike '%' || replace(replace(p_q, '%', '\%'), '_', '\_') || '%'
      order by m.last_message_at desc nulls last, m.created_at desc
      limit least(coalesce(p_limit, 200), 1000);
 end $$;

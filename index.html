@@ -658,6 +658,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 .admchat .ab{white-space:pre-wrap;font-size:14px;margin-top:4px}
 .admchat .amimg{width:200px;aspect-ratio:3/4;background:#ddd center/cover;margin-top:6px;cursor:zoom-in;font-size:12px;color:var(--grey);display:flex;align-items:center;justify-content:center}
 .tblwrap .table{min-width:780px}
+.chempty{margin:auto;text-align:center;padding:30px 16px;color:var(--grey)}.chempty .serif{font-size:18px;color:var(--ink);margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -699,7 +700,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.45.0';
+const BUILD = 'v1.46.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -888,14 +889,14 @@ async function refreshUnread(){
   if(!location.hash.startsWith('#/likes')) sb.from('likes').select('from_id',{count:'exact',head:true}).eq('to_id', me.id).gt('created_at', seenL).then(({ count: lc })=>{
     document.querySelectorAll('a[href="#/likes"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(lc>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${lc>99?'99+':lc}</span>`); }); });
   if(!ms || !ms.length) return setBadge(0);
-  const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id));
+  const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).is('recalled_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id));
   setBadge(count||0);
 }
 setInterval(()=>{ if(document.visibilityState==='visible') refreshUnread(); }, 60000);
 let lastHidden = 0;
 document.addEventListener('visibilitychange', async ()=>{
   if(document.visibilityState==='hidden'){ lastHidden = Date.now(); return; }
-  if(!me || Date.now()-lastHidden < 20000 || $('#modal').innerHTML) return;   // 只離開一下（例如選照片）就不重畫
+  if(!me || Date.now()-lastHidden < 20000 || $('#modal').innerHTML || window.__pickingPhoto){ window.__pickingPhoto=false; return; }   // 只離開一下（例如選照片）就不重畫
   const typing = $('#chIn')?.value || [...document.querySelectorAll('#app input[type=text],#app textarea')].some(x=>x.value && x.value!==x.defaultValue);
   if(typing){ refreshUnread(); return; }   // 正在打字或改資料，不要把內容洗掉
   const before = me.status; await loadMe(); if(!me) return;
@@ -1664,7 +1665,7 @@ async function viewMatches(){
   const [{ data: ps }, { data: nm }, { data: unread }] = await Promise.all([
     sb.from('profiles').select('id,nickname,avatar_path,status,role,birth_year,city').in('id', ids),
     sb.rpc('related_names', { ids }),
-    sb.from('messages').select('match_id').is('read_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id)),
+    sb.from('messages').select('match_id').is('read_at', null).is('recalled_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id)),
   ]);
   const pm = Object.fromEntries((ps||[]).map(p=>[p.id,p]));
   const names = {}; (Array.isArray(nm)?nm:[]).forEach(n=>names[n.id]=n.nickname);
@@ -1720,26 +1721,34 @@ async function viewChat(matchId){
   let lastDay='', lastAt=null; const seenIds=new Set();
   const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
   const msgHtml = x => { const mine = x.sender_id===me.id;
-    if(x.recalled_at) return `<div class="msg ${mine?'me':'them'} recalled" data-mid="${x.id}">${mine?'你收回了一則訊息':'對方收回了一則訊息'}</div>`;
-    return `<div class="msg ${mine?'me':'them'}${x.image_path?' hasimg':''}" data-mid="${x.id}">${x.image_path?`<div class="mimg wm" data-wm="${wmText()}" data-p="${esc(x.image_path)}"></div>`:''}${x.body?`<div>${esc(x.body)}</div>`:''}<span class="time">${tm(x)}</span></div>`; };
+    if(x.recalled_at) return `<div class="msg ${mine?'me':'them'} recalled" data-mid="${x.id}" data-t="${x.created_at}">${mine?'你收回了一則訊息':'對方收回了一則訊息'}</div>`;
+    return `<div class="msg ${mine?'me':'them'}${x.image_path?' hasimg':''}" data-mid="${x.id}" data-t="${x.created_at}">${x.image_path?`<div class="mimg wm" data-wm="${wmText()}" data-p="${esc(x.image_path)}"></div>`:''}${x.body?`<div>${esc(x.body)}</div>`:''}<span class="time">${tm(x)}</span></div>`; };
   const loadImg = el => { const im=el.querySelector('.mimg'); if(!im) return; sb.storage.from('chat').createSignedUrl(im.dataset.p, 900).then(({ data })=>{ if(data?.signedUrl && im.isConnected){ im.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; im.dataset.u=data.signedUrl; } }); };
-  const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); } if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); }
-    box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); box.scrollTop = box.scrollHeight; };
-  const markRecalled = x => { const el = box.querySelector(`[data-mid="${x.id}"]`); if(el){ el.outerHTML = msgHtml({ ...x, recalled_at: x.recalled_at || new Date().toISOString() }); } };
+  const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); } const prevLast = lastAt; if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay && !(prevLast && x.created_at < prevLast)){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); }
+    box.querySelector('.chempty')?.remove();
+    const later = prevLast && x.created_at < prevLast ? [...box.querySelectorAll('.msg[data-t]')].find(e=>e.dataset.t > x.created_at) : null;   // 補抓到較早的訊息：插到正確位置
+    if(later){ later.insertAdjacentHTML('beforebegin', msgHtml(x)); loadImg(later.previousElementSibling); }
+    else { box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); box.scrollTop = box.scrollHeight; } };
+  const markRecalled = x => { const el = box.querySelector(`[data-mid="${x.id}"]`); if(el && el.nextElementSibling?.id==='readLbl') el.nextElementSibling.remove(); if(el){ el.outerHTML = msgHtml({ ...x, recalled_at: x.recalled_at || new Date().toISOString() }); } };
   // 點自己的訊息：收回；點照片：放大
   box.addEventListener('click', async ev => {
     const im = ev.target.closest('.mimg');
-    if(im && im.dataset.u){ modal(`<div class="wm" data-wm="${wmText()}" style="position:relative;background:#111 center/contain no-repeat;background-image:url('${cssu(im.dataset.u)}');height:min(78vh,900px)"></div><p class="tiny dim mt">請勿截圖外流。畫面上的浮水印是你的會員代號。</p>`); return; }
-    const el = ev.target.closest('.msg.me:not(.recalled)'); if(!el || !el.dataset.mid) return;
+    const own = ev.target.closest('.msg.me:not(.recalled)');
+    if(im && im.dataset.u){ modal(`<div class="wm" data-wm="${wmText()}" style="position:relative;background:#111 center/contain no-repeat;background-image:url('${cssu(im.dataset.u)}');height:min(74vh,900px)"></div><p class="tiny dim mt">請勿截圖外流。畫面上的浮水印是你的會員代號。</p>${own?'<button class="btn ghost mt" id="imRc">收回這張照片</button>':''}`);
+      if(own) $('#imRc').onclick = ()=>askRecall(own); return; }
+    if(own) askRecall(own); });
+  const askRecall = el => { if(!el || !el.dataset.mid) return;
+    if(m.initiator===me.id && !otherReplied) return toast('對方回覆前不能收回第一則訊息');
     modal(`<div class="sheet"><button class="it bad" id="rcBtn">收回這則訊息</button><p class="tiny dim" style="padding:14px 4px 0">收回後雙方都看不到這則訊息；對方會看到「對方收回了一則訊息」。</p></div>`);
     $('#rcBtn').onclick = async ()=>{ $('#rcBtn').disabled=true;
       const { error } = await sb.from('messages').update({ recalled_at: new Date().toISOString() }).eq('id', el.dataset.mid);
       if(error){ $('#rcBtn').disabled=false; return toast('沒有收回成功：'+zh(error.message)); }
       closeModal(); markRecalled({ id: el.dataset.mid, sender_id: me.id }); toast('已收回'); };
-  });
+  };
   (msgs||[]).forEach(add);
+  if(!msgs.length) box.insertAdjacentHTML('beforeend', `<div class="chempty"><p class="serif">還沒有訊息</p><p class="tiny dim">說說你為什麼想認識 ${esc(oname)}，好的開場白比較容易得到回覆。</p></div>`);
   const lastMine = [...msgs].reverse().find(x=>x.sender_id===me.id);
-  if(lastMine && lastMine.read_at && msgs[msgs.length-1]===lastMine) box.insertAdjacentHTML('beforeend', `<div class="tiny dim" style="text-align:right;margin:-4px 2px 8px">已讀 ${fmtTime(lastMine.read_at)}</div>`), box.scrollTop=box.scrollHeight;
+  if(lastMine && lastMine.read_at && msgs[msgs.length-1]===lastMine) box.insertAdjacentHTML('beforeend', `<div class="tiny dim" id="readLbl" style="text-align:right;margin:-4px 2px 8px">已讀 ${fmtTime(lastMine.read_at)}</div>`), box.scrollTop=box.scrollHeight;
   let otherReplied = !!m.replied_at || msgs.some(x=>x.sender_id!==me.id), mySent = msgs.some(x=>x.sender_id===me.id);
   const showClosed = () => { $('#chClosed').classList.remove('hidden'); $('#chForm').classList.add('hidden'); $('#chWait').classList.add('hidden'); };
   const gate = () => { const wait = m.initiator===me.id && !otherReplied && mySent; const blocked = !['approved','pending'].includes(me.status); const off = wait || blocked;
@@ -1750,26 +1759,33 @@ async function viewChat(matchId){
   gate();
   sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread());
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
-    if(payload.new.sender_id!==me.id){ add(payload.new); otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
+    add(payload.new);   // 自己的訊息也處理（例如另一台裝置傳的），seenIds 會去重
+    if(payload.new.sender_id!==me.id){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
   }).on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     if(payload.new.recalled_at) markRecalled(payload.new);
-  }).subscribe();
+  }).subscribe(st => { if(st==='SUBSCRIBED' && subscribedOnce) onChatVisible && onChatVisible(); if(st==='SUBSCRIBED') subscribedOnce = true; });
+  let subscribedOnce = false;
   // 手機切到背景再回來時，即時連線可能斷過：補抓這段時間的新訊息
   onChatVisible = async () => { if(my!==routeSeq || !$('#msgs')) return;
     let q = sb.from('messages').select('*').eq('match_id', matchId).order('created_at');
     if(lastAt) q = q.gt('created_at', lastAt);
-    const { data: nw } = await q; if(my!==routeSeq || !nw?.length) return;
+    const [{ data: nw }, { data: rc }] = await Promise.all([q, sb.from('messages').select('id,sender_id,recalled_at').eq('match_id', matchId).not('recalled_at','is',null)]);
+    if(my!==routeSeq) return;
+    (rc||[]).forEach(x=>{ const el=box.querySelector(`[data-mid="${x.id}"]`); if(el && !el.classList.contains('recalled')) markRecalled(x); });
+    if(!nw?.length) return;
     const theirs = nw.filter(x=>x.sender_id!==me.id); nw.forEach(add);
     if(theirs.length){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread()); }
     box.scrollTop = box.scrollHeight; };
-  $('#chPh').onclick = e => { if($('#chFile').disabled){ e.preventDefault(); toast(otherReplied?'目前無法傳照片':'對方回覆後就能傳照片'); } };
+  $('#chPh').onclick = e => { window.__pickingPhoto = true; if($('#chFile').disabled){ window.__pickingPhoto = false; e.preventDefault(); toast(otherReplied?'目前無法傳照片':'對方回覆後就能傳照片'); } };
   $('#chFile').onchange = async e => { const f=e.target.files[0]; e.target.value=''; if(!f || sending) return;
     sending = true; $('#chPh').classList.add('busy'); toast('照片傳送中…', 30000); let path;
     try{
       const blob = await compressImage(f, 1280, .82);
       path = `${me.id}/${matchId}-${Date.now()}.jpg`;
       const { error: ue } = await sb.storage.from('chat').upload(path, blob, { contentType:'image/jpeg', upsert:false });
-      if(ue) throw new Error(/row-level|security|403/i.test(ue.message||'')?'今天傳的照片太多了，明天再試':ue.message);
+      if(ue){ const { data: m2 } = await sb.from('matches').select('closed_at').eq('id', matchId).maybeSingle();
+        if(!m2 || m2.closed_at){ showClosed(); throw new Error('對方已結束這段對話'); }
+        throw new Error(/row-level|security|403/i.test(ue.message||'') ? (['approved','pending'].includes(me.status) ? '今天傳的照片太多了，明天再試' : '目前無法傳照片') : ue.message); }
       const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body:'', image_path:path }).select().single();
       if(error) throw error;
       add(data); mySent=true; gate(); toast('已傳送', 1200);
@@ -2033,7 +2049,8 @@ async function viewAdmin(){
     const box = $('#adm');
     if(tab==='convos'){
       box.innerHTML = `<div class="row mb"><input id="cq" placeholder="暱稱關鍵字（任一方）" style="padding:9px 12px"><button class="btn sm primary" id="cqb">搜尋</button></div><div id="cr"><div class="spinner"></div></div>`;
-      const list = async ()=>{ const { data: rows, error } = await sb.rpc('admin_conversations', { p_q: $('#cq').value.trim()||null });
+      const list = async ()=>{ const { data: rows, error } = await sb.rpc('admin_conversations', { p_q: $('#cq')?.value.trim()||null });
+        if(!$('#cr')) return;
         if(error){ $('#cr').innerHTML=`<p class="muted">${esc(zh(error.message))}</p>`; return; }
         if(!rows?.length){ $('#cr').innerHTML='<p class="muted center" style="padding:40px 0">目前沒有對話</p>'; return; }
         $('#cr').innerHTML = `<div class="list">${rows.map(c=>`<button type="button" class="item cvo" data-id="${c.id}" data-a="${c.user_a}" data-na="${esc(c.name_a||'（已刪除）')}" data-nb="${esc(c.name_b||'（已刪除）')}" style="width:100%;text-align:left">
@@ -2105,14 +2122,15 @@ async function viewAdmin(){
     if(tab==='reports'){
       const { data: rows } = await sb.from('reports').select('*, r:profiles!reports_reporter_id_fkey(nickname), t:profiles!reports_reported_id_fkey(id,nickname,status)').eq('status','open').order('created_at');
       if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有未處理檢舉 ✓</p>'; return; }
-      box.innerHTML = `<div class="tblwrap"><table class="table"><tr><th>時間</th><th>檢舉人</th><th>被檢舉</th><th>原因</th><th>說明</th><th></th></tr>${rows.map(r=>`<tr><td class="tiny">${fmtTime(r.created_at)}</td><td>${esc(r.r?.nickname||'')}</td><td>${esc(r.t?.nickname||'')} <span class="chip">${STATUS_TXT[r.t?.status]||''}</span></td><td>${REPORT_REASONS[r.reason]}</td><td class="small">${esc(r.detail||'')}</td>
+      box.innerHTML = `<div class="tblwrap"><table class="table"><tr><th>時間</th><th>檢舉人</th><th>被檢舉</th><th>原因</th><th>說明</th><th></th></tr>${rows.map(r=>`<tr><td class="tiny">${fmtTime(r.created_at)}</td><td>${esc(r.r?.nickname||'')}</td><td>${esc(r.t?.nickname||r.reported_nickname||'（已刪除帳號）')} <span class="chip">${STATUS_TXT[r.t?.status]||''}</span></td><td>${REPORT_REASONS[r.reason]}</td><td class="small">${esc(r.detail||'')}</td>
         <td><div class="row flexwrap" style="gap:4px"><button class="btn sm ghost msgs" data-id="${r.t?.id}" data-r="${r.id}">看對話</button><button class="btn sm danger sp" data-id="${r.t?.id}" data-r="${r.id}">停權</button><button class="btn sm ghost rs" data-r="${r.id}">結案</button><button class="btn sm ghost dm" data-r="${r.id}">駁回</button></div></td></tr>`).join('')}</table></div>`;
       box.querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權此會員？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); await adm(sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r)); draw(); });
       box.querySelectorAll('.rs').forEach(b=>b.onclick=async()=>{ await adm(sb.from('reports').update({ status:'resolved' }).eq('id',b.dataset.r)); draw(); });
       box.querySelectorAll('.dm').forEach(b=>b.onclick=async()=>{ await adm(sb.from('reports').update({ status:'dismissed' }).eq('id',b.dataset.r)); draw(); });
-      box.querySelectorAll('.msgs').forEach(b=>b.onclick=async()=>{ const { data: ms, error } = await sb.from('report_evidence').select('body,created_at,sender_id').eq('report_id',b.dataset.r).order('created_at');
+      box.querySelectorAll('.msgs').forEach(b=>b.onclick=async()=>{ const { data: ms, error } = await sb.from('report_evidence').select('body,created_at,sender_id,image_path,recalled').eq('report_id',b.dataset.r).order('created_at');
         if(error) return toast(error.message);
-        modal(`<h3 style="font-size:16px">檢舉當下雙方的對話（${(ms||[]).length} 則）</h3><p class="tiny dim">送出檢舉時自動備份，對方刪除帳號或結束對話也不會消失。</p>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--rule);padding:6px 0"><b class="tiny ${x.sender_id===b.dataset.id?'bad':''}">${x.sender_id===b.dataset.id?'被檢舉人':'檢舉人'}</b>　<span class="tiny dim">${fmtTime(x.created_at)}</span><br>${esc(x.body)}</p>`).join('')||'<p class="muted mt">兩人之間沒有對話紀錄</p>'}`); });
+        modal(`<h3 style="font-size:16px">檢舉當下雙方的對話（${(ms||[]).length} 則）</h3><p class="tiny dim">送出檢舉時自動備份，對方刪除帳號或結束對話也不會消失。</p>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--rule);padding:6px 0"><b class="tiny ${x.sender_id===b.dataset.id?'bad':''}">${x.sender_id===b.dataset.id?'被檢舉人':'檢舉人'}</b>　<span class="tiny dim">${fmtTime(x.created_at)}</span>${x.recalled?'　<span class="tiny bad">已收回</span>':''}<br>${esc(x.body)}${x.image_path?`<span class="evimg" data-p="${esc(x.image_path)}">［照片］</span>`:''}</p>`).join('')||'<p class="muted mt">兩人之間沒有對話紀錄</p>'}`);
+        document.querySelectorAll('#modal .evimg').forEach(async el=>{ const { data } = await sb.storage.from('chat').createSignedUrl(el.dataset.p, 900); if(data?.signedUrl && el.isConnected){ el.innerHTML=''; el.style.cssText='display:block;width:180px;aspect-ratio:3/4;background:#ddd center/cover;margin-top:6px;cursor:zoom-in;background-image:url("'+cssu(data.signedUrl)+'")'; el.onclick=()=>window.open(data.signedUrl,'_blank'); } else if(el.isConnected) el.textContent='［照片檔已刪除］'; }); });
     }
     if(tab==='person'){
       const { data: rows, error } = await sb.from('person_verifications').select('*').eq('status','pending').order('submitted_at');

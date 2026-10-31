@@ -5,7 +5,7 @@ declare
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
-  AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; m1 bigint; m2 bigint;
+  AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid;
 begin
   perform set_config('storage.allow_delete_query','true',true);
   update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
@@ -601,6 +601,23 @@ begin
   exception when others then out := array_append(out, '35h 只有管理員能看 Email／手機 ✓'::text); end;
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true); out := array_append(out, ('35d 對方無法收回或改我的訊息 = '||n||' (應為1)')::text);
+
+  -- 36 v0.29：對方回覆前不能收回第一則；被檢舉人刪帳號後檢舉與證據保留
+  update public.matches set closed_at = now() where id = cm;
+  insert into public.matches (user_a, user_b, initiator) values (least(X2,AD), greatest(X2,AD), X2) returning id into cm2;
+  update public.profiles set gender='male', looking_for='female' where id=AD;
+  perform set_config('request.jwt.claims', json_build_object('sub',X2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', X2::text, true);
+  execute 'set local role authenticated';
+  insert into public.messages (match_id, sender_id, body) values (cm2, X2, '第一則') returning id into m1;
+  begin update public.messages set recalled_at = now() where id = m1; exception when others then null; end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from public.messages where id=m1 and recalled_at is null; out := array_append(out, ('36 對方回覆前收回第一則被擋 = '||n||' (應為1)')::text);
+  insert into public.reports (reporter_id, reported_id, reason) values (X1, X2, 'harass') returning id into rid2;
+  delete from auth.users where id = X2;
+  select count(*) into n from public.reports where id=rid2 and reported_id is null and reported_nickname='X2'; out := array_append(out, ('36b 被檢舉人刪帳號後檢舉仍保留 = '||n||' (應為1)')::text);
+  select count(*) into n from public.report_evidence where report_id=rid2; out := array_append(out, ('36c 檢舉證據含照片與收回原文 = '||n||' (應為4)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
