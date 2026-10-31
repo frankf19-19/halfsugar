@@ -580,6 +580,7 @@ begin
   update public.messages set recalled_at = now() where id in (m1, m2);
   execute 'reset role';
   select count(*) into n from public.messages where id in (m1,m2) and recalled_at is not null and body = '' and image_path is null; out := array_append(out, ('35b 寄件人收回後內容清空 = '||n||' (應為2)')::text);
+  select count(*) into n from public.message_recalls where message_id in (m1,m2) and (body='想收回的話' or image_path is not null); out := array_append(out, ('35e 收回的原內容有備份給管理員 = '||n||' (應為2)')::text);
   select count(*) into n from public.matches where id=cm and last_message='訊息已收回'; out := array_append(out, ('35c 收回最後一則後預覽更新 = '||n||' (應為1)')::text);
   insert into public.messages (match_id, sender_id, body) values (cm, X1, '對方不能收回我的訊息') returning id into m2;
   perform set_config('request.jwt.claims', json_build_object('sub',X2,'role','authenticated')::text, true);
@@ -588,7 +589,18 @@ begin
   update public.messages set recalled_at = now(), body = 'x' where id = m2;
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
-  select count(*) into n from public.messages where id=m2 and recalled_at is null and body='對方不能收回我的訊息'; out := array_append(out, ('35d 對方無法收回或改我的訊息 = '||n||' (應為1)')::text);
+  select count(*) into n from public.messages where id=m2 and recalled_at is null and body='對方不能收回我的訊息';
+  perform set_config('request.jwt.claims', json_build_object('sub',X1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', X1::text, true);
+  execute 'set local role authenticated';
+  begin select count(*) into n from public.message_recalls; out := array_append(out, '35f 會員讀到收回備份：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '35f 會員讀不到收回備份 ✓'::text); end;
+  begin perform public.admin_messages(cm); out := array_append(out, '35g 會員呼叫管理員對話檢視：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '35g 只有管理員能看所有對話 ✓'::text); end;
+  begin perform public.admin_contacts(array[X2]); out := array_append(out, '35h 會員查別人 Email／手機：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '35h 只有管理員能看 Email／手機 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true); out := array_append(out, ('35d 對方無法收回或改我的訊息 = '||n||' (應為1)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

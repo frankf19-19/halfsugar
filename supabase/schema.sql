@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.27.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.28.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -346,6 +346,17 @@ create index if not exists messages_match_idx on public.messages(match_id, creat
 alter table public.messages add column if not exists image_path text;
 alter table public.messages add column if not exists recalled_at timestamptz;
 alter table public.messages drop constraint if exists messages_body_check;
+create table if not exists public.message_recalls (
+  message_id  bigint primary key,
+  match_id    uuid not null references public.matches(id) on delete cascade,
+  sender_id   uuid not null references public.profiles(id) on delete cascade,
+  body        text,
+  image_path  text,
+  sent_at     timestamptz,
+  recalled_at timestamptz not null default now()
+);
+alter table public.message_recalls enable row level security;
+revoke all on public.message_recalls from anon, authenticated;
 alter table public.messages add constraint messages_body_check
   check (char_length(body) <= 2000 and (char_length(body) >= 1 or image_path is not null or recalled_at is not null));
 
@@ -392,7 +403,9 @@ begin
     new.sender_id := old.sender_id; new.match_id := old.match_id; new.created_at := old.created_at;
     if old.sender_id = auth.uid() then
       new.read_at := old.read_at;
-      if new.recalled_at is not null and old.recalled_at is null then   -- 寄件人收回：清掉內容與照片
+      if new.recalled_at is not null and old.recalled_at is null then   -- 寄件人收回：會員看不到，原內容另存一份給管理員
+        insert into public.message_recalls (message_id, match_id, sender_id, body, image_path, sent_at)
+        values (old.id, old.match_id, old.sender_id, old.body, old.image_path, old.created_at) on conflict do nothing;
         new.recalled_at := now(); new.body := ''; new.image_path := null;
       else
         new.recalled_at := old.recalled_at; new.body := old.body; new.image_path := old.image_path;
@@ -1406,3 +1419,54 @@ create policy "chat_storage_select" on storage.objects for select to authenticat
 drop policy if exists "chat_storage_delete" on storage.objects;
 create policy "chat_storage_delete" on storage.objects for delete to authenticated
   using (bucket_id = 'chat' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+
+-- ---------------------------------------------------------------------
+-- v0.28 管理員：查看所有對話（含已收回的原內容）與會員聯絡資料
+-- ---------------------------------------------------------------------
+create or replace function public.admin_conversations(p_q text default null, p_limit int default 200)
+returns table (id uuid, user_a uuid, user_b uuid, name_a text, name_b text, created_at timestamptz,
+               last_message_at timestamptz, last_message text, closed_at timestamptz, msg_count bigint, img_count bigint, recall_count bigint)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query
+    select m.id, m.user_a, m.user_b, pa.nickname, pb.nickname, m.created_at, m.last_message_at, m.last_message, m.closed_at,
+           (select count(*) from public.messages x where x.match_id = m.id),
+           (select count(*) from public.messages x where x.match_id = m.id and x.image_path is not null)
+             + (select count(*) from public.message_recalls r where r.match_id = m.id and r.image_path is not null),
+           (select count(*) from public.message_recalls r where r.match_id = m.id)
+      from public.matches m
+      left join public.profiles pa on pa.id = m.user_a
+      left join public.profiles pb on pb.id = m.user_b
+     where p_q is null or p_q = '' or pa.nickname ilike '%' || p_q || '%' or pb.nickname ilike '%' || p_q || '%'
+     order by m.last_message_at desc nulls last, m.created_at desc
+     limit least(coalesce(p_limit, 200), 1000);
+end $$;
+revoke execute on function public.admin_conversations(text, int) from anon, public;
+grant execute on function public.admin_conversations(text, int) to authenticated;
+
+create or replace function public.admin_messages(mid uuid)
+returns table (id bigint, sender_id uuid, body text, image_path text, created_at timestamptz, read_at timestamptz, recalled_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query
+    select ms.id, ms.sender_id,
+           coalesce(r.body, ms.body), coalesce(r.image_path, ms.image_path),
+           ms.created_at, ms.read_at, ms.recalled_at
+      from public.messages ms left join public.message_recalls r on r.message_id = ms.id
+     where ms.match_id = mid
+     order by ms.created_at;
+end $$;
+revoke execute on function public.admin_messages(uuid) from anon, public;
+grant execute on function public.admin_messages(uuid) to authenticated;
+
+create or replace function public.admin_contacts(ids uuid[])
+returns table (id uuid, email text, phone text, last_sign_in_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select u.id, u.email::text, u.phone::text, u.last_sign_in_at from auth.users u where u.id = any(ids);
+end $$;
+revoke execute on function public.admin_contacts(uuid[]) from anon, public;
+grant execute on function public.admin_contacts(uuid[]) to authenticated;
