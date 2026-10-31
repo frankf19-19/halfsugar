@@ -1216,7 +1216,7 @@ async function viewBrowse(){
   const adminView = isAdminBrowse();
   const cities = () => browseState.region ? REGIONS[browseState.region] : CITIES;
   if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}
-    ${adminView ? `<div class="banner info">管理員瀏覽模式：看得到所有已上架的會員，不限方向。只能瀏覽，不能傳訊息或心動。</div>`
+    ${adminView ? `<header class="phd"><h1>探索</h1><p>管理員瀏覽模式：看得到所有已上架的會員，不限方向；只能瀏覽，不能傳訊息或心動。</p></header>`
     : `<header class="phd"><h1>探索</h1><p>${orientText(me)}，只顯示方向互相吻合的會員</p></header>`}
     <div class="filters">
       ${adminView?`<select id="fGender" aria-label="性別"><option value="">男女都看</option><option value="female" ${browseState.agender==='female'?'selected':''}>只看女生</option><option value="male" ${browseState.agender==='male'?'selected':''}>只看男生</option></select>`:''}
@@ -1263,7 +1263,7 @@ async function viewBrowse(){
     $('#fCount').textContent = rows.length ? `${rows.length>=150?'150+':rows.length} 位會員` : '';
     if(!rows.length){ const filtered = B.city||B.region||advCount();
       $('#grid').innerHTML = me.status==='suspended' ? `<p class="muted center" style="grid-column:1/-1;padding:40px 0">帳號停權中，無法探索其他會員。<br><a href="#" data-support>聯絡客服</a></p>` : me.status==='rejected' ? `<p class="muted center" style="grid-column:1/-1;padding:40px 0">你的檔案需要修改後才能探索。<br><a class="btn mt2" href="#/me">前往修改</a></p>`
-        : `<p class="muted center" style="grid-column:1/-1;padding:40px 0">${filtered?'這個條件下暫時沒有會員。':'會員陸續加入中，晚點再回來看看。'}${filtered?'<br><button class="btn mt2" id="clrF">清除篩選</button>':''}</p>`;
+        : `<div class="empty" style="grid-column:1/-1"><p class="serif">${filtered?'這個條件下暫時沒有會員':'會員陸續加入中'}</p><p class="muted small">${filtered?'放寬一些條件看看。':'晚點再回來看看。'}</p>${filtered?'<button class="btn mt2" id="clrF">清除篩選</button>':''}</div>`;
       $('#clrF') && ($('#clrF').onclick=()=>{ resetBrowse(); viewBrowse(); }); return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
         <div class="ph" data-ph="${esc(r.avatar_path||'')}">◌</div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
