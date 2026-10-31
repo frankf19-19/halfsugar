@@ -1,6 +1,6 @@
-# 微糖 JUST SUGAR — 台灣甜心交友平台
+# 微糖 1/3 SUGAR — 台灣甜心交友平台
 
-品牌名「微糖 JUST SUGAR」（前名半糖 HALF SUGAR、微糖 SUGAR 30）。改名只需搜尋替換 `微糖` / `JUST SUGAR` 兩個字串，logo 在 brand/ 資料夾。
+品牌名「微糖 1/3 SUGAR」（前名半糖 HALF SUGAR、微糖 SUGAR 30、微糖 Just Sugar）。改名只需搜尋替換 `微糖` / `1/3 SUGAR` 兩個字串，logo 在 brand/ 資料夾。
 
 ## 檔案
 ```
