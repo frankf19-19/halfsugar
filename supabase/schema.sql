@@ -65,6 +65,7 @@ alter table public.profiles add column if not exists person_verified_at timestam
 -- 身材、罩杯（選填、只限女性）、相處方式、見面頻率、甜心期望預算
 -- 創始會員：前 100 位第一次通過審核的會員（不對外顯示，正式收費後給優惠用）
 alter table public.profiles add column if not exists founder_no int unique;
+alter table public.profiles add column if not exists founder_boost_until timestamptz;   -- 甜心創始會員：探索優先曝光到期日
 alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
 alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
 alter table public.profiles add column if not exists relation_types text[] not null default '{}'
@@ -113,6 +114,7 @@ begin
   new.person_verified_at := old.person_verified_at;   -- 真人認證只有管理員能設定   -- 財力認證只有管理員能設定
   new.created_at  := old.created_at;
   new.founder_no  := old.founder_no;     -- 創始會員編號只由系統給
+  new.founder_boost_until := old.founder_boost_until;
   new.approved_at  := old.approved_at;    -- 只能由審核流程設定（下一個 trigger 處理）
   new.submitted_at := old.submitted_at;
   if new.last_active_at is not null then new.last_active_at := least(new.last_active_at, now()); end if;
@@ -176,6 +178,8 @@ begin
       perform pg_advisory_xact_lock(hashtext('founder_no'));
       if (select count(*) from public.profiles where founder_no is not null) < 100 then
         new.founder_no := coalesce((select max(founder_no) from public.profiles), 0) + 1;
+        -- 甜心創始會員：通過審核起 90 天探索優先曝光；Sugar Daddy／Mommy 的優惠（正式收費後 3 個月微糖會員）收費時依 founder_no 發放
+        if new.role = 'baby' then new.founder_boost_until := now() + interval '90 days'; end if;
       end if;
     end if;
   end if;
@@ -737,7 +741,7 @@ $$;
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
 grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, person_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
-              avatar_path, status, hidden, last_active_at, created_at, updated_at) on public.profiles to authenticated;
+              avatar_path, status, hidden, last_active_at, created_at, updated_at, founder_boost_until) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
 create or replace function public.get_me()
