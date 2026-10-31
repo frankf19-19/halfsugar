@@ -672,7 +672,10 @@ begin
   begin insert into public.voice_intros (user_id, path) values (V2, V2||'/2.webm'); out := array_append(out, '37o 替別人上傳語音：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '37o 不能替別人上傳語音 ✓'::text); end;
   execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   update public.voice_intros set status='approved' where user_id=V2;
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
   execute 'set local role authenticated';
   select count(*) into n from public.voice_intros where user_id=V2; out := array_append(out, ('37p 審核後方向吻合的會員聽得到 = '||n||' (應為1)')::text);
   execute 'reset role';

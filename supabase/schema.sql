@@ -1725,7 +1725,8 @@ alter table public.voice_intros enable row level security;
 create or replace function public.voice_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if public.is_admin() and auth.uid() is not null and (tg_op = 'UPDATE' and new.path = old.path) then
+  if auth.uid() is null then return new; end if;   -- 系統／後台直接操作
+  if public.is_admin() and (tg_op = 'UPDATE' and new.path = old.path) then
     if new.status <> old.status then new.reviewed_at := now(); end if; return new;
   end if;
   if auth.uid() is not null and new.user_id <> auth.uid() then raise exception '只能上傳自己的語音'; end if;
