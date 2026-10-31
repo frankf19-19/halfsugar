@@ -178,8 +178,8 @@ begin
       perform pg_advisory_xact_lock(hashtext('founder_no'));
       if (select count(*) from public.profiles where founder_no is not null) < 100 then
         new.founder_no := coalesce((select max(founder_no) from public.profiles), 0) + 1;
-        -- 甜心創始會員：通過審核起 90 天探索優先曝光；Sugar Daddy／Mommy 的優惠（正式收費後 3 個月微糖會員）收費時依 founder_no 發放
-        if new.role = 'baby' then new.founder_boost_until := now() + interval '90 days'; end if;
+        -- 甜心創始會員：通過審核起 60 天探索優先曝光；Sugar Daddy／Mommy 的優惠（正式收費後 3 個月微糖會員）收費時依 founder_no 發放
+        if new.role = 'baby' then new.founder_boost_until := now() + interval '60 days'; end if;
       end if;
     end if;
   end if;

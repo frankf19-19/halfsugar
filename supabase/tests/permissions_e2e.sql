@@ -530,7 +530,7 @@ begin
   select count(*) into n from public.profiles where id=Q and founder_no = 99999; out := array_append(out, ('32 自己填創始會員編號 = '||n||' (應為0)')::text);
   update public.profiles set status='approved' where id=Y;
   select count(*) into n from public.profiles where id=Y and founder_no is not null; out := array_append(out, ('32b 第一次通過審核拿到創始編號 = '||n||' (應為1)')::text);
-  select count(*) into n from public.profiles where id=Y and founder_boost_until > now() + interval '80 days'; out := array_append(out, ('32c 甜心創始會員有優先曝光期 = '||n||' (應為1)')::text);
+  select count(*) into n from public.profiles where id=Y and founder_boost_until > now() + interval '50 days'; out := array_append(out, ('32c 甜心創始會員有優先曝光期 = '||n||' (應為1)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
