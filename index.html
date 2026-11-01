@@ -403,6 +403,7 @@ html{scrollbar-gutter:stable}body.modal-open{overflow:hidden}.modal .box{overscr
 body.kb .chat{min-height:0}
 .admth{position:absolute;right:4px;bottom:4px;width:44%;max-width:90px;aspect-ratio:3/4;background:#ddd center/cover no-repeat;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);font-size:10px;color:#fff;text-shadow:0 0 3px #000;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;pointer-events:none}
 .msg .time{opacity:1;color:var(--grey)}.msg.me .time{color:inherit;opacity:.72}[data-theme=dark] .nowtag{color:#1A1918}
+.doc p,.doc li,.bio,.psec p,.safepg p,.chempty p,.msg div{word-break:normal}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
 @media(max-width:719px){input,select,textarea{font-size:16px!important}.mnav{display:flex;grid-column:2;justify-self:end;gap:2px}.mnav a{padding:8px 10px;font-size:13px;letter-spacing:.14em;text-decoration:none;color:inherit}}
@@ -813,7 +814,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.61.0';
+const BUILD = 'v1.62.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1529,7 +1530,7 @@ function missingBasics(p){ if(!p) return [];
   const m=[]; if(!(p.nickname||'').trim()) m.push('暱稱'); if(!p.gender||!p.looking_for) m.push('想認識的對象'); if(!p.role) m.push('身分');
   if(!p.birth_year) m.push('出生年'); if(!p.city) m.push('所在地'); if(!p.body_type) m.push('身材'); if(!(p.bio||'').trim()) m.push('自我介紹');
   if((p.role==='daddy'||p.role==='mommy') && !p.budget) m.push('每月相處預算'); if(!p.avatar_path) m.push('頭像'); return m; }
-const PUB_COLS = 'approved_avatar_path,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -1660,6 +1661,9 @@ async function viewOnboarding(){
    ===================================================================== */
 const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
 // 別人重新送審中：顯示上一次通過審核的頭像（新頭像審核通過前不給別人看）
+// 別人重新送審中：自介、職業、興趣也顯示上一次通過審核的版本
+const pubView = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_bio != null)
+  ? { ...p, bio: p.approved_bio, occupation: p.approved_occupation, tags: p.approved_tags || [] } : p;
 const pubAv = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_avatar_path) ? p.approved_avatar_path : p?.avatar_path;
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const isFree = r => !!(r && r.free_until && new Date(r.free_until) > new Date());
@@ -1788,7 +1792,7 @@ let profSeq = 0;
 async function openProfile(id){
   const tok = ++profSeq;
   modal('<div class="spinner"></div>');
-  const [{ data: p, error }, { data: photos }, { data: myLike }, { data: theirLike }, { data: grant }, { data: req }, { data: privN }] = await Promise.all([
+  const [{ data: p0, error }, { data: photos }, { data: myLike }, { data: theirLike }, { data: grant }, { data: req }, { data: privN }] = await Promise.all([
     sb.from('profiles').select(PUB_COLS).eq('id', id).maybeSingle(),
     sb.from('photos').select('*').eq('user_id', id).eq('status','approved').order('created_at'),
     sb.from('likes').select('to_id').eq('from_id', me.id).eq('to_id', id).maybeSingle(),
@@ -1797,6 +1801,7 @@ async function openProfile(id){
     sb.from('photo_requests').select('status').eq('requester_id', me.id).eq('owner_id', id).maybeSingle(),
     sb.rpc('private_photo_count', { uid: id }),
   ]);
+  const p = pubView(p0);
   const { data: conv } = await sb.from('matches').select('id').or(`and(user_a.eq.${me.id},user_b.eq.${id}),and(user_a.eq.${id},user_b.eq.${me.id})`).maybeSingle();
   if(!$('#mbg') || tok!==profSeq) return;   // 使用者在載入時已經關掉視窗或改看別人
   if(error || !p){ modal('<p class="muted">找不到這位會員，可能已下架。</p>'); return; }
@@ -1981,7 +1986,8 @@ async function viewChat(matchId){
   if(cErr && cErr.code!=='PGRST116') throw cErr;
   if(!m){ $('#app').innerHTML='<div class="center" style="padding:60px 0"><p class="muted">這段對話已經關閉。</p><a class="btn mt2" href="#/matches">回到訊息</a></div>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
-  const [{ data: o }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,status,tags,occupation,city').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
+  const [{ data: o0 }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,approved_occupation,approved_tags,status,tags,occupation,city').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
+  const o = pubView(o0);
   const oname = o?.nickname || (Array.isArray(nm)&&nm[0]?.nickname) || '對方';
   const closed = !!m.closed_at;
   const { data: last } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at',{ascending:false}).limit(300);
