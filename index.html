@@ -398,6 +398,8 @@ br.d{display:none}
 .msg.sending{opacity:.6}
 .openers{display:flex;flex-direction:column;gap:8px;margin:10px auto 0;max-width:360px}.opener{font:inherit;font-size:14px;line-height:1.5;text-align:left;padding:10px 14px;border:1px solid var(--rule);background:var(--white);color:var(--ink);cursor:pointer}.opener:hover{border-color:var(--ink)}
 #app.busy{opacity:.5;pointer-events:none;transition:opacity .12s ease .06s}
+html{scrollbar-gutter:stable}body.modal-open{overflow:hidden}.modal .box{overscroll-behavior:contain}
+.modal .box:focus{outline:none}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
 @media(max-width:719px){input,select,textarea{font-size:16px!important}.mnav{display:flex;grid-column:2;justify-self:end;gap:2px}.mnav a{padding:8px 10px;font-size:13px;letter-spacing:.14em;text-decoration:none;color:inherit}}
@@ -808,7 +810,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.56.0';
+const BUILD = 'v1.57.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -935,9 +937,21 @@ async function compressImage(file, max=1080, q=.85){
   return new Promise(res=>c.toBlob(res,'image/jpeg',q));
 }
 let recovering = false, lastUid;
-function modal(html){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx">×</button>${html}</div></div>`;
-  $('#mx').onclick = closeModal; $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); }; }
-function closeModal(){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; recovering=false; }
+// 手機「返回」鍵：先關掉視窗，不要整頁跳走
+let modalHist = false, ignorePop = 0;
+function modal(html){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx" aria-label="關閉">×</button>${html}</div></div>`;
+  $('#mx').onclick = ()=>closeModal(); $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); };
+  document.body.classList.add('modal-open');
+  const bx = $('#mbg .box'); bx.setAttribute('role','dialog'); bx.setAttribute('aria-modal','true'); bx.tabIndex = -1;
+  if(!modalHist) window.__modalReturn = document.activeElement; if(!bx.contains(document.activeElement)) bx.focus({ preventScroll:true });
+  if(!modalHist){ try{ history.pushState({ yyModal:1 }, ''); modalHist = true; }catch(_){} } }
+function closeModal(fromNav){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; recovering=false; document.body.classList.remove('modal-open');
+  const rf = window.__modalReturn; window.__modalReturn = null; if(rf && rf.isConnected && rf.focus) try{ rf.focus({ preventScroll:true }); }catch(_){}
+  if(fromNav){ modalHist = false; return; }
+  const at = location.href;
+  if(modalHist) setTimeout(()=>{ if(!modalHist || $('#modal').innerHTML) return; modalHist = false; if(location.href !== at) return; ignorePop++; history.back(); }, 0); }   // 關掉後馬上換頁的，就不要再退一頁   // 關完馬上又開新視窗時，沿用同一筆紀錄
+window.addEventListener('popstate', e=>{ if(ignorePop > 0){ ignorePop--; return; } if(modalHist){ modalHist = false; if($('#modal').innerHTML) closeModal(true); return; }
+  if(e.state && e.state.yyModal && !$('#modal').innerHTML){ ignorePop++; history.back(); } });   // 退到「視窗開著時」留下的紀錄：直接略過，不要多按一次
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('#modal').innerHTML) closeModal(); });
 
 { const f=document.querySelector('footer div'); if(f) f.insertAdjacentHTML('beforeend', `·<a href="#" data-support>聯絡客服</a>`); }
@@ -1125,7 +1139,7 @@ async function route(){
   if(curTab) scrollMem[curTab] = { y: window.scrollY, t: Date.now() };
   routeSeq++;
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; } onChatVisible = null;
-  if(!recovering) closeModal();
+  if(!recovering) closeModal(true);
   const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
   renderNav();
   document.body.classList.toggle('home', !path || path==='about');
