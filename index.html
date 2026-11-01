@@ -812,7 +812,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.58.0';
+const BUILD = 'v1.58.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1504,7 +1504,7 @@ async function uploadPhoto(file){
 const thumbOf = p => String(p).replace(/\.jpg$/, 't.jpg');
 async function makeThumb(src, path){ try{ const tb = await compressImage(src, 480, .8); await sb.storage.from('photos').upload(thumbOf(path), tb, { contentType:'image/jpeg', upsert:false }); }catch(_){} }
 const noThumb = new Map();
-const USE_THUMBS = false;   // 暫停顯示縮圖：等資料庫的縮圖審核保護更新後再打開
+const USE_THUMBS = true;    // 縮圖：送審後鎖住、跟原圖一起審核（schema v0.35）
 async function signedThumb(p){ if(!p) return null; if(!USE_THUMBS || (noThumb.get(p)||0) > Date.now()) return signed(p);
   const u = await signed(thumbOf(p)); if(u) return u; noThumb.set(p, Date.now()+10*60*1000); return signed(p); }
 const rmPhotos = paths => { const ps = paths.filter(Boolean); return ps.length ? sb.storage.from('photos').remove([...ps, ...ps.map(thumbOf)]) : Promise.resolve({}); };
