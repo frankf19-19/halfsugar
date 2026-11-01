@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.32.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.33.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -69,7 +69,8 @@ alter table public.profiles add column if not exists founder_boost_until timesta
 alter table public.profiles add column if not exists free_until timestamptz;        -- 今晚有空：到期時間（隔天早上 6 點）
 alter table public.profiles add column if not exists travel_city text;              -- 旅行模式：要去的城市
 alter table public.profiles add column if not exists travel_from date;
-alter table public.profiles add column if not exists travel_to date;   -- 甜心創始會員：探索優先曝光到期日
+alter table public.profiles add column if not exists travel_to date;
+alter table public.profiles add column if not exists openers text[] not null default '{}';   -- 我的開場白（只有本人看得到）   -- 甜心創始會員：探索優先曝光到期日
 alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
 alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
 alter table public.profiles add column if not exists relation_types text[] not null default '{}'
@@ -119,6 +120,10 @@ begin
   new.created_at  := old.created_at;
   new.founder_no  := old.founder_no;     -- 創始會員編號只由系統給
   new.founder_boost_until := old.founder_boost_until;
+  if new.openers is distinct from old.openers then
+    new.openers := array(select left(btrim(x), 200) from unnest(coalesce(new.openers, '{}')) x where btrim(x) <> '');
+    if cardinality(new.openers) > 5 then raise exception '開場白最多 5 句'; end if;
+  end if;
   if current_setting('halfsugar.avail', true) is distinct from '1' then   -- 今晚有空、旅行模式只能用專用函式設定
     new.free_until := old.free_until; new.travel_city := old.travel_city; new.travel_from := old.travel_from; new.travel_to := old.travel_to;
   end if;

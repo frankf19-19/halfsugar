@@ -720,5 +720,23 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 40 我的開場白
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set openers = array['  嗨，你好  ', '', '想認識你'] where id=V1;
+  select count(*) into n from public.get_me() where openers = array['嗨，你好','想認識你'] and status='approved'; out := array_append(out, ('40a 存開場白（去空白、不用重審）= '||n||' (應為1)')::text);
+  begin update public.profiles set openers = array['1','2','3','4','5','6'] where id=V1; out := array_append(out, '40b 超過 5 句：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '40b 開場白最多 5 句 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V2::text, true);
+  execute 'set local role authenticated';
+  begin perform openers from public.profiles where id=V1; out := array_append(out, '40c 別人讀得到我的開場白 ✗'::text);
+  exception when others then out := array_append(out, '40c 別人讀不到我的開場白 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
