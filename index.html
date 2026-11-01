@@ -386,6 +386,7 @@ br.d{display:none}
 .bnav a.active{color:var(--ink)}
 @media(min-width:720px){.bnav{display:none}}
 .mnav{display:none}
+@media(max-width:719px){.tblwrap .table.stack{min-width:0}.table.stack tr:first-child{display:none}.table.stack tr{display:block;border:1px solid var(--rule);padding:12px 14px;margin-bottom:12px}.table.stack td{display:flex;gap:12px;padding:5px 0;border:0;align-items:baseline}.table.stack td::before{content:attr(data-l);flex:0 0 74px;font-size:11px;letter-spacing:.1em;color:var(--grey)}.table.stack td[data-l=""]::before{display:none}.table.stack td:first-child{font-size:16px;flex-wrap:wrap;padding-bottom:8px}.table.stack td:first-child::before{display:none}.table.stack td.row{flex-wrap:wrap;padding-top:10px}}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
 @media(max-width:719px){input,select,textarea{font-size:16px!important}.mnav{display:flex;grid-column:2;justify-self:end;gap:2px}.mnav a{padding:8px 10px;font-size:13px;letter-spacing:.14em;text-decoration:none;color:inherit}}
@@ -796,7 +797,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.52.2';
+const BUILD = 'v1.52.3';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -842,12 +843,12 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const age = y => y ? (new Date().getFullYear() - y) : '';
 const INV_KIND = { coffee:'喝咖啡', tea:'下午茶', dinner:'吃晚餐', drink:'小酌', activity:'出去走走', other:'其他' };
 const INV_ST = { pending:'等待回覆', accepted:'已接受', declined:'已婉拒', cancelled:'已取消' };
-const fmtDate = t => new Date(t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});
+const fmtDate = t => !t || isNaN(new Date(t)) ? '—' : new Date(t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});
 const SCAM_RE = /匯款|轉帳|投資|虛擬幣|加密貨幣|usdt|比特幣|泰達幣|點數卡|遊戲點數|代收|代購|保證獲利|穩賺|博弈|娛樂城|借錢|借我|急用|保證金|解凍金/i;
 const replyLabel = r => { if(!r || r.n < 3) return ''; const rate = Math.round(r.replied/r.n*100); const m = r.median_min;
   const sp = m==null ? '' : m < 60 ? '通常 1 小時內回覆' : m < 360 ? '通常幾小時內回覆' : m < 1440 ? '通常 1 天內回覆' : '回覆較慢';
   return `回覆率 ${rate}%${sp?'・'+sp:''}`; };
-const fmtTime = t => { const d = new Date(t); const now = new Date();
+const fmtTime = t => { const d = new Date(t); if(!t || isNaN(d)) return '—'; const now = new Date();
   return d.toDateString()===now.toDateString() ? d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}); };
 const seen = t => { if(!t) return ''; const m=(Date.now()-new Date(t))/60000;
   if(m<15) return '在線上'; if(m<60*24) return '今天上線'; if(m<60*24*3) return '近三天上線'; if(m<60*24*7) return '本週上線'; return ''; };
@@ -1228,8 +1229,8 @@ async function viewLanding(){
       <div class="e"><dt>Sugar Daddy<br>Sugar Mommy</dt><dd class="pos">名詞</dd><dd>事業與生活都已穩定，願意把時間和心力，放在一段讓彼此都舒服的關係裡。</dd></div>
       <div class="e"><dt>坦誠</dt><dd class="pos">形容詞</dd><dd>微糖最重要的一個詞。見面之前，先把彼此期待的相處方式、見面節奏說清楚；不合適，就不必勉強。</dd></div>
       <div class="e"><dt>界線</dt><dd class="pos">名詞</dd><dd>每個人都有，也都該被尊重。對方說不，就是不。封鎖一次，對方就再也看不到你。</dd></div>
-      <div class="e"><dt>真人認證</dt><dd class="pos">名詞</dd><dd>依系統隨機指定的動作，拍一張自拍和一段短影片，由真人和頭像比對。通過後檔案會出現「✓ 真人認證」，自拍和影片審核完立即刪除。</dd></div>
-      <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件（姓名可以遮住），由真人看過後，檔案上會出現「✓ 財力認證」。不是必要的，是加分；甜心想看文件可以申請，對方按允許才看得到。</dd></div>
+      <div class="e"><dt>真人認證</dt><dd class="pos">名詞</dd><dd>依系統隨機指定的動作，拍一張自拍和一段短影片，由真人和頭像比對。通過後檔案會出現<span style="white-space:nowrap">「✓ 真人認證」</span>，自拍和影片審核完立即刪除。</dd></div>
+      <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件（姓名可以遮住），由真人看過後，檔案上會出現<span style="white-space:nowrap">「✓ 財力認證」</span>。不是必要的，是加分；甜心想看文件可以申請，對方按允許才看得到。</dd></div>
       <div class="e"><dt>審核</dt><dd class="pos">動詞</dd><dd>每一張照片、每一段自介，都由真人看過才公開。業者、假照片、留聯絡方式的，到不了這裡。</dd></div>
       <div class="e no"><dt>性交易</dt><dd class="pos">名詞　微糖不使用的詞</dd><dd>以金錢或財物交換性行為，違法，也違反本站守則。出現就停權，必要時配合司法調查。平台不代收、不轉交會員之間的任何款項。</dd></div>
     </dl>
@@ -2030,7 +2031,7 @@ async function viewChat(matchId){
       if(!m2 || m2.closed_at){ showClosed(); return toast('對方已結束這段對話'); }
       return toast('沒有送出：'+error.message); }
     add(data); mySent=true; gate(); };
-  $('#chMore') && ($('#chMore').onclick=()=>{ modal(`<div class="sheet">
+  $('#chMore') && ($('#chMore').onclick=()=>{ modal(`<div class="sheet"><p class="tiny dim" style="letter-spacing:.14em;margin:0 0 4px">和 ${esc(oname)} 的對話</p>
       ${o?'<button class="it" id="shProf">查看檔案</button>':''}
       <button class="it" id="shReport">檢舉</button>
       <button class="it bad" id="shBlock">封鎖</button>
@@ -2061,9 +2062,9 @@ async function viewMe(){
   ]);
   const lastPv = (pvs||[])[0];
   const personCard = `<div class="card mt" id="pCard"><h3 style="font-size:17px">真人認證 ${personBadge(me)}</h3>
-    ${me.person_verified_at ? `<p class="small muted mt">你已在 ${new Date(me.person_verified_at).toLocaleDateString('zh-TW')} 通過真人認證，檔案和探索卡片上會顯示「✓ 真人認證」。</p>`
+    ${me.person_verified_at ? `<p class="small muted mt">你已在 ${new Date(me.person_verified_at).toLocaleDateString('zh-TW')} 通過真人認證，檔案和探索卡片上會顯示<span style="white-space:nowrap">「✓ 真人認證」</span>。</p>`
     : lastPv?.status==='pending' ? `<p class="small mt">審核中，通常 1–2 天內完成。審核後自拍和影片會立即刪除。</p>`
-    : `<p class="small muted mt">證明照片裡的人就是你。通過後檔案會顯示「✓ 真人認證」，對方更敢回覆你。</p>
+    : `<p class="small muted mt">證明照片裡的人就是你。通過後檔案會顯示<span style="white-space:nowrap">「✓ 真人認證」</span>，對方更敢回覆你。</p>
       ${lastPv?.status==='rejected'?`<div class="banner warn mt">上一次沒有通過：${esc(lastPv.review_note||'')}</div>`:''}
       <p class="tiny dim mt">系統會隨機給你兩個動作：一張自拍、一段 10 秒內的短影片。用手機前鏡頭當場拍，管理員會和你的頭像比對。<b>自拍和影片只有管理員看得到，審核完立即刪除。</b></p>
       <button class="btn primary mt2" id="pvStart">開始真人認證</button>`}
@@ -2078,13 +2079,13 @@ async function viewMe(){
   const nameOf = id => esc(names[id] || '已離開的會員');
   const wealthCard = !isSugar ? '' : `<div class="card mt" id="wCard"><h3 style="font-size:17px">財力認證 ${wealthBadge(me)}</h3>
     ${lastWv?.status==='pending' ? `<p class="small mt">文件審核中，通常 1–2 天內完成。</p>`
-    : me.wealth_verified_at ? `<p class="small muted mt">你已在 ${new Date(me.wealth_verified_at).toLocaleDateString('zh-TW')} 通過財力認證，檔案和探索卡片上會顯示「✓ 財力認證」。</p>
+    : me.wealth_verified_at ? `<p class="small muted mt">你已在 ${new Date(me.wealth_verified_at).toLocaleDateString('zh-TW')} 通過財力認證，檔案和探索卡片上會顯示<span style="white-space:nowrap">「✓ 財力認證」</span>。</p>
       ${lastWv?.status==='rejected'?`<div class="banner warn mt">最新上傳的文件沒有通過：${esc(lastWv.review_note||'')}</div>`:''}
       ${hasDoc ? `<p class="tiny dim mt">你的文件保存在私有空間，只有你按「允許」的甜心看得到，查看時會疊上對方的代號浮水印。你可以隨時刪除文件，認證標章會保留。</p>
         ${wPend.length?`<div class="list mt">${wPend.map(x=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(x.requester_id)} <span class="tiny dim">想看你的財力證明</span></div><button class="btn sm primary wGrant" data-id="${x.requester_id}">允許</button><button class="btn sm ghost wDeny" data-id="${x.requester_id}">婉拒</button></div>`).join('')}</div>`:''}
         ${wGrant.length?`<p class="tiny dim mt">已允許查看：</p><div class="list">${wGrant.map(x=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(x.requester_id)}</div><button class="btn sm ghost wRevoke" data-id="${x.requester_id}">收回</button></div>`).join('')}</div>`:''}
         <button class="btn sm ghost mt" id="wDelDoc">刪除我的財力文件</button>` : `<p class="tiny dim mt">文件已刪除，甜心無法申請查看。想讓甜心看，可以重新上傳一份。</p><label class="btn sm ghost mt">重新上傳文件<input type="file" accept="image/*" id="wFile" class="hidden"></label><input type="hidden" id="wKind" value="other">`}`
-    : `<p class="small muted mt">通過認證後，你的檔案會顯示「✓ 財力認證」，甜心可以只看有認證的會員，回覆率通常比較高。</p>
+    : `<p class="small muted mt">通過認證後，你的檔案會顯示<span style="white-space:nowrap">「✓ 財力認證」</span>，甜心可以只看有認證的會員，回覆率通常比較高。</p>
       ${lastWv?.status==='rejected'?`<div class="banner warn mt">上一份文件沒有通過：${esc(lastWv.review_note||'')}</div>`:''}
       <p class="tiny dim mt">上傳<b>任一種</b>看得出經濟能力的文件照片即可。<b>姓名、帳號、身分證字號、地址都可以遮住</b>，看得到大概金額就好。</p>
       <details class="more mt"><summary>文件怎麼保存？</summary><p class="tiny dim">沒通過的立即刪除；通過的保存在私有空間，只有你按「允許」的甜心看得到，查看時會疊上對方代號浮水印。你可以隨時刪除。財力認證不是必要的，是加分。</p></details>
@@ -2468,6 +2469,7 @@ async function viewAdmin(){
         const flag = x => x && (x.starts_7d>=7 || (x.unreplied_pct>=80 && x.starts_7d>=4) || x.closed_by_others>=3 || x.blocked_by>=2);
         $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>見面評價</th><th>Email／手機</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.founder_no?` <span class="chip" title="創始會員（不對外顯示）">創始 #${p.founder_no}</span>`:''}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.person_verified_at?' <span class="pbadge">✓ 真人</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td class="tiny">${rv[p.id]?`<button class="lnk rvw ${rv[p.id].bad?'bad':''}" data-id="${p.id}" data-n="${esc(p.nickname||'')}">${rv[p.id].n} 則・好 ${rv[p.id].good}・差 ${rv[p.id].bad}</button>`:'—'}</td><td class="tiny">${ct[p.id]?`${esc(ct[p.id].email||'—')}<br>${ct[p.id].phone?esc('0'+String(ct[p.id].phone).replace(/^886/,'')):'—'}`:''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
           <td class="row" style="gap:4px">${p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}${p.wealth_verified_at?`<button class="btn sm ghost wrv" data-id="${p.id}">取消財力認證</button>`:''}${p.person_verified_at?`<button class="btn sm ghost prv" data-id="${p.id}">取消真人認證</button>`:''}</td></tr>`).join('')}</table></div>`;
+        { const tb=$('#qr .table'); if(tb){ tb.classList.add('stack'); const ths=[...tb.querySelectorAll('th')].map(t=>t.textContent); tb.querySelectorAll('tr').forEach(tr=>tr.querySelectorAll('td').forEach((td,i)=>{ td.dataset.l=ths[i]||''; })); } }
         $('#qr').querySelectorAll('.rvw').forEach(b=>b.onclick=async()=>{ const { data, error } = await sb.rpc('admin_reviews', { target: b.dataset.id }); if(error) return toast(error.message);
           modal(`<h3 style="font-size:16px">${esc(b.dataset.n)} 收到的見面評價</h3><p class="tiny dim">只有管理員看得到。</p>${(data||[]).map(r=>`<div style="border-bottom:1px solid var(--rule);padding:10px 0"><div class="tiny dim">${fmtTime(r.created_at)}・評價人 ${esc(r.reviewer)}・見面 ${r.date_at?fmtDate(r.date_at):''}</div><div class="small ${r.rating===1?'bad':r.rating===3?'ok':''}">${['','不舒服','普通','很愉快'][r.rating]}　${(r.tags||[]).map(esc).join('、')}</div>${r.note?`<p class="small mt" style="white-space:pre-wrap">${esc(r.note)}</p>`:''}</div>`).join('')||'<p class="muted">沒有評價</p>'}`); });
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
