@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.35.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.36.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -116,6 +116,7 @@ begin
   new.is_admin    := old.is_admin;
   new.review_note := old.review_note;
   new.wealth_verified_at := old.wealth_verified_at;
+  if new.role = 'baby' and old.role is distinct from 'baby' then new.wealth_verified_at := null; end if;   -- 改成甜心：財力認證標章不再適用
   new.person_verified_at := old.person_verified_at;   -- 真人認證只有管理員能設定   -- 財力認證只有管理員能設定
   new.created_at  := old.created_at;
   new.founder_no  := old.founder_no;     -- 創始會員編號只由系統給
@@ -183,6 +184,8 @@ create or replace function public.profiles_submitted_at()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.status = 'pending' and old.status is distinct from 'pending' then new.submitted_at := now(); end if;
+  -- 被退件：視同重新審核，通過前不能瀏覽其他會員（避免什麼都不改、重送一次就恢復）
+  if new.status = 'rejected' and old.status is distinct from 'rejected' then new.approved_at := null; end if;
   -- 解除停權後要重新審核：清掉舊的通過時間，審核前不能瀏覽其他會員
   if old.status = 'suspended' and new.status <> 'suspended' and new.status <> 'approved' then new.approved_at := null; end if;
   if new.status = 'approved' and new.approved_at is null then
@@ -278,7 +281,7 @@ create or replace function public.handle_block()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare a uuid := least(new.blocker_id, new.blocked_id); b uuid := greatest(new.blocker_id, new.blocked_id);
 begin
-  update public.matches set closed_at = now() where user_a = a and user_b = b and closed_at is null;
+  update public.matches set closed_at = coalesce(closed_at, now()), closed_by = null where user_a = a and user_b = b;   -- 對方先結束對話再封鎖時，也要讓雙方都看不到
   delete from public.likes where (from_id = a and to_id = b) or (from_id = b and to_id = a);
   delete from public.photo_grants where (owner_id = a and viewer_id = b) or (owner_id = b and viewer_id = a);
   delete from public.photo_requests where (requester_id = a and owner_id = b) or (requester_id = b and owner_id = a);
@@ -404,6 +407,9 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if auth.uid() is null or public.is_admin() then return new; end if;
   if tg_op = 'INSERT' then
+    if public.my_status() is distinct from 'approved' and public.my_status() is distinct from 'pending' then
+      raise exception '你的帳號目前無法傳送訊息';   -- 退件、停權的帳號不能再傳（包含從已開啟的對話、邀請卡）
+    end if;
     new.created_at := clock_timestamp(); new.read_at := null;
     perform 1 from public.matches where id = new.match_id for update;   -- 同一段對話的送出排隊，避免連點繞過規則
     if not private.can_send(new.match_id) then raise exception '對方回覆後才能繼續傳訊息'; end if;
@@ -1671,7 +1677,8 @@ language sql stable security definer set search_path = public as $$
     join public.date_invites v on v.id = sc.invite_id
     left join public.profiles po on po.id = sc.owner_id
     left join public.profiles pp on pp.id = case when v.from_id = sc.owner_id then v.to_id else v.from_id end
-   where length(p_token) = 64 and sc.token = p_token;
+   where length(p_token) = 64 and sc.token = p_token
+     and sc.ends_at > now() - interval '3 days';   -- 約會結束 3 天後連結失效
 $$;
 revoke execute on function public.safety_view(text) from public;
 grant execute on function public.safety_view(text) to anon, authenticated;
@@ -1894,3 +1901,6 @@ revoke all on function public.set_free_tonight(boolean) from public, anon;
 revoke all on function public.set_travel(text, date, date) from public, anon;
 grant execute on function public.set_free_tonight(boolean) to authenticated;
 grant execute on function public.set_travel(text, date, date) to authenticated;
+
+-- v0.36：內部函式不開放直接執行
+revoke all on function private.invite_msg(uuid, uuid, text) from public, anon, authenticated;

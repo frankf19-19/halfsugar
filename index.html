@@ -812,7 +812,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.58.1';
+const BUILD = 'v1.59.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -951,7 +951,7 @@ function modal(html, opt){ if(window.__onModalClose){ try{ window.__onModalClose
     if(history.state && history.state.yyDead && deadHref===location.href) history.replaceState({ yyModal:1 }, '');   // 沿用剛失效的那筆，不會越疊越多
     else history.pushState({ yyModal:1 }, '');
     deadHref = null; modalHist = true; }catch(_){} } }
-function closeModal(){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; recovering=false; document.body.classList.remove('modal-open');
+function closeModal(){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; const wasRec = recovering; recovering=false; if(wasRec) setTimeout(()=>route(), 0);   // 重設密碼視窗被關掉：已經登入了，畫面要跟著更新 document.body.classList.remove('modal-open');
   const rf = window.__modalReturn; window.__modalReturn = null; if(rf && rf.isConnected && rf.focus) try{ rf.focus({ preventScroll:true }); }catch(_){}
   if(history.state && history.state.yyModal){ try{ history.replaceState({ yyDead:1 }, ''); deadHref = location.href; }catch(_){} }
   modalHist = false; }
@@ -982,7 +982,7 @@ async function loadMe(){
 }
 lastUid = undefined;
 sb.auth.onAuthStateChange(async (ev, s)=>{
-  if(ev==='PASSWORD_RECOVERY'){ recovering = true; lastUid = s?.user?.id; setTimeout(openPasswordReset, 300); return; }
+  if(ev==='PASSWORD_RECOVERY'){ recovering = true; lastUid = s?.user?.id; setTimeout(async ()=>{ await loadMe(); openPasswordReset(); }, 300); return; }
   if(ev==='SIGNED_OUT'){ urlCache.clear(); browseState.role=null; resetBrowse(); }
   // 切回分頁、選照片時 supabase 會再發 SIGNED_IN；同一個人就不重畫，避免正在填的表單被清掉
   const uid = s?.user?.id || null;
@@ -1168,6 +1168,7 @@ async function route(){
   if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat'].includes(path||'')){ location.hash='#/onboarding'; return; }
   if(me && !me.is_admin && me.status!=='incomplete' && missingBasics(me).length && ['browse','likes','matches','chat'].includes(path)){ sessionStorage.setItem('meTab','profile'); toast('請先完成基本資料'); location.hash='#/me'; return; }
   if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety','safe'].includes(path));
+  if(path && !routes[path]) { try{ history.replaceState(history.state, '', location.pathname + location.search + '#/'); }catch(_){} document.body.classList.add('home'); document.body.dataset.page='home'; renderNav(); }   // 打錯的網址：顯示首頁，網址也改回首頁
   const fn = routes[path] || viewLanding;
   const seq = routeSeq;
   const done = () => { if(seq===routeSeq){ clearTimeout(window.__spinT); app.classList.remove('busy'); } };
@@ -1990,7 +1991,7 @@ async function viewChat(matchId){
 </div>`;
   if(o) signedThumb(o.avatar_path).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
-  let lastDay='', lastAt=null; const seenIds=new Set();
+  let lastDay='', lastAt=null, bulk=false; const seenIds=new Set();
   const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
   const invInner = id => { const v = inv[id]; if(!v) return '<p class="tiny dim">載入中…</p>';
     const mineV = v.from_id===me.id, past = new Date(v.date_at) < new Date(), c = myChk[id];
@@ -2022,7 +2023,7 @@ async function viewChat(matchId){
     box.querySelector('.chempty')?.remove();
     const later = prevLast && x.created_at < prevLast ? [...box.querySelectorAll('[data-t]')].find(e=>e.dataset.t > x.created_at) : null;   // 補抓到較早的訊息：插到正確位置
     if(later){ later.insertAdjacentHTML('beforebegin', msgHtml(x)); loadImg(later.previousElementSibling); }
-    else { box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); box.scrollTop = box.scrollHeight; }
+    else { box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); if(!bulk) box.scrollTop = box.scrollHeight; }
     if(x.invite_id && (!inv[x.invite_id] || x.body!=='送出了約會邀請')) refreshInv(x.invite_id);
     if(x.sender_id!==me.id && !x.recalled_at && SCAM_RE.test(x.body||'') && !box.querySelector('.scamtip')){
       const el = box.querySelector(`[data-mid="${x.id}"]`); el && el.insertAdjacentHTML('afterend', `<div class="scamtip">提醒：微糖不經手任何金錢。要求匯款、投資、買點數或借錢的，幾乎都是詐騙。請不要轉帳，可以從右上角「⋯」檢舉。</div>`); } };
@@ -2087,7 +2088,7 @@ async function viewChat(matchId){
       if(error){ $('#rcBtn').disabled=false; return toast('沒有收回成功：'+zh(error.message)); }
       closeModal(); markRecalled({ id: el.dataset.mid, sender_id: me.id }); toast('已收回'); };
   };
-  (msgs||[]).forEach(add);
+  bulk = true; (msgs||[]).forEach(add); bulk = false; box.scrollTop = box.scrollHeight;   // 一次放好再捲到底，不要每則都重新排版
   if(!msgs.length){ const ops = closed ? [] : openersFor(o), mineOps = closed ? [] : (me.openers||[]).map(t=>t.replace(/\{對方\}/g, ()=>oname));
     box.insertAdjacentHTML('beforeend', `<div class="chempty"><p class="serif">還沒有訊息</p><p class="tiny dim">說說你為什麼想認識 ${esc(oname)}，好的開場白比較容易得到回覆。點一下開場白，可以修改後再送出。</p>
       ${mineOps.length?`<p class="tiny dim oph">我的開場白</p><div class="openers">${mineOps.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}
@@ -2108,10 +2109,10 @@ async function viewChat(matchId){
   sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread(true));
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     add(payload.new);   // 自己的訊息也處理（例如另一台裝置傳的），seenIds 會去重
-    if(payload.new.sender_id!==me.id){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
+    if(payload.new.sender_id!==me.id){ otherReplied=true; gate(); if(document.visibilityState==='visible') sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }   // 手機在背景時不送已讀，回到畫面時再一起標記
   }).on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     if(payload.new.recalled_at) markRecalled(payload.new);
-  }).subscribe(st => { if(st==='SUBSCRIBED' && subscribedOnce) onChatVisible && onChatVisible(); if(st==='SUBSCRIBED') subscribedOnce = true; });
+  }).subscribe(st => { if(st==='SUBSCRIBED'){ onChatVisible && onChatVisible(); subscribedOnce = true; } });   // 連線好就補抓一次：讀取訊息到連線完成之間對方傳的也不會漏
   let subscribedOnce = false;
   // 手機切到背景再回來時，即時連線可能斷過：補抓這段時間的新訊息
   onChatVisible = async () => { if(my!==routeSeq || !$('#msgs')) return;
@@ -2454,7 +2455,7 @@ function bindAccount(){
       <p class="small">以下資料會全部永久刪除：</p>
       <ul class="delwarn"><li>你的檔案、頭像、公開照與私密照</li><li>所有心動紀錄與對話（對方那邊也會一起消失）</li><li>私密照授權、索取與封鎖名單</li><li>綁定的手機號碼與登入信箱</li></ul>
       <p class="small muted mt">如果只是想暫時休息，可以改用「隱私設定 → 不出現在探索」。</p>
-      <p class="tiny dim">帳號被停權或有處理中的檢舉時，需等處理完才能刪除。</p>
+      <p class="tiny dim">帳號被停權時，需聯絡客服處理後才能刪除。</p>
       <label class="mt2">請輸入「刪除」兩個字確認</label><input id="delIn" autocomplete="off">
       <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="delNo">取消</button><button class="btn danger" id="delYes" disabled>永久刪除我的帳號</button></div>`);
     $('#delIn').oninput = ()=>{ $('#delYes').disabled = $('#delIn').value.trim()!=='刪除'; };
@@ -2730,10 +2731,18 @@ function viewDoc(k){ $('#app').innerHTML = `<div class="doc card">${DOCS[k]}</di
   const hp = new URLSearchParams(location.hash.replace(/^#/,'')); const err = hp.get('error_description') || new URLSearchParams(location.search).get('error_description');
   if(err){ history.replaceState(null,'',location.pathname); setTimeout(()=>toast(/expired|invalid/i.test(err)?'驗證連結已失效。請到登入頁輸入帳號密碼，再按「重寄驗證信」':zh(err), 7000), 400); }
   const sp = new URLSearchParams(location.search);
-  if(sp.get('th')){ const th=sp.get('th'), tt=sp.get('tt')||'email'; history.replaceState(null,'',location.pathname+location.hash);
-    const { error } = await verifyEmailOtp({ token_hash: th, type: tt });
-    if(error) setTimeout(()=>toast('這個連結已失效或已用過。請回到登入頁重新申請。', 7000), 400);
-    else if(tt!=='recovery') setTimeout(()=>toast(tt==='email_change'?'Email 已更新':'Email 驗證成功，歡迎加入微糖'), 400); }
+  if(sp.get('th')){ const th=sp.get('th'), tt0=sp.get('tt')||'email'; history.replaceState(null,'',location.pathname+location.hash);
+    const tt = ['email','signup','magiclink','recovery','email_change'].includes(tt0) ? tt0 : 'email';
+    // 已經登入的人點到「別人的」驗證連結：不要被換成別人的帳號
+    const { data: { session: prev } } = await sb.auth.getSession();
+    const { data: vd, error } = await verifyEmailOtp({ token_hash: th, type: tt });
+    const newUid = vd?.user?.id || vd?.session?.user?.id;
+    if(!error && prev && newUid && newUid !== prev.user.id){
+      await sb.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token }).catch(()=>{});
+      setTimeout(()=>toast('這個連結屬於另一個帳號，已保留你原本的登入。', 7000), 400); }
+    else if(error) setTimeout(()=>toast('這個連結已失效或已用過。請回到登入頁重新申請。', 7000), 400);
+    else if(tt!=='recovery'){ const em = vd?.user?.email || ''; const mask = em.replace(/^(.{2}).*(@.*)$/, '$1***$2');
+      setTimeout(()=>toast((tt==='email_change'?'Email 已更新':'Email 驗證成功，歡迎加入微糖') + (prev ? '' : `（登入帳號 ${mask}，不是你的帳號請到「我的」登出）`), 8000), 400); } }
   await loadMe(); route();
 })();
 </script>

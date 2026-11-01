@@ -773,5 +773,33 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 42 退件、封鎖、報備連結期限
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update public.profiles set status='rejected' where id=V1;
+  select count(*) into n from public.profiles where id=V1 and approved_at is null; out := array_append(out, ('42a 退件後要重新審核才能瀏覽 = '||n||' (應為1)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  begin insert into public.messages (match_id, sender_id, body) values (cm3, V1, '退件後還想聊'); out := array_append(out, '42b 退件帳號在已開啟的對話傳訊息：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '42b 退件帳號不能再傳訊息 ✓'::text); end;
+  begin perform public.send_first_message(V2, '退件後還想聊'); out := array_append(out, '42c 退件帳號用 send_first_message 傳訊息：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '42c 退件帳號用 send_first_message 也被擋 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update public.profiles set status='approved', approved_at=now() where id=V1;
+  update public.matches set closed_at=now(), closed_by=V2 where id=cm3;
+  insert into public.blocks (blocker_id, blocked_id) values (V2, V1);
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.matches where id=cm3; out := array_append(out, ('42d 對方先結束再封鎖，被封鎖的人還看得到對話 = '||n||' (應為0)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into public.safety_checks (invite_id, owner_id, ends_at) values (iv, V1, now() - interval '4 days'), (iv, V2, now() - interval '1 day') on conflict do nothing;
+  select count(*) into n from public.safety_checks sc, lateral public.safety_view(sc.token) v where sc.invite_id = iv and sc.owner_id = V1;
+  out := array_append(out, ('42e 約會結束 3 天後報備連結失效，還看得到 = '||n||' (應為0)')::text);
+  select count(*) into n from public.safety_checks sc, lateral public.safety_view(sc.token) v where sc.invite_id = iv and sc.owner_id = V2;
+  out := array_append(out, ('42f 結束 3 天內的報備連結仍可看 = '||n||' (應為1)')::text);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
