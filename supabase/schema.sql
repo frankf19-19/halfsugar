@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.34.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.35.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -751,6 +751,12 @@ returns int language sql stable security definer set search_path = public as $$
   select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%' and name !~ 't\.jpg$';   -- 縮圖不算
 $$;
 
+create or replace function private.my_thumb_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%' and name ~ 't\.jpg$';
+$$;
+grant execute on function private.my_thumb_count() to authenticated;
+
 -- 縮圖用：檢查自己是否已上傳這張原圖（security definer，避免在 storage 規則裡查 storage 造成循環）
 create or replace function private.my_photo_file_exists(p_name text)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -767,14 +773,18 @@ create policy "photos_storage_insert" on storage.objects for insert to authentic
                  and private.my_file_count() < 30            -- 每人最多 30 個檔案（相簿 20 + 頭像與更換的餘裕）
                  and not private.photo_path_in_use(name))    -- 不可用同檔名覆蓋已登記的照片
                 -- 縮圖（檔名加 t）：必須對應一張自己已上傳的原圖，不算在數量裡
+                -- 只能在原圖登記之前上傳（之後就跟著原圖一起審核、一起鎖住），縮圖另有數量上限
                 or (name ~ ('^' || auth.uid()::text || '/[0-9]+t\.jpg$')
-                    and private.my_photo_file_exists(regexp_replace(name, 't\.jpg$', '.jpg')))
+                    and private.my_photo_file_exists(regexp_replace(name, 't\.jpg$', '.jpg'))
+                    and not private.photo_path_in_use(regexp_replace(name, 't\.jpg$', '.jpg'))
+                    and private.my_thumb_count() < 30)
               ));
 
 drop policy if exists "photos_storage_delete" on storage.objects;
 create policy "photos_storage_delete" on storage.objects for delete to authenticated
   using (bucket_id = 'photos' and (public.is_admin()
-         or ((storage.foldername(name))[1] = auth.uid()::text and not private.photo_path_in_use(name))));
+         or ((storage.foldername(name))[1] = auth.uid()::text and not private.photo_path_in_use(name)
+             and not private.photo_path_in_use(regexp_replace(name, 't\.jpg$', '.jpg')))));   -- 照片登記後（送審、已通過），它的縮圖也鎖住，不能刪掉換別張
 
 drop policy if exists "photos_storage_select" on storage.objects;
 create or replace function private.can_see_photo(p_name text)
@@ -1867,7 +1877,9 @@ begin
     if p_city not in ('台北市','新北市','桃園市','新竹','台中市','彰化','雲林','嘉義','台南市','高雄市','屏東','基隆','宜蘭','花蓮','台東','南投','苗栗','澎湖','金門') then raise exception '請選擇要去的城市'; end if;
     if p_city = home then raise exception '要去的城市和你的所在地相同'; end if;
     if p_from is null or p_to is null then raise exception '請選擇日期'; end if;
-    if p_from < today then raise exception '出發日已經過了'; end if;
+    -- 已經出發的行程：出發日維持原本的，可以改回程日
+    if p_from < today and not exists (select 1 from public.profiles where id = auth.uid() and travel_city = p_city and travel_from = p_from and travel_to >= today) then
+      raise exception '出發日已經過了'; end if;
     if p_from > today + 60 then raise exception '只能設定 60 天內的行程'; end if;
     if p_to < p_from then raise exception '回程日要在出發日之後'; end if;
     if p_to > p_from + 13 then raise exception '一次最多 14 天'; end if;

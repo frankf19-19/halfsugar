@@ -715,6 +715,16 @@ begin
   -- 改其他欄位不會影響旅行設定，也不會因此重新審核
   update public.profiles set height_cm = 175 where id=V1;
   select count(*) into n from public.profiles where id=V1 and travel_city='台中市' and status='approved'; out := array_append(out, ('39i 改身高後旅行設定還在且不用重審 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update public.profiles set travel_from = (now() at time zone 'Asia/Taipei')::date - 2, travel_to = (now() at time zone 'Asia/Taipei')::date + 1 where id=V1;   -- 模擬已經出發
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  begin perform public.set_travel('台中市', (now() at time zone 'Asia/Taipei')::date - 2, (now() at time zone 'Asia/Taipei')::date + 5); out := array_append(out, '39k 旅行途中延長回程日 ✓'::text);
+  exception when others then out := array_append(out, ('39k 旅行途中延長回程日失敗：'||sqlerrm||' ✗')::text); end;
+  begin perform public.set_travel('台南市', (now() at time zone 'Asia/Taipei')::date - 2, (now() at time zone 'Asia/Taipei')::date + 5); out := array_append(out, '39l 換城市卻用過去的出發日：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '39l 不能用過去的出發日設定新行程 ✓'::text); end;
   perform public.set_travel(null, null, null);
   select count(*) into n from public.profiles where id=V1 and travel_city is null and travel_from is null; out := array_append(out, ('39j 取消旅行 = '||n||' (應為1)')::text);
   execute 'reset role';
@@ -752,6 +762,10 @@ begin
   execute 'set local role authenticated';
   begin insert into storage.objects (bucket_id, name, owner) values ('photos', V2||'/13t.jpg', V2); out := array_append(out, '41b 有原圖的縮圖可以上傳 ✓'::text);
   exception when others then out := array_append(out, ('41b 有原圖的縮圖上傳失敗：'||sqlerrm||' ✗')::text); end;
+  begin insert into storage.objects (bucket_id, name, owner) values ('photos', V2||'/11t.jpg', V2); out := array_append(out, '41e 已登記照片換縮圖：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '41e 已登記的照片不能再上傳縮圖 ✓'::text); end;
+  delete from storage.objects where name = V2||'/11t.jpg'; get diagnostics n = row_count; out := array_append(out, ('41f 刪掉已登記照片的縮圖 = '||n||' (應為0)')::text);
+  delete from storage.objects where name = V2||'/13t.jpg'; get diagnostics n = row_count; out := array_append(out, ('41g 還沒登記的照片縮圖可以刪 = '||n||' (應為1)')::text);
   begin insert into storage.objects (bucket_id, name, owner) values ('photos', V2||'/99t.jpg', V2); out := array_append(out, '41c 沒有原圖的縮圖：沒被擋 ✗'::text);
   exception when others then out := array_append(out, '41c 沒有原圖不能上傳縮圖 ✓'::text); end;
   begin insert into storage.objects (bucket_id, name, owner) values ('photos', V1||'/11t.jpg', V2); out := array_append(out, '41d 縮圖放到別人資料夾：沒被擋 ✗'::text);
