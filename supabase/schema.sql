@@ -751,6 +751,13 @@ returns int language sql stable security definer set search_path = public as $$
   select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%' and name !~ 't\.jpg$';   -- 縮圖不算
 $$;
 
+-- 縮圖用：檢查自己是否已上傳這張原圖（security definer，避免在 storage 規則裡查 storage 造成循環）
+create or replace function private.my_photo_file_exists(p_name text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from storage.objects where bucket_id = 'photos' and name = p_name and name like auth.uid()::text || '/%');
+$$;
+grant execute on function private.my_photo_file_exists(text) to authenticated;
+
 drop policy if exists "photos_storage_insert" on storage.objects;
 create policy "photos_storage_insert" on storage.objects for insert to authenticated
   with check (bucket_id = 'photos'
@@ -761,7 +768,7 @@ create policy "photos_storage_insert" on storage.objects for insert to authentic
                  and not private.photo_path_in_use(name))    -- 不可用同檔名覆蓋已登記的照片
                 -- 縮圖（檔名加 t）：必須對應一張自己已上傳的原圖，不算在數量裡
                 or (name ~ ('^' || auth.uid()::text || '/[0-9]+t\.jpg$')
-                    and exists (select 1 from storage.objects o where o.bucket_id = 'photos' and o.name = regexp_replace(name, 't\.jpg$', '.jpg')))
+                    and private.my_photo_file_exists(regexp_replace(name, 't\.jpg$', '.jpg')))
               ));
 
 drop policy if exists "photos_storage_delete" on storage.objects;
