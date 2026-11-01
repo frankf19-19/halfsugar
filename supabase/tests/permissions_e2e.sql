@@ -738,5 +738,26 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 41 縮圖
+  insert into public.photos (user_id, path, is_private, status) values (V2, V2||'/11.jpg', false, 'approved'), (V2, V2||'/12.jpg', true, 'approved');
+  insert into storage.objects (bucket_id, name) values ('photos', V2||'/11.jpg'), ('photos', V2||'/11t.jpg'), ('photos', V2||'/12.jpg'), ('photos', V2||'/12t.jpg'), ('photos', V2||'/13.jpg');
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from storage.objects where name in (V2||'/11t.jpg', V2||'/12t.jpg'); out := array_append(out, ('41a 縮圖跟原圖同權限（公開看得到、私密看不到）= '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V2::text, true);
+  execute 'set local role authenticated';
+  begin insert into storage.objects (bucket_id, name, owner) values ('photos', V2||'/13t.jpg', V2); out := array_append(out, '41b 有原圖的縮圖可以上傳 ✓'::text);
+  exception when others then out := array_append(out, ('41b 有原圖的縮圖上傳失敗：'||sqlerrm||' ✗')::text); end;
+  begin insert into storage.objects (bucket_id, name, owner) values ('photos', V2||'/99t.jpg', V2); out := array_append(out, '41c 沒有原圖的縮圖：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '41c 沒有原圖不能上傳縮圖 ✓'::text); end;
+  begin insert into storage.objects (bucket_id, name, owner) values ('photos', V1||'/11t.jpg', V2); out := array_append(out, '41d 縮圖放到別人資料夾：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '41d 不能把縮圖放到別人資料夾 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

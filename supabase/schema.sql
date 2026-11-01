@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.33.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.34.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -748,15 +748,21 @@ $$;
 
 create or replace function private.my_file_count()
 returns int language sql stable security definer set search_path = public as $$
-  select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%';
+  select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%' and name !~ 't\.jpg$';   -- 縮圖不算
 $$;
 
 drop policy if exists "photos_storage_insert" on storage.objects;
 create policy "photos_storage_insert" on storage.objects for insert to authenticated
-  with check (bucket_id = 'photos' and name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
+  with check (bucket_id = 'photos'
               and exists (select 1 from public.profiles where id = auth.uid() and status <> 'suspended')
-              and private.my_file_count() < 30            -- 每人最多 15 個檔案（相簿 9 + 頭像與更換的餘裕）
-              and not private.photo_path_in_use(name));   -- 不可用同檔名覆蓋已登記的照片
+              and (
+                (name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
+                 and private.my_file_count() < 30            -- 每人最多 30 個檔案（相簿 20 + 頭像與更換的餘裕）
+                 and not private.photo_path_in_use(name))    -- 不可用同檔名覆蓋已登記的照片
+                -- 縮圖（檔名加 t）：必須對應一張自己已上傳的原圖，不算在數量裡
+                or (name ~ ('^' || auth.uid()::text || '/[0-9]+t\.jpg$')
+                    and exists (select 1 from storage.objects o where o.bucket_id = 'photos' and o.name = regexp_replace(name, 't\.jpg$', '.jpg')))
+              ));
 
 drop policy if exists "photos_storage_delete" on storage.objects;
 create policy "photos_storage_delete" on storage.objects for delete to authenticated
@@ -764,23 +770,31 @@ create policy "photos_storage_delete" on storage.objects for delete to authentic
          or ((storage.foldername(name))[1] = auth.uid()::text and not private.photo_path_in_use(name))));
 
 drop policy if exists "photos_storage_select" on storage.objects;
-create policy "photos_storage_select" on storage.objects for select to authenticated
-  using (
-    bucket_id = 'photos' and (
-      (storage.foldername(name))[1] = auth.uid()::text
+create or replace function private.can_see_photo(p_name text)
+returns boolean language sql stable set search_path = public as $$
+  select ((storage.foldername(p_name))[1] = auth.uid()::text
       or public.is_admin()
       or exists (select 1 from public.profiles p
-                 where p.avatar_path = name and (p.status = 'approved' or (p.status = 'pending' and private.has_open_match(p.id)))
-                   and (storage.foldername(name))[1] = p.id::text
+                 where p.avatar_path = p_name and (p.status = 'approved' or (p.status = 'pending' and private.has_open_match(p.id)))
+                   and (storage.foldername(p_name))[1] = p.id::text
                    and private.can_browse() and private.is_compatible(p.id)
                    and not private.is_blocked_with(p.id))
       or exists (select 1 from public.photos ph
-                 where ph.path = name and ph.status = 'approved'
-                   and (storage.foldername(name))[1] = ph.user_id::text
+                 where ph.path = p_name and ph.status = 'approved'
+                   and (storage.foldername(p_name))[1] = ph.user_id::text
                    and private.can_browse() and private.is_compatible(ph.user_id)
                    and not private.is_blocked_with(ph.user_id)
                    and (not ph.is_private or exists (select 1 from public.photo_grants g
                                                      where g.owner_id = ph.user_id and g.viewer_id = auth.uid())))
+  );
+$$;
+grant execute on function private.can_see_photo(text) to authenticated;
+create policy "photos_storage_select" on storage.objects for select to authenticated
+  using (
+    bucket_id = 'photos' and (
+      private.can_see_photo(name)
+      -- 縮圖：看得到原圖的人就看得到縮圖
+      or (name ~ 't\.jpg$' and private.can_see_photo(regexp_replace(name, 't\.jpg$', '.jpg')))
     )
   );
 
