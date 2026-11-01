@@ -42,7 +42,7 @@ try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>a
 <style>
 :root{
   --white:#FFFFFF; --paper:#F7F6F4; --black:#000; --ink:#1A1A1A; --grey:#5F5F5F; --grey2:#767676;
-  --rule:#E3E1DD; --wine:#B04A62; --ok:#3E7A55; --warn:#A8762A; --bad:#A33A3A;
+  --rule:#E3E1DD; --wine:#B04A62; --ok:#3E7A55; --warn:#8A5E18; --bad:#A33A3A;
   /* 舊變數對應 */
   --bg:var(--white); --bg2:var(--paper); --card:var(--white); --text:var(--ink); --muted:var(--grey); --dim:var(--grey2);
   --line:var(--rule); --hair:var(--rule); --gold:var(--wine); --gold2:var(--ink); --cream:var(--white); --sand:var(--wine);
@@ -365,7 +365,7 @@ br.d{display:none}
 .msg{max-width:76%;padding:11px 16px;font-size:15px;line-height:1.7;word-break:break-word}
 .msg.me{align-self:flex-end;background:var(--black);color:#fff}
 .msg.them{align-self:flex-start;background:var(--paper)}
-.msg .time{display:block;font-size:10px;opacity:.5;margin-top:4px;text-align:right}
+.msg .time{display:block;font-size:10px;margin-top:4px;text-align:right}
 .chat form{display:flex;gap:10px;padding:12px 0 calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--rule)}
 .chat form input{flex:1;border:1px solid var(--rule);padding:12px 16px}
 .chat form .btn{padding:0 22px}
@@ -402,6 +402,7 @@ html{scrollbar-gutter:stable}body.modal-open{overflow:hidden}.modal .box{overscr
 .modal .box:focus{outline:none}
 body.kb .chat{min-height:0}
 .admth{position:absolute;right:4px;bottom:4px;width:44%;max-width:90px;aspect-ratio:3/4;background:#ddd center/cover no-repeat;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);font-size:10px;color:#fff;text-shadow:0 0 3px #000;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;pointer-events:none}
+.msg .time{opacity:1;color:var(--grey)}.msg.me .time{color:inherit;opacity:.72}[data-theme=dark] .nowtag{color:#1A1918}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
 @media(max-width:719px){input,select,textarea{font-size:16px!important}.mnav{display:flex;grid-column:2;justify-self:end;gap:2px}.mnav a{padding:8px 10px;font-size:13px;letter-spacing:.14em;text-decoration:none;color:inherit}}
@@ -812,7 +813,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.60.0';
+const BUILD = 'v1.61.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -945,6 +946,7 @@ let modalHist = false, ignorePop = 0, deadHref = null;
 function modal(html, opt){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx" aria-label="關閉">×</button>${html}</div></div>`;
   $('#mx').onclick = ()=>closeModal(); $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); };
   document.body.classList.add('modal-open');
+  try{ a11yFix($('#modal')); }catch(_){}
   const bx = $('#mbg .box'); bx.setAttribute('role','dialog'); bx.setAttribute('aria-modal','true'); bx.tabIndex = -1;
   if(!modalHist) window.__modalReturn = document.activeElement; if(!bx.contains(document.activeElement)) bx.focus({ preventScroll:true });
   if(!modalHist && !(opt && opt.noHist)){ try{
@@ -1135,6 +1137,14 @@ async function viewSafe(token){
   const iv = setInterval(()=>{ if(rs!==routeSeq) return clearInterval(iv); draw(); }, 60000);
 }
 
+/* ---------- 無障礙：表單標題連到欄位、可捲動區塊可用鍵盤捲 ---------- */
+function a11yFix(root){ root = root || document;
+  root.querySelectorAll('label:not([for])').forEach(l=>{ if(l.querySelector('input,select,textarea')) return;
+    let c = l.nextElementSibling; if(c && !/^(INPUT|SELECT|TEXTAREA)$/.test(c.tagName)) c = c.querySelector(':scope > input:not([type=checkbox]):not([type=radio]):not([type=file]), :scope > select, :scope > textarea');
+    if(!c || !/^(INPUT|SELECT|TEXTAREA)$/.test(c.tagName) || /^(checkbox|radio|file|hidden)$/.test(c.type)) return;
+    if(!c.id) c.id = 'f_' + Math.random().toString(36).slice(2, 9); l.htmlFor = c.id; });
+  root.querySelectorAll('.dcards, dl').forEach(e=>{ if(!e.hasAttribute('tabindex') && (e.scrollWidth > e.clientWidth + 2 || e.scrollHeight > e.clientHeight + 2)) e.tabIndex = 0; }); }
+
 /* ---------- 路由 ---------- */
 let reloadSeq = 0;
 const routes = {
@@ -1180,6 +1190,7 @@ async function route(){
     $('#retryBtn') && ($('#retryBtn').onclick = ()=>route()); }
   done();
   if(seq!==routeSeq) return;
+  try{ a11yFix($('#app')); }catch(_){}
   curTab = MEM_TABS.includes(path) ? path : null;
   const mem = curTab && scrollMem[curTab];
   if(mem && Date.now() - mem.t < 30*60*1000 && mem.y > 0){
@@ -1518,7 +1529,7 @@ function missingBasics(p){ if(!p) return [];
   const m=[]; if(!(p.nickname||'').trim()) m.push('暱稱'); if(!p.gender||!p.looking_for) m.push('想認識的對象'); if(!p.role) m.push('身分');
   if(!p.birth_year) m.push('出生年'); if(!p.city) m.push('所在地'); if(!p.body_type) m.push('身材'); if(!(p.bio||'').trim()) m.push('自我介紹');
   if((p.role==='daddy'||p.role==='mommy') && !p.budget) m.push('每月相處預算'); if(!p.avatar_path) m.push('頭像'); return m; }
-const PUB_COLS = 'free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'approved_avatar_path,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -1648,6 +1659,8 @@ async function viewOnboarding(){
    頁面：探索
    ===================================================================== */
 const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
+// 別人重新送審中：顯示上一次通過審核的頭像（新頭像審核通過前不給別人看）
+const pubAv = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_avatar_path) ? p.approved_avatar_path : p?.avatar_path;
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const isFree = r => !!(r && r.free_until && new Date(r.free_until) > new Date());
 const travelOn = r => !!(r && r.travel_city && r.travel_to && r.travel_from && r.travel_to >= ymdOf(new Date()) && r.travel_from <= ymdOf(new Date(Date.now()+14*864e5)));
@@ -1823,7 +1836,7 @@ async function openProfile(id){
     </div></div>
     `;
   modal(body);
-  signed(p.avatar_path).then(u=>{ if(u && $('#bigPh')) $('#bigPh').style.backgroundImage=`url("${cssu(u)}")`; });
+  signed(pubAv(p)).then(u=>{ if(u && $('#bigPh')) $('#bigPh').style.backgroundImage=`url("${cssu(u)}")`; });
   if(p.id!==me.id) sb.rpc('reply_stats', { ids:[id] }).then(({ data })=>{ const t = replyLabel(Array.isArray(data)?data[0]:null); const h=$('#modal .phead .sub'); if(t && h && tok===profSeq) h.insertAdjacentHTML('afterend', `<p class="rstat">${t}</p>`); });
   sb.from('voice_intros').select('path,duration').eq('user_id', id).eq('status','approved').maybeSingle().then(({ data: vc })=>{ const h=$('#modal .phead'); if(!vc || !h || tok!==profSeq) return;
     h.insertAdjacentHTML('beforeend', `<button type="button" class="vbtn" id="vPlay"><span class="vi">▶</span>聽聽 ${esc(p.nickname)} 的聲音${vc.duration?`<span class="tiny dim">0:${String(vc.duration).padStart(2,'0')}</span>`:''}</button>`);
@@ -1844,7 +1857,7 @@ async function openProfile(id){
         <button class="btn mt2" id="wBack">返回檔案</button>`); $('#wBack').onclick=()=>openProfile(id); });
   });
   const showBig = el => { const b=$('#bigPh'); if(!b || !el.style.backgroundImage) return; b.style.backgroundImage=el.style.backgroundImage; document.querySelectorAll('#modal .thumbs .g, #modal .gallery .g').forEach(x=>x.classList.toggle('on', x===el)); if(el.closest('.gallery')) b.scrollIntoView({behavior:'smooth',block:'center'}); };
-  const avEl = $('#modal .thumbs .g[data-av]'); if(avEl){ avEl.onclick=()=>showBig(avEl); signed(p.avatar_path).then(u=>{ if(u && avEl.isConnected) avEl.style.backgroundImage=`url("${cssu(u)}")`; }); }
+  const avEl = $('#modal .thumbs .g[data-av]'); if(avEl){ avEl.onclick=()=>showBig(avEl); signed(pubAv(p)).then(u=>{ if(u && avEl.isConnected) avEl.style.backgroundImage=`url("${cssu(u)}")`; }); }
   $('#modal').querySelectorAll('.gallery .g, .thumbs .g[data-ph]').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>showBig(el); } });
   $('#msgBtn').onclick = ()=>{
     if(conv){ closeModal(); location.hash='#/chat/'+conv.id; return; }
@@ -1904,13 +1917,13 @@ async function viewLikes(){
   const rs = routeSeq;
   localStorage.setItem('yy_likes_seen_'+me.id, new Date().toISOString()); unread.l = 0; document.querySelectorAll('a[href="#/likes"] .badge').forEach(b=>b.remove());
   const [{ data: toMe, error: le1 }, { data: fromMe, error: le2 }] = await Promise.all([
-    sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('to_id', me.id).order('created_at',{ascending:false}),
-    sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('from_id', me.id).order('created_at',{ascending:false}),
+    sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('to_id', me.id).order('created_at',{ascending:false}),
+    sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('from_id', me.id).order('created_at',{ascending:false}),
   ]);
   if(le1||le2) throw (le1||le2);
   const ok = rows => (rows||[]).filter(r=>r.p&&r.p.status==='approved');
   const list = (rows, key) => ok(rows).length ? `<div class="grid lgrid">${ok(rows).map(r=>`<div class="pcard" data-id="${r.p.id}">
-      <div class="ph" data-ph="${esc(r.p.avatar_path||'')}"></div>${seen(r.p.last_active_at)?`<span class="seen ${seen(r.p.last_active_at)==='在線上'?'on':''}">${seen(r.p.last_active_at)}</span>`:''}
+      <div class="ph" data-ph="${esc(pubAv(r.p)||'')}"></div>${seen(r.p.last_active_at)?`<span class="seen ${seen(r.p.last_active_at)==='在線上'?'on':''}">${seen(r.p.last_active_at)}</span>`:''}
       <div class="info"><div class="name"><span>${esc(r.p.nickname)}</span><span class="muted small">${age(r.p.birth_year)}</span></div><div class="meta">${r.p.role?`<span class="rtag">${ROLES[r.p.role]}</span>`:''}${esc(r.p.city||'')}</div><div class="tiny dim" style="margin-top:2px">${fmtTime(r.created_at)} 心動</div></div></div>`).join('')}</div>`
     : `<div class="empty"><p class="serif">${key==='b'?'還沒有心動過的人':'還沒有人對你心動'}</p><p class="muted small">${key==='b'?'在探索看到喜歡的人，按「心動」讓對方知道。':'把檔案和照片準備好，被看見的機會更高。'}</p><a class="btn mt2" href="${key==='b'?'#/browse':'#/me'}">${key==='b'?'去探索':'完善我的檔案'}</a></div>`;
   if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>心動</h1><p>對你心動的人，和你心動過的人。</p></header><div class="tabs"><button class="on" data-t="a">對我心動（${ok(toMe).length}）</button><button data-t="b">我心動的（${ok(fromMe).length}）</button></div>
@@ -1930,7 +1943,7 @@ async function viewMatches(){
   if(!ms || !ms.length){ if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>訊息</h1></header><div class="empty"><p class="serif">還沒有對話</p><p class="muted small">到「探索」看看，遇到想認識的人，就直接傳一則訊息。</p><a class="btn mt2" href="#/browse">去探索</a></div>`; return; }
   const ids = ms.map(m=> m.user_a===me.id ? m.user_b : m.user_a);
   const [{ data: ps }, { data: nm }, { data: unread }] = await Promise.all([
-    sb.from('profiles').select('id,nickname,avatar_path,status,role,birth_year,city').in('id', ids),
+    sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,status,role,birth_year,city').in('id', ids),
     sb.rpc('related_names', { ids }),
     sb.from('messages').select('match_id').is('read_at', null).is('recalled_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id)),
   ]);
@@ -1942,7 +1955,7 @@ async function viewMatches(){
   ms.forEach(m=>{ const k=kind(m); (k==='closed' ? groups.chat : groups[k]).push(m); });
   const row = m => { const oid = m.user_a===me.id?m.user_b:m.user_a; const o = pm[oid] || { nickname: names[oid] || '對方', avatar_path:'' }; const k = kind(m);
     const sub = k==='closed' ? '<i>對方已結束對話</i>' : k==='waiting' ? '<i>等待對方回覆</i>' : (m.last_message?esc(m.last_message):'');
-    return `<div class="item ${k==='closed'?'closed':''}${uc[m.id]?' unread':''}" data-id="${m.id}"><div class="avatar" data-ph="${esc(o.avatar_path||'')}"></div>
+    return `<div class="item ${k==='closed'?'closed':''}${uc[m.id]?' unread':''}" data-id="${m.id}"><div class="avatar" data-ph="${esc(pubAv(o)||'')}"></div>
       <div class="grow"><div class="t">${esc(o.nickname)} ${o.birth_year?`<span class="muted small">${age(o.birth_year)}</span>`:''}</div>
       ${k==='request'?`<div class="tiny dim">${o.role?ROLES[o.role]+' · ':''}${esc(o.city||'')}</div><div class="req">${esc(m.last_message||'')}</div>
         <div class="row mt" style="gap:8px"><button class="btn sm primary rq-reply" data-id="${m.id}">回覆</button><button class="btn sm ghost rq-no" data-id="${m.id}">不感興趣</button></div>`
@@ -1968,7 +1981,7 @@ async function viewChat(matchId){
   if(cErr && cErr.code!=='PGRST116') throw cErr;
   if(!m){ $('#app').innerHTML='<div class="center" style="padding:60px 0"><p class="muted">這段對話已經關閉。</p><a class="btn mt2" href="#/matches">回到訊息</a></div>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
-  const [{ data: o }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,tags,occupation,city').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
+  const [{ data: o }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,status,tags,occupation,city').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
   const oname = o?.nickname || (Array.isArray(nm)&&nm[0]?.nickname) || '對方';
   const closed = !!m.closed_at;
   const { data: last } = await sb.from('messages').select('*').eq('match_id', matchId).order('created_at',{ascending:false}).limit(300);
@@ -1987,9 +2000,9 @@ async function viewChat(matchId){
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
     <div class="banner ${closed?'':'hidden'}" id="chClosed" style="margin:8px 0 0">對方已結束這段對話，無法再傳訊息。如果有不當內容，仍可以從右上角「⋯」檢舉或封鎖。</div>
     <div class="revbar hidden" id="revBar"></div>
-    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><label class="chph" id="chPh" aria-label="傳照片" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="hidden"></label><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
+    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><label class="chph" id="chPh" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="hidden" aria-label="傳照片"></label><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
 </div>`;
-  if(o) signedThumb(o.avatar_path).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
+  if(o) signedThumb(pubAv(o)).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
   let lastDay='', lastAt=null, bulk=false; const seenIds=new Set();
   const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
@@ -2245,7 +2258,7 @@ async function viewMe(){
     </header>
     ${todo.some(t=>!t[1])?`<div class="prog"><div class="pl"><span>完成你的檔案</span><span>${todo.filter(t=>t[1]).length} ／ ${todo.length}</span></div><div class="bar"><i style="width:${Math.round(todo.filter(t=>t[1]).length/todo.length*100)}%"></i></div>
       <div class="todo">${todo.map(([tab,done,txt])=>`<button type="button" class="td ${done?'done':''}" data-go="${tab==='相簿'?'album':'verify'}"><span>${done?'✓':'○'}</span>${txt}</button>`).join('')}</div></div>`:''}
-    <div class="tabs metabs" role="tablist">${TABS.map(([k,v,n])=>`<button type="button" class="${k===meTab?'on':''}" data-mt="${k}">${v}${n?`<i class="dot">${n}</i>`:''}</button>`).join('')}</div>
+    <div class="tabs metabs" role="tablist">${TABS.map(([k,v,n])=>`<button type="button" role="tab" aria-selected="${k===meTab}" class="${k===meTab?'on':''}" data-mt="${k}">${v}${n?`<i class="dot">${n}</i>`:''}</button>`).join('')}</div>
     <div class="card mb" id="availCard"></div>
     <div id="openItems"></div>
     <section class="mt-pane" data-mt="album">
@@ -2278,7 +2291,7 @@ async function viewMe(){
     ${accountCard}
     </section>
   </div>`;
-  const showMeTab = t => { meTab=t; sessionStorage.setItem('meTab', t); document.querySelectorAll('.metabs button').forEach(x=>x.classList.toggle('on', x.dataset.mt===t)); document.querySelectorAll('.mt-pane').forEach(x=>x.classList.toggle('hidden', x.dataset.mt!==t)); };
+  const showMeTab = t => { meTab=t; sessionStorage.setItem('meTab', t); document.querySelectorAll('.metabs button').forEach(x=>{ x.classList.toggle('on', x.dataset.mt===t); x.setAttribute('aria-selected', x.dataset.mt===t); }); document.querySelectorAll('.mt-pane').forEach(x=>x.classList.toggle('hidden', x.dataset.mt!==t)); };
   if(me.status==='suspended') document.querySelectorAll('#meForm button[type=submit], .mePh, #meAvFile, #pvStart, #wFile').forEach(el=>(el.closest('label')||el).remove());
   showMeTab(meTab);
   document.querySelectorAll('.metabs button').forEach(b=>b.onclick=()=>showMeTab(b.dataset.mt));
@@ -2286,11 +2299,12 @@ async function viewMe(){
   bindTagPick();
   signedThumb(me.avatar_path).then(u=>{ if(u && $('#meAv')) $('#meAv').style.backgroundImage=`url("${cssu(u)}")`; });
   $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signedThumb(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
-  $('#meAvFile') && ($('#meAvFile').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; toast('上傳中…', 60000);
+  $('#meAvFile') && ($('#meAvFile').onchange = async e=>{ const f=e.target.files[0]; if(!f) return;
+    if(me.person_verified_at && !confirm('換頭像後，「✓ 真人認證」需要重新申請。確定要換嗎？')){ e.target.value=''; return; } toast('上傳中…', 60000);
     const oldAv = me.avatar_path; let path;
     try{ path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error;
       if(oldAv && !(photos||[]).some(x=>x.path===oldAv)) rmPhotos([oldAv]).catch(()=>{});
-      toast('頭像已更新，重新送審'); viewMe(); }
+      toast(me.person_verified_at ? '頭像已更新，重新送審。換了頭像，真人認證需要重新申請' : '頭像已更新，重新送審', 5000); viewMe(); }
     catch(err){ if(path) rmPhotos([path]).catch(()=>{}); toast(zh(err.message)); e.target.value=''; } });
   const drawVoice = async () => { const box = $('#vcBody'); if(!box) return;
     const { data: vc } = await sb.from('voice_intros').select('*').eq('user_id', me.id).maybeSingle(); if(!$('#vcBody')) return;
@@ -2386,6 +2400,10 @@ async function viewMe(){
       toast('已送出，審核後會在這裡顯示結果'); viewMe();
     }catch(err){ e.target.disabled=false; toast(err.message||err); } });
   $('#pvStart') && ($('#pvStart').onclick = async ()=>{
+    // 先清掉之前沒送出完成的檔案，避免卡在檔案數上限（審核中的不動）
+    try{ const [{ data: files }, { data: keep }] = await Promise.all([ sb.storage.from('person').list(me.id, { limit:50 }), sb.from('person_verifications').select('photo_path,video_path').eq('user_id', me.id).eq('status','pending') ]);
+      const keepSet = new Set((keep||[]).flatMap(k=>[k.photo_path, k.video_path]).filter(Boolean));
+      const stray = (files||[]).filter(f=>f.id).map(f=>`${me.id}/${f.name}`).filter(x=>!keepSet.has(x)); if(stray.length) await sb.storage.from('person').remove(stray); }catch(_){}
     const { data: task, error } = await sb.rpc('start_person_verification'); if(error) return toast(error.message);
     const t = Array.isArray(task) ? task[0] : task;
     $('#pCard').innerHTML = `<h3 style="font-size:17px">真人認證</h3>
@@ -2431,7 +2449,7 @@ async function viewMe(){
     if(await act(()=>sb.from('photos').delete().eq('id',b.dataset.id))){ await rmPhotos([b.dataset.path]); toast('已刪除'); } viewMe(); });
   document.querySelectorAll('.grantBtn').forEach(b=>b.onclick=async()=>{ if(await act(()=>sb.from('photo_grants').upsert({ owner_id:me.id, viewer_id:b.dataset.id }))) await act(()=>sb.from('photo_requests').update({ status:'granted' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已授權'); viewMe(); });
   document.querySelectorAll('.denyBtn').forEach(b=>b.onclick=async()=>{ await act(()=>sb.from('photo_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已婉拒'); viewMe(); });
-  document.querySelectorAll('.revokeBtn').forEach(b=>b.onclick=async()=>{ if(await act(()=>sb.from('photo_grants').delete().eq('owner_id',me.id).eq('viewer_id',b.dataset.id))) await act(()=>sb.from('photo_requests').delete().eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已收回'); viewMe(); });
+  document.querySelectorAll('.revokeBtn').forEach(b=>b.onclick=async()=>{ if(await act(()=>sb.from('photo_grants').delete().eq('owner_id',me.id).eq('viewer_id',b.dataset.id))) await act(()=>sb.from('photo_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已收回'); /* 收回後 3 天內不能再索取 */ viewMe(); });
   document.querySelectorAll('.unblockBtn').forEach(b=>b.onclick=async()=>{ await act(()=>sb.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',b.dataset.id), '已解除封鎖'); viewMe(); });
   const pv = async (patch, msg, el) => { const { error } = await sb.from('profiles').update(patch).eq('id', me.id); if(error){ if(el) el.checked=!el.checked; return toast(error.message); } Object.assign(me, patch); toast(msg); };
   $('#pvHidden').onchange = e => pv({ hidden: e.target.checked }, e.target.checked ? '已隱藏，你不會出現在探索' : '已恢復出現在探索', e.target);
