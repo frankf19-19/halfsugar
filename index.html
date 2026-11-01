@@ -2,7 +2,7 @@
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>微糖 1/3 Sugar｜台灣甜心交友・Sugar Dating 甜心網</title>
 <meta name="description" content="微糖是重視隱私的台灣甜心交友（Sugar Dating）平台。Sugar Daddy、Sugar Mommy 與甜心在真人審核的環境中，坦誠彼此期待、認真認識彼此。">
 <meta name="robots" content="index,follow">
@@ -29,7 +29,7 @@
 <link rel="modulepreload" href="https://esm.sh/@supabase/supabase-js@2.118.0?bundle">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400&display=swap" rel="stylesheet">
 <script>
 // 外觀：light／dark／auto（跟隨手機），存在這台裝置
 window.applyTheme = t => { t = t || (function(){ try{ return localStorage.getItem('yy_theme') }catch(e){ return null } })() || 'light';
@@ -50,7 +50,7 @@ try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>a
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:clip;-webkit-text-size-adjust:100%}
-body{font-family:"Noto Sans TC",system-ui,-apple-system,sans-serif;font-weight:400;background:var(--white);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+body{line-break:strict;font-family:var(--sans);font-weight:400;background:var(--white);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
 a{color:inherit;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;text-decoration-color:var(--grey2)}
 a:hover{text-decoration-color:var(--ink)}
 h1,h2,h3,.serif{font-family:"Noto Serif TC",serif;font-weight:300;letter-spacing:.06em;text-wrap:balance}
@@ -90,7 +90,7 @@ label.ckl{letter-spacing:.02em!important;line-height:1.65;font-size:14px!importa
 .logo{display:inline-flex;align-items:center;gap:10px;letter-spacing:.12em!important;padding-left:0!important}
 .logo .lm{width:22px;height:20px;flex:none}
 .logo span{font-size:21px;letter-spacing:.12em}
-.logo em{font-style:normal;font-family:"Noto Sans TC",sans-serif;font-size:11px;letter-spacing:.24em;color:var(--grey);padding-left:12px;margin-left:2px;border-left:1px solid currentColor;line-height:1}
+.logo em{font-style:normal;font-family:var(--sans);font-size:11px;letter-spacing:.24em;color:var(--grey);padding-left:12px;margin-left:2px;border-left:1px solid currentColor;line-height:1}
 body.home:not(.scrolled) .logo em{color:rgba(255,255,255,.75)}
 @media(max-width:380px){.logo em{display:none}}
 .nav{grid-column:3;justify-self:end;display:flex;gap:4px}
@@ -103,7 +103,7 @@ body.home.scrolled .topbar{background:rgba(255,255,255,.96);border-bottom-color:
 body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scrolled .topbar .mnav a{color:var(--ink)}
 .wrap{max-width:1320px;margin:0 auto;padding:40px 30px 80px}
 .narrow{max-width:580px;margin:0 auto}
-@media(max-width:719px){:root{--hdr:58px}.topbar .in{padding:0 18px;height:58px}.wrap{padding:28px 18px 60px}}
+@media(max-width:719px){:root{--hdr:58px;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",sans-serif}.topbar .in{padding:0 18px;height:58px}.wrap{padding:28px 18px 60px}}
 
 .card{background:var(--white);border:1px solid var(--rule);padding:28px}
 .card h3{font-size:18px;font-weight:400}
@@ -117,8 +117,8 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .req{margin-top:6px;padding:10px 12px;background:var(--paper);font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:7.2em;overflow:hidden}
 .pcard .budget{font-size:12px;letter-spacing:.06em;color:var(--wine);margin-top:4px}
 .budget{color:var(--wine);letter-spacing:.06em}
-.wbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid #9C7A3C;color:#7A5B22;background:#FBF6EC;margin-top:5px;font-family:"Noto Sans TC";font-weight:500;white-space:nowrap}
-.pbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid var(--ink);color:var(--ink);background:#fff;margin-top:5px;margin-right:4px;font-family:"Noto Sans TC";font-weight:500;white-space:nowrap}
+.wbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid #9C7A3C;color:#7A5B22;background:#FBF6EC;margin-top:5px;font-family:var(--sans);font-weight:500;white-space:nowrap}
+.pbadge{display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid var(--ink);color:var(--ink);background:#fff;margin-top:5px;margin-right:4px;font-family:var(--sans);font-weight:500;white-space:nowrap}
 .pbadge.big{font-size:13px;padding:3px 10px;margin-top:0}
 .wbadge.big{font-size:13px;padding:3px 10px;margin-top:0}
 .pfacts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--grey)}
@@ -271,7 +271,7 @@ br.d{display:none}
 .pcard:hover .ph{opacity:.9}
 .pcard .info{padding:12px 2px 0}
 .pcard .name{font-family:"Noto Serif TC",serif;font-size:17px;letter-spacing:.08em;display:flex;justify-content:space-between;align-items:baseline}
-.pcard .name .muted{font-family:"Noto Sans TC";font-size:13px}
+.pcard .name .muted{font-family:var(--sans);font-size:13px}
 .pcard .meta{font-size:12px;letter-spacing:.08em;color:var(--grey)}
 .pcard .liked{position:absolute;top:10px;right:10px;font-size:11px;letter-spacing:.12em;padding:3px 10px;background:#fff;color:var(--wine)}
 
@@ -280,7 +280,7 @@ br.d{display:none}
 .list .item{display:flex;gap:16px;align-items:center;padding:20px 0;border-bottom:1px solid var(--rule);cursor:pointer}
 .list .item .avatar{width:58px;height:58px}
 .list .item .t{font-family:"Noto Serif TC",serif;font-size:17px;letter-spacing:.06em}
-.list .item .t .muted{font-family:"Noto Sans TC";font-size:13px}
+.list .item .t .muted{font-family:var(--sans);font-size:13px}
 .list .item .s{font-size:13px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58vw}
 
 .roles{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
@@ -321,7 +321,7 @@ br.d{display:none}
 .plan .who{font-size:12px;letter-spacing:.2em;color:var(--wine)}
 .plan h3{font-size:24px;font-weight:300;margin:10px 0 6px}
 .plan .price{font-family:"Noto Serif TC",serif;font-size:34px;font-weight:300;letter-spacing:.02em}
-.plan .price small{font-family:"Noto Sans TC";font-size:13px;color:var(--grey);letter-spacing:.06em;margin-left:6px}
+.plan .price small{font-family:var(--sans);font-size:13px;color:var(--grey);letter-spacing:.06em;margin-left:6px}
 .plan .alt{font-size:13px;color:var(--grey);margin-top:4px;min-height:22px}
 .plan ul{list-style:none;margin:22px 0 28px;flex:1}
 .plan li{font-size:14px;line-height:1.9;padding:7px 0;border-top:1px solid var(--rule)}
@@ -357,7 +357,7 @@ br.d{display:none}
 .photo-big{width:100%;aspect-ratio:3/4;background:#ECEAE6 center/cover}
 
 /* ===== 聊天 ===== */
-.chat{display:flex;flex-direction:column;height:calc(100dvh - 150px);min-height:420px}
+.chat{display:flex;flex-direction:column;height:calc(min(100dvh, var(--vvh, 100dvh)) - 150px);min-height:420px}
 .chat .hd{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--rule)}
 .chat .hd .name{font-family:"Noto Serif TC",serif;font-size:18px;letter-spacing:.08em}
 .chat .hd .ib{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none}
@@ -400,6 +400,8 @@ br.d{display:none}
 #app.busy{opacity:.5;pointer-events:none;transition:opacity .12s ease .06s}
 html{scrollbar-gutter:stable}body.modal-open{overflow:hidden}.modal .box{overscroll-behavior:contain}
 .modal .box:focus{outline:none}
+body.kb .chat{min-height:0}
+.admth{position:absolute;right:4px;bottom:4px;width:44%;max-width:90px;aspect-ratio:3/4;background:#ddd center/cover no-repeat;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);font-size:10px;color:#fff;text-shadow:0 0 3px #000;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;pointer-events:none}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
 @media(max-width:719px){input,select,textarea{font-size:16px!important}.mnav{display:flex;grid-column:2;justify-self:end;gap:2px}.mnav a{padding:8px 10px;font-size:13px;letter-spacing:.14em;text-decoration:none;color:inherit}}
@@ -578,7 +580,7 @@ body[data-page=matches] #app,body[data-page=likes] #app{max-width:820px}
 .oauth .or::before,.oauth .or::after{content:"";flex:1;height:1px;background:var(--rule)}
 .freeall{text-align:center;padding:40px 20px;border:1px solid var(--hair)}
 .freeall .big{font-size:38px;font-weight:300;letter-spacing:.3em;margin-bottom:12px}
-.nowtag{display:inline-block;vertical-align:middle;margin-left:8px;font-family:"Noto Sans TC";font-size:10px;letter-spacing:.16em;padding:3px 8px;background:var(--wine);color:#fff}
+.nowtag{display:inline-block;vertical-align:middle;margin-left:8px;font-family:var(--sans);font-size:10px;letter-spacing:.16em;padding:3px 8px;background:var(--wine);color:#fff}
 .plan .price .was{font-size:18px;color:var(--grey2);margin-right:8px;text-decoration-thickness:1px}
 .plan .price small{display:inline}
 /* 會員檔案視窗 */
@@ -658,7 +660,7 @@ html{scroll-padding-top:calc(var(--hdr,66px) + 90px)}
   .pmR .phead{margin-top:0}.pmR .phead>.row:first-child{padding-right:52px}
   .pmR .pactions{margin:auto -26px 0;padding:10px 26px 12px;bottom:0}
   .modal .box:has(.pm) .x{position:absolute;top:10px;right:10px;margin:0;float:none;z-index:3}
-  .chat{height:calc(100dvh - 90px);min-height:0}
+  .chat{height:calc(min(100dvh, var(--vvh, 100dvh)) - 90px);min-height:0}
 }
 /* v1.44 聊天照片與收回 */
 .chat form{align-items:center}
@@ -810,7 +812,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.57.0';
+const BUILD = 'v1.58.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -937,21 +939,27 @@ async function compressImage(file, max=1080, q=.85){
   return new Promise(res=>c.toBlob(res,'image/jpeg',q));
 }
 let recovering = false, lastUid;
-// 手機「返回」鍵：先關掉視窗，不要整頁跳走
-let modalHist = false, ignorePop = 0;
-function modal(html){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx" aria-label="關閉">×</button>${html}</div></div>`;
+// 手機「返回」鍵：先關掉視窗，不要整頁跳走。
+// 做法：開視窗時多一筆歷史紀錄；用 × 關掉時不倒退（避免和接著的換頁搶時間），而是把那筆標成失效，之後按返回遇到就自動跳過。
+let modalHist = false, ignorePop = 0, deadHref = null;
+function modal(html, opt){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx" aria-label="關閉">×</button>${html}</div></div>`;
   $('#mx').onclick = ()=>closeModal(); $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); };
   document.body.classList.add('modal-open');
   const bx = $('#mbg .box'); bx.setAttribute('role','dialog'); bx.setAttribute('aria-modal','true'); bx.tabIndex = -1;
   if(!modalHist) window.__modalReturn = document.activeElement; if(!bx.contains(document.activeElement)) bx.focus({ preventScroll:true });
-  if(!modalHist){ try{ history.pushState({ yyModal:1 }, ''); modalHist = true; }catch(_){} } }
-function closeModal(fromNav){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; recovering=false; document.body.classList.remove('modal-open');
+  if(!modalHist && !(opt && opt.noHist)){ try{
+    if(history.state && history.state.yyDead && deadHref===location.href) history.replaceState({ yyModal:1 }, '');   // 沿用剛失效的那筆，不會越疊越多
+    else history.pushState({ yyModal:1 }, '');
+    deadHref = null; modalHist = true; }catch(_){} } }
+function closeModal(){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; recovering=false; document.body.classList.remove('modal-open');
   const rf = window.__modalReturn; window.__modalReturn = null; if(rf && rf.isConnected && rf.focus) try{ rf.focus({ preventScroll:true }); }catch(_){}
-  if(fromNav){ modalHist = false; return; }
-  const at = location.href;
-  if(modalHist) setTimeout(()=>{ if(!modalHist || $('#modal').innerHTML) return; modalHist = false; if(location.href !== at) return; ignorePop++; history.back(); }, 0); }   // 關掉後馬上換頁的，就不要再退一頁   // 關完馬上又開新視窗時，沿用同一筆紀錄
-window.addEventListener('popstate', e=>{ if(ignorePop > 0){ ignorePop--; return; } if(modalHist){ modalHist = false; if($('#modal').innerHTML) closeModal(true); return; }
-  if(e.state && e.state.yyModal && !$('#modal').innerHTML){ ignorePop++; history.back(); } });   // 退到「視窗開著時」留下的紀錄：直接略過，不要多按一次
+  if(history.state && history.state.yyModal){ try{ history.replaceState({ yyDead:1 }, ''); deadHref = location.href; }catch(_){} }
+  modalHist = false; }
+window.addEventListener('popstate', e=>{ const st = e.state || {};
+  if(ignorePop > 0){ ignorePop--; return; }
+  if(modalHist && !st.yyModal){ modalHist = false; deadHref = null; if($('#modal').innerHTML) closeModal(); return; }   // 視窗開著時按返回：只關視窗
+  if((st.yyModal || st.yyDead) && !$('#modal').innerHTML){ deadHref = null; ignorePop++; history.back(); return; }   // 退到失效的紀錄：直接略過
+  if(deadHref && location.href === deadHref){ deadHref = null; ignorePop++; history.back(); } });   // 從失效紀錄退到同一頁：再退一次，不要多按
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('#modal').innerHTML) closeModal(); });
 
 { const f=document.querySelector('footer div'); if(f) f.insertAdjacentHTML('beforeend', `·<a href="#" data-support>聯絡客服</a>`); }
@@ -989,10 +997,11 @@ function codeBox(id, label='輸入信中的驗證碼'){
   return `<form id="${id}" class="codebox mt2"><label>${label}</label><div class="row" style="gap:8px"><input class="grow" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required placeholder="驗證碼" style="letter-spacing:6px;text-align:center;font-size:18px"><button class="btn primary" type="submit">確認</button></div><p class="small bad mt" data-err></p></form>`;
 }
 function openPasswordReset(title='設定新密碼'){
+  const fromMail = title==='設定新密碼';
   modal(`<h2>${title}</h2><p class="muted small mt">請輸入新的密碼，至少 8 碼。</p>
     <form id="pwReset"><label>新密碼</label><input type="password" name="pw" minlength="8" required autocomplete="new-password">
     <label>再輸入一次</label><input type="password" name="pw2" minlength="8" required autocomplete="new-password">
-    <p class="small bad mt" id="pwErr"></p><button class="btn primary block mt2" type="submit">更新密碼</button></form>`);
+    <p class="small bad mt" id="pwErr"></p><button class="btn primary block mt2" type="submit">更新密碼</button></form>`, { noHist: fromMail });
   $('#pwReset').onsubmit = async e => { e.preventDefault(); const f=new FormData(e.target);
     if(f.get('pw')!==f.get('pw2')) { $('#pwErr').textContent='兩次輸入的密碼不一樣'; return; }
     const { error } = await sb.auth.updateUser({ password: f.get('pw') });
@@ -1007,7 +1016,9 @@ function renderNav(){
   if(!me){
     $('#nav').innerHTML = link('#/plans','會員方案') + link('#/auth','登入／註冊');
     $('#mnav').innerHTML = h.startsWith('#/auth') ? '' : `<a href="#/auth?mode=login">登入</a>`;
-    $('#bnav').classList.add('hidden'); document.body.classList.remove('nobnav'); return;
+    $('#bnav').classList.add('hidden'); document.body.classList.remove('nobnav');
+    Object.assign(unread, { m:0, l:0, at:0, uid:null }); document.title = document.title.replace(/^\(\S+\) /,'');   // 登出後清掉標題上的未讀數
+    return;
   }
   if(me.status==='incomplete' && !me.is_admin){
     $('#nav').innerHTML = link('#/onboarding','完成註冊') + link('#/me','帳號');
@@ -1031,24 +1042,27 @@ function renderNav(){
 }
 
 // 小紅點：換頁時先用上次的數字（不閃），20 秒內不重查；有事件時（讀訊息、回到 App、定時）才強制更新
-const unread = { m:0, l:0, at:0, uid:null };
+const unread = { m:0, l:0, at:0, uid:null, seq:0 };
 function applyBadges(){
   const put = (sel, n) => document.querySelectorAll(sel).forEach(a=>{ const b=a.querySelector('.badge'); if(n>0){ const t=n>99?'99+':String(n); if(b) b.textContent=t; else a.insertAdjacentHTML('beforeend',`<span class="badge">${t}</span>`); } else b?.remove(); });
   put('a[href="#/matches"]:not(.ib)', unread.m); put('a[href="#/likes"]', location.hash.startsWith('#/likes') ? 0 : unread.l);
   document.title = (unread.m>0?`(${unread.m>99?'99+':unread.m}) `:'') + document.title.replace(/^\(\S+\) /,''); }
 async function refreshUnread(force){
-  if(!me || !['approved','pending'].includes(me.status)) return;
+  if(!me || !['approved','pending'].includes(me.status)){ if(unread.m||unread.l){ Object.assign(unread, { m:0, l:0, at:0 }); applyBadges(); } return; }   // 登出後清掉標題上的數字
   if(unread.uid !== me.id) Object.assign(unread, { m:0, l:0, at:0, uid:me.id });
   applyBadges();
   if(!force && Date.now() - unread.at < 20000) return;
-  unread.at = Date.now();
+  unread.at = Date.now(); const my = ++unread.seq;   // 只採用最新一次查詢的結果
   const seenL = localStorage.getItem('yy_likes_seen_'+me.id) || '1970-01-01T00:00:00Z';
   const [{ data: ms }, { count: lc }] = await Promise.all([
     sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`),
     location.hash.startsWith('#/likes') ? Promise.resolve({ count:0 }) : sb.from('likes').select('from_id',{count:'exact',head:true}).eq('to_id', me.id).gt('created_at', seenL) ]);
-  unread.l = lc || 0;
-  if(ms && ms.length){ const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).is('recalled_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id)); unread.m = count || 0; }
-  else unread.m = 0;
+  if(my !== unread.seq) return;
+  if(!ms){ unread.at = 0; return; }   // 查詢失敗：保留原本的數字，下次再查
+  let m = 0;
+  if(ms.length){ const { count, error } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).is('recalled_at',null).neq('sender_id',me.id).in('match_id',ms.map(x=>x.id)); if(error){ unread.at = 0; return; } m = count || 0; }
+  if(my !== unread.seq) return;
+  unread.l = lc || 0; unread.m = m;
   applyBadges();
 }
 setInterval(()=>{ if(document.visibilityState==='visible') refreshUnread(true); }, 60000);
@@ -1137,9 +1151,10 @@ document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState=
 const scrollMem = {}; let curTab = null; const MEM_TABS = ['browse','likes','matches'];
 async function route(){
   if(curTab) scrollMem[curTab] = { y: window.scrollY, t: Date.now() };
+  if(deadHref && location.href !== deadHref) deadHref = null;   // 已經換到別頁，失效紀錄的記號不再需要
   routeSeq++;
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; } onChatVisible = null;
-  if(!recovering) closeModal(true);
+  if(!recovering) closeModal();
   const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
   renderNav();
   document.body.classList.toggle('home', !path || path==='about');
@@ -1172,6 +1187,11 @@ async function route(){
   } else window.scrollTo(0,0);
 }
 window.addEventListener('hashchange', route);
+// 手機鍵盤：聊天室跟著鍵盤上方剩下的空間調整，標題和最新訊息不會被推出畫面
+if(window.visualViewport){ const vv = window.visualViewport; let kbWas = false;
+  const upd = () => { const kb = innerHeight - vv.height > 120; document.documentElement.style.setProperty('--vvh', Math.round(vv.height)+'px'); document.body.classList.toggle('kb', kb);
+    if(kb && document.body.dataset.page==='chat'){ window.scrollTo(0,0); if(!kbWas){ const m=$('#msgs'); if(m) m.scrollTop=m.scrollHeight; } } kbWas = kb; };
+  vv.addEventListener('resize', upd); upd(); }
 window.addEventListener('offline', ()=>toast('目前沒有網路連線', 4000));
 window.addEventListener('online', ()=>{ toast('已恢復連線'); if($('#retryBtn')) route(); });
 window.addEventListener('scroll', ()=>document.body.classList.toggle('scrolled', window.scrollY>40), {passive:true});
@@ -1484,14 +1504,13 @@ async function uploadPhoto(file){
 const thumbOf = p => String(p).replace(/\.jpg$/, 't.jpg');
 async function makeThumb(src, path){ try{ const tb = await compressImage(src, 480, .8); await sb.storage.from('photos').upload(thumbOf(path), tb, { contentType:'image/jpeg', upsert:false }); }catch(_){} }
 const noThumb = new Map();
-async function signedThumb(p){ if(!p) return null; if((noThumb.get(p)||0) > Date.now()) return signed(p);
+const USE_THUMBS = false;   // 暫停顯示縮圖：等資料庫的縮圖審核保護更新後再打開
+async function signedThumb(p){ if(!p) return null; if(!USE_THUMBS || (noThumb.get(p)||0) > Date.now()) return signed(p);
   const u = await signed(thumbOf(p)); if(u) return u; noThumb.set(p, Date.now()+10*60*1000); return signed(p); }
 const rmPhotos = paths => { const ps = paths.filter(Boolean); return ps.length ? sb.storage.from('photos').remove([...ps, ...ps.map(thumbOf)]) : Promise.resolve({}); };
-// 舊頭像沒有縮圖：本人登入時在背景補做一張（之後別人看卡片就會變快）
-let thumbFixed = false;
-async function fixMyThumb(){ if(thumbFixed || !me?.avatar_path || !/\.jpg$/.test(me.avatar_path)) return; thumbFixed = true;
-  if(await signed(thumbOf(me.avatar_path))) return;
-  const { data: blob } = await sb.storage.from('photos').download(me.avatar_path); if(blob) await makeThumb(blob, me.avatar_path); }
+// 後台審核：把別人在卡片上會看到的小圖一起顯示，確認跟原圖是同一張
+async function admThumb(el){ const p = el.dataset.ph; if(!p) return; const t = await signed(thumbOf(p)); if(!t || !el.isConnected) return;
+  el.style.position = el.style.position || 'relative'; el.insertAdjacentHTML('beforeend', `<span class="admth" title="卡片上的小圖，請確認和原圖是同一張" style="background-image:url('${cssu(t)}')">小圖</span>`); }
 
 // 必填基本資料（缺任何一項就不能使用網站，要先補齊）
 function missingBasics(p){ if(!p) return [];
@@ -2069,7 +2088,7 @@ async function viewChat(matchId){
       closeModal(); markRecalled({ id: el.dataset.mid, sender_id: me.id }); toast('已收回'); };
   };
   (msgs||[]).forEach(add);
-  if(!msgs.length){ const ops = closed ? [] : openersFor(o), mineOps = closed ? [] : (me.openers||[]).map(t=>t.replace(/\{對方\}/g, oname));
+  if(!msgs.length){ const ops = closed ? [] : openersFor(o), mineOps = closed ? [] : (me.openers||[]).map(t=>t.replace(/\{對方\}/g, ()=>oname));
     box.insertAdjacentHTML('beforeend', `<div class="chempty"><p class="serif">還沒有訊息</p><p class="tiny dim">說說你為什麼想認識 ${esc(oname)}，好的開場白比較容易得到回覆。點一下開場白，可以修改後再送出。</p>
       ${mineOps.length?`<p class="tiny dim oph">我的開場白</p><div class="openers">${mineOps.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}
       ${ops.length?`<p class="tiny dim oph">從對方的檔案想到的</p><div class="openers">${ops.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}
@@ -2323,11 +2342,11 @@ async function viewMe(){
       if(error){ e.target.disabled = false; return toast(zh(error.message)); } me.free_until = data || null; drawAvail(); toast(free ? '已關閉今晚有空' : '已開啟，明天早上 6 點自動關閉'); };
     $('#avTrvOff') && ($('#avTrvOff').onclick = async e => { e.target.disabled = true; const { error } = await sb.rpc('set_travel', { p_city:null, p_from:null, p_to:null });
       if(error){ e.target.disabled = false; return toast(zh(error.message)); } Object.assign(me, { travel_city:null, travel_from:null, travel_to:null }); drawAvail(); toast('已取消旅行模式'); });
-    $('#avTrv').onclick = () => { const t0 = ymdOf(new Date()), tmax = ymdOf(new Date(Date.now()+60*864e5));
+    $('#avTrv').onclick = () => { const t0 = ymdOf(new Date()), tmax = ymdOf(new Date(Date.now()+60*864e5)), onTrip = trv && me.travel_from < t0;   // 已經出發：出發日不能改，只能改回程日
       modal(`<h2>旅行模式</h2><p class="small muted mt">設定要去的城市和日期。出發前兩週起到回程那天，你會出現在當地會員的探索結果裡，卡片上會標示「✈ 日期 在城市」。</p>
         <form id="trvF" class="mt"><label>要去的城市</label><select name="c" required><option value="">請選擇</option>${CITIES.filter(c=>c!=='海外' && c!==me.city).map(c=>`<option ${trv&&me.travel_city===c?'selected':''}>${c}</option>`).join('')}</select>
-        <div style="display:flex;gap:12px"><div style="flex:1"><label>出發日</label><input type="date" name="f" required min="${t0}" max="${tmax}" value="${trv?me.travel_from:''}"></div><div style="flex:1"><label>回程日</label><input type="date" name="t" required min="${t0}" value="${trv?me.travel_to:''}"></div></div>
-        <p class="tiny dim mt">一次最多 14 天。回程那天過後會自動關閉。</p><p class="small bad mt" data-err></p><button class="btn primary block mt2" type="submit">儲存</button></form>`);
+        <div style="display:flex;gap:12px"><div style="flex:1"><label>出發日</label><input type="date" name="f" required min="${onTrip?me.travel_from:t0}" max="${tmax}" value="${trv?me.travel_from:''}" ${onTrip?'readonly':''}></div><div style="flex:1"><label>回程日</label><input type="date" name="t" required min="${t0}" value="${trv?me.travel_to:''}"></div></div>
+        <p class="tiny dim mt">${onTrip?'已經出發了，可以修改回程日。':''}一次最多 14 天。回程那天過後會自動關閉。</p><p class="small bad mt" data-err></p><button class="btn primary block mt2" type="submit">儲存</button></form>`);
       const F = $('#trvF'); const lim = () => { if(!F.f.value) return; F.t.min = F.f.value; F.t.max = ymdOf(new Date(new Date(F.f.value+'T00:00').getTime()+13*864e5)); }; lim(); F.f.onchange = () => { lim(); if(F.t.value && (F.t.value < F.t.min || F.t.value > F.t.max)) F.t.value = F.f.value; };
       F.onsubmit = async e => { e.preventDefault(); const err = F.querySelector('[data-err]'), btn = F.querySelector('button[type=submit]');
         const c = F.c.value, f = F.f.value, t = F.t.value; err.textContent = '';
@@ -2518,8 +2537,8 @@ async function viewAdmin(){
         ${(phBy[p.id]||[]).length?`<div class="tiny dim mt">其他待審照片（${phBy[p.id].length}）　<button class="btn sm ghost phAll" data-u="${p.id}">全部通過</button></div>
           <div class="gallery mt aphs">${phBy[p.id].map(x=>`<div class="g" data-ph="${esc(x.path)}" data-id="${x.id}"><span class="st chip warn">${x.is_private?'🔒 私密':'公開'}</span><div class="aphb"><button class="pok" data-id="${x.id}" aria-label="通過">✓</button><button class="pno" data-id="${x.id}" aria-label="退件">✕</button></div></div>`).join('')}</div>`:''}
         <div class="row mt flexwrap"><button class="btn sm primary ap" data-id="${p.id}">✓ 通過</button><input class="grow note" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px"><button class="btn sm ghost rj" data-id="${p.id}">退件</button><button class="btn sm danger sp" data-id="${p.id}">停權</button></div></div>`).join('');
-      box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
-      box.querySelectorAll('.aphs .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; } });
+      box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } admThumb(el); });
+      box.querySelectorAll('.aphs .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; } admThumb(el); });
       const phDone = (id, ok) => { const g = box.querySelector(`.aphs .g[data-id="${id}"]`); if(g){ g.style.opacity=.35; g.querySelector('.st').textContent = ok?'已通過':'已退件'; g.querySelector('.aphb')?.remove(); } };
       box.querySelectorAll('.pok').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id))) phDone(b.dataset.id,true); });
       box.querySelectorAll('.pno').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id))) phDone(b.dataset.id,false); });
@@ -2535,7 +2554,7 @@ async function viewAdmin(){
       const vHtml = vrows?.length ? `<h3 style="font-size:16px;margin-bottom:10px">待審語音（${vrows.length}）</h3><div class="list mb">${vrows.map(v=>`<div class="item" style="cursor:default;flex-wrap:wrap"><div class="grow t">${esc(v.p?.nickname||'')}<span class="tiny dim">　${v.duration||''} 秒</span></div><audio controls preload="none" data-vp="${esc(v.path)}" style="height:34px;max-width:100%"></audio><button class="btn sm primary va" data-u="${v.user_id}">通過</button><button class="btn sm ghost vr" data-u="${v.user_id}">退件</button></div>`).join('')}</div>` : '';
       box.innerHTML = vHtml + (rows?.length ? '' : '<p class="muted center">沒有待審照片 ✓</p>') + `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
         <div class="row mt" style="gap:6px"><button class="btn sm primary pa" data-id="${x.id}">通過</button><button class="btn sm ghost pr" data-id="${x.id}">退件</button></div></div></div>`).join('')}</div>`;
-      box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); } });
+      box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank'); }  admThumb(el); });
       box.querySelectorAll('audio[data-vp]').forEach(async au=>{ const { data } = await sb.storage.from('voice').createSignedUrl(au.dataset.vp, 900); if(data?.signedUrl) au.src = data.signedUrl; });
       box.querySelectorAll('.va,.vr').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('voice_intros').update({ status: b.classList.contains('va')?'approved':'rejected' }).eq('user_id', b.dataset.u))){ b.closest('.item').style.opacity=.3; } });
       const pdone = b => { const c=b.closest('.pcard'); c.style.opacity=.3; setTimeout(()=>{ c.remove(); if(!box.querySelector('.pcard')) draw(); },300); };
@@ -2716,7 +2735,6 @@ function viewDoc(k){ $('#app').innerHTML = `<div class="doc card">${DOCS[k]}</di
     if(error) setTimeout(()=>toast('這個連結已失效或已用過。請回到登入頁重新申請。', 7000), 400);
     else if(tt!=='recovery') setTimeout(()=>toast(tt==='email_change'?'Email 已更新':'Email 驗證成功，歡迎加入微糖'), 400); }
   await loadMe(); route();
-  setTimeout(()=>{ if(me) (window.requestIdleCallback||setTimeout)(()=>fixMyThumb().catch(()=>{})); }, 4000);   // 不影響開啟速度
 })();
 </script>
 </body>
