@@ -24,7 +24,11 @@
 <meta name="apple-mobile-web-app-title" content="微糖">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://esm.sh" crossorigin>
+<link rel="preconnect" href="https://xuecvkwqgvicrttlezzy.supabase.co" crossorigin>
+<link rel="modulepreload" href="https://esm.sh/@supabase/supabase-js@2.118.0?bundle">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;400&display=swap" rel="stylesheet">
 <script>
 // 外觀：light／dark／auto（跟隨手機），存在這台裝置
@@ -391,7 +395,9 @@ br.d{display:none}
 .sortbar .tonight{white-space:nowrap;font:inherit;font-size:13px;letter-spacing:.08em;padding:6px 12px;border:1px solid var(--rule);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}.sortbar .tonight::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:7px;vertical-align:1px;opacity:.5}.sortbar .tonight.on{border-color:var(--ok);color:var(--ok)}.sortbar .tonight.on::before{opacity:1}
 #availCard .avrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:14px 0;border-top:1px solid var(--hair)}#availCard .avrow:first-of-type{border-top:0;padding-top:10px}#availCard .avrow .tiny{margin-top:3px;line-height:1.6}#availCard .avrow .grow{min-width:190px;flex:1 1 190px}#availCard .avrow>.row,#availCard .avrow>.btn{margin-left:auto}#fCount{white-space:nowrap}@media(max-width:420px){.sortbar .sortl{display:none}.sortbar{gap:8px}}
 .oph{margin-top:18px;letter-spacing:.14em}.oplist .opi{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--hair);font-size:14px;line-height:1.6}.oplist .opi span{overflow-wrap:anywhere}.oplist .opi .lnk{flex:0 0 auto;font-size:13px}.opadd{display:flex;flex-direction:column;gap:10px;align-items:flex-end;margin-top:12px}.opadd textarea{width:100%;font-size:15px;line-height:1.5;padding:8px 2px;resize:vertical}
+.msg.sending{opacity:.6}
 .openers{display:flex;flex-direction:column;gap:8px;margin:10px auto 0;max-width:360px}.opener{font:inherit;font-size:14px;line-height:1.5;text-align:left;padding:10px 14px;border:1px solid var(--rule);background:var(--white);color:var(--ink);cursor:pointer}.opener:hover{border-color:var(--ink)}
+#app.busy{opacity:.5;pointer-events:none;transition:opacity .12s ease .06s}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
 @media(max-width:719px){input,select,textarea{font-size:16px!important}.mnav{display:flex;grid-column:2;justify-self:end;gap:2px}.mnav a{padding:8px 10px;font-size:13px;letter-spacing:.14em;text-decoration:none;color:inherit}}
@@ -802,7 +808,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.54.0';
+const BUILD = 'v1.55.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -812,7 +818,7 @@ const CONFIG = {
 };
 document.getElementById('ver').textContent = BUILD;
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0?bundle';   // 固定版本＋合併成一個檔：少轉址、少下載好幾個小檔，打開更快，也不會因為新版自動更新而出問題
 const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON);
 // 社群登入：Google 由 Supabase 設定自動偵測；LINE 用自訂登入（CONFIG.LINE_PROVIDER）
 let oauthAvail = null;
@@ -898,15 +904,28 @@ function toast(msg, ms){ const t=$('#toast'); t.textContent=zh(msg);
 function containsBadWords(s, chat){ const l=(s||'').toLowerCase(); return BAD_WORDS.filter(w=>!(chat && CHAT_OK.includes(w)) && l.includes(w.toLowerCase())); }
 const CHAT_OK = ['出場','定點','全套','價碼','一次多少','line id','加賴'];   // 日常對話也會用到的詞，訊息裡不擋（自介仍擋）
 const cssu = u => String(u).replace(/["\\\n\r()]/g, c=>encodeURIComponent(c));
-async function signed(path){
-  if(!path) return null;
+// 照片連結：同一時間要的合併成一次請求（以前每張照片各發一次，探索頁一進來就是幾十個請求）
+const signWait = new Map(), signPend = new Map(); let signTimer = null;
+function flushSign(){ signTimer = null; const batch = [...signWait.entries()]; signWait.clear();
+  for(let i=0; i<batch.length; i+=100){ const part = batch.slice(i, i+100);
+    sb.storage.from('photos').createSignedUrls(part.map(x=>x[0]), 900)   // 15 分鐘就失效，外流的連結很快沒用
+      .then(({ data }) => { const m = new Map((data||[]).filter(d=>d && d.signedUrl).map(d=>[d.path, d.signedUrl]));
+        part.forEach(([p, cbs]) => { const u = m.get(p) || null; if(u) urlCache.set(p, { url:u, exp: Date.now() + 10*60*1000 }); signPend.delete(p); cbs.forEach(f=>f(u)); }); })
+      .catch(() => part.forEach(([p, cbs]) => { signPend.delete(p); cbs.forEach(f=>f(null)); })); } }
+function signed(path){
+  if(!path) return Promise.resolve(null);
   const c = urlCache.get(path);
-  if(c && c.exp > Date.now()) return c.url;
-  const { data } = await sb.storage.from('photos').createSignedUrl(path, 900);   // 15 分鐘就失效，外流的連結很快沒用
-  const u = data?.signedUrl || null;
-  if(u) urlCache.set(path, { url:u, exp: Date.now() + 10*60*1000 });
-  return u;
+  if(c && c.exp > Date.now()) return Promise.resolve(c.url);
+  if(signPend.has(path)) return signPend.get(path);
+  const pr = new Promise(res => { signWait.set(path, [res]); if(!signTimer) signTimer = setTimeout(flushSign, 12); });
+  signPend.set(path, pr); return pr;
 }
+// 卡片照片：捲到附近才載入，下載完再淡入（不會一張張跳出來、也不會一次下載幾十張）
+const phIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if(!e.isIntersecting) return; phIO.unobserve(e.target); showPh(e.target); }), { rootMargin:'400px 0px' }) : null;
+async function showPh(el){ const u = await signed(el.dataset.ph); if(!u || !el.isConnected) return;
+  const im = new Image(); im.src = u; try{ await im.decode(); }catch(_){}
+  if(!el.isConnected) return; el.style.backgroundImage = `url("${cssu(u)}")`; el.classList.add('in'); }
+function lazyPh(els){ els.forEach(el => { if(!el.dataset.ph) return; phIO ? phIO.observe(el) : showPh(el); }); }
 async function compressImage(file, max=1080, q=.85){
   const src = URL.createObjectURL(file);
   const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('無法讀取這張照片，請改用 JPG 或 PNG')); i.src=src; }).finally(()=>setTimeout(()=>URL.revokeObjectURL(src), 0));
@@ -933,8 +952,8 @@ async function loadMe(){
   session = s;
   lastUid = session?.user?.id || null;
   if(!session){ me=null; authUser=null; return; }
-  const { data: gu } = await sb.auth.getUser(); authUser = gu?.user || session.user;
-  const { data, error } = await sb.rpc('get_me').maybeSingle();
+  const [{ data: gu }, { data, error }] = await Promise.all([ sb.auth.getUser(), sb.rpc('get_me').maybeSingle() ]);   // 同時查，少等一輪
+  authUser = gu?.user || session.user;
   if(error && me && me.id===session.user.id) return;   // 網路不穩時保留原本的資料，不要把人當成登出
   me = data;
   if(me && me.show_online!==false) sb.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', me.id).then(()=>{});
@@ -997,28 +1016,38 @@ function renderNav(){
   refreshUnread();
 }
 
-async function refreshUnread(){
+// 小紅點：換頁時先用上次的數字（不閃），20 秒內不重查；有事件時（讀訊息、回到 App、定時）才強制更新
+const unread = { m:0, l:0, at:0, uid:null };
+function applyBadges(){
+  const put = (sel, n) => document.querySelectorAll(sel).forEach(a=>{ const b=a.querySelector('.badge'); if(n>0){ const t=n>99?'99+':String(n); if(b) b.textContent=t; else a.insertAdjacentHTML('beforeend',`<span class="badge">${t}</span>`); } else b?.remove(); });
+  put('a[href="#/matches"]:not(.ib)', unread.m); put('a[href="#/likes"]', location.hash.startsWith('#/likes') ? 0 : unread.l);
+  document.title = (unread.m>0?`(${unread.m>99?'99+':unread.m}) `:'') + document.title.replace(/^\(\S+\) /,''); }
+async function refreshUnread(force){
   if(!me || !['approved','pending'].includes(me.status)) return;
-  const { data: ms } = await sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`);
-  const setBadge = n => (document.title = (n>0?`(${n>99?'99+':n}) `:'') + document.title.replace(/^\(\S+\) /,''), document.querySelectorAll('a[href="#/matches"]:not(.ib)')).forEach(a=>{ a.querySelector('.badge')?.remove(); if(n>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${n>99?'99+':n}</span>`); });
+  if(unread.uid !== me.id) Object.assign(unread, { m:0, l:0, at:0, uid:me.id });
+  applyBadges();
+  if(!force && Date.now() - unread.at < 20000) return;
+  unread.at = Date.now();
   const seenL = localStorage.getItem('yy_likes_seen_'+me.id) || '1970-01-01T00:00:00Z';
-  if(!location.hash.startsWith('#/likes')) sb.from('likes').select('from_id',{count:'exact',head:true}).eq('to_id', me.id).gt('created_at', seenL).then(({ count: lc })=>{
-    document.querySelectorAll('a[href="#/likes"]').forEach(a=>{ a.querySelector('.badge')?.remove(); if(lc>0) a.insertAdjacentHTML('beforeend',`<span class="badge">${lc>99?'99+':lc}</span>`); }); });
-  if(!ms || !ms.length) return setBadge(0);
-  const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).is('recalled_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id));
-  setBadge(count||0);
+  const [{ data: ms }, { count: lc }] = await Promise.all([
+    sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`),
+    location.hash.startsWith('#/likes') ? Promise.resolve({ count:0 }) : sb.from('likes').select('from_id',{count:'exact',head:true}).eq('to_id', me.id).gt('created_at', seenL) ]);
+  unread.l = lc || 0;
+  if(ms && ms.length){ const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).is('recalled_at',null).neq('sender_id',me.id).in('match_id',ms.map(m=>m.id)); unread.m = count || 0; }
+  else unread.m = 0;
+  applyBadges();
 }
-setInterval(()=>{ if(document.visibilityState==='visible') refreshUnread(); }, 60000);
+setInterval(()=>{ if(document.visibilityState==='visible') refreshUnread(true); }, 60000);
 let lastHidden = 0;
 document.addEventListener('visibilitychange', async ()=>{
   if(document.visibilityState==='hidden'){ lastHidden = Date.now(); return; }
   if(!me || Date.now()-lastHidden < 20000 || $('#modal').innerHTML || window.__pickingPhoto){ window.__pickingPhoto=false; return; }   // 只離開一下（例如選照片）就不重畫
   const typing = $('#chIn')?.value || [...document.querySelectorAll('#app input[type=text],#app textarea')].some(x=>x.value && x.value!==x.defaultValue);
-  if(typing){ refreshUnread(); return; }   // 正在打字或改資料，不要把內容洗掉
+  if(typing){ refreshUnread(true); return; }   // 正在打字或改資料，不要把內容洗掉
   const before = me.status; await loadMe(); if(!me) return;
   if(me.status!==before){ if(me.status==='approved') toast('🎉 你的檔案已通過審核，可以開始探索了', 6000); route(); }
   else if(location.hash.startsWith('#/chat/') || location.hash.startsWith('#/matches')) route();
-  else refreshUnread();
+  else refreshUnread(true);
 });
 
 /* ---------- 聯絡客服（站內留言） ---------- */
@@ -1089,7 +1118,7 @@ const routes = {
   'bye': ()=>{ $('#app').innerHTML = `<div class="narrow center" style="padding:80px 0"><h2>帳號已刪除</h2><p class="muted mt">你的檔案、照片、對話與手機號碼都已永久刪除。<br class="d">謝謝你曾經來過微糖。</p><a class="btn mt2" href="#/">回到首頁</a></div>`; },
 };
 let chatChannel = null, routeSeq = 0, onChatVisible = null;
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ onChatVisible && onChatVisible(); refreshUnread(); } });
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ onChatVisible && onChatVisible(); refreshUnread(true); } });
 async function route(){
   routeSeq++;
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; } onChatVisible = null;
@@ -1098,7 +1127,10 @@ async function route(){
   renderNav();
   document.body.classList.toggle('home', !path || path==='about');
   document.body.dataset.page = path || 'home';
-  const app = $('#app'); app.innerHTML = '<div class="spinner"></div>';
+  const app = $('#app');
+  // 換頁不先清空：舊畫面淡一點、暫停點擊，新畫面好了直接換上；超過 0.2 秒還沒好才顯示轉圈圈（避免每次換頁都閃白）
+  clearTimeout(window.__spinT); app.classList.add('busy');
+  const spinSeq = routeSeq; window.__spinT = setTimeout(()=>{ if(spinSeq===routeSeq && app.classList.contains('busy')){ app.innerHTML = '<div class="spinner"></div>'; app.classList.remove('busy'); } }, 200);
   const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding'];
   if(protectedPages.includes(path) && !me){ if(path!=='onboarding') sessionStorage.setItem('yy_next', location.hash); location.hash='#/auth?mode=login'; return; }
   if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat'].includes(path||'')){ location.hash='#/onboarding'; return; }
@@ -1106,11 +1138,14 @@ async function route(){
   if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety','safe'].includes(path));
   const fn = routes[path] || viewLanding;
   const seq = routeSeq;
+  const done = () => { if(seq===routeSeq){ clearTimeout(window.__spinT); app.classList.remove('busy'); } };
+  new MutationObserver((_, ob)=>{ ob.disconnect(); done(); }).observe(app, { childList:true });   // 新畫面一放上去就恢復
   try { await fn(arg); } catch(e){ console.error(e); if(seq!==routeSeq) return;
     const net = !navigator.onLine || /fetch|network|load failed|timeout/i.test(String(e?.message||e));
     app.innerHTML = net ? `<div class="empty"><p class="serif">連線不太穩定</p><p class="muted small">請確認網路後再試一次。</p><button class="btn mt2" id="retryBtn">重新載入</button></div>`
       : `<div class="banner bad">載入失敗：${esc(zh(e.message||e))}　<a href="javascript:location.reload()">重新整理</a></div>`;
     $('#retryBtn') && ($('#retryBtn').onclick = ()=>route()); }
+  done();
   if(seq===routeSeq) window.scrollTo(0,0);
 }
 window.addEventListener('hashchange', route);
@@ -1642,7 +1677,7 @@ async function viewBrowse(){
         <div class="ph" data-ph="${esc(r.avatar_path||'')}"></div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
         ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:(isNew(r)?'<span class="seen">新會員</span>':'')}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${personBadge(r)}${wealthBadge(r)}${availHtml(r)?`<div class="avls">${availHtml(r)}</div>`:''}</div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
-    $('#grid').querySelectorAll('.ph').forEach(async el=>{ const u = await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.classList.add('in'); } });
+    lazyPh($('#grid').querySelectorAll('.ph'));
   };
   $('#fGender') && ($('#fGender').onchange = ()=>{ browseState.agender=$('#fGender').value; reload(); });
   $('#fSort').onchange = ()=>{ browseState.sort=$('#fSort').value; reload(); };
@@ -1811,7 +1846,7 @@ function openReport(id, name){
    ===================================================================== */
 async function viewLikes(){
   const rs = routeSeq;
-  localStorage.setItem('yy_likes_seen_'+me.id, new Date().toISOString()); document.querySelectorAll('a[href="#/likes"] .badge').forEach(b=>b.remove());
+  localStorage.setItem('yy_likes_seen_'+me.id, new Date().toISOString()); unread.l = 0; document.querySelectorAll('a[href="#/likes"] .badge').forEach(b=>b.remove());
   const [{ data: toMe, error: le1 }, { data: fromMe, error: le2 }] = await Promise.all([
     sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('to_id', me.id).order('created_at',{ascending:false}),
     sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('from_id', me.id).order('created_at',{ascending:false}),
@@ -1826,7 +1861,7 @@ async function viewLikes(){
     <div id="ta">${list(toMe,'a')}</div><div id="tb" class="hidden">${list(fromMe,'b')}</div>`;
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); });
   $('#app').querySelectorAll('.pcard').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
-  $('#app').querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.classList.add('in'); } });
+  lazyPh($('#app').querySelectorAll('.ph'));
 }
 
 /* =====================================================================
@@ -1926,7 +1961,9 @@ async function viewChat(matchId){
     if(x.recalled_at) return `<div class="msg ${mine?'me':'them'} recalled" data-mid="${x.id}" data-t="${x.created_at}">${mine?'你收回了一則訊息':'對方收回了一則訊息'}</div>`;
     return `<div class="msg ${mine?'me':'them'}${x.image_path?' hasimg':''}" data-mid="${x.id}" data-t="${x.created_at}">${x.image_path?`<div class="mimg wm" data-wm="${wmText()}" data-p="${esc(x.image_path)}"></div>`:''}${x.body?`<div>${esc(x.body)}</div>`:''}<span class="time">${tm(x)}</span></div>`; };
   const loadImg = el => { const im=el.querySelector('.mimg'); if(!im) return; sb.storage.from('chat').createSignedUrl(im.dataset.p, 900).then(({ data })=>{ if(data?.signedUrl && im.isConnected){ im.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; im.dataset.u=data.signedUrl; } }); };
-  const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); } const prevLast = lastAt; if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay && !(prevLast && x.created_at < prevLast)){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); }
+  const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); }
+    if(x.sender_id===me.id && x.body) for(const e of box.querySelectorAll('.msg.sending')) if(e.firstElementChild?.textContent===x.body){ e.remove(); break; }   /* 即時通知比送出結果先到 */
+    const prevLast = lastAt; if(!lastAt || x.created_at>lastAt) lastAt=x.created_at; const d=new Date(x.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); if(d!==lastDay && !(prevLast && x.created_at < prevLast)){ lastDay=d; box.insertAdjacentHTML('beforeend', `<div class="day">${d}</div>`); }
     box.querySelector('.chempty')?.remove();
     const later = prevLast && x.created_at < prevLast ? [...box.querySelectorAll('[data-t]')].find(e=>e.dataset.t > x.created_at) : null;   // 補抓到較早的訊息：插到正確位置
     if(later){ later.insertAdjacentHTML('beforebegin', msgHtml(x)); loadImg(later.previousElementSibling); }
@@ -2013,7 +2050,7 @@ async function viewChat(matchId){
     $('#chWait').textContent = blocked ? (me.status==='suspended' ? '帳號停權中，無法傳訊息。' : '你的檔案需要修改並通過審核後，才能繼續傳訊息。') : '已送出第一則訊息，對方回覆後就能繼續聊。';
     $('#chWait').classList.toggle('hidden', !off); };
   gate();
-  sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread());
+  sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread(true));
   chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     add(payload.new);   // 自己的訊息也處理（例如另一台裝置傳的），seenIds 會去重
     if(payload.new.sender_id!==me.id){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }
@@ -2030,7 +2067,7 @@ async function viewChat(matchId){
     (rc||[]).forEach(x=>{ const el=box.querySelector(`[data-mid="${x.id}"]`); if(el && !el.classList.contains('recalled')) markRecalled(x); });
     if(!nw?.length) return;
     const theirs = nw.filter(x=>x.sender_id!==me.id); nw.forEach(add);
-    if(theirs.length){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread()); }
+    if(theirs.length){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread(true)); }
     box.scrollTop = box.scrollHeight; };
   $('#chInv').onclick = () => { if($('#chInv').classList.contains('off')) return toast(otherReplied?'目前無法送出邀請':'對方回覆後就能送出約會邀請'); openInvite(); };
   $('#chPh').onclick = e => { window.__pickingPhoto = true; if($('#chFile').disabled){ window.__pickingPhoto = false; e.preventDefault(); toast(otherReplied?'目前無法傳照片':'對方回覆後就能傳照片'); } };
@@ -2051,9 +2088,12 @@ async function viewChat(matchId){
   let sending = false;
   $('#chForm').onsubmit = async e => { e.preventDefault(); if(sending) return; const body=$('#chIn').value.trim(); if(!body) return;
     const bad = containsBadWords(body, true); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);
-    sending = true; $('#chSend').disabled = true; $('#chIn').value='';
+    sending = true; $('#chSend').disabled = true; $('#chIn').value=''; $('#chIn').focus();   // 鍵盤不收起來
+    // 先把訊息放上畫面（傳送中），不用等網路
+    box.querySelector('.chempty')?.remove();
+    box.insertAdjacentHTML('beforeend', `<div class="msg me sending"><div>${esc(body)}</div><span class="time">傳送中…</span></div>`); const pend = box.lastElementChild; box.scrollTop = box.scrollHeight;
     const { data, error } = await sb.from('messages').insert({ match_id:matchId, sender_id:me.id, body }).select().single();
-    sending = false; $('#chSend').disabled = false;
+    sending = false; $('#chSend').disabled = false; pend.remove();
     if(error){ if(!$('#chIn').value) $('#chIn').value=body;
       const { data: m2 } = await sb.from('matches').select('closed_at').eq('id', matchId).maybeSingle();
       if(!m2 || m2.closed_at){ showClosed(); return toast('對方已結束這段對話'); }
@@ -2078,8 +2118,9 @@ async function viewChat(matchId){
    ===================================================================== */
 async function viewMe(){
   const rs = routeSeq;
-  await loadMe();
-  const [{ data: photos }, { data: reqs }, { data: grants }, { data: blocks }, { data: wv }, { data: wr }, { data: pvs }] = await Promise.all([
+  const uid = me.id;   // 個人資料和其他資料同時查，不用多等一輪
+  const [, { data: photos }, { data: reqs }, { data: grants }, { data: blocks }, { data: wv }, { data: wr }, { data: pvs }] = await Promise.all([
+    loadMe(),
     sb.from('photos').select('*').eq('user_id', me.id).order('created_at'),
     sb.from('photo_requests').select('requester_id').eq('owner_id', me.id).eq('status','pending'),
     sb.from('photo_grants').select('viewer_id').eq('owner_id', me.id),
@@ -2088,6 +2129,7 @@ async function viewMe(){
     sb.from('wealth_requests').select('requester_id,status').eq('owner_id', me.id).in('status',['pending','granted']),
     sb.from('person_verifications').select('status,review_note').eq('user_id', me.id).neq('status','awaiting').order('created_at',{ascending:false}).limit(1),
   ]);
+  if(!me || me.id!==uid || rs!==routeSeq) return;
   const lastPv = (pvs||[])[0];
   const personCard = `<div class="card mt" id="pCard"><h3 style="font-size:17px">真人認證 ${personBadge(me)}</h3>
     ${me.person_verified_at ? `<p class="small muted mt">你已在 ${new Date(me.person_verified_at).toLocaleDateString('zh-TW')} 通過真人認證，檔案和探索卡片上會顯示<span style="white-space:nowrap">「✓ 真人認證」</span>。</p>`
