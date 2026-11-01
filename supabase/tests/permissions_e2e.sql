@@ -850,5 +850,18 @@ begin
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   select count(*) into n from (select private.wealth_doc_path(V1) x) t where x is not null; out := array_append(out, ('44f 取消財力認證後文件還在分享 = '||n||' (應為0)')::text);
 
+  -- 45 通過審核時記下自介等，會員自己改不了
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update public.profiles set bio='通過版自介', status='approved' where id=V2;
+  update public.profiles set bio='新版自介', status='pending' where id=V2;
+  select count(*) into n from public.profiles where id=V2 and approved_bio='通過版自介'; out := array_append(out, ('45a 送審期間保留通過版自介 = '||n||' (應為1)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V2::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set approved_bio='偷改', approved_avatar_path=V2||'/x.jpg' where id=V2;
+  execute 'reset role';
+  select count(*) into n from public.profiles where id=V2 and approved_bio='通過版自介' and approved_avatar_path is distinct from V2||'/x.jpg'; out := array_append(out, ('45b 會員改不了通過版內容 = '||n||' (應為1)')::text);
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

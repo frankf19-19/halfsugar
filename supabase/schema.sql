@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.38.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.39.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -71,7 +71,10 @@ alter table public.profiles add column if not exists travel_city text;          
 alter table public.profiles add column if not exists travel_from date;
 alter table public.profiles add column if not exists travel_to date;
 alter table public.profiles add column if not exists openers text[] not null default '{}';
-alter table public.profiles add column if not exists approved_avatar_path text;   -- 最近一次通過審核的頭像：重新送審期間，配對對象看到的是這張   -- 我的開場白（只有本人看得到）   -- 甜心創始會員：探索優先曝光到期日
+alter table public.profiles add column if not exists approved_avatar_path text;
+alter table public.profiles add column if not exists approved_bio text;          -- 最近一次通過審核的自介、職業、興趣：重新送審期間給配對對象看
+alter table public.profiles add column if not exists approved_occupation text;
+alter table public.profiles add column if not exists approved_tags text[];   -- 最近一次通過審核的頭像：重新送審期間，配對對象看到的是這張   -- 我的開場白（只有本人看得到）   -- 甜心創始會員：探索優先曝光到期日
 alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
 alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
 alter table public.profiles add column if not exists relation_types text[] not null default '{}'
@@ -122,7 +125,7 @@ begin
   new.created_at  := old.created_at;
   new.founder_no  := old.founder_no;     -- 創始會員編號只由系統給
   new.founder_boost_until := old.founder_boost_until;
-  new.approved_avatar_path := old.approved_avatar_path;
+  new.approved_avatar_path := old.approved_avatar_path; new.approved_bio := old.approved_bio; new.approved_occupation := old.approved_occupation; new.approved_tags := old.approved_tags;
   -- 換頭像：真人認證要重新申請（避免用本人通過後換成別人的照片）
   if old.avatar_path is not null and new.avatar_path is distinct from old.avatar_path then new.person_verified_at := null; end if;
   if new.openers is distinct from old.openers then
@@ -192,7 +195,7 @@ begin
   if new.status = 'rejected' and old.status is distinct from 'rejected' then new.approved_at := null; end if;
   -- 解除停權後要重新審核：清掉舊的通過時間，審核前不能瀏覽其他會員
   if old.status = 'suspended' and new.status <> 'suspended' and new.status <> 'approved' then new.approved_at := null; end if;
-  if new.status = 'approved' then new.approved_avatar_path := new.avatar_path; end if;
+  if new.status = 'approved' then new.approved_avatar_path := new.avatar_path; new.approved_bio := new.bio; new.approved_occupation := new.occupation; new.approved_tags := new.tags; end if;
   if new.status = 'approved' and new.approved_at is null then
     new.approved_at := now();
     -- 前 100 位第一次通過審核的會員，記錄為創始會員（管理員不算）
@@ -866,7 +869,7 @@ $$;
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
 grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, person_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
-              avatar_path, status, hidden, last_active_at, created_at, founder_boost_until, free_until, travel_city, travel_from, travel_to, approved_avatar_path) on public.profiles to authenticated;
+              avatar_path, status, hidden, last_active_at, created_at, founder_boost_until, free_until, travel_city, travel_from, travel_to, approved_avatar_path, approved_bio, approved_occupation, approved_tags) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
 create or replace function public.get_me()
@@ -1982,3 +1985,7 @@ create trigger photo_requests_row_guard before update on public.photo_requests f
 drop trigger if exists wealth_requests_row_guard on public.wealth_requests;
 create trigger wealth_requests_row_guard before update on public.wealth_requests for each row execute function private.request_row_guard();
 update public.profiles set approved_avatar_path = avatar_path where status = 'approved' and approved_avatar_path is distinct from avatar_path;
+
+-- v0.39：回填通過審核的自介、職業、興趣
+update public.profiles set approved_bio = bio, approved_occupation = occupation, approved_tags = tags
+ where status = 'approved' and (approved_bio is distinct from bio or approved_occupation is distinct from occupation or approved_tags is distinct from tags);
