@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.31.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.32.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -65,7 +65,11 @@ alter table public.profiles add column if not exists person_verified_at timestam
 -- 身材、罩杯（選填、只限女性）、相處方式、見面頻率、甜心期望預算
 -- 創始會員：前 100 位第一次通過審核的會員（不對外顯示，正式收費後給優惠用）
 alter table public.profiles add column if not exists founder_no int unique;
-alter table public.profiles add column if not exists founder_boost_until timestamptz;   -- 甜心創始會員：探索優先曝光到期日
+alter table public.profiles add column if not exists founder_boost_until timestamptz;
+alter table public.profiles add column if not exists free_until timestamptz;        -- 今晚有空：到期時間（隔天早上 6 點）
+alter table public.profiles add column if not exists travel_city text;              -- 旅行模式：要去的城市
+alter table public.profiles add column if not exists travel_from date;
+alter table public.profiles add column if not exists travel_to date;   -- 甜心創始會員：探索優先曝光到期日
 alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
 alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
 alter table public.profiles add column if not exists relation_types text[] not null default '{}'
@@ -115,6 +119,9 @@ begin
   new.created_at  := old.created_at;
   new.founder_no  := old.founder_no;     -- 創始會員編號只由系統給
   new.founder_boost_until := old.founder_boost_until;
+  if current_setting('halfsugar.avail', true) is distinct from '1' then   -- 今晚有空、旅行模式只能用專用函式設定
+    new.free_until := old.free_until; new.travel_city := old.travel_city; new.travel_from := old.travel_from; new.travel_to := old.travel_to;
+  end if;
   new.approved_at  := old.approved_at;    -- 只能由審核流程設定（下一個 trigger 處理）
   new.submitted_at := old.submitted_at;
   if new.last_active_at is not null then new.last_active_at := least(new.last_active_at, now()); end if;
@@ -809,7 +816,7 @@ $$;
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
 grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, person_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
-              avatar_path, status, hidden, last_active_at, created_at, founder_boost_until) on public.profiles to authenticated;
+              avatar_path, status, hidden, last_active_at, created_at, founder_boost_until, free_until, travel_city, travel_from, travel_to) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
 create or replace function public.get_me()
@@ -1799,3 +1806,53 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke execute on function public.my_open_items() from anon, public;
 grant execute on function public.my_open_items() to authenticated;
+
+
+-- =====================================================================
+-- v0.32  今晚有空、旅行模式
+-- =====================================================================
+create index if not exists profiles_travel_idx on public.profiles(travel_city, travel_to) where travel_city is not null;
+
+create or replace function public.set_free_tonight(p_on boolean)
+returns timestamptz language plpgsql security definer set search_path = public as $$
+declare loc timestamp := now() at time zone 'Asia/Taipei'; v timestamptz;
+begin
+  if auth.uid() is null then raise exception '請先登入'; end if;
+  if not exists (select 1 from public.profiles where id = auth.uid() and status = 'approved') then raise exception '檔案通過審核後才能使用'; end if;
+  if p_on then
+    -- 到隔天早上 6 點（台灣時間）自動消失；凌晨 6 點前開啟則到當天 6 點
+    v := (case when extract(hour from loc) < 6 then date_trunc('day', loc) + interval '6 hours'
+               else date_trunc('day', loc) + interval '30 hours' end) at time zone 'Asia/Taipei';
+  end if;
+  perform set_config('halfsugar.avail', '1', true);
+  update public.profiles set free_until = v where id = auth.uid();
+  perform set_config('halfsugar.avail', '', true);
+  return v;
+end $$;
+
+create or replace function public.set_travel(p_city text, p_from date, p_to date)
+returns void language plpgsql security definer set search_path = public as $$
+declare today date := (now() at time zone 'Asia/Taipei')::date; home text;
+begin
+  if auth.uid() is null then raise exception '請先登入'; end if;
+  select city into home from public.profiles where id = auth.uid() and status = 'approved';
+  if not found then raise exception '檔案通過審核後才能使用'; end if;
+  if p_city is not null then
+    if p_city not in ('台北市','新北市','桃園市','新竹','台中市','彰化','雲林','嘉義','台南市','高雄市','屏東','基隆','宜蘭','花蓮','台東','南投','苗栗','澎湖','金門') then raise exception '請選擇要去的城市'; end if;
+    if p_city = home then raise exception '要去的城市和你的所在地相同'; end if;
+    if p_from is null or p_to is null then raise exception '請選擇日期'; end if;
+    if p_from < today then raise exception '出發日已經過了'; end if;
+    if p_from > today + 60 then raise exception '只能設定 60 天內的行程'; end if;
+    if p_to < p_from then raise exception '回程日要在出發日之後'; end if;
+    if p_to > p_from + 13 then raise exception '一次最多 14 天'; end if;
+  end if;
+  perform set_config('halfsugar.avail', '1', true);
+  update public.profiles set travel_city = p_city, travel_from = case when p_city is null then null else p_from end,
+         travel_to = case when p_city is null then null else p_to end where id = auth.uid();
+  perform set_config('halfsugar.avail', '', true);
+end $$;
+
+revoke all on function public.set_free_tonight(boolean) from public, anon;
+revoke all on function public.set_travel(text, date, date) from public, anon;
+grant execute on function public.set_free_tonight(boolean) to authenticated;
+grant execute on function public.set_travel(text, date, date) to authenticated;

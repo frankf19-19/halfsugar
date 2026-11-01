@@ -691,5 +691,34 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
+  -- 39 今晚有空、旅行模式
+  update public.profiles set city='台北市' where id=V1;
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set free_until = now() + interval '30 days', travel_city='台中市', travel_from=current_date, travel_to=current_date+100 where id=V1;
+  select count(*) into n from public.profiles where id=V1 and free_until is null and travel_city is null; out := array_append(out, ('39a 直接改今晚有空／旅行欄位被擋 = '||n||' (應為1)')::text);
+  perform public.set_free_tonight(true);
+  select count(*) into n from public.profiles where id=V1 and free_until > now() and free_until <= now() + interval '30 hours'; out := array_append(out, ('39b 今晚有空到隔天早上 = '||n||' (應為1)')::text);
+  perform public.set_free_tonight(false);
+  select count(*) into n from public.profiles where id=V1 and free_until is null; out := array_append(out, ('39c 關掉今晚有空 = '||n||' (應為1)')::text);
+  perform public.set_travel('台中市', (now() at time zone 'Asia/Taipei')::date + 3, (now() at time zone 'Asia/Taipei')::date + 5);
+  select count(*) into n from public.profiles where id=V1 and travel_city='台中市'; out := array_append(out, ('39d 設定旅行 = '||n||' (應為1)')::text);
+  begin perform public.set_travel('台北市', current_date+3, current_date+4); out := array_append(out, '39e 旅行到自己城市：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '39e 不能設定成自己的城市 ✓'::text); end;
+  begin perform public.set_travel('台中市', current_date+3, current_date+30); out := array_append(out, '39f 超過 14 天：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '39f 一次最多 14 天 ✓'::text); end;
+  begin perform public.set_travel('台中市', current_date-3, current_date+1); out := array_append(out, '39g 出發日已過：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '39g 出發日不能是過去 ✓'::text); end;
+  begin perform public.set_travel('東京', current_date+3, current_date+4); out := array_append(out, '39h 亂填城市：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '39h 城市必須在清單裡 ✓'::text); end;
+  -- 改其他欄位不會影響旅行設定，也不會因此重新審核
+  update public.profiles set height_cm = 175 where id=V1;
+  select count(*) into n from public.profiles where id=V1 and travel_city='台中市' and status='approved'; out := array_append(out, ('39i 改身高後旅行設定還在且不用重審 = '||n||' (應為1)')::text);
+  perform public.set_travel(null, null, null);
+  select count(*) into n from public.profiles where id=V1 and travel_city is null and travel_from is null; out := array_append(out, ('39j 取消旅行 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
