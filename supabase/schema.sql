@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.37.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.38.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -70,7 +70,8 @@ alter table public.profiles add column if not exists free_until timestamptz;    
 alter table public.profiles add column if not exists travel_city text;              -- 旅行模式：要去的城市
 alter table public.profiles add column if not exists travel_from date;
 alter table public.profiles add column if not exists travel_to date;
-alter table public.profiles add column if not exists openers text[] not null default '{}';   -- 我的開場白（只有本人看得到）   -- 甜心創始會員：探索優先曝光到期日
+alter table public.profiles add column if not exists openers text[] not null default '{}';
+alter table public.profiles add column if not exists approved_avatar_path text;   -- 最近一次通過審核的頭像：重新送審期間，配對對象看到的是這張   -- 我的開場白（只有本人看得到）   -- 甜心創始會員：探索優先曝光到期日
 alter table public.profiles add column if not exists body_type text check (body_type in ('slim','fit','average','athletic','curvy','chubby'));
 alter table public.profiles add column if not exists cup text check (cup in ('A','B','C','D','E','F+'));
 alter table public.profiles add column if not exists relation_types text[] not null default '{}'
@@ -121,6 +122,9 @@ begin
   new.created_at  := old.created_at;
   new.founder_no  := old.founder_no;     -- 創始會員編號只由系統給
   new.founder_boost_until := old.founder_boost_until;
+  new.approved_avatar_path := old.approved_avatar_path;
+  -- 換頭像：真人認證要重新申請（避免用本人通過後換成別人的照片）
+  if old.avatar_path is not null and new.avatar_path is distinct from old.avatar_path then new.person_verified_at := null; end if;
   if new.openers is distinct from old.openers then
     new.openers := array(select left(btrim(x), 200) from unnest(coalesce(new.openers, '{}')) x where btrim(x) <> '');
     if cardinality(new.openers) > 5 then raise exception '開場白最多 5 句'; end if;
@@ -188,6 +192,7 @@ begin
   if new.status = 'rejected' and old.status is distinct from 'rejected' then new.approved_at := null; end if;
   -- 解除停權後要重新審核：清掉舊的通過時間，審核前不能瀏覽其他會員
   if old.status = 'suspended' and new.status <> 'suspended' and new.status <> 'approved' then new.approved_at := null; end if;
+  if new.status = 'approved' then new.approved_avatar_path := new.avatar_path; end if;
   if new.status = 'approved' and new.approved_at is null then
     new.approved_at := now();
     -- 前 100 位第一次通過審核的會員，記錄為創始會員（管理員不算）
@@ -231,6 +236,7 @@ begin
   if auth.uid() is null or public.is_admin() then return new; end if;
   if tg_op = 'INSERT' then
     new.user_id := auth.uid(); new.status := 'pending'; new.review_note := null; new.created_at := now();
+    perform pg_advisory_xact_lock(hashtext('photos:' || auth.uid()::text));   -- 同時上傳多張時也不會超過上限
     if (select count(*) from public.photos where user_id = auth.uid()) >= 20 then raise exception '相簿最多 20 張'; end if;
   else
     new.user_id := old.user_id; new.path := old.path; new.status := old.status;
@@ -624,7 +630,7 @@ create policy "photos_delete_own" on public.photos for delete to authenticated
 drop policy if exists "grants_rw" on public.photo_grants;
 create policy "grants_rw" on public.photo_grants for all to authenticated
   using (owner_id = auth.uid() or viewer_id = auth.uid())
-  with check (owner_id = auth.uid());
+  with check (owner_id = auth.uid() and exists (select 1 from public.photo_requests r where r.owner_id = auth.uid() and r.requester_id = viewer_id));   -- 只能授權給向你索取過的人
 drop policy if exists "requests_select" on public.photo_requests;
 create policy "requests_select" on public.photo_requests for select to authenticated
   using (requester_id = auth.uid() or owner_id = auth.uid());
@@ -749,7 +755,7 @@ create policy "verify_storage_delete" on storage.objects for delete to authentic
 create or replace function private.photo_path_in_use(p text)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.photos where path = p)
-      or exists (select 1 from public.profiles where avatar_path = p);
+      or exists (select 1 from public.profiles where avatar_path = p or approved_avatar_path = p);
 $$;
 
 create or replace function private.my_file_count()
@@ -798,13 +804,15 @@ returns boolean language sql stable set search_path = public as $$
   select ((storage.foldername(p_name))[1] = auth.uid()::text
       or public.is_admin()
       or exists (select 1 from public.profiles p
-                 where p.avatar_path = p_name and (p.status = 'approved' or (p.status = 'pending' and private.has_open_match(p.id)))
+                 where ((p.avatar_path = p_name and p.status = 'approved')
+                        or (p.approved_avatar_path = p_name and p.status = 'pending' and private.has_open_match(p.id)))   -- 重新送審中：只給看上一次通過的頭像
                    and (storage.foldername(p_name))[1] = p.id::text
                    and private.can_browse() and private.is_compatible(p.id)
                    and not private.is_blocked_with(p.id))
       or exists (select 1 from public.photos ph
                  where ph.path = p_name and ph.status = 'approved'
                    and (storage.foldername(p_name))[1] = ph.user_id::text
+                   and exists (select 1 from public.profiles op where op.id = ph.user_id and (op.status = 'approved' or (op.status = 'pending' and private.has_open_match(op.id))))
                    and private.can_browse() and private.is_compatible(ph.user_id)
                    and not private.is_blocked_with(ph.user_id)
                    and (not ph.is_private or exists (select 1 from public.photo_grants g
@@ -858,7 +866,7 @@ $$;
 -- 欄位權限：其他會員只讀得到公開欄位；是否為管理員、退件原因、上線設定、同意紀錄等只有本人與管理員看得到
 revoke select on public.profiles from anon, authenticated;
 grant select (id, nickname, gender, looking_for, role, budget, wealth_verified_at, person_verified_at, body_type, cup, relation_types, meet_freq, expect_budget, birth_year, city, height_cm, occupation, bio, tags,
-              avatar_path, status, hidden, last_active_at, created_at, founder_boost_until, free_until, travel_city, travel_from, travel_to) on public.profiles to authenticated;
+              avatar_path, status, hidden, last_active_at, created_at, founder_boost_until, free_until, travel_city, travel_from, travel_to, approved_avatar_path) on public.profiles to authenticated;
 
 -- 讀自己的完整資料
 create or replace function public.get_me()
@@ -1132,8 +1140,10 @@ create policy "wreq_delete" on public.wealth_requests for delete to authenticate
 -- 某人目前可分享的財力文件路徑（已通過且未刪除的最新一份）
 create or replace function private.wealth_doc_path(owner uuid)
 returns text language sql stable security definer set search_path = public as $$
-  select path from public.wealth_verifications where user_id = owner and status = 'approved' and path is not null
-   order by reviewed_at desc nulls last limit 1;
+  select w.path from public.wealth_verifications w join public.profiles p on p.id = w.user_id
+   where w.user_id = owner and w.status = 'approved' and w.path is not null
+     and p.wealth_verified_at is not null and p.role in ('daddy','mommy')   -- 認證被取消或改成甜心：不再分享
+   order by w.reviewed_at desc nulls last limit 1;
 $$;
 
 -- 我能不能看這個檔案（storage 規則用）
@@ -1143,7 +1153,7 @@ returns boolean language sql stable security definer set search_path = public as
                    join public.wealth_requests r on r.owner_id = w.user_id and r.requester_id = auth.uid() and r.status = 'granted'
                   where w.path = fname and w.status = 'approved'
                     and not private.is_blocked_with(w.user_id) and private.can_browse()
-                    and exists (select 1 from public.profiles p where p.id = w.user_id and p.status = 'approved'));
+                    and exists (select 1 from public.profiles p where p.id = w.user_id and p.status = 'approved' and p.wealth_verified_at is not null and p.role in ('daddy','mommy')));
 $$;
 
 -- 查看狀態：回傳 none（沒有可看的文件）、can_request、pending、denied、granted（附路徑）
@@ -1220,6 +1230,8 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
   update public.profiles set wealth_verified_at = null where id = target;
+  update public.wealth_verifications set path = null where user_id = target and status = 'approved';   -- 文件不再分享
+  delete from public.wealth_requests where owner_id = target;
 end $$;
 revoke execute on function public.admin_revoke_wealth(uuid) from anon, public;
 grant execute on function public.admin_revoke_wealth(uuid) to authenticated;
@@ -1851,7 +1863,8 @@ drop policy if exists "voice_storage_select" on storage.objects;
 create policy "voice_storage_select" on storage.objects for select to authenticated
   using (bucket_id = 'voice' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()
          or exists (select 1 from public.voice_intros v where v.path = name and v.status = 'approved'
-                      and private.can_browse() and private.is_compatible(v.user_id) and not private.is_blocked_with(v.user_id))));
+                      and private.can_browse() and private.is_compatible(v.user_id) and not private.is_blocked_with(v.user_id)
+                      and exists (select 1 from public.profiles op where op.id = v.user_id and (op.status = 'approved' or (op.status = 'pending' and private.has_open_match(op.id)))))));
 drop policy if exists "voice_storage_delete" on storage.objects;
 create policy "voice_storage_delete" on storage.objects for delete to authenticated
   using (bucket_id = 'voice' and (public.is_admin() or ((storage.foldername(name))[1] = auth.uid()::text and not private.voice_path_in_use(name))));
@@ -1955,3 +1968,17 @@ begin
 end $$;
 revoke execute on function public.admin_prior_reviews(uuid) from anon, public;
 grant execute on function public.admin_prior_reviews(uuid) to authenticated;
+
+-- v0.38：索取紀錄的對象不能被改掉；婉拒時重新計算 3 天冷卻期；回填通過審核的頭像
+create or replace function private.request_row_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.requester_id := old.requester_id; new.owner_id := old.owner_id;
+  if new.status = 'denied' and old.status is distinct from 'denied' then new.created_at := now(); end if;
+  return new;
+end $$;
+drop trigger if exists photo_requests_row_guard on public.photo_requests;
+create trigger photo_requests_row_guard before update on public.photo_requests for each row execute function private.request_row_guard();
+drop trigger if exists wealth_requests_row_guard on public.wealth_requests;
+create trigger wealth_requests_row_guard before update on public.wealth_requests for each row execute function private.request_row_guard();
+update public.profiles set approved_avatar_path = avatar_path where status = 'approved' and approved_avatar_path is distinct from avatar_path;

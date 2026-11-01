@@ -817,5 +817,38 @@ begin
   delete from auth.users where id = D;
   select count(*) into n from public.meet_reviews where reviewee_phone_hash = 'e2e-hash' and reviewee_id is null and reviewee_name = 'D'; out := array_append(out, ('43c 帳號刪除後評價保留 = '||n||' (應為1)')::text);
 
+  -- 44 重新送審的頭像、真人認證、財力取消、私密照授權
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  delete from public.blocks where (blocker_id=V2 and blocked_id=V1) or (blocker_id=V1 and blocked_id=V2);
+  update public.matches set closed_at=null, closed_by=null where id=cm3;
+  insert into storage.objects (bucket_id, name, owner) values ('photos', V2||'/901.jpg', V2), ('photos', V2||'/902.jpg', V2), ('photos', V2||'/903.jpg', V2);
+  update public.profiles set avatar_path=V2||'/901.jpg', status='approved' where id=V2;
+  update public.profiles set avatar_path=V2||'/902.jpg', status='pending' where id=V2;
+  perform set_config('request.jwt.claims', json_build_object('sub',V1,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V1::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from storage.objects where name = V2||'/902.jpg'; out := array_append(out, ('44a 配對對象看得到還沒審的新頭像 = '||n||' (應為0)')::text);
+  select count(*) into n from storage.objects where name = V2||'/901.jpg'; out := array_append(out, ('44b 配對對象看得到上一次通過的頭像 = '||n||' (應為1)')::text);
+  begin insert into public.photo_grants (owner_id, viewer_id) values (V1, V2); out := array_append(out, '44c 沒人索取就授權（可查暱稱）：沒被擋 ✗'::text);
+  exception when others then out := array_append(out, '44c 只能授權給索取過的人 ✓'::text); end;
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  update public.profiles set person_verified_at = now() where id=V2;
+  perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V2::text, true);
+  execute 'set local role authenticated';
+  update public.profiles set avatar_path = V2||'/903.jpg' where id=V2;
+  execute 'reset role';
+  select count(*) into n from public.profiles where id=V2 and person_verified_at is null; out := array_append(out, ('44d 換頭像後真人認證要重新申請 = '||n||' (應為1)')::text);
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into public.wealth_verifications (user_id, kind, path, status, reviewed_at) values (V1, 'deposit', V1||'/w.jpg', 'approved', now());
+  update public.profiles set wealth_verified_at = now(), role='daddy' where id=V1;
+  select count(*) into n from (select private.wealth_doc_path(V1) x) t where x is not null; out := array_append(out, ('44e 財力認證有效時可分享 = '||n||' (應為1)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',AD,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', AD::text, true);
+  perform public.admin_revoke_wealth(V1);
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from (select private.wealth_doc_path(V1) x) t where x is not null; out := array_append(out, ('44f 取消財力認證後文件還在分享 = '||n||' (應為0)')::text);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
