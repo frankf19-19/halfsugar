@@ -808,7 +808,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.55.0';
+const BUILD = 'v1.56.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -922,7 +922,7 @@ function signed(path){
 }
 // 卡片照片：捲到附近才載入，下載完再淡入（不會一張張跳出來、也不會一次下載幾十張）
 const phIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if(!e.isIntersecting) return; phIO.unobserve(e.target); showPh(e.target); }), { rootMargin:'400px 0px' }) : null;
-async function showPh(el){ const u = await signed(el.dataset.ph); if(!u || !el.isConnected) return;
+async function showPh(el){ const u = await signedThumb(el.dataset.ph); if(!u || !el.isConnected) return;
   const im = new Image(); im.src = u; try{ await im.decode(); }catch(_){}
   if(!el.isConnected) return; el.style.backgroundImage = `url("${cssu(u)}")`; el.classList.add('in'); }
 function lazyPh(els){ els.forEach(el => { if(!el.dataset.ph) return; phIO ? phIO.observe(el) : showPh(el); }); }
@@ -1119,7 +1119,10 @@ const routes = {
 };
 let chatChannel = null, routeSeq = 0, onChatVisible = null;
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ onChatVisible && onChatVisible(); refreshUnread(true); } });
+// 主分頁記住捲動位置：從探索滑到一半去聊天，回來還在原本的地方
+const scrollMem = {}; let curTab = null; const MEM_TABS = ['browse','likes','matches'];
 async function route(){
+  if(curTab) scrollMem[curTab] = { y: window.scrollY, t: Date.now() };
   routeSeq++;
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; } onChatVisible = null;
   if(!recovering) closeModal();
@@ -1146,7 +1149,13 @@ async function route(){
       : `<div class="banner bad">載入失敗：${esc(zh(e.message||e))}　<a href="javascript:location.reload()">重新整理</a></div>`;
     $('#retryBtn') && ($('#retryBtn').onclick = ()=>route()); }
   done();
-  if(seq===routeSeq) window.scrollTo(0,0);
+  if(seq!==routeSeq) return;
+  curTab = MEM_TABS.includes(path) ? path : null;
+  const mem = curTab && scrollMem[curTab];
+  if(mem && Date.now() - mem.t < 30*60*1000 && mem.y > 0){
+    window.scrollTo(0, mem.y);
+    [150, 400, 900].forEach(ms => setTimeout(()=>{ if(seq===routeSeq && window.scrollY < mem.y - 4 && document.documentElement.scrollHeight - innerHeight >= mem.y - 4) window.scrollTo(0, mem.y); }, ms));   // 卡片晚一點才排好時再補一次
+  } else window.scrollTo(0,0);
 }
 window.addEventListener('hashchange', route);
 window.addEventListener('offline', ()=>toast('目前沒有網路連線', 4000));
@@ -1454,8 +1463,21 @@ async function uploadPhoto(file){
   const path = `${me.id}/${Date.now()}.jpg`;
   const { error } = await sb.storage.from('photos').upload(path, blob, { contentType:'image/jpeg', upsert:false });
   if(error){ if(/row-level|security|403|Unauthorized/i.test(error.message||'') && me.status!=='suspended') throw new Error('照片空間已滿，請先刪除幾張舊照片再上傳'); throw error; }
+  await makeThumb(file, path);
   return path;
 }
+// 縮圖：探索卡片、列表、小頭像用（約原圖的 1/5 大小）；沒有縮圖的舊照片自動改用原圖
+const thumbOf = p => String(p).replace(/\.jpg$/, 't.jpg');
+async function makeThumb(src, path){ try{ const tb = await compressImage(src, 480, .8); await sb.storage.from('photos').upload(thumbOf(path), tb, { contentType:'image/jpeg', upsert:false }); }catch(_){} }
+const noThumb = new Map();
+async function signedThumb(p){ if(!p) return null; if((noThumb.get(p)||0) > Date.now()) return signed(p);
+  const u = await signed(thumbOf(p)); if(u) return u; noThumb.set(p, Date.now()+10*60*1000); return signed(p); }
+const rmPhotos = paths => { const ps = paths.filter(Boolean); return ps.length ? sb.storage.from('photos').remove([...ps, ...ps.map(thumbOf)]) : Promise.resolve({}); };
+// 舊頭像沒有縮圖：本人登入時在背景補做一張（之後別人看卡片就會變快）
+let thumbFixed = false;
+async function fixMyThumb(){ if(thumbFixed || !me?.avatar_path || !/\.jpg$/.test(me.avatar_path)) return; thumbFixed = true;
+  if(await signed(thumbOf(me.avatar_path))) return;
+  const { data: blob } = await sb.storage.from('photos').download(me.avatar_path); if(blob) await makeThumb(blob, me.avatar_path); }
 
 // 必填基本資料（缺任何一項就不能使用網站，要先補齊）
 function missingBasics(p){ if(!p) return [];
@@ -1577,8 +1599,8 @@ async function viewOnboarding(){
       const prevAv = me.avatar_path;
       path = await uploadPhoto(avatarFile);
       const { data: upd, error } = await sb.from('profiles').update({ ...p, avatar_path: path, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id).select('status').maybeSingle();
-      if(error){ sb.storage.from('photos').remove([path]).catch(()=>{}); throw error; }
-      if(prevAv && prevAv!==path) sb.storage.from('photos').remove([prevAv]).catch(()=>{});   // 重送時清掉上一次的頭像，避免占用空間
+      if(error){ rmPhotos([path]).catch(()=>{}); throw error; }
+      if(prevAv && prevAv!==path) rmPhotos([prevAv]).catch(()=>{});   // 重送時清掉上一次的頭像，避免占用空間
       if(upd && upd.status==='incomplete'){ await loadMe(); throw new Error(phoneOk()?'資料還不完整，請檢查每個必填欄位':'請先完成手機驗證'); }
       let failed = 0;
       for(let i=0;i<extra.length;i++){ btn.textContent=`上傳照片 ${i+1}／${extra.length}…`;
@@ -1903,7 +1925,7 @@ async function viewMatches(){
   $('#app').querySelectorAll('.rq-reply').forEach(b=>b.onclick=()=>location.hash='#/chat/'+b.dataset.id);
   $('#app').querySelectorAll('.rq-no').forEach(b=>b.onclick=async()=>{ if(!confirm('不感興趣：這段對話會從你的訊息中移除，對方也不能再主動傳訊息給你。確定？')) return;
     const { error } = await sb.rpc('unmatch', { mid: b.dataset.id }); if(error) return toast(error.message); toast('已移除'); viewMatches(); });
-  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
+  $('#app').querySelectorAll('.avatar').forEach(async el=>{ const u=await signedThumb(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
 }
 async function viewChat(matchId){
   const my = routeSeq;
@@ -1933,7 +1955,7 @@ async function viewChat(matchId){
     <div class="revbar hidden" id="revBar"></div>
     <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><label class="chph" id="chPh" aria-label="傳照片" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="hidden"></label><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
 </div>`;
-  if(o) signed(o.avatar_path).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
+  if(o) signedThumb(o.avatar_path).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
   let lastDay='', lastAt=null; const seenIds=new Set();
   const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
@@ -2228,14 +2250,14 @@ async function viewMe(){
   document.querySelectorAll('.metabs button').forEach(b=>b.onclick=()=>showMeTab(b.dataset.mt));
   document.querySelectorAll('.todo .td').forEach(b=>b.onclick=()=>{ showMeTab(b.dataset.go); $('.metabs').scrollIntoView({behavior:'smooth',block:'start'}); });
   bindTagPick();
-  signed(me.avatar_path).then(u=>{ if(u && $('#meAv')) $('#meAv').style.backgroundImage=`url("${cssu(u)}")`; });
-  $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
+  signedThumb(me.avatar_path).then(u=>{ if(u && $('#meAv')) $('#meAv').style.backgroundImage=`url("${cssu(u)}")`; });
+  $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signedThumb(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
   $('#meAvFile') && ($('#meAvFile').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; toast('上傳中…', 60000);
     const oldAv = me.avatar_path; let path;
     try{ path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error;
-      if(oldAv && !(photos||[]).some(x=>x.path===oldAv)) sb.storage.from('photos').remove([oldAv]).catch(()=>{});
+      if(oldAv && !(photos||[]).some(x=>x.path===oldAv)) rmPhotos([oldAv]).catch(()=>{});
       toast('頭像已更新，重新送審'); viewMe(); }
-    catch(err){ if(path) sb.storage.from('photos').remove([path]).catch(()=>{}); toast(zh(err.message)); e.target.value=''; } });
+    catch(err){ if(path) rmPhotos([path]).catch(()=>{}); toast(zh(err.message)); e.target.value=''; } });
   const drawVoice = async () => { const box = $('#vcBody'); if(!box) return;
     const { data: vc } = await sb.from('voice_intros').select('*').eq('user_id', me.id).maybeSingle(); if(!$('#vcBody')) return;
     const ST = { pending:['warn','審核中'], approved:['ok','已通過'], rejected:['bad','未通過，請重錄'] };
@@ -2318,7 +2340,7 @@ async function viewMe(){
   document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=20) return toast('相簿最多 20 張'); toast('上傳中…', 60000); document.querySelectorAll('.mePh').forEach(x=>x.disabled=true);
     let path;
     try{ path=await uploadPhoto(f); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1' }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }
-    catch(err){ if(path) sb.storage.from('photos').remove([path]).catch(()=>{}); toast(zh(err.message)); }
+    catch(err){ if(path) rmPhotos([path]).catch(()=>{}); toast(zh(err.message)); }
     finally{ document.querySelectorAll('.mePh').forEach(x=>{ x.disabled=false; x.value=''; }); } });
   $('#wFile') && ($('#wFile').onchange = async e => { const f=e.target.files[0]; if(!f) return;
     if(!['approved','pending'].includes(me.status)) return toast('請先完成建立檔案');
@@ -2372,7 +2394,7 @@ async function viewMe(){
     wAct(()=>sb.rpc('delete_my_wealth_doc'), '文件已刪除'); });
   const act = async (fn, ok) => { const r = await fn(); if(r && r.error){ toast('沒有完成：'+r.error.message); return false; } if(ok) toast(ok); return true; };
   $('#meGal').querySelectorAll('.del').forEach(b=>b.onclick=async()=>{ if(!confirm('刪除這張照片？')) return;
-    if(await act(()=>sb.from('photos').delete().eq('id',b.dataset.id))){ await sb.storage.from('photos').remove([b.dataset.path]); toast('已刪除'); } viewMe(); });
+    if(await act(()=>sb.from('photos').delete().eq('id',b.dataset.id))){ await rmPhotos([b.dataset.path]); toast('已刪除'); } viewMe(); });
   document.querySelectorAll('.grantBtn').forEach(b=>b.onclick=async()=>{ if(await act(()=>sb.from('photo_grants').upsert({ owner_id:me.id, viewer_id:b.dataset.id }))) await act(()=>sb.from('photo_requests').update({ status:'granted' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已授權'); viewMe(); });
   document.querySelectorAll('.denyBtn').forEach(b=>b.onclick=async()=>{ await act(()=>sb.from('photo_requests').update({ status:'denied' }).eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已婉拒'); viewMe(); });
   document.querySelectorAll('.revokeBtn').forEach(b=>b.onclick=async()=>{ if(await act(()=>sb.from('photo_grants').delete().eq('owner_id',me.id).eq('viewer_id',b.dataset.id))) await act(()=>sb.from('photo_requests').delete().eq('owner_id',me.id).eq('requester_id',b.dataset.id), '已收回'); viewMe(); });
@@ -2679,7 +2701,9 @@ function viewDoc(k){ $('#app').innerHTML = `<div class="doc card">${DOCS[k]}</di
     const { error } = await verifyEmailOtp({ token_hash: th, type: tt });
     if(error) setTimeout(()=>toast('這個連結已失效或已用過。請回到登入頁重新申請。', 7000), 400);
     else if(tt!=='recovery') setTimeout(()=>toast(tt==='email_change'?'Email 已更新':'Email 驗證成功，歡迎加入微糖'), 400); }
-  await loadMe(); route(); })();
+  await loadMe(); route();
+  setTimeout(()=>{ if(me) (window.requestIdleCallback||setTimeout)(()=>fixMyThumb().catch(()=>{})); }, 4000);   // 不影響開啟速度
+})();
 </script>
 </body>
 </html>
