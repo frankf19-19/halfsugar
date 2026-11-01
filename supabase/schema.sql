@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.36.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.37.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -1470,6 +1470,12 @@ begin
 exception when others then return false;
 end $$;
 
+create or replace function private.is_evidence_photo(fname text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.report_evidence where image_path = fname);
+$$;
+grant execute on function private.is_evidence_photo(text) to authenticated;
+
 create or replace function private.chat_can_read(fname text)
 returns boolean language sql stable security definer set search_path = public as $$
   select fname like auth.uid()::text || '/%'
@@ -1489,7 +1495,8 @@ create policy "chat_storage_select" on storage.objects for select to authenticat
   using (bucket_id = 'chat' and private.chat_can_read(name));
 drop policy if exists "chat_storage_delete" on storage.objects;
 create policy "chat_storage_delete" on storage.objects for delete to authenticated
-  using (bucket_id = 'chat' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+  using (bucket_id = 'chat' and (public.is_admin()
+         or ((storage.foldername(name))[1] = auth.uid()::text and not private.is_evidence_photo(name))));   -- 檢舉證據的照片：會員（含刪帳號時）刪不掉，只有管理員能處理
 
 -- ---------------------------------------------------------------------
 -- v0.28 管理員：查看所有對話（含已收回的原內容）與會員聯絡資料
@@ -1699,6 +1706,22 @@ alter table public.meet_reviews enable row level security;
 drop policy if exists "meet_reviews_admin" on public.meet_reviews;
 create policy "meet_reviews_admin" on public.meet_reviews for select to authenticated using (public.is_admin());
 
+-- v0.37：帳號刪除後評價保留（記下當時暱稱、見面日期、手機指紋），刪帳號重來也洗不掉負評
+alter table public.meet_reviews add column if not exists date_at timestamptz;
+alter table public.meet_reviews add column if not exists reviewee_name text;
+alter table public.meet_reviews add column if not exists reviewee_phone_hash text;
+alter table public.meet_reviews alter column invite_id drop not null;
+alter table public.meet_reviews alter column reviewee_id drop not null;
+alter table public.meet_reviews drop constraint if exists meet_reviews_invite_id_fkey;
+alter table public.meet_reviews add constraint meet_reviews_invite_id_fkey foreign key (invite_id) references public.date_invites(id) on delete set null;
+alter table public.meet_reviews drop constraint if exists meet_reviews_reviewee_id_fkey;
+alter table public.meet_reviews add constraint meet_reviews_reviewee_id_fkey foreign key (reviewee_id) references public.profiles(id) on delete set null;
+create index if not exists meet_reviews_phone_idx on public.meet_reviews(reviewee_phone_hash) where reviewee_phone_hash is not null;
+update public.meet_reviews r set date_at = v.date_at from public.date_invites v where v.id = r.invite_id and r.date_at is null;
+update public.meet_reviews r set reviewee_name = p.nickname from public.profiles p where p.id = r.reviewee_id and r.reviewee_name is null;
+update public.meet_reviews r set reviewee_phone_hash = private.phone_hash(u.phone) from auth.users u
+ where u.id = r.reviewee_id and r.reviewee_phone_hash is null and nullif(u.phone,'') is not null;
+
 create or replace function public.pending_reviews(mid uuid)
 returns table (id uuid, date_at timestamptz) language sql stable security definer set search_path = public as $$
   select v.id, v.date_at from public.date_invites v
@@ -1718,9 +1741,11 @@ begin
   if not found or v.status <> 'accepted' or v.date_at > now() then raise exception '見面之後才能評價'; end if;
   if v.date_at < now() - interval '30 days' then raise exception '已超過可以評價的時間'; end if;
   if p_rating is null or p_rating not between 1 and 3 then raise exception '請選擇評價'; end if;
-  insert into public.meet_reviews (invite_id, reviewer_id, reviewee_id, rating, tags, note)
-  values (iid, auth.uid(), case when v.from_id = auth.uid() then v.to_id else v.from_id end,
-          p_rating, coalesce((select array_agg(left(t, 20)) from unnest(p_tags[1:8]) t), '{}'), nullif(btrim(coalesce(p_note,'')), ''));
+  insert into public.meet_reviews (invite_id, reviewer_id, reviewee_id, rating, tags, note, date_at, reviewee_name, reviewee_phone_hash)
+  select iid, auth.uid(), x.rid, p_rating, coalesce((select array_agg(left(t, 20)) from unnest(p_tags[1:8]) t), '{}'), nullif(btrim(coalesce(p_note,'')), ''),
+         v.date_at, (select nickname from public.profiles where id = x.rid),
+         (select private.phone_hash(u.phone) from auth.users u where u.id = x.rid and nullif(u.phone,'') is not null)
+    from (select case when v.from_id = auth.uid() then v.to_id else v.from_id end as rid) x;
 exception when unique_violation then raise exception '你已經評價過這次見面了';
 end $$;
 revoke execute on function public.submit_meet_review(uuid, int, text[], text) from anon, public;
@@ -1743,7 +1768,7 @@ returns table (created_at timestamptz, reviewer text, rating smallint, tags text
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
-  return query select r.created_at, coalesce(p.nickname, '（已刪除）'), r.rating, r.tags, r.note, v.date_at
+  return query select r.created_at, coalesce(p.nickname, '（已刪除）'), r.rating, r.tags, r.note, coalesce(v.date_at, r.date_at)
                  from public.meet_reviews r left join public.profiles p on p.id = r.reviewer_id
                  left join public.date_invites v on v.id = r.invite_id
                 where r.reviewee_id = target order by r.created_at desc;
@@ -1904,3 +1929,29 @@ grant execute on function public.set_travel(text, date, date) to authenticated;
 
 -- v0.36：內部函式不開放直接執行
 revoke all on function private.invite_msg(uuid, uuid, text) from public, anon, authenticated;
+
+-- v0.37：同一支手機以前刪掉的帳號收到的評價（管理員用）
+create or replace function public.admin_prior_review_counts(ids uuid[])
+returns table (id uuid, n bigint, bad bigint)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select u.id, count(r.*), count(r.*) filter (where r.rating = 1)
+                 from auth.users u join public.meet_reviews r on r.reviewee_phone_hash = private.phone_hash(u.phone) and r.reviewee_id is distinct from u.id
+                where u.id = any(ids) and nullif(u.phone,'') is not null group by u.id;
+end $$;
+revoke execute on function public.admin_prior_review_counts(uuid[]) from anon, public;
+grant execute on function public.admin_prior_review_counts(uuid[]) to authenticated;
+
+create or replace function public.admin_prior_reviews(target uuid)
+returns table (created_at timestamptz, old_name text, reviewer text, rating smallint, tags text[], note text, date_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select r.created_at, coalesce(r.reviewee_name, '（未知）'), coalesce(p.nickname, '（已刪除）'), r.rating, r.tags, r.note, r.date_at
+                 from auth.users u join public.meet_reviews r on r.reviewee_phone_hash = private.phone_hash(u.phone) and r.reviewee_id is distinct from u.id
+                 left join public.profiles p on p.id = r.reviewer_id
+                where u.id = target and nullif(u.phone,'') is not null order by r.created_at desc;
+end $$;
+revoke execute on function public.admin_prior_reviews(uuid) from anon, public;
+grant execute on function public.admin_prior_reviews(uuid) to authenticated;

@@ -801,5 +801,21 @@ begin
   select count(*) into n from public.safety_checks sc, lateral public.safety_view(sc.token) v where sc.invite_id = iv and sc.owner_id = V2;
   out := array_append(out, ('42f 結束 3 天內的報備連結仍可看 = '||n||' (應為1)')::text);
 
+  -- 43 檢舉證據與評價保存
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into storage.objects (bucket_id, name, owner) values ('chat', V2||'/'||cm3||'-1.jpg', V2), ('chat', V2||'/'||cm3||'-2.jpg', V2);
+  insert into public.reports (reporter_id, reported_id, reason) values (V1, V2, 'other') returning id into rid2;
+  insert into public.report_evidence (report_id, sender_id, body, image_path, created_at) values (rid2, V2, '[照片]', V2||'/'||cm3||'-1.jpg', now());
+  perform set_config('request.jwt.claims', json_build_object('sub',V2,'role','authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', V2::text, true);
+  execute 'set local role authenticated';
+  delete from storage.objects where bucket_id='chat' and name = V2||'/'||cm3||'-1.jpg'; get diagnostics n = row_count; out := array_append(out, ('43a 會員刪掉檢舉證據的照片 = '||n||' (應為0)')::text);
+  delete from storage.objects where bucket_id='chat' and name = V2||'/'||cm3||'-2.jpg'; get diagnostics n = row_count; out := array_append(out, ('43b 一般聊天照片可以自己刪 = '||n||' (應為1)')::text);
+  execute 'reset role';
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  insert into public.meet_reviews (reviewer_id, reviewee_id, rating, reviewee_name, reviewee_phone_hash, date_at) values (V1, D, 1, 'D', 'e2e-hash', now() - interval '1 day');
+  delete from auth.users where id = D;
+  select count(*) into n from public.meet_reviews where reviewee_phone_hash = 'e2e-hash' and reviewee_id is null and reviewee_name = 'D'; out := array_append(out, ('43c 帳號刪除後評價保留 = '||n||' (應為1)')::text);
+
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
