@@ -390,6 +390,7 @@ br.d{display:none}
 .avls{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.avl{display:inline-block;font-size:11px;letter-spacing:.06em;line-height:1.5;padding:2px 8px;border:1px solid currentColor;white-space:nowrap}.avl.free{color:var(--ok)}.avl.trv{color:var(--wine)}
 .sortbar .tonight{white-space:nowrap;font:inherit;font-size:13px;letter-spacing:.08em;padding:6px 12px;border:1px solid var(--rule);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}.sortbar .tonight::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:7px;vertical-align:1px;opacity:.5}.sortbar .tonight.on{border-color:var(--ok);color:var(--ok)}.sortbar .tonight.on::before{opacity:1}
 #availCard .avrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:14px 0;border-top:1px solid var(--hair)}#availCard .avrow:first-of-type{border-top:0;padding-top:10px}#availCard .avrow .tiny{margin-top:3px;line-height:1.6}#availCard .avrow .grow{min-width:190px;flex:1 1 190px}#availCard .avrow>.row,#availCard .avrow>.btn{margin-left:auto}#fCount{white-space:nowrap}@media(max-width:420px){.sortbar .sortl{display:none}.sortbar{gap:8px}}
+.oph{margin-top:18px;letter-spacing:.14em}.oplist .opi{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--hair);font-size:14px;line-height:1.6}.oplist .opi span{overflow-wrap:anywhere}.oplist .opi .lnk{flex:0 0 auto;font-size:13px}.opadd{display:flex;flex-direction:column;gap:10px;align-items:flex-end;margin-top:12px}.opadd textarea{width:100%;font-size:15px;line-height:1.5;padding:8px 2px;resize:vertical}
 .openers{display:flex;flex-direction:column;gap:8px;margin:10px auto 0;max-width:360px}.opener{font:inherit;font-size:14px;line-height:1.5;text-align:left;padding:10px 14px;border:1px solid var(--rule);background:var(--white);color:var(--ink);cursor:pointer}.opener:hover{border-color:var(--ink)}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
@@ -801,7 +802,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.53.0';
+const BUILD = 'v1.54.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1995,8 +1996,12 @@ async function viewChat(matchId){
       closeModal(); markRecalled({ id: el.dataset.mid, sender_id: me.id }); toast('已收回'); };
   };
   (msgs||[]).forEach(add);
-  if(!msgs.length){ const ops = closed ? [] : openersFor(o);
-    box.insertAdjacentHTML('beforeend', `<div class="chempty"><p class="serif">還沒有訊息</p><p class="tiny dim">說說你為什麼想認識 ${esc(oname)}，好的開場白比較容易得到回覆。</p>${ops.length?`<p class="tiny dim" style="margin-top:18px">從對方的檔案想到的開場白，點一下可以修改後再送出：</p><div class="openers">${ops.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}</div>`);
+  if(!msgs.length){ const ops = closed ? [] : openersFor(o), mineOps = closed ? [] : (me.openers||[]).map(t=>t.replace(/\{對方\}/g, oname));
+    box.insertAdjacentHTML('beforeend', `<div class="chempty"><p class="serif">還沒有訊息</p><p class="tiny dim">說說你為什麼想認識 ${esc(oname)}，好的開場白比較容易得到回覆。點一下開場白，可以修改後再送出。</p>
+      ${mineOps.length?`<p class="tiny dim oph">我的開場白</p><div class="openers">${mineOps.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}
+      ${ops.length?`<p class="tiny dim oph">從對方的檔案想到的</p><div class="openers">${ops.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}
+      ${closed?'':`<p class="tiny" style="margin-top:14px"><a href="#/me" id="opEdit">${mineOps.length?'編輯我的開場白':'＋ 設定我自己的開場白'}</a></p>`}</div>`);
+    $('#opEdit') && ($('#opEdit').onclick = ()=>sessionStorage.setItem('meTab','settings'));
     box.querySelectorAll('.opener').forEach(b=>b.onclick=()=>{ const i=$('#chIn'); if(!i) return; i.value=b.textContent; i.focus(); i.setSelectionRange(i.value.length, i.value.length); }); }
   const lastMine = [...msgs].reverse().find(x=>x.sender_id===me.id);
   if(lastMine && lastMine.read_at && msgs[msgs.length-1]===lastMine) box.insertAdjacentHTML('beforeend', `<div class="tiny dim" id="readLbl" style="text-align:right;margin:-4px 2px 8px">已讀 ${fmtTime(lastMine.read_at)}</div>`), box.scrollTop=box.scrollHeight;
@@ -2165,6 +2170,7 @@ async function viewMe(){
     <section class="mt-pane" data-mt="settings">
     <div class="card"><h3 style="font-size:17px">外觀</h3><p class="tiny dim">只影響這台裝置。</p>
       <div class="themesw" role="group" aria-label="外觀"><button type="button" data-th="light">淺色</button><button type="button" data-th="dark">深色</button><button type="button" data-th="auto">跟隨手機</button></div></div>
+    <div class="card" id="opCard"></div>
     <div class="card"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
       <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你心動過的人、或正在和你聊天的人看得到你。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvAccept" ${me.accept_from==='liked'?'checked':''}><span><b>只接受我心動過的人傳訊息</b><small>開啟後，只有你按過「心動」的人能主動傳第一則訊息給你，可以減少陌生訊息。</small></span></label>
@@ -2253,6 +2259,16 @@ async function viewMe(){
         if(error){ btn.disabled = false; return err.textContent = zh(error.message); }
         Object.assign(me, { travel_city:c, travel_from:f, travel_to:t }); closeModal(); drawAvail(); toast('已設定旅行模式'); }; }; };
   drawAvail();
+  const drawOpeners = () => { const box = $('#opCard'); if(!box) return; const ops = me.openers || [];
+    box.innerHTML = `<h3 style="font-size:17px">我的開場白</h3><p class="tiny dim">寫幾句你常用的開場白，開始新對話時點一下就能用，換手機也還在。最多 5 句，只有你自己看得到。寫「{對方}」會自動換成對方的暱稱。</p>
+      <div class="oplist">${ops.map((t,i)=>`<div class="opi"><span class="grow">${esc(t)}</span><button type="button" class="lnk bad" data-del="${i}">刪除</button></div>`).join('') || '<p class="tiny dim" style="padding:6px 0">還沒有開場白。</p>'}</div>
+      ${ops.length<5?`<form id="opF" class="opadd"><textarea id="opIn" rows="2" maxlength="200" placeholder="例如：嗨 {對方}，看到你也喜歡爬山，最近有去哪裡嗎？"></textarea><button class="btn sm primary" type="submit">新增</button></form>`:'<p class="tiny dim mt">已經 5 句了，刪掉一句才能再新增。</p>'}`;
+    const save = async (arr, btn, msg) => { btn && (btn.disabled = true); const { error } = await sb.from('profiles').update({ openers: arr }).eq('id', me.id);
+      if(error){ btn && (btn.disabled = false); return toast(zh(error.message)); } me.openers = arr; drawOpeners(); toast(msg); };
+    box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>save(ops.filter((_,i)=>i!==+b.dataset.del), b, '已刪除'));
+    $('#opF') && ($('#opF').onsubmit = e => { e.preventDefault(); const v = $('#opIn').value.trim(); if(!v) return $('#opIn').focus();
+      if(ops.includes(v)) return toast('這句已經有了'); save([...ops, v], e.target.querySelector('button'), '已新增'); }); };
+  drawOpeners();
   sb.rpc('my_open_items').then(({ data })=>{ const box=$('#openItems'); if(!box || !Array.isArray(data) || !data.length) return;
     box.innerHTML = `<div class="card mb oitems"><h3 style="font-size:16px">約會待辦</h3>${data.map(x=>`<div class="oi"><div class="grow"><div class="small">${x.kind==='checkin'?'還沒報平安':'見面後私下評價'}・${esc(x.partner||'（已刪除）')}</div><div class="tiny dim">${fmtDate(x.date_at)}</div></div>${x.kind==='checkin'?`<button class="btn sm primary" data-ck="${x.invite_id}">✓ 我平安</button>`:`<button class="btn sm ghost" data-rv="${x.invite_id}" data-d="${x.date_at}" data-p="${esc(x.partner||'')}">評價</button>`}</div>`).join('')}</div>`;
     box.querySelectorAll('[data-ck]').forEach(b=>b.onclick=async()=>{ b.disabled=true; const { error } = await sb.rpc('safety_checkin', { iid:b.dataset.ck }); if(error){ b.disabled=false; return toast(zh(error.message)); } b.outerHTML='<span class="tiny ok">已報平安</span>'; toast('已報平安'); });
