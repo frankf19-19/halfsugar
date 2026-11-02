@@ -817,7 +817,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.64.0';
+const BUILD = 'v1.64.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1286,7 +1286,7 @@ async function viewLanding(){
       <div class="pts">
         <div><h3>沒有登入，什麼都看不到</h3><p>會員的照片與檔案只對已登入、且通過審核的會員開放。搜尋引擎與路人都看不到。</p></div>
         <div><h3>照片不公開存放</h3><p>照片存放在私有空間，只有登入、通過審核、而且方向吻合的會員才讀得到；查看時會疊上看的人的代號浮水印，截圖外流也查得到是誰。</p></div>
-        <div><h3>手機只用來驗證</h3><p>一支手機只能註冊一個帳號，擋掉假帳號。你的手機號碼和 Email 永遠不會顯示給任何會員，站內就能聊，不必交換聯絡方式。</p></div>
+        <div><h3>一支手機，一個帳號</h3><p>每位會員都要用台灣手機收簡訊驗證，一支手機只能有一個帳號，一支號碼也只收得到 3 次驗證碼。被停權的號碼不能再註冊，刪掉帳號重開也洗不掉過去的評價。手機號碼和 Email 不會顯示給任何會員。</p></div>
         <div><h3>想隱身就隱身</h3><p>可以不出現在探索，只讓你心動過的人、或正在聊天的人看到你；也可以隱藏上線狀態。</p></div>
         <div><h3>私密照，親自授權</h3><p>私密相簿只給你點頭的人看，隨時收回；封鎖之後，對方再也找不到你。</p></div>
         <div><h3>說刪就刪</h3><p>在「我的」頁面就能自己刪除帳號，檔案、照片、對話與綁定手機立即永久刪除。我們不販售、不分享任何會員資料。</p></div>
@@ -1322,6 +1322,7 @@ async function viewLanding(){
     <p class="swipehint">← 左右滑動看更多 →</p>
     <ul class="dnotes">
       <li><b>真人審核</b>每一張照片、每一段自介都由真人看過才上架。</li>
+      <li><b>手機驗證</b>一支台灣手機只能有一個帳號，被停權的人換帳號也回不來。</li>
       <li><b>每月預算</b>Sugar Daddy／Mommy 註冊時填寫，彼此一開始就清楚期待。</li>
       <li><b>真人認證</b>依隨機指定動作拍自拍與短影片，確認照片就是本人。</li>
       <li><b>財力認證</b>自願上傳文件、真人確認後顯示，甜心可以申請查看。</li>
@@ -1374,7 +1375,7 @@ async function viewAuth(){
         ${mode==='register' ? `
         <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--text);font-size:14px"><input type="checkbox" name="age" required style="width:auto;margin-top:4px"><span>我確認已年滿 18 歲（或所在地法定成年年齡）</span></label>
         <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--text);font-size:14px"><input type="checkbox" name="terms" required style="width:auto;margin-top:4px"><span>我已閱讀並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>，並了解本站禁止任何金錢交易與色情招攬</span></label>` : ''}
-        ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定暱稱、性別與想認識的對象，送出後無法修改。</p>':''}
+        ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，驗證碼最多收 3 次，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定暱稱、性別與想認識的對象，送出後無法修改。</p>':''}
         <button class="btn primary block mt2" type="submit">${mode==='register'?'建立帳號':'登入'}</button>
         ${mode==='login' ? `<button class="btn ghost block mt" type="button" id="forgot">忘記密碼</button>`:''}
         <p class="small bad mt" id="authErr"></p>
@@ -1597,12 +1598,12 @@ function viewPhoneVerify(){
   $('#app').innerHTML = `<div class="narrow">
     <div class="obsteps"><span class="on">1　手機驗證</span><span>2　建立檔案</span></div>
     <h2 style="font-size:24px">驗證你的手機</h2>
-    <p class="muted small mt mb">每個帳號都要綁定一支手機，一支手機只能綁定一個帳號，用來確認你是真人、減少假帳號。號碼不會顯示給任何會員，刪除帳號時一併刪除。</p>
+    <p class="muted small mt mb">每位會員都要用台灣手機驗證，一支手機只能有一個帳號。被停權的號碼不能再註冊，所以在這裡遇到的人，都沒辦法換個帳號重來。你的號碼不會顯示給任何會員。</p>
     <form id="phForm" class="card">
       <label>手機號碼</label>
       <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="12" required></div>
       <div id="phCap"></div>
-      <p class="small bad mt" id="phErr" role="alert"></p><p class="tiny dim mt">目前僅支援台灣手機門號。<span id="phLeft">每個帳號最多可傳送 3 次驗證碼，請先確認號碼正確再送出。</span></p>
+      <p class="small bad mt" id="phErr" role="alert"></p><p class="tiny dim mt">目前僅支援台灣手機門號。<span id="phLeft">驗證碼最多可傳送 3 次（每個帳號、每支手機都一樣），請先確認號碼正確再送出。</span></p>
       <button class="btn primary block mt2" id="phSend" type="submit">傳送驗證碼</button>
     </form>
     <form id="otpForm" class="card mt hidden">
@@ -1619,7 +1620,7 @@ function viewPhoneVerify(){
   const cool = () => { let t=60; const b=$('#otpResend'); b.disabled=true; clearInterval(timer);
     timer=setInterval(()=>{ if(!document.body.contains(b)) return clearInterval(timer); t--; b.textContent = t>0?`重新傳送（${t}）`:'重新傳送'; if(t<=0){ b.disabled=false; clearInterval(timer); } },1000); };
   let sending=false, left=3;
-  const showLeft = () => { const el=$('#phLeft'); if(el) el.textContent = left>0 ? `每個帳號最多可傳送 3 次驗證碼，目前還剩 ${left} 次。請先確認號碼正確再送出。` : '驗證碼傳送次數已用完。'; };
+  const showLeft = () => { const el=$('#phLeft'); if(el) el.textContent = left>0 ? `驗證碼最多可傳送 3 次（每個帳號、每支手機都一樣），目前還剩 ${left} 次。請先確認號碼正確再送出。` : '驗證碼傳送次數已用完。'; };
   const noMore = keepOtp => { left=0; showLeft(); const rb=$('#otpResend'); if(rb){ rb.disabled=true; rb.textContent='已無法再傳送'; } clearInterval(timer);
     if(!keepOtp){ const b=$('#phSend'); if(b){ b.disabled=true; } phErr('驗證碼傳送次數已用完。請從網頁最下方「聯絡客服」，我們會協助你完成驗證。'); } };
   // 真人驗證（Cloudflare Turnstile）：後台設定了 site key 才出現
@@ -2788,7 +2789,7 @@ async function viewAdmin(){
    文件頁：條款 / 隱私 / 守則 / 安全
    ===================================================================== */
 const DOCS = {
-terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日</p>
+terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 11 月 2 日</p>
 <h3>第一條　契約主體與服務性質</h3><p>本條款為微糖 1/3 Sugar（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友服務（包括 Sugar Dating 甜心交友）。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
 <h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
 <h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。你於建立檔案時設定之暱稱、性別與想認識的對象，送出審核後即無法自行修改（暱稱於檔案未通過審核時得修改）；如有特殊需要，得來信客服申請，由本平台審酌處理。Sugar Daddy 身分限男性、Sugar Mommy 身分限女性。</p>
@@ -2816,8 +2817,8 @@ privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 10 �
 <h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
 <h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方。管理人員只在處理檢舉、或發現疑似詐騙與違規時查看相關對話。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
 <h3>資料儲存與保護</h3><p>資料儲存於 Supabase 雲端服務，傳輸全程加密（HTTPS）。照片以私有儲存空間存放，只透過加密的限時連結讀取，查看時疊加檢視者代號浮水印。資料庫以列級權限控管，會員只能讀取規則允許的資料。</p><h3>我們不做的事</h3><ul><li>不販售、出租或分享任何會員資料給第三方。</li><li>不使用第三方廣告追蹤。</li><li>管理人員只在處理檢舉時查看相關對話。</li></ul>
-<h3>手機號碼</h3><p>註冊時需以簡訊驗證手機，一支手機僅能綁定一個帳號。手機號碼僅用於確認真人與防止重複註冊，不會顯示給任何會員，也不會用於行銷。</p>
-<h3>你的權利</h3><p>你得隨時查詢、更正或下架你的資料，並可在「我的」頁面自行刪除帳號；刪除後檔案、照片、對話、手機號碼與信箱立即永久刪除，無法復原。其他問題請以註冊信箱來信 support@onethirdsugar.com。</p>
+<h3>手機號碼</h3><p>註冊時需以簡訊驗證手機，一支手機僅能綁定一個帳號。手機號碼僅用於確認真人與防止重複註冊，不會顯示給任何會員，也不會用於行銷。</p><p>為防止濫用，我們會保留手機號碼經單向加密的編碼（無法還原成號碼），即使帳號刪除後亦同，僅用於：限制驗證簡訊次數、讓被停權的號碼無法再註冊，以及保留其他會員對該帳號的見面評價供審核參考。</p>
+<h3>你的權利</h3><p>你得隨時查詢、更正或下架你的資料，並可在「我的」頁面自行刪除帳號；刪除後檔案、照片、對話、手機號碼與信箱立即永久刪除，無法復原（防止濫用的手機號碼單向編碼除外，見「手機號碼」）。其他問題請以註冊信箱來信 support@onethirdsugar.com。</p>
 <h3>Cookie 與本機儲存</h3><p>本平台使用瀏覽器本機儲存以維持登入狀態與年齡確認紀錄，不使用第三方廣告追蹤。</p>`,
 
 guidelines: `<h2>社群守則</h2><p>微糖希望成為一個讓成熟成年人可以安心、坦誠認識彼此的地方。以下是我們對每一位會員的要求。</p>
@@ -2832,6 +2833,7 @@ safety: `<h2>安全須知</h2><p>線上認識的人，請用線下的謹慎對�
 <h3>見面前</h3><ul><li>先在站內多聊幾次，再考慮交換其他聯絡方式。</li><li>可以要求視訊通話，確認對方與照片相符。</li><li>任何在見面前就談到錢的人，請直接封鎖並檢舉。</li></ul>
 <h3>第一次見面</h3><ul><li>選擇公開、人多的場所，例如餐廳、咖啡廳。</li><li>自己安排交通，不要讓對方接送。</li><li>告訴信任的朋友你的行程與對方的資訊。</li><li>保持清醒，自己看著自己的飲料。</li></ul>
 <h3>保護個資</h3><ul><li>不要過早透露住址、公司、全名或財務狀況。</li><li>不要傳送可能被用來勒索的照片或影片。</li></ul>
+<h3>我們怎麼擋掉壞人</h3><ul><li>每位會員都用台灣手機簡訊驗證，一支手機只能有一個帳號，每支號碼也只收得到 3 次驗證碼，沒辦法大量開假帳號。</li><li>被停權的人，那支手機就不能再註冊。</li><li>想刪掉帳號重開來洗掉紀錄也沒用：別人給過的見面評價會跟著手機號碼留下來，管理員審核時看得到。</li><li>每一張照片、每一段自介都由真人看過才公開。</li></ul>
 <h3>遇到問題</h3><p>任何讓你不舒服的互動，請立即封鎖並檢舉。若涉及威脅、勒索或人身安全，請報警（110），並保留對話紀錄。</p>`
 };
 function viewPlans(){
