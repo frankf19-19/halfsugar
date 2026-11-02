@@ -2093,10 +2093,10 @@ returns text language plpgsql security definer set search_path = public as $$
 declare t uuid; em text;
 begin
   select u.id, u.email into t, em from auth.users u
-   where u.id <> uid and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = private.phone_hash(ph) limit 1;
+   where u.id <> sms_recover_start.uid and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = private.phone_hash(ph) limit 1;
   if t is null then return null; end if;
-  insert into public.phone_recover (uid, target, expires_at) values (uid, t, now() + interval '15 minutes')
-    on conflict (uid) do update set target = excluded.target, expires_at = excluded.expires_at;
+  insert into public.phone_recover (uid, target, expires_at) values (sms_recover_start.uid, t, now() + interval '15 minutes')
+    on conflict on constraint phone_recover_pkey do update set target = excluded.target, expires_at = excluded.expires_at;
   return coalesce(em, '');
 end $$;
 revoke execute on function public.sms_recover_start(uuid, text) from anon, authenticated, public;
@@ -2110,7 +2110,7 @@ begin
   delete from public.phone_recover where phone_recover.uid = sms_recover_take.uid and expires_at > now() returning target into t;
   if t is null then return jsonb_build_object('r','expired'); end if;
   select email into em from auth.users where id = t;
-  select status into st from public.profiles where id = uid;
+  select status into st from public.profiles where id = sms_recover_take.uid;
   return jsonb_build_object('r','ok','email',coalesce(em,''),'empty', coalesce(st,'incomplete') = 'incomplete');
 end $$;
 revoke execute on function public.sms_recover_take(uuid) from anon, authenticated, public;
