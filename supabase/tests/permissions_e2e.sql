@@ -195,7 +195,7 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub',E,'role','authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', E::text, true);
   execute 'set local role authenticated';
-  insert into public.blocks (blocker_id, blocked_id) values (E, D);
+  execute 'reset role'; insert into public.blocks (blocker_id, blocked_id) values (E, D); execute 'set local role authenticated';   -- 測試資料（直接建立）
   update public.blocks set blocked_id = A where blocker_id = E; get diagnostics n = row_count;
   out := array_append(out, ('18c 修改封鎖對象 = '||n||' 筆 (應為0)')::text);
   begin perform private.is_compatible(A); out := array_append(out, '18d 內部函式（從資料庫內）可用 ✓'::text);
