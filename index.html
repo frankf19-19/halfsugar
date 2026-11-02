@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-DPTI9ZdXIg3dDi3m91MBC1moHOfoZ4fSS7e1H1LLAJg=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-9KlbELQyv2FqOFu7FYd/SzhfSoDAFc3zbYWOi1owpGk=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -823,7 +823,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.66.2';
+const BUILD = 'v1.67.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1397,7 +1397,7 @@ async function viewAuth(){
         <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--text);font-size:14px"><input type="checkbox" name="terms" required style="width:auto;margin-top:4px"><span>我已閱讀並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>，並了解本站禁止任何金錢交易與色情招攬</span></label>` : ''}
         ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，驗證碼最多收 3 次，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定暱稱、性別與想認識的對象：這會決定你在探索看到誰、誰看得到你，送出後無法修改。</p>':''}
         <button class="btn primary block mt2" type="submit">${mode==='register'?'建立帳號':'登入'}</button>
-        ${mode==='login' ? `<button class="btn ghost block mt" type="button" id="forgot">忘記密碼</button>`:''}
+        ${mode==='login' ? `<button class="btn ghost block mt" type="button" id="forgot">忘記密碼</button><p class="tiny dim center mt">忘記當初用哪個 Email 註冊？<button type="button" class="lnk" id="findAcc" style="font-size:inherit">用手機找回帳號</button></p>`:''}
         <p class="small bad mt" id="authErr"></p>
       </form></div></div>`;
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ mode=b.dataset.m; draw(); });
@@ -1433,6 +1433,7 @@ async function viewAuth(){
         if(/Email not confirmed/i.test(err.message)){ $('#authErr').insertAdjacentHTML('beforeend', ' <a href="#" id="reAuth">重寄驗證信</a>');
           $('#reAuth').onclick = async ev=>{ ev.preventDefault(); const { error } = await sb.auth.resend({ type:'signup', email, options:{ emailRedirectTo: location.origin + location.pathname } }); toast(error?error.message:'已重寄，請到信箱收信'); }; } }
     };
+    const fa = $('#findAcc'); if(fa) fa.onclick = openFindAccount;
     const fg = $('#forgot'); if(fg) fg.onclick = async ()=>{ const email = $('input[name=email]').value.trim(); if(!email) return toast('請先輸入 Email');
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); if(error) return toast(zh(error.message));
       modal(`<h2>重設密碼</h2><p class="muted small mt">如果 <b>${esc(email)}</b> 有註冊微糖，我們已寄出一封重設密碼信。按信中的按鈕，或在這裡輸入信中的驗證碼。</p>${codeBox('rpCode')}<p class="tiny dim mt">沒收到？請看看垃圾郵件匣。</p>`);
@@ -1620,6 +1621,42 @@ function askRecover(email){
       ? `<h2>已寄出重設密碼信</h2><p class="muted small mt">我們已寄一封重設密碼信到 <b>${esc(r.email||'原本帳號的 Email')}</b>。按信中的按鈕設定新密碼，就能回到原本的帳號。</p><p class="tiny dim mt">沒收到？請看看垃圾郵件匣。如果那個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>`
       : `<h2>請登入原本的帳號</h2><p class="muted small mt">請用 <b>${esc(r.email||'原本帳號的 Email')}</b> 和密碼登入。忘記密碼的話，在登入頁按「忘記密碼」。</p>`), 400); };
   $('#rcReset').onclick = ()=>go('reset'); $('#rcLogin').onclick = ()=>go('login');
+}
+// 用手機找回帳號（忘記用哪個 Email 註冊）：驗證手機後，把重設密碼信寄到那個帳號的 Email
+function openFindAccount(){
+  modal(`<h2>用手機找回帳號</h2><p class="muted small mt">輸入註冊時驗證過的手機號碼。驗證後，我們會把重設密碼信寄到那個帳號的 Email，並告訴你是哪個信箱。</p>
+    <form id="fdForm"><label>手機號碼</label><div class="phrow"><span class="cc">台灣 +886</span><input id="fdNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="12" required></div>
+      <div id="fdCap"></div><p class="small bad mt" id="fdErr" role="alert"></p>
+      <button class="btn primary block mt2" id="fdSend" type="submit">傳送驗證碼</button></form>
+    <form id="fdOtp" class="hidden mt2"><p class="small" id="fdHint"></p><label>簡訊驗證碼</label>
+      <input id="fdCode" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" required>
+      <p class="small bad mt" id="fdErr2" role="alert"></p><button class="btn primary block mt2" type="submit">確認</button></form>
+    <p class="tiny dim mt2">每支手機每 30 天最多可以找回 2 次。號碼換了或收不到簡訊，請從網頁最下方「聯絡客服」。</p>`);
+  let phone='', capKey='', capTok='', capId=null;
+  sb.from('app_config').select('value').eq('key','turnstile_sitekey').maybeSingle().then(({ data })=>{
+    capKey=(data?.value||'').trim(); if(!capKey || !$('#fdCap')) return;
+    const mount=()=>{ if(!$('#fdCap') || !window.turnstile) return; capId=window.turnstile.render('#fdCap', { sitekey:capKey, language:'zh-tw', size:'flexible',
+      theme: document.documentElement.dataset.theme==='dark'?'dark':'light', callback:t=>{ capTok=t; }, 'expired-callback':()=>{ capTok=''; } }); };
+    if(window.turnstile) mount(); else if(!document.getElementById('tsScript')){ const sc=document.createElement('script'); sc.id='tsScript'; sc.async=true; sc.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.onload=mount; document.head.appendChild(sc); }
+    else document.getElementById('tsScript').addEventListener('load', mount); });
+  $('#fdForm').onsubmit = async e => { e.preventDefault(); const n=$('#fdNum').value.replace(/[\s-]/g,'');
+    if(!/^09\d{8}$/.test(n)) return $('#fdErr').textContent='請輸入 09 開頭的 10 碼手機號碼';
+    if(capKey && !capTok) return $('#fdErr').textContent='請先完成上方的真人驗證';
+    $('#fdErr').textContent=''; phone='+886'+n.slice(1); const b=$('#fdSend'); b.disabled=true; b.textContent='傳送中…';
+    const r = await phoneApi({ action:'find_send', phone, captcha: capTok }); capTok=''; try{ if(capId!==null) window.turnstile.reset(capId); }catch(_){}
+    if(r.error){ b.disabled=false; b.textContent='傳送驗證碼'; return $('#fdErr').textContent=smsErr2(r.error); }
+    b.textContent='已送出'; $('#fdOtp').classList.remove('hidden');
+    $('#fdHint').textContent=`如果 ${maskPhone(phone.replace('+',''))} 有註冊微糖，你會在一分鐘內收到驗證碼，請在 10 分鐘內輸入。沒收到的話，代表這支號碼沒有註冊過，或這 30 天內的找回次數已用完。`;
+    $('#fdCode').focus(); setTimeout(()=>{ if($('#fdSend')){ $('#fdSend').disabled=false; $('#fdSend').textContent='重新傳送'; } }, 60000); };
+  $('#fdOtp').onsubmit = async e => { e.preventDefault(); const code=$('#fdCode').value.replace(/\D/g,''); if(code.length<6) return $('#fdErr2').textContent='請輸入 6 位數驗證碼';
+    const b=e.target.querySelector('button'); b.disabled=true; $('#fdErr2').textContent='';
+    const r = await phoneApi({ action:'find_check', phone, code });
+    if(r.error){ b.disabled=false; return $('#fdErr2').textContent=smsErr2(r.error); }
+    modal(`<h2>找到你的帳號了</h2><p class="mt">你的帳號是 <b>${esc(r.email||'')}</b>。</p>
+      <p class="muted small mt">${r.mailed?'我們已寄一封重設密碼信到這個信箱，按信中的按鈕設定新密碼，就能登入。':'重設密碼信這次沒有寄出，請在登入頁輸入這個 Email，按「忘記密碼」。'}</p>
+      <p class="tiny dim mt">沒收到？請看看垃圾郵件匣。如果這個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>
+      <button class="btn primary block mt2" id="fdOk">好</button>`);
+    $('#fdOk').onclick = closeModal; };
 }
 function viewPhoneVerify(){
   $('#app').innerHTML = `<div class="narrow">
