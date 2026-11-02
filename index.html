@@ -814,7 +814,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.62.1';
+const BUILD = 'v1.63.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1543,6 +1543,49 @@ function smsErr(e){
   if(/otp_expired|expired|invalid|token/i.test(m)) return '驗證碼錯誤或已過期，請重新輸入或重新發送。';
   return '沒有成功：'+(e?.message||'請稍後再試');
 }
+async function phoneApi(body){
+  try{
+    const { data, error } = await sb.functions.invoke('phone-verify', { body });
+    if(error){ let j=null; try{ j = await error.context?.json(); }catch(_){} return { error: j?.error || (error.name==='FunctionsFetchError'?'network':'server') }; }
+    return data || { error:'server' };
+  }catch(e){ return { error:'network' }; }
+}
+function smsErr2(c){
+  return ({
+    phone_exists:'這支手機已經綁定其他帳號。一支手機只能綁定一個帳號。',
+    banned:'這支手機號碼無法在本站註冊。如有疑問請從網頁最下方「聯絡客服」。',
+    user_limit:'驗證碼傳送次數已用完。請從網頁最下方「聯絡客服」，我們會協助你完成驗證。',
+    phone_limit:'這支手機收到的驗證碼次數已達上限。請從網頁最下方「聯絡客服」。',
+    global_limit:'目前申請驗證的人比較多，請 1 小時後再試。',
+    twilio_rate:'發送太頻繁，請 10 分鐘後再試。',
+    bad_phone:'這個號碼無法接收簡訊，請確認是 09 開頭的台灣手機號碼。',
+    send_failed:'簡訊暫時無法送出，請稍後再試；若持續發生，請從網頁最下方「聯絡客服」告訴我們。',
+    wrong_code:'驗證碼不正確，請再確認一次。',
+    expired:'驗證碼已過期或輸入錯誤太多次，請按「重新傳送」。',
+    too_many_checks:'輸入錯誤太多次，請按「重新傳送」。',
+    bad_code:'請輸入 6 位數驗證碼',
+    recover_expired:'等太久了，請重新驗證一次手機。',
+    network:'網路連線不穩，請稍後再試。',
+    auth:'登入已過期，請重新登入。'
+  })[c] || '沒有成功，請稍後再試。';
+}
+// 同一支手機已經有帳號：問要不要恢復原本的帳號（一支手機只能綁一個帳號）
+function askRecover(email){
+  modal(`<h2>這支手機已經有帳號了</h2>
+    <p class="muted small mt">這支手機已經綁定帳號 <b>${esc(email||'')}</b>。一支手機只能有一個帳號，要恢復原本的帳號嗎？</p>
+    <p class="tiny dim mt">恢復後，你剛剛建立、還沒填資料的新帳號會一併刪除。</p>
+    <button class="btn primary block mt2" id="rcReset">恢復原本帳號（寄重設密碼信）</button>
+    <button class="btn ghost block mt" id="rcLogin">我記得密碼，直接登入</button>
+    <p class="tiny dim mt2">這不是你的帳號？手機號碼可能是電信公司回收後重新發出的，請從網頁最下方「聯絡客服」，我們會協助你。</p>`, { noHist:true });
+  const go = async mode => { document.querySelectorAll('#rcReset,#rcLogin').forEach(b=>b.disabled=true);
+    const r = await phoneApi({ action:'recover', mode });
+    if(r.error){ closeModal(); return toast(r.error==='recover_expired'?'等太久了，請重新驗證一次手機。':smsErr2(r.error)); }
+    await sb.auth.signOut(); closeModal(); location.hash='#/auth?mode=login';
+    setTimeout(()=>modal(mode==='reset'
+      ? `<h2>已寄出重設密碼信</h2><p class="muted small mt">我們已寄一封重設密碼信到 <b>${esc(r.email||'原本帳號的 Email')}</b>。按信中的按鈕設定新密碼，就能回到原本的帳號。</p><p class="tiny dim mt">沒收到？請看看垃圾郵件匣。如果那個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>`
+      : `<h2>請登入原本的帳號</h2><p class="muted small mt">請用 <b>${esc(r.email||'原本帳號的 Email')}</b> 和密碼登入。忘記密碼的話，在登入頁按「忘記密碼」。</p>`), 400); };
+  $('#rcReset').onclick = ()=>go('reset'); $('#rcLogin').onclick = ()=>go('login');
+}
 function viewPhoneVerify(){
   $('#app').innerHTML = `<div class="narrow">
     <div class="obsteps"><span class="on">1　手機驗證</span><span>2　建立檔案</span></div>
@@ -1551,7 +1594,7 @@ function viewPhoneVerify(){
     <form id="phForm" class="card">
       <label>手機號碼</label>
       <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="12" required></div>
-      <p class="small bad mt" id="phErr" role="alert"></p><p class="tiny dim mt">目前僅支援台灣手機門號。</p>
+      <p class="small bad mt" id="phErr" role="alert"></p><p class="tiny dim mt">目前僅支援台灣手機門號。<span id="phLeft">每個帳號最多可傳送 3 次驗證碼，請先確認號碼正確再送出。</span></p>
       <button class="btn primary block mt2" id="phSend" type="submit">傳送驗證碼</button>
     </form>
     <form id="otpForm" class="card mt hidden">
@@ -1567,13 +1610,18 @@ function viewPhoneVerify(){
   const otpErr = t => { const el=$('#otpErr'); if(el) el.textContent=t||''; else if(t) toast(t); };
   const cool = () => { let t=60; const b=$('#otpResend'); b.disabled=true; clearInterval(timer);
     timer=setInterval(()=>{ if(!document.body.contains(b)) return clearInterval(timer); t--; b.textContent = t>0?`重新傳送（${t}）`:'重新傳送'; if(t<=0){ b.disabled=false; clearInterval(timer); } },1000); };
-  let sending=false;
+  let sending=false, left=3;
+  const showLeft = () => { const el=$('#phLeft'); if(el) el.textContent = left>0 ? `每個帳號最多可傳送 3 次驗證碼，目前還剩 ${left} 次。請先確認號碼正確再送出。` : '驗證碼傳送次數已用完。'; };
+  const noMore = keepOtp => { left=0; showLeft(); const rb=$('#otpResend'); if(rb){ rb.disabled=true; rb.textContent='已無法再傳送'; } clearInterval(timer);
+    if(!keepOtp){ const b=$('#phSend'); if(b){ b.disabled=true; } phErr('驗證碼傳送次數已用完。請從網頁最下方「聯絡客服」，我們會協助你完成驗證。'); } };
+  sb.rpc('my_sms_left').then(({ data })=>{ if(typeof data==='number'){ left=data; showLeft(); if(left<=0) noMore(); } });
   const send = async () => { if(sending) return false; sending=true; const rb=$('#otpResend'); if(rb) rb.disabled=true;
-    const { data, error } = await sb.auth.updateUser({ phone }).finally(()=>{ sending=false; });
-    if(error){ phErr(smsErr(error)); if(rb && !timer) rb.disabled=false; return false; }
-    if(data?.user?.phone_confirmed_at && data.user.phone===phone.replace('+','')){ await loadMe(); toast('這支手機已經驗證過了'); route(); return true; }
-    $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，請在幾分鐘內輸入。`;
-    $('#otpIn').focus(); cool(); return true;
+    const r = await phoneApi({ action:'send', phone }).finally(()=>{ sending=false; });
+    if(r.error==='already'){ await sb.auth.refreshSession(); await loadMe(); toast('這支手機已經驗證過了'); route(); return true; }
+    if(r.error){ phErr(smsErr2(r.error)); if(['user_limit'].includes(r.error)) noMore(); else if(rb && !timer) rb.disabled=false; return false; }
+    left = r.left ?? Math.max(0,left-1);
+    $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，請在 10 分鐘內輸入。${left>0?`還可以重新傳送 ${left} 次。`:'這是最後一次傳送機會。'}`;
+    showLeft(); $('#otpIn').focus(); if(left>0) cool(); else noMore(true); return true;
   };
   $('#phForm').onsubmit = async e => { e.preventDefault();
     const n = $('#phNum').value.replace(/[\s-]/g,'');
@@ -1585,8 +1633,9 @@ function viewPhoneVerify(){
   $('#otpForm').onsubmit = async e => { e.preventDefault();
     const token = $('#otpIn').value.replace(/\D/g,''); if(token.length<6) return otpErr('請輸入 6 位數驗證碼');
     const sb2=e.target.querySelector('button[type=submit]'); if(sb2.disabled) return; sb2.disabled=true; otpErr('');
-    const { error } = await sb.auth.verifyOtp({ phone, token, type:'phone_change' });
-    if(error){ sb2.disabled=false; return otpErr(smsErr(error)); }
+    const r = await phoneApi({ action:'check', phone, code: token });
+    if(r.error){ sb2.disabled=false; return otpErr(smsErr2(r.error)); }
+    if(r.recover){ sb2.disabled=false; return askRecover(r.email); }
     await sb.auth.refreshSession(); await loadMe(); toast('手機驗證完成'); route(); };
 }
 
@@ -2651,9 +2700,9 @@ async function viewAdmin(){
       box.innerHTML = `<p class="tiny dim mb">「對話行為」標紅 ⚠ 表示可能在大量群發或騷擾：近 7 天主動開啟 7 個以上、對方幾乎都不回、常被結束對話或被封鎖。</p><div class="row mb"><input id="q" placeholder="暱稱關鍵字" style="padding:9px 12px"><select id="qs" style="width:auto;padding:9px 12px"><option value="">所有狀態</option>${Object.entries(STATUS_TXT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><button class="btn sm primary" id="qb">搜尋</button></div><div id="qr"></div>`;
       const run = async ()=>{ const { data: rows, error } = await sb.rpc('admin_profiles', { p_status: $('#qs').value||null, p_q: $('#q').value.trim()||null });
         if(error) return toast(error.message);
-        const st = {}, ct = {}, rv = {}, prv = {}; if(rows?.length){ const ids = rows.map(r=>r.id); const [{ data: ss }, { data: cs }, { data: rs2 }, { data: ps2 }] = await Promise.all([sb.rpc('admin_member_stats', { ids }), sb.rpc('admin_contacts', { ids }), sb.rpc('admin_review_stats', { ids }), sb.rpc('admin_prior_review_counts', { ids })]); (ss||[]).forEach(x=>st[x.id]=x); (cs||[]).forEach(x=>ct[x.id]=x); (Array.isArray(rs2)?rs2:[]).forEach(x=>rv[x.id]=x); (Array.isArray(ps2)?ps2:[]).forEach(x=>prv[x.id]=x); }
+        const st = {}, ct = {}, rv = {}, prv = {}, smc = {}; if(rows?.length){ const ids = rows.map(r=>r.id); const [{ data: ss }, { data: cs }, { data: rs2 }, { data: ps2 }, { data: sm2 }] = await Promise.all([sb.rpc('admin_member_stats', { ids }), sb.rpc('admin_contacts', { ids }), sb.rpc('admin_review_stats', { ids }), sb.rpc('admin_prior_review_counts', { ids }), sb.rpc('admin_sms_counts', { ids })]); (Array.isArray(sm2)?sm2:[]).forEach(x=>smc[x.id]=x.n); (ss||[]).forEach(x=>st[x.id]=x); (cs||[]).forEach(x=>ct[x.id]=x); (Array.isArray(rs2)?rs2:[]).forEach(x=>rv[x.id]=x); (Array.isArray(ps2)?ps2:[]).forEach(x=>prv[x.id]=x); }
         const flag = x => x && (x.starts_7d>=7 || (x.unreplied_pct>=80 && x.starts_7d>=4) || x.closed_by_others>=3 || x.blocked_by>=2);
-        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>見面評價</th><th>Email／手機</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.founder_no?` <span class="chip" title="創始會員（不對外顯示）">創始 #${p.founder_no}</span>`:''}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.person_verified_at?' <span class="pbadge">✓ 真人</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td class="tiny">${rv[p.id]?`<button class="lnk rvw ${rv[p.id].bad?'bad':''}" data-id="${p.id}" data-n="${esc(p.nickname||'')}">${rv[p.id].n} 則・好 ${rv[p.id].good}・差 ${rv[p.id].bad}</button>`:(prv[p.id]?'':'—')}${prv[p.id]?`${rv[p.id]?'<br>':''}<button class="lnk prvw ${prv[p.id].bad?'bad':''}" data-id="${p.id}" data-n="${esc(p.nickname||'')}" title="同一支手機以前刪掉的帳號收到的評價">⚠ 同手機舊帳號 ${prv[p.id].n} 則${prv[p.id].bad?`・差 ${prv[p.id].bad}`:''}</button>`:''}</td><td class="tiny">${ct[p.id]?`${esc(ct[p.id].email||'—')}<br>${ct[p.id].phone?esc('0'+String(ct[p.id].phone).replace(/^886/,'')):'—'}`:''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
+        $('#qr').innerHTML = `<div class="tblwrap"><table class="table"><tr><th>暱稱</th><th>見面評價</th><th>Email／手機</th><th>性別/年齡</th><th>地區</th><th>狀態</th><th title="近 7 天主動開啟／對方未回覆率／被結束對話／被封鎖">對話行為</th><th>註冊</th><th></th></tr>${(rows||[]).map(p=>`<tr><td>${esc(p.nickname||'—')}${p.founder_no?` <span class="chip" title="創始會員（不對外顯示）">創始 #${p.founder_no}</span>`:''}${p.is_admin?' <span class="chip ok">admin</span>':''}${p.person_verified_at?' <span class="pbadge">✓ 真人</span>':''}${p.wealth_verified_at?' <span class="wbadge">✓ 財力</span>':''}</td><td class="tiny">${rv[p.id]?`<button class="lnk rvw ${rv[p.id].bad?'bad':''}" data-id="${p.id}" data-n="${esc(p.nickname||'')}">${rv[p.id].n} 則・好 ${rv[p.id].good}・差 ${rv[p.id].bad}</button>`:(prv[p.id]?'':'—')}${prv[p.id]?`${rv[p.id]?'<br>':''}<button class="lnk prvw ${prv[p.id].bad?'bad':''}" data-id="${p.id}" data-n="${esc(p.nickname||'')}" title="同一支手機以前刪掉的帳號收到的評價">⚠ 同手機舊帳號 ${prv[p.id].n} 則${prv[p.id].bad?`・差 ${prv[p.id].bad}`:''}</button>`:''}</td><td class="tiny">${ct[p.id]?`${esc(ct[p.id].email||'—')}<br>${ct[p.id].phone?esc('0'+String(ct[p.id].phone).replace(/^886/,'')):'—'}`:''}${smc[p.id]&&!ct[p.id]?.phone?`<br><span class="${smc[p.id]>=3?'bad':''}">簡訊 ${smc[p.id]}/3</span> <button class="lnk smr" data-id="${p.id}" data-n="${esc(p.nickname||'')}">重設</button>`:''}</td><td>${p.gender==='male'?'男':p.gender==='female'?'女':'—'} ${age(p.birth_year)}</td><td>${esc(p.city||'')}</td><td><span class="chip">${STATUS_TXT[p.status]}</span></td><td class="tiny ${flag(st[p.id])?'bad':''}">${st[p.id]?`開 ${st[p.id].starts_7d}・未回 ${st[p.id].unreplied_pct}%・被結束 ${st[p.id].closed_by_others}・被封 ${st[p.id].blocked_by}${flag(st[p.id])?' ⚠':''}`:''}</td><td class="tiny">${fmtTime(p.created_at)}</td>
           <td class="row" style="gap:4px">${p.is_admin || p.id===me.id ? '<span class="tiny dim">管理員</span>' : p.status==='suspended'?`<button class="btn sm ghost un" data-id="${p.id}">解除停權</button><button class="btn sm danger dl" data-id="${p.id}" data-n="${esc(p.nickname||'')}">刪除帳號</button>`:`<button class="btn sm danger sp" data-id="${p.id}">停權</button>`}${['pending','rejected'].includes(p.status)?`<button class="btn sm primary ap" data-id="${p.id}">通過</button>`:''}${p.wealth_verified_at?`<button class="btn sm ghost wrv" data-id="${p.id}">取消財力認證</button>`:''}${p.person_verified_at?`<button class="btn sm ghost prv" data-id="${p.id}">取消真人認證</button>`:''}</td></tr>`).join('')}</table></div>`;
         { const tb=$('#qr .table'); if(tb){ tb.classList.add('stack'); const ths=[...tb.querySelectorAll('th')].map(t=>t.textContent); tb.querySelectorAll('tr').forEach(tr=>tr.querySelectorAll('td').forEach((td,i)=>{ td.dataset.l=ths[i]||''; })); } }
         $('#qr').querySelectorAll('.prvw').forEach(b=>b.onclick=async()=>{ const { data, error } = await sb.rpc('admin_prior_reviews', { target: b.dataset.id }); if(error) return toast(error.message);
@@ -2663,6 +2712,7 @@ async function viewAdmin(){
         $('#qr').querySelectorAll('.sp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權？')) return; await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id)); run(); });
         $('#qr').querySelectorAll('.un').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('profiles').update({ status:'pending' }).eq('id',b.dataset.id))) toast('已解除停權，檔案回到待審，請重新審核'); run(); });
         $('#qr').querySelectorAll('.prv').forEach(b=>b.onclick=async()=>{ if(!confirm('取消這位會員的真人認證？')) return; const { error } = await sb.rpc('admin_revoke_person', { target: b.dataset.id }); toast(error?error.message:'已取消真人認證'); run(); });
+        $('#qr').querySelectorAll('.smr').forEach(b=>b.onclick=async()=>{ if(!confirm(`重設「${b.dataset.n||'這位會員'}」的驗證簡訊次數？\n重設後他（和他用過的號碼）可以再收 3 次驗證碼。`)) return; const { error } = await sb.rpc('admin_reset_sms', { target: b.dataset.id }); toast(error?error.message:'已重設，可以再傳送 3 次'); run(); });
         $('#qr').querySelectorAll('.wrv').forEach(b=>b.onclick=async()=>{ if(!confirm('取消這位會員的財力認證？')) return; const { error } = await sb.rpc('admin_revoke_wealth', { target: b.dataset.id }); toast(error?error.message:'已取消財力認證'); run(); });
         $('#qr').querySelectorAll('.dl').forEach(b=>b.onclick=async()=>{
           if(!confirm(`永久刪除「${b.dataset.n}」的帳號？\n檔案、照片、對話都會刪除，這支手機之後不能再註冊。無法復原。`)) return;
