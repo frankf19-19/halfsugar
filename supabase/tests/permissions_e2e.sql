@@ -6,7 +6,7 @@ declare
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
   AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid; V1 uuid := gen_random_uuid(); V2 uuid := gen_random_uuid(); cm3 uuid; iv uuid; tk text;
-  N1 uuid := gen_random_uuid(); N2 uuid := gen_random_uuid(); N3 uuid := gen_random_uuid(); N4 uuid := gen_random_uuid(); j jsonb; Z1 uuid := gen_random_uuid(); Z2 uuid := gen_random_uuid(); Z3 uuid := gen_random_uuid(); Z4 uuid := gen_random_uuid();
+  N1 uuid := gen_random_uuid(); N2 uuid := gen_random_uuid(); N3 uuid := gen_random_uuid(); N4 uuid := gen_random_uuid(); j jsonb; Z1 uuid := gen_random_uuid(); Z2 uuid := gen_random_uuid(); Z3 uuid := gen_random_uuid(); Z4 uuid := gen_random_uuid(); Q1 uuid := gen_random_uuid(); Q2 uuid := gen_random_uuid(); Q3 uuid := gen_random_uuid(); Q4 uuid := gen_random_uuid(); qm uuid;
 begin
   perform set_config('storage.allow_delete_query','true',true);
   update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
@@ -953,6 +953,54 @@ begin
   begin execute 'set local role authenticated'; perform public.sms_recover_take(Z1); execute 'reset role'; v := v||',會員能呼叫恢復 ✗'; exception when others then v := v||',擋下'; end;
   begin execute 'set local role anon'; perform public.sms_check_ok(Z1,'+886933000009'); execute 'reset role'; v := v||',訪客能呼叫 ✗'; exception when others then v := v||',擋下'; end;
   out := array_append(out, ('48f 會員／訪客不能直接呼叫後端專用函式 = '||v||' (應為擋下,擋下,擋下)')::text);
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  -- 49 整體安全性加強（v0.44）
+  insert into auth.users (id, email, aud, role) values (Q1,'e2e-q1@test.invalid','authenticated','authenticated'),(Q2,'e2e-q2@test.invalid','authenticated','authenticated'),(Q3,'e2e-q3@test.invalid','authenticated','authenticated'),(Q4,'e2e-q4@test.invalid','authenticated','authenticated');
+  update public.profiles set nickname='Q1', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1984, city='台北市', status='approved', avatar_path=Q1||'/av.jpg', age_confirmed=true, agreed_terms_at=now() where id=Q1;
+  update public.profiles set nickname='Q2', gender='female', looking_for='male', role='baby', birth_year=1996, city='台北市', status='approved', avatar_path=Q2||'/av.jpg', age_confirmed=true, agreed_terms_at=now() where id=Q2;
+  update public.profiles set nickname='Q3隱身', gender='female', looking_for='male', role='baby', birth_year=1995, city='台北市', status='approved', hidden=true where id=Q3;
+  update public.profiles set nickname='Q4', gender='male', looking_for='male', role='daddy', budget='50to80k', birth_year=1980, city='台北市', status='approved' where id=Q4;
+  -- 49a 訪客：資料表一律碰不到；網站設定只看得到兩項
+  v := '';
+  begin execute 'set local role anon'; perform count(*) from public.likes; execute 'reset role'; v := v||'讀得到 ✗'; exception when others then v := v||'擋下'; end;
+  begin execute 'set local role anon'; select count(*) into n from public.app_config; execute 'reset role'; v := v||','||n; exception when others then v := v||',錯誤 ✗'; end;
+  perform set_config('request.jwt.claims', json_build_object('sub',Q1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', Q1::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.app_config where key like 'sms%'; v := v||','||n;
+  out := array_append(out, ('49a 訪客碰不到資料表、會員看不到簡訊設定 = '||v||' (應為擋下,2,0)')::text);
+  -- 49b 封鎖／檢舉／心動：不能拿任意 ID 探測（隱身、方向不合的人）
+  v := '';
+  begin insert into public.blocks (blocker_id, blocked_id) values (Q1, Q3); v := v||'能封鎖隱身陌生人 ✗'; exception when others then v := v||'擋下'; end;
+  begin insert into public.blocks (blocker_id, blocked_id) values (Q1, Q4); v := v||',能封鎖方向不合的人 ✗'; exception when others then v := v||',擋下'; end;
+  begin insert into public.reports (reporter_id, reported_id, reason) values (Q1, Q3, 'other'); v := v||',能檢舉隱身陌生人 ✗'; exception when others then v := v||',擋下'; end;
+  begin insert into public.likes (from_id, to_id) values (Q1, Q3); v := v||',能對隱身陌生人心動 ✗'; exception when others then v := v||',擋下'; end;
+  v := v||','||public.private_photo_count(Q3)||','||(select count(*) from public.reply_stats(array[Q3]))||','||(select state from public.wealth_doc_status(Q3));
+  begin insert into public.likes (from_id, to_id) values (Q1, Q2); v := v||',正常心動'; exception when others then v := v||',誤擋 ✗'||sqlerrm; end;
+  out := array_append(out, ('49b 不能探測隱身／方向不合的會員 = '||v||' (應為擋下,擋下,擋下,擋下,0,0,none,正常心動)')::text);
+  execute 'reset role';
+  -- 49c 已讀不能偽造；不允許的字眼伺服器也擋
+  insert into public.matches (user_a, user_b, initiator) values (least(Q1,Q2), greatest(Q1,Q2), Q1) returning id into qm;
+  insert into public.messages (match_id, sender_id, body) values (qm, Q1, '你好');
+  perform set_config('request.jwt.claims', json_build_object('sub',Q2,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', Q2::text, true);
+  execute 'set local role authenticated';
+  update public.messages set read_at = now() + interval '10 days' where match_id = qm;
+  select count(*) into n from public.messages where match_id = qm and read_at <= now() + interval '1 minute'; v := n::text;
+  update public.messages set read_at = null where match_id = qm;
+  select count(*) into n from public.messages where match_id = qm and read_at is not null; v := v||','||n;
+  begin update public.messages set body='改掉了' where match_id = qm; get diagnostics n = row_count; v := v||case when n>0 then ',能改別人訊息 ✗' else ',擋下' end; exception when others then v := v||',擋下'; end;
+  begin insert into public.messages (match_id, sender_id, body) values (qm, Q2, '外送茶嗎'); v := v||',違規字沒擋 ✗'; exception when others then v := v||',擋下'; end;
+  begin insert into public.messages (match_id, sender_id, body) values (qm, Q2, '你的 line id 是？'); v := v||',日常用語可以'; exception when others then v := v||',誤擋 ✗'; end;
+  begin update public.profiles set bio = '可以援交' where id = Q2; v := v||',自介違規字沒擋 ✗'; exception when others then v := v||',擋下'; end;
+  begin update public.profiles set bio = repeat('長', 601) where id = Q2; v := v||',超長自介沒擋 ✗'; exception when others then v := v||',擋下'; end;
+  execute 'reset role';
+  out := array_append(out, ('49c 已讀不能偽造、違規字和超長內容伺服器擋 = '||v||' (應為1,1,擋下,擋下,日常用語可以,擋下,擋下)')::text);
+  -- 49d 聊天照片：送出後不能換檔、檔名不能重用；刪帳號流程中才能清
+  update public.messages set image_path = Q1||'/'||qm||'-1.jpg' where match_id = qm and sender_id = Q1;
+  perform set_config('request.jwt.claims', json_build_object('sub',Q1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', Q1::text, true);
+  v := (private.chat_can_upload(Q1||'/'||qm||'-1.jpg'))::text||','||(private.chat_can_upload(Q1||'/'||qm||'-2.jpg'))::text||','||(private.chat_file_used(Q1||'/'||qm||'-1.jpg'))::text||','||(private.am_deleting())::text;
+  insert into private.account_deleting (uid) values (Q1);
+  v := v||','||(private.am_deleting())::text;
+  out := array_append(out, ('49d 聊天照片不能重用檔名、刪帳號時才能清 = '||v||' (應為false,true,true,false,true)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');

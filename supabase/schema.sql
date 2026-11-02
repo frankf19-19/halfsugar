@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.43.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.44.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -2339,3 +2339,357 @@ begin
 end $$;
 drop trigger if exists block_disposable_email on auth.users;
 create trigger block_disposable_email before insert or update of email on auth.users for each row execute function private.block_disposable_email();
+
+-- =====================================================================
+-- v0.44：整體安全性加強（獨立審查後）
+-- =====================================================================
+
+-- 1. 權限縱深防禦：未登入的人（anon）不能直接碰任何資料表；登入者也拿掉用不到的權限
+do $g$
+declare t record;
+begin
+  for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+            where n.nspname = 'public' and c.relkind in ('r','p','v','m') loop
+    execute format('revoke all on public.%I from anon', t.relname);
+    execute format('revoke truncate, references, trigger on public.%I from authenticated', t.relname);
+  end loop;
+end $g$;
+grant select on public.app_config to anon, authenticated;
+alter default privileges in schema public revoke all on tables from anon;
+alter default privileges in schema public revoke truncate, references, trigger on tables from authenticated;
+alter default privileges in schema public revoke execute on functions from anon, public;
+
+-- 觸發器函式：只給資料庫自己用，任何人都不需要、也不能直接呼叫
+do $f$
+declare f record;
+begin
+  for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname in ('public','private') and p.prorettype = 'trigger'::regtype loop
+    execute format('revoke execute on function %s from anon, authenticated, public', f.sig);
+  end loop;
+end $f$;
+
+-- 網站設定：只公開前端需要的兩項（簡訊上限、暫停狀態不給外人看）
+drop policy if exists "app_config_read" on public.app_config;
+create policy "app_config_read" on public.app_config for select to anon, authenticated
+  using (key in ('free_launch', 'turnstile_sitekey') or public.is_admin());
+
+-- 2. 「我看得到這位會員嗎」：和 profiles 的讀取規則一致（隱身、封鎖、方向、狀態）
+create or replace function private.profile_visible(x uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select x = auth.uid() or public.is_admin()
+      or (private.can_browse() and private.is_compatible(x) and not private.is_blocked_with(x)
+          and exists (select 1 from public.profiles p where p.id = x
+                        and ((p.status = 'approved'
+                              and (not p.hidden
+                                   or exists (select 1 from public.likes l where l.from_id = x and l.to_id = auth.uid())
+                                   or private.has_open_match(x)))
+                             or (p.status = 'pending' and private.has_open_match(x)))));
+$$;
+-- 「這個人和我有關係嗎」：互相心動、對話（含已結束）、索取私密照或財力文件
+create or replace function private.related_to(x uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.likes where (from_id = auth.uid() and to_id = x) or (from_id = x and to_id = auth.uid()))
+      or exists (select 1 from public.matches where user_a = least(auth.uid(), x) and user_b = greatest(auth.uid(), x))
+      or exists (select 1 from public.photo_requests where (requester_id = auth.uid() and owner_id = x) or (requester_id = x and owner_id = auth.uid()))
+      or exists (select 1 from public.wealth_requests where (requester_id = auth.uid() and owner_id = x) or (requester_id = x and owner_id = auth.uid()));
+$$;
+revoke all on function private.profile_visible(uuid) from public, anon;
+revoke all on function private.related_to(uuid) from public, anon;
+grant execute on function private.profile_visible(uuid) to authenticated;
+grant execute on function private.related_to(uuid) to authenticated;
+
+-- 封鎖、檢舉：只能針對看得到或有關係的人（不能拿任意 ID 探測對方是否存在、叫什麼）
+drop policy if exists "blocks_insert" on public.blocks;
+create policy "blocks_insert" on public.blocks for insert to authenticated
+  with check (blocker_id = auth.uid() and blocked_id <> auth.uid()
+              and (private.profile_visible(blocked_id) or private.related_to(blocked_id)));
+drop policy if exists "reports_insert" on public.reports;
+create policy "reports_insert" on public.reports for insert to authenticated
+  with check (reporter_id = auth.uid() and status = 'open' and reported_id <> auth.uid()
+              and public.my_status() in ('pending','approved','rejected')
+              and char_length(coalesce(detail,'')) <= 1000
+              and private.my_reports_today() < 5
+              and (private.profile_visible(reported_id) or private.related_to(reported_id)));
+
+-- 心動：每天最多 100 個，而且對方要看得到（隱身會員不會被陌生人探測到）
+create or replace function private.my_likes_today()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from public.likes where from_id = auth.uid() and created_at > now() - interval '1 day';
+$$;
+revoke all on function private.my_likes_today() from public, anon;
+grant execute on function private.my_likes_today() to authenticated;
+drop policy if exists "likes_insert" on public.likes;
+create policy "likes_insert" on public.likes for insert to authenticated
+  with check (
+    from_id = auth.uid()
+    and public.my_status() = 'approved'
+    and exists (select 1 from public.profiles p where p.id = to_id and p.status = 'approved')
+    and private.profile_visible(to_id)
+    and private.my_likes_today() < 100
+  );
+
+-- 私密照索取：對方要看得到
+drop policy if exists "requests_insert" on public.photo_requests;
+create policy "requests_insert" on public.photo_requests for insert to authenticated
+  with check (requester_id = auth.uid() and status = 'pending'
+              and public.my_status() = 'approved'
+              and exists (select 1 from public.profiles p where p.id = owner_id and p.status = 'approved')
+              and private.profile_visible(owner_id));
+
+create or replace function public.request_private_photos(owner uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare r public.photo_requests;
+begin
+  if public.my_status() is distinct from 'approved' then raise exception '資料審核通過後才能索取'; end if;
+  if owner = auth.uid() or not private.profile_visible(owner)
+     or not exists (select 1 from public.profiles where id = owner and status = 'approved') then
+    raise exception '無法向這位會員索取';
+  end if;
+  select * into r from public.photo_requests where requester_id = auth.uid() and owner_id = owner;
+  if found then
+    if r.status = 'pending' then raise exception '已送出索取，等待對方同意'; end if;
+    if r.status = 'granted' and exists (select 1 from public.photo_grants where owner_id = owner and viewer_id = auth.uid()) then return; end if;
+    if r.status = 'denied' and r.created_at > now() - interval '3 days' then raise exception '對方剛婉拒，3 天後才能再問一次'; end if;
+    update public.photo_requests set status = 'pending', created_at = now() where requester_id = auth.uid() and owner_id = owner;
+  else
+    insert into public.photo_requests (requester_id, owner_id) values (auth.uid(), owner);
+  end if;
+end $$;
+
+create or replace function public.private_photo_count(uid uuid)
+returns int language sql stable security definer set search_path = public as $$
+  select case when not private.profile_visible(uid)
+              or not exists (select 1 from public.profiles where id = uid and status = 'approved') then 0
+         else (select count(*)::int from public.photos where user_id = uid and is_private and status = 'approved') end;
+$$;
+
+create or replace function public.request_wealth_view(owner uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare r public.wealth_requests;
+begin
+  if public.my_status() is distinct from 'approved' then raise exception '檔案審核通過後才能申請查看'; end if;
+  if owner = auth.uid() or not private.profile_visible(owner)
+     or not exists (select 1 from public.profiles where id = owner and status = 'approved')
+     or private.wealth_doc_path(owner) is null then
+    raise exception '這位會員目前沒有可查看的財力證明';
+  end if;
+  select * into r from public.wealth_requests where requester_id = auth.uid() and owner_id = owner;
+  if found then
+    if r.status = 'pending' then raise exception '已送出申請，等待對方同意'; end if;
+    if r.status = 'granted' then return; end if;
+    if r.created_at > now() - interval '3 days' then raise exception '對方剛婉拒，3 天後才能再申請'; end if;
+    update public.wealth_requests set status = 'pending', created_at = now() where requester_id = auth.uid() and owner_id = owner;
+  else
+    insert into public.wealth_requests (requester_id, owner_id) values (auth.uid(), owner);
+  end if;
+end $$;
+
+create or replace function public.wealth_doc_status(owner uuid)
+returns table (state text, path text) language plpgsql stable security definer set search_path = public as $$
+declare r public.wealth_requests; doc text;
+begin
+  if owner <> auth.uid() and not private.profile_visible(owner) then return query select 'none'::text, null::text; return; end if;
+  doc := private.wealth_doc_path(owner);
+  if doc is null or private.is_blocked_with(owner) then return query select 'none'::text, null::text; return; end if;
+  if owner = auth.uid() then return query select 'own'::text, doc; return; end if;
+  select * into r from public.wealth_requests where requester_id = auth.uid() and owner_id = owner;
+  if not found then return query select 'can_request'::text, null::text;
+  elsif r.status = 'granted' then return query select 'granted'::text, doc;
+  else return query select r.status, null::text; end if;
+end $$;
+
+-- 回覆率：只回傳看得到的人（封鎖、隱身、停權、未建檔一律不回傳）
+create or replace function public.reply_stats(ids uuid[])
+returns table (id uuid, n bigint, replied bigint, median_min int)
+language sql stable security definer set search_path = public as $$
+  select p.id, count(m.id), count(m.replied_at),
+         (percentile_cont(0.5) within group (order by extract(epoch from (m.replied_at - coalesce(m.reopened_at, m.created_at))) / 60)
+            filter (where m.replied_at is not null))::int
+    from public.profiles p
+    left join public.matches m on (m.user_a = p.id or m.user_b = p.id) and m.initiator is not null and m.initiator <> p.id
+                              and coalesce(m.reopened_at, m.created_at) > now() - interval '90 days'
+   where p.id = any(ids) and private.profile_visible(p.id)
+   group by p.id;
+$$;
+
+-- 語音介紹：和檔案一樣的可見規則
+drop policy if exists "voice_select" on public.voice_intros;
+create policy "voice_select" on public.voice_intros for select to authenticated
+  using (user_id = auth.uid() or public.is_admin()
+         or (status = 'approved' and private.profile_visible(user_id)
+             and exists (select 1 from public.profiles p where p.id = user_id and p.status = 'approved')));
+
+-- 3. 已讀：只能從「未讀」改成「現在已讀」，不能偽造時間或改回未讀；對話結束後不能再改
+create or replace function public.messages_read_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or public.is_admin() then return new; end if;
+  if new.sender_id <> auth.uid() then
+    -- 收件人：只能標記已讀
+    if new.body is distinct from old.body or new.image_path is distinct from old.image_path or new.recalled_at is distinct from old.recalled_at
+       or new.sender_id is distinct from old.sender_id or new.match_id is distinct from old.match_id or new.created_at is distinct from old.created_at or new.invite_id is distinct from old.invite_id then
+      raise exception '不能修改別人的訊息';
+    end if;
+    new.read_at := case when old.read_at is null and new.read_at is not null then now() else old.read_at end;
+  else
+    new.read_at := old.read_at;   -- 寄件人不能改已讀狀態
+  end if;
+  return new;
+end $$;
+drop trigger if exists messages_read_guard_trg on public.messages;
+create trigger messages_read_guard_trg before update on public.messages for each row execute function public.messages_read_guard();
+revoke execute on function public.messages_read_guard() from anon, authenticated, public;
+drop policy if exists "messages_update_read" on public.messages;
+create policy "messages_update_read" on public.messages for update to authenticated
+  using (sender_id <> auth.uid() and exists (select 1 from public.matches m where m.id = match_id
+                 and (m.user_a = auth.uid() or m.user_b = auth.uid()) and m.closed_at is null))
+  with check (sender_id <> auth.uid());
+
+-- 4. 停權的人不能再做任何設定變更
+drop policy if exists "grants_rw" on public.photo_grants;
+drop policy if exists "grants_select" on public.photo_grants;
+create policy "grants_select" on public.photo_grants for select to authenticated
+  using (owner_id = auth.uid() or viewer_id = auth.uid());
+drop policy if exists "grants_insert" on public.photo_grants;
+create policy "grants_insert" on public.photo_grants for insert to authenticated
+  with check (owner_id = auth.uid() and public.my_status() in ('approved','pending')
+              and exists (select 1 from public.photo_requests r where r.owner_id = auth.uid() and r.requester_id = viewer_id)
+              and not private.is_blocked_with(viewer_id));
+drop policy if exists "grants_delete" on public.photo_grants;
+create policy "grants_delete" on public.photo_grants for delete to authenticated
+  using (owner_id = auth.uid() or viewer_id = auth.uid());
+drop policy if exists "requests_update_owner" on public.photo_requests;
+create policy "requests_update_owner" on public.photo_requests for update to authenticated
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid() and public.my_status() in ('approved','pending'));
+drop policy if exists "wreq_update_owner" on public.wealth_requests;
+create policy "wreq_update_owner" on public.wealth_requests for update to authenticated
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid() and public.my_status() in ('approved','pending'));
+drop policy if exists "photos_update" on public.photos;
+create policy "photos_update" on public.photos for update to authenticated
+  using (user_id = auth.uid() or public.is_admin())
+  with check (public.is_admin() or (user_id = auth.uid() and public.my_status() <> 'suspended'));
+drop policy if exists "voice_update" on public.voice_intros;
+create policy "voice_update" on public.voice_intros for update to authenticated
+  using (user_id = auth.uid() or public.is_admin())
+  with check (public.is_admin() or (user_id = auth.uid() and public.my_status() <> 'suspended'));
+
+-- 5. 文字長度上限（直接打 API 也不能存超長內容；舊資料不受影響）
+alter table public.profiles drop constraint if exists profiles_text_len;
+alter table public.profiles add constraint profiles_text_len check (
+  char_length(coalesce(nickname,'')) <= 20 and char_length(coalesce(occupation,'')) <= 30 and char_length(coalesce(bio,'')) <= 600
+  and coalesce(cardinality(tags),0) <= 8 and char_length(coalesce(array_to_string(tags,''),'')) <= 120
+  and char_length(coalesce(travel_city,'')) <= 20 and char_length(coalesce(review_note,'')) <= 500) not valid;
+
+-- 6. 不允許的字眼：伺服器端也檢查（以前只有網頁擋，直接打 API 可以繞過）
+create or replace function private.bad_words(t text, chat boolean default false)
+returns text language sql immutable set search_path = public as $$
+  select string_agg(w, '、') from unnest(array['援交','援助交際','約炮','外送茶','茶莊','魚訊','出場','買春','賣春','性交易','嫖','陪睡','包夜','全套','半套','定點','價碼','一次多少','一晚多少','代聊','line id','加賴']) w
+   where position(lower(w) in lower(coalesce(t,''))) > 0
+     and not (chat and w = any(array['出場','定點','全套','價碼','一次多少','line id','加賴']));
+$$;
+revoke all on function private.bad_words(text, boolean) from public, anon;
+
+create or replace function public.messages_words_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare b text;
+begin
+  if auth.uid() is null or public.is_admin() then return new; end if;
+  b := private.bad_words(new.body, true);
+  if b is not null then raise exception '訊息含不允許的字眼：%', b; end if;
+  return new;
+end $$;
+drop trigger if exists messages_words_guard_trg on public.messages;
+create trigger messages_words_guard_trg before insert on public.messages for each row execute function public.messages_words_guard();
+revoke execute on function public.messages_words_guard() from anon, authenticated, public;
+
+create or replace function public.profiles_words_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare b text;
+begin
+  if auth.uid() is null or public.is_admin() or current_setting('halfsugar.deleting', true) = '1' then return new; end if;
+  if (new.nickname, new.bio, new.occupation, new.tags) is distinct from (old.nickname, old.bio, old.occupation, old.tags) then
+    b := private.bad_words(concat_ws(' ', new.nickname, new.bio, new.occupation, array_to_string(new.tags, ' ')), false);
+    if b is not null then raise exception '內容含不允許的字眼：%', b; end if;
+  end if;
+  if new.openers is distinct from old.openers then
+    b := private.bad_words(array_to_string(new.openers, ' '), true);
+    if b is not null then raise exception '開場白含不允許的字眼：%', b; end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists profiles_words_guard_trg on public.profiles;
+create trigger profiles_words_guard_trg before update on public.profiles for each row execute function public.profiles_words_guard();
+revoke execute on function public.profiles_words_guard() from anon, authenticated, public;
+
+-- 7. 聊天照片：送出後就不能刪掉或換成別張（證據不會消失）；刪帳號時才能清掉
+create table if not exists private.account_deleting (uid uuid primary key, at timestamptz not null default now());
+create or replace function private.am_deleting()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from private.account_deleting where uid = auth.uid() and at > now() - interval '1 hour');
+$$;
+create or replace function private.chat_file_used(fname text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.messages where image_path = fname)
+      or exists (select 1 from public.message_recalls where image_path = fname);
+$$;
+revoke all on function private.am_deleting() from public, anon;
+revoke all on function private.chat_file_used(text) from public, anon;
+grant execute on function private.am_deleting() to authenticated;
+grant execute on function private.chat_file_used(text) to authenticated;
+
+create or replace function private.chat_can_upload(fname text)
+returns boolean language plpgsql stable security definer set search_path = public as $$
+declare mid uuid; uid uuid := auth.uid();
+begin
+  if uid is null or fname !~ ('^' || uid::text || '/[0-9a-f-]{36}-[0-9]+\.jpg$') then return false; end if;
+  if private.chat_file_used(fname) then return false; end if;   -- 同一個檔名不能重複使用
+  mid := substring(fname from '^[^/]+/([0-9a-f-]{36})-')::uuid;
+  return exists (select 1 from public.matches m where m.id = mid and m.closed_at is null and (m.user_a = uid or m.user_b = uid)
+                   and not private.is_blocked_with(case when m.user_a = uid then m.user_b else m.user_a end))
+     and public.my_status() in ('approved','pending')
+     and (select count(*) from storage.objects o where o.bucket_id = 'chat' and o.name like uid::text || '/%' and o.created_at > now() - interval '1 day') < 60;
+exception when others then return false;
+end $$;
+
+drop policy if exists "chat_storage_delete" on storage.objects;
+create policy "chat_storage_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'chat' and (public.is_admin()
+         or ((storage.foldername(name))[1] = auth.uid()::text and not private.is_evidence_photo(name)
+             and (not private.chat_file_used(name) or private.am_deleting()))));
+
+create or replace function public.begin_account_deletion()
+returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() = 'suspended' then
+    raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
+  end if;
+  insert into private.account_deleting (uid) values (uid) on conflict (uid) do update set at = now();
+  perform set_config('halfsugar.deleting', '1', true);
+  update public.profiles set hidden = true, avatar_path = null where id = uid;
+  delete from public.photos where user_id = uid;
+  delete from public.wealth_verifications where user_id = uid;
+  delete from public.person_verifications where user_id = uid;
+  if to_regclass('public.voice_intros') is not null then execute 'delete from public.voice_intros where user_id = $1' using uid; end if;
+  perform set_config('halfsugar.deleting', '0', true);
+end $$;
+
+-- 刪帳號：檢舉證據的照片會留給管理員，不擋刪除
+create or replace function public.delete_my_account()
+returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() = 'suspended' then
+    raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
+  end if;
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat','voice') and name like uid::text || '/%'
+               and not (bucket_id = 'chat' and private.is_evidence_photo(name))) then
+    raise exception '照片檔案還沒刪完，請再按一次刪除';
+  end if;
+  delete from public.photos where user_id = uid;
+  delete from private.account_deleting where account_deleting.uid = delete_my_account.uid;
+  delete from auth.users where id = uid;
+end $$;
