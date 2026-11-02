@@ -57,6 +57,16 @@ Deno.serve(async (req) => {
   }
 });
 
+// 真人驗證（Cloudflare Turnstile）：設定了 TURNSTILE_SECRET 才啟用
+async function captchaOk(token: string, ip: string) {
+  if (!env("TURNSTILE_SECRET")) return true;
+  const tv = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    body: new URLSearchParams({ secret: env("TURNSTILE_SECRET"), response: token, ...(ip ? { remoteip: ip } : {}) }),
+  }).then((r) => r.json()).catch(() => ({ success: false }));
+  return !!tv?.success;
+}
+
 async function handle(req: Request): Promise<Response> {
   const h = cors(req);
   const reply = (o: unknown, status = 200) =>
@@ -64,14 +74,45 @@ async function handle(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: h });
   if (req.method !== "POST") return reply({ error: "method" }, 405);
 
+  let b: { action?: string; phone?: string; code?: string; mode?: string; captcha?: string } = {};
+  try { b = await req.json(); } catch { /* ignore */ }
+
+  // 用手機找回帳號（不用登入）：沒註冊的號碼不寄簡訊，回應也一樣，不能拿來試探別人有沒有註冊
+  if (b.action === "find_send" || b.action === "find_check") {
+    const fphone = String(b.phone || "").replace(/[\s-]/g, "");
+    if (!/^\+8869\d{8}$/.test(fphone)) return reply({ error: "bad_phone" }, 400);
+    const ip = clientIp(req);
+    if (b.action === "find_send") {
+      if (!(await captchaOk(String(b.captcha || ""), ip))) return reply({ error: "captcha" }, 400);
+      const { data: rs, error: re } = await admin.rpc("sms_find_reserve", { ph: fphone, ip: ip || null });
+      if (re) return reply({ error: "server" }, 500);
+      if (rs?.r === "none") return reply({ ok: true });
+      if (rs?.r !== "ok") return reply({ error: rs?.r || "server" }, 429);
+      let t = await twilioSafe("Verifications", { To: fphone, Channel: "sms", Locale: "zh-HK" });
+      if (!t.ok && t.status === 400 && ![60200, 60203, 60205, 60410, 21211, 21408, 21610, 21614].includes(Number(t.j?.code))) {
+        t = await twilioSafe("Verifications", { To: fphone, Channel: "sms" });
+      }
+      if (!t.ok) { await admin.rpc("sms_refund", { rid: rs.id }); return reply({ error: t.j?.code === 60203 ? "twilio_rate" : "send_failed" }, 502); }
+      return reply({ ok: true });
+    }
+    const code = String(b.code || "").replace(/\D/g, "");
+    if (code.length < 4 || code.length > 10) return reply({ error: "bad_code" }, 400);
+    const t = await twilioSafe("VerificationCheck", { To: fphone, Code: code });
+    if (t.status === 404) return reply({ error: "expired" }, 400);
+    if (!t.ok) return reply({ error: t.j?.code === 60202 ? "too_many_checks" : "check_failed" }, 400);
+    if (t.j?.status !== "approved") return reply({ error: "wrong_code" }, 400);
+    const { data: em } = await admin.rpc("sms_find_take", { ph: fphone });
+    if (!em) return reply({ error: "expired" }, 400);
+    const anon = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), { auth: { persistSession: false } });
+    const { error: me } = await anon.auth.resetPasswordForEmail(em, { redirectTo: "https://onethirdsugar.com/" });
+    return reply({ ok: true, email: maskEmail(em), mailed: !me });
+  }
+
   // 誰在呼叫
   const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   const { data: ud, error: ue } = await admin.auth.getUser(jwt);
   const user = ud?.user;
   if (ue || !user) return reply({ error: "auth" }, 401);
-
-  let b: { action?: string; phone?: string; code?: string; mode?: string; captcha?: string } = {};
-  try { b = await req.json(); } catch { /* ignore */ }
 
   // 恢復原本帳號（手機已驗證、且屬於另一個帳號時才會走到這裡）
   if (b.action === "recover") {
@@ -98,14 +139,7 @@ async function handle(req: Request): Promise<Response> {
 
   if (b.action === "send") {
     const ip = clientIp(req);
-    // 真人驗證（Cloudflare Turnstile）：設定了 TURNSTILE_SECRET 才啟用
-    if (env("TURNSTILE_SECRET")) {
-      const tv = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-        method: "POST",
-        body: new URLSearchParams({ secret: env("TURNSTILE_SECRET"), response: String(b.captcha || ""), ...(ip ? { remoteip: ip } : {}) }),
-      }).then((r) => r.json()).catch(() => ({ success: false }));
-      if (!tv?.success) return reply({ error: "captcha" }, 400);
-    }
+    if (!(await captchaOk(String(b.captcha || ""), ip))) return reply({ error: "captcha" }, 400);
     const { data: rs, error: re } = await admin.rpc("sms_reserve", { uid: user.id, ph: phone, ip: ip || null });
     if (re) return reply({ error: "server", detail: re.message }, 500);
     if (rs?.r !== "ok") return reply({ error: rs?.r || "server" }, rs?.r === "already" ? 200 : 429);

@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.45.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.46.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -2716,3 +2716,106 @@ begin
 end $$;
 revoke execute on function public.sms_recover_peek(uuid) from anon, authenticated, public;
 grant execute on function public.sms_recover_peek(uuid) to service_role;
+
+-- v0.46：用手機找回帳號（忘記當初用哪個 Email 註冊）
+--   每支手機每 30 天最多 2 次，不佔註冊驗證的 3 次額度；IP、全站上限與暫停照常適用
+--   沒註冊過的號碼不寄簡訊，畫面回應也一樣（不能拿來試探別人有沒有註冊）
+alter table public.sms_sends add column if not exists kind text not null default 'verify';
+alter table public.sms_sends add column if not exists used_at timestamptz;
+create index if not exists sms_sends_kind_phone_idx on public.sms_sends(kind, phone_hash, created_at);
+
+create or replace function public.sms_reserve(uid uuid, ph text, ip text default null)
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare h text := private.phone_hash(ph); ih text; nu int; np int; n int; rid bigint;
+begin
+  if uid is null or coalesce(ph,'') !~ '^\+?8869\d{8}$' then return jsonb_build_object('r','bad_phone'); end if;
+  if coalesce((select value from public.app_config where key = 'sms_paused'), 'off') = 'on' then return jsonb_build_object('r','paused'); end if;
+  perform pg_advisory_xact_lock(hashtext('sms_reserve'));
+  if exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null and nullif(u.phone,'') is not null) then
+    return jsonb_build_object('r','already');
+  end if;
+  if exists (select 1 from public.banned_phones b where b.phone_hash = h) then return jsonb_build_object('r','banned'); end if;
+  select count(*) into nu from public.sms_sends where user_id = uid and voided_at is null and kind = 'verify';
+  if nu >= 3 then return jsonb_build_object('r','user_limit'); end if;
+  select count(*) into np from public.sms_sends where phone_hash = h and voided_at is null and kind = 'verify';
+  if np >= 3 then return jsonb_build_object('r','phone_limit'); end if;
+  ih := encode(digest('halfsugar-ip:' || coalesce(nullif(ip,''), 'unknown'), 'sha256'), 'hex');
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_ip_hour', 5) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_ip_day', 10) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_hour', 100) then return jsonb_build_object('r','global_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_day', 300) then return jsonb_build_object('r','global_limit'); end if;
+  insert into public.sms_sends (user_id, phone_hash, ip_hash, kind) values (uid, h, ih, 'verify') returning id into rid;
+  return jsonb_build_object('r','ok','id',rid,'left',2-nu);
+end $$;
+revoke execute on function public.sms_reserve(uuid, text, text) from anon, authenticated, public;
+grant execute on function public.sms_reserve(uuid, text, text) to service_role;
+
+-- 找回帳號：預留一次寄送。'none' = 沒有帳號或已達本號碼上限（兩者對外回應一樣）
+create or replace function public.sms_find_reserve(ph text, ip text default null)
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare h text := private.phone_hash(ph); ih text; owner uuid; n int; rid bigint;
+begin
+  if coalesce(ph,'') !~ '^\+?8869\d{8}$' then return jsonb_build_object('r','bad_phone'); end if;
+  if coalesce((select value from public.app_config where key = 'sms_paused'), 'off') = 'on' then return jsonb_build_object('r','paused'); end if;
+  perform pg_advisory_xact_lock(hashtext('sms_reserve'));
+  ih := encode(digest('halfsugar-ip:' || coalesce(nullif(ip,''), 'unknown'), 'sha256'), 'hex');
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_ip_hour', 5) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_ip_day', 10) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_hour', 100) then return jsonb_build_object('r','global_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_day', 300) then return jsonb_build_object('r','global_limit'); end if;
+  select u.id into owner from auth.users u
+   where u.phone_confirmed_at is not null and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = h limit 1;
+  if owner is null then return jsonb_build_object('r','none'); end if;
+  select count(*) into n from public.sms_sends where phone_hash = h and kind = 'find' and voided_at is null and created_at > now() - interval '30 days';
+  if n >= 2 then return jsonb_build_object('r','none'); end if;
+  insert into public.sms_sends (user_id, phone_hash, ip_hash, kind) values (owner, h, ih, 'find') returning id into rid;
+  return jsonb_build_object('r','ok','id',rid);
+end $$;
+revoke execute on function public.sms_find_reserve(text, text) from anon, authenticated, public;
+grant execute on function public.sms_find_reserve(text, text) to service_role;
+
+-- 驗證碼正確後：確認 15 分鐘內有寄過找回簡訊（只能用一次），回傳這支手機帳號的 Email
+create or replace function public.sms_find_take(ph text)
+returns text language plpgsql security definer set search_path = public as $$
+declare h text := private.phone_hash(ph); rid bigint; em text;
+begin
+  select id into rid from public.sms_sends
+   where phone_hash = h and kind = 'find' and used_at is null and created_at > now() - interval '15 minutes'
+   order by created_at desc limit 1 for update;
+  if rid is null then return null; end if;
+  update public.sms_sends set used_at = now() where id = rid;
+  select u.email into em from auth.users u
+   where u.phone_confirmed_at is not null and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = h limit 1;
+  return em;
+end $$;
+revoke execute on function public.sms_find_take(text) from anon, authenticated, public;
+grant execute on function public.sms_find_take(text) to service_role;
+
+create or replace function public.sms_check_ok(uid uuid, ph text)
+returns text language sql stable security definer set search_path = public as $$
+  select case
+    when exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null and nullif(u.phone,'') is not null) then 'already'
+    when not exists (select 1 from public.sms_sends s where s.user_id = uid and s.kind = 'verify' and s.phone_hash = private.phone_hash(ph) and s.created_at > now() - interval '15 minutes') then 'no_send'
+    else 'ok' end;
+$$;
+
+create or replace function public.my_sms_left()
+returns int language sql stable security definer set search_path = public as $$
+  select greatest(0, 3 - (select count(*)::int from public.sms_sends where user_id = auth.uid() and voided_at is null and kind = 'verify'));
+$$;
+
+create or replace function public.admin_sms_counts(ids uuid[])
+returns table (id uuid, n int)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select s.user_id, count(*)::int from public.sms_sends s where s.user_id = any(ids) and s.voided_at is null and s.kind = 'verify' group by s.user_id;
+end $$;

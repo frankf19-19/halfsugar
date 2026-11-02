@@ -1004,6 +1004,21 @@ begin
   insert into private.account_deleting (uid) values (Q1);
   v := v||','||(private.am_deleting())::text;
   out := array_append(out, ('49d 聊天照片不能重用檔名、刪帳號時才能清 = '||v||' (應為false,true,true,false,true)')::text);
+  -- 50 用手機找回帳號（v0.46）
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  delete from public.sms_sends;
+  update auth.users set phone='886944000001', phone_confirmed_at=now() where id=Q2;
+  v := (public.sms_find_reserve('+886944000099','8.8.8.1')->>'r')||','||(select count(*) from public.sms_sends)::text;
+  v := v||','||(public.sms_find_reserve('+886944000001','8.8.8.2')->>'r')||','||(public.sms_find_reserve('+886944000001','8.8.8.3')->>'r')||','||(public.sms_find_reserve('+886944000001','8.8.8.4')->>'r');
+  out := array_append(out, ('50a 沒註冊的號碼不寄、每支手機 30 天 2 次 = '||v||' (應為none,0,ok,ok,none)')::text);
+  v := coalesce(public.sms_find_take('+886944000001'),'null')||','||coalesce(public.sms_find_take('+886944000001'),'null')||','||coalesce(public.sms_find_take('+886944000001'),'null')||','||coalesce(public.sms_find_take('+886944000099'),'null');
+  out := array_append(out, ('50b 驗證後取得 Email、每封簡訊只能用一次 = '||v||' (應為e2e-q2@test.invalid,e2e-q2@test.invalid,null,null)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',Q2,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', Q2::text, true);
+  v := public.my_sms_left()::text;
+  begin execute 'set local role anon'; perform public.sms_find_reserve('+886944000001'); execute 'reset role'; v := v||',訪客能直接呼叫 ✗'; exception when others then v := v||',擋下'; end;
+  begin execute 'set local role authenticated'; perform public.sms_find_take('+886944000001'); execute 'reset role'; v := v||',會員能直接呼叫 ✗'; exception when others then v := v||',擋下'; end;
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  out := array_append(out, ('50c 找回不佔註冊次數、不能直接呼叫 = '||v||' (應為3,擋下,擋下)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
