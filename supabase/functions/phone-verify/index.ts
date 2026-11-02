@@ -92,7 +92,7 @@ async function handle(req: Request): Promise<Response> {
       if (!t.ok && t.status === 400 && ![60200, 60203, 60205, 60410, 21211, 21408, 21610, 21614].includes(Number(t.j?.code))) {
         t = await twilioSafe("Verifications", { To: fphone, Channel: "sms" });
       }
-      if (!t.ok) { await admin.rpc("sms_refund", { rid: rs.id }); return reply({ error: t.j?.code === 60203 ? "twilio_rate" : "send_failed" }, 502); }
+      if (!t.ok) { console.error("phone-verify find_send failed", JSON.stringify({ status: t.status, code: t.j?.code, message: t.j?.message })); await admin.rpc("sms_refund", { rid: rs.id }); return reply({ error: t.j?.code === 60203 ? "twilio_rate" : "send_failed", code: t.j?.code }, 502); }
       return reply({ ok: true });
     }
     const code = String(b.code || "").replace(/\D/g, "");
@@ -113,6 +113,25 @@ async function handle(req: Request): Promise<Response> {
   const { data: ud, error: ue } = await admin.auth.getUser(jwt);
   const user = ud?.user;
   if (ue || !user) return reply({ error: "auth" }, 401);
+
+  // 管理員檢查 Twilio 設定（不寄簡訊）
+  if (b.action === "diag") {
+    const { data: pr } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+    if (!pr?.is_admin) return reply({ error: "auth" }, 403);
+    const sid = env("TWILIO_ACCOUNT_SID"), auth = "Basic " + btoa(sid + ":" + env("TWILIO_AUTH_TOKEN"));
+    const get = async (u: string) => { try { const r = await fetch(u, { headers: { Authorization: auth } }); return { status: r.status, j: await r.json().catch(() => ({})) }; } catch (e) { return { status: 0, j: { err: String(e) } }; } };
+    const acc = await get(`https://api.twilio.com/2010-04-01/Accounts/${sid}.json`);
+    const bal = await get(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Balance.json`);
+    const svc = await get(`https://verify.twilio.com/v2/Services/${env("TWILIO_VERIFY_SID")}`);
+    const geo = await get(`https://voice.twilio.com/v1/DialingPermissions/Countries/TW`);
+    return reply({
+      secrets: { sid: !!sid, token: !!env("TWILIO_AUTH_TOKEN"), verify: !!env("TWILIO_VERIFY_SID") },
+      account: { status: acc.status, type: acc.j?.type, state: acc.j?.status, code: acc.j?.code, message: acc.j?.message },
+      balance: { status: bal.status, balance: bal.j?.balance, currency: bal.j?.currency },
+      verify: { status: svc.status, name: svc.j?.friendly_name, code: svc.j?.code, message: svc.j?.message },
+      tw_voice: { status: geo.status, low_risk: geo.j?.low_risk_numbers_enabled },
+    });
+  }
 
   // 恢復原本帳號（手機已驗證、且屬於另一個帳號時才會走到這裡）
   if (b.action === "recover") {
@@ -151,6 +170,7 @@ async function handle(req: Request): Promise<Response> {
     if (!t.ok) {
       await admin.rpc("sms_refund", { rid: rs.id });
       const c = t.j?.code;
+      console.error("phone-verify send failed", JSON.stringify({ status: t.status, code: c, message: t.j?.message, more: t.j?.more_info }));
       return reply({ error: c === 60203 ? "twilio_rate" : c === 60410 ? "blocked_by_twilio" : c === 60200 || c === 60205 || c === 21211 || c === 21614 ? "bad_phone" : "send_failed", code: c }, 502);
     }
     return reply({ ok: true, left: rs.left });
