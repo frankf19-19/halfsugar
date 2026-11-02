@@ -987,7 +987,8 @@ begin
   select count(*) into n from public.messages where match_id = qm and read_at <= now() + interval '1 minute'; v := n::text;
   update public.messages set read_at = null where match_id = qm;
   select count(*) into n from public.messages where match_id = qm and read_at is not null; v := v||','||n;
-  begin update public.messages set body='改掉了' where match_id = qm; get diagnostics n = row_count; v := v||case when n>0 then ',能改別人訊息 ✗' else ',擋下' end; exception when others then v := v||',擋下'; end;
+  begin update public.messages set body='改掉了' where match_id = qm; exception when others then null; end;
+  select count(*) into n from public.messages where match_id = qm and body = '改掉了'; v := v||case when n>0 then ',能改別人訊息 ✗' else ',擋下' end;
   begin insert into public.messages (match_id, sender_id, body) values (qm, Q2, '外送茶嗎'); v := v||',違規字沒擋 ✗'; exception when others then v := v||',擋下'; end;
   begin insert into public.messages (match_id, sender_id, body) values (qm, Q2, '你的 line id 是？'); v := v||',日常用語可以'; exception when others then v := v||',誤擋 ✗'; end;
   begin update public.profiles set bio = '可以援交' where id = Q2; v := v||',自介違規字沒擋 ✗'; exception when others then v := v||',擋下'; end;
@@ -995,6 +996,7 @@ begin
   execute 'reset role';
   out := array_append(out, ('49c 已讀不能偽造、違規字和超長內容伺服器擋 = '||v||' (應為1,1,擋下,擋下,日常用語可以,擋下,擋下)')::text);
   -- 49d 聊天照片：送出後不能換檔、檔名不能重用；刪帳號流程中才能清
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   update public.messages set image_path = Q1||'/'||qm||'-1.jpg' where match_id = qm and sender_id = Q1;
   perform set_config('request.jwt.claims', json_build_object('sub',Q1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', Q1::text, true);
   v := (private.chat_can_upload(Q1||'/'||qm||'-1.jpg'))::text||','||(private.chat_can_upload(Q1||'/'||qm||'-2.jpg'))::text||','||(private.chat_file_used(Q1||'/'||qm||'-1.jpg'))::text||','||(private.am_deleting())::text;

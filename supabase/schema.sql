@@ -2371,7 +2371,11 @@ end $f$;
 
 -- 網站設定：只公開前端需要的兩項（簡訊上限、暫停狀態不給外人看）
 drop policy if exists "app_config_read" on public.app_config;
-create policy "app_config_read" on public.app_config for select to anon, authenticated
+drop policy if exists "app_config_read_anon" on public.app_config;
+drop policy if exists "app_config_read_auth" on public.app_config;
+create policy "app_config_read_anon" on public.app_config for select to anon
+  using (key in ('free_launch', 'turnstile_sitekey'));
+create policy "app_config_read_auth" on public.app_config for select to authenticated
   using (key in ('free_launch', 'turnstile_sitekey') or public.is_admin());
 
 -- 2. 「我看得到這位會員嗎」：和 profiles 的讀取規則一致（隱身、封鎖、方向、狀態）
