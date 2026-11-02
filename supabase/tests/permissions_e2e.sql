@@ -924,6 +924,36 @@ begin
   begin insert into auth.users (id, email, aud, role) values (gen_random_uuid(),'x@Mailinator.com','authenticated','authenticated'); v := '沒擋 ✗'; exception when others then v := '擋下'; end;
   begin insert into auth.users (id, email, aud, role) values (Z4,'e2e-z4-not-real@gmail.com','authenticated','authenticated'); v := v||',正常'; exception when others then v := v||',誤擋 ✗'; end;
   out := array_append(out, ('47c 拋棄式信箱不能註冊 = '||v||' (應為擋下,正常)')::text);
+  -- 48 審查後修正（v0.43）
+  begin insert into auth.users (id, email, aud, role) values (gen_random_uuid(),'x@inbox.mailinator.com','authenticated','authenticated'); v := '沒擋 ✗'; exception when others then v := '擋下'; end;
+  begin update auth.users set email='z4@yopmail.com' where id=Z4; v := v||',改信箱沒擋 ✗'; exception when others then v := v||',擋下'; end;
+  out := array_append(out, ('48a 子網域／改成拋棄式信箱 = '||v||' (應為擋下,擋下)')::text);
+  delete from public.sms_sends;
+  perform public.sms_reserve(Z4,'+886933000001','7.7.7.7');
+  v := public.sms_check_ok(Z4,'+886933000001')||','||public.sms_check_ok(Z4,'+886933000002')||','||public.sms_check_ok(N4,'+886933000001');
+  out := array_append(out, ('48b 只能核對自己剛寄過的號碼、已綁手機不能換號 = '||v||' (應為ok,no_send,already)')::text);
+  perform public.sms_reserve(Z1,'+886933000003','7.7.7.8'); perform public.sms_reserve(Z2,'+886933000003','7.7.7.9'); perform public.sms_reserve(Z3,'+886933000003','7.7.7.10');
+  v := public.sms_reserve(Z4,'+886933000003','7.7.7.11')->>'r';
+  perform set_config('request.jwt.claims', json_build_object('sub',AD,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', AD::text, true);
+  v := v||','||public.admin_reset_sms_phone('0933000003')||','||(public.admin_sms_stats()->>'hour');
+  begin perform public.admin_reset_sms_phone('12345'); v := v||',亂填沒擋 ✗'; exception when others then v := v||',擋下'; end;
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  v := v||','||(public.sms_reserve(Z4,'+886933000003','7.7.7.11')->>'r');
+  out := array_append(out, ('48c 依手機號碼重設（全站用量照算） = '||v||' (應為phone_limit,3,4,擋下,ok)')::text);
+  v := (public.sms_reserve(Z1,'+886933000004',null)->>'r')||','||(select count(*) from public.sms_sends where ip_hash is null)::text;
+  out := array_append(out, ('48d 抓不到 IP 時一樣限制 = '||v||' (應為ok,0)')::text);
+  update public.profiles set status='incomplete', is_admin=true where id=Z2;
+  update public.profiles set status='incomplete', is_admin=false, avatar_path=null where id=Z3;
+  insert into public.phone_recover (uid, target, expires_at) values (Z2, N4, now()+interval '5 minutes'), (Z3, N4, now()+interval '5 minutes'), (Z1, N4, now()-interval '1 minute');
+  v := (public.sms_recover_take(Z2)->>'empty')||','||(public.sms_recover_take(Z3)->>'empty')||','||(public.sms_recover_take(Z1)->>'r');
+  out := array_append(out, ('48e 管理員帳號不算空帳號／過期不能恢復 = '||v||' (應為false,true,expired)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',Z1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', Z1::text, true);
+  v := '';
+  begin execute 'set local role authenticated'; perform public.sms_reserve(Z1,'+886933000009'); execute 'reset role'; v := v||'會員能呼叫 ✗'; exception when others then v := v||'擋下'; end;
+  begin execute 'set local role authenticated'; perform public.sms_recover_take(Z1); execute 'reset role'; v := v||',會員能呼叫恢復 ✗'; exception when others then v := v||',擋下'; end;
+  begin execute 'set local role anon'; perform public.sms_check_ok(Z1,'+886933000009'); execute 'reset role'; v := v||',訪客能呼叫 ✗'; exception when others then v := v||',擋下'; end;
+  out := array_append(out, ('48f 會員／訪客不能直接呼叫後端專用函式 = '||v||' (應為擋下,擋下,擋下)')::text);
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;

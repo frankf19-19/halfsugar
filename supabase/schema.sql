@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.42.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.43.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -2222,3 +2222,120 @@ begin
 end $$;
 drop trigger if exists block_disposable_email on auth.users;
 create trigger block_disposable_email before insert on auth.users for each row execute function private.block_disposable_email();
+
+-- v0.43：簡訊防護修正（獨立審查後）
+--   1. 驗證碼核對：已綁手機的帳號不能換號；只接受自己 15 分鐘內寄過的號碼
+--   2. 管理員重設改成「作廢」而不是刪除：全站／IP 用量照算，只有帳號／手機次數歸零；可依手機號碼重設
+--   3. 恢復原帳號時，只有真的空帳號（非管理員、沒照片、沒頭像、未建檔）才會被刪
+--   4. 拋棄式信箱：子網域也擋，改 Email 也擋
+alter table public.sms_sends add column if not exists voided_at timestamptz;
+
+create or replace function public.sms_reserve(uid uuid, ph text, ip text default null)
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare h text := private.phone_hash(ph); ih text; nu int; np int; n int; rid bigint;
+begin
+  if uid is null or coalesce(ph,'') !~ '^\+?8869\d{8}$' then return jsonb_build_object('r','bad_phone'); end if;
+  if coalesce((select value from public.app_config where key = 'sms_paused'), 'off') = 'on' then return jsonb_build_object('r','paused'); end if;
+  perform pg_advisory_xact_lock(hashtext('sms_reserve'));
+  if exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null and nullif(u.phone,'') is not null) then
+    return jsonb_build_object('r','already');
+  end if;
+  if exists (select 1 from public.banned_phones b where b.phone_hash = h) then return jsonb_build_object('r','banned'); end if;
+  select count(*) into nu from public.sms_sends where user_id = uid and voided_at is null;
+  if nu >= 3 then return jsonb_build_object('r','user_limit'); end if;
+  select count(*) into np from public.sms_sends where phone_hash = h and voided_at is null;
+  if np >= 3 then return jsonb_build_object('r','phone_limit'); end if;
+  ih := encode(digest('halfsugar-ip:' || coalesce(nullif(ip,''), 'unknown'), 'sha256'), 'hex');
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_ip_hour', 5) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_ip_day', 10) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_hour', 100) then return jsonb_build_object('r','global_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_day', 300) then return jsonb_build_object('r','global_limit'); end if;
+  insert into public.sms_sends (user_id, phone_hash, ip_hash) values (uid, h, ih) returning id into rid;
+  return jsonb_build_object('r','ok','id',rid,'left',2-nu);
+end $$;
+revoke execute on function public.sms_reserve(uuid, text, text) from anon, authenticated, public;
+grant execute on function public.sms_reserve(uuid, text, text) to service_role;
+
+-- 核對驗證碼之前：這個帳號還沒綁手機、而且 15 分鐘內真的寄過這支號碼
+create or replace function public.sms_check_ok(uid uuid, ph text)
+returns text language sql stable security definer set search_path = public as $$
+  select case
+    when exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null and nullif(u.phone,'') is not null) then 'already'
+    when not exists (select 1 from public.sms_sends s where s.user_id = uid and s.phone_hash = private.phone_hash(ph) and s.created_at > now() - interval '15 minutes') then 'no_send'
+    else 'ok' end;
+$$;
+revoke execute on function public.sms_check_ok(uuid, text) from anon, authenticated, public;
+grant execute on function public.sms_check_ok(uuid, text) to service_role;
+
+create or replace function public.my_sms_left()
+returns int language sql stable security definer set search_path = public as $$
+  select greatest(0, 3 - (select count(*)::int from public.sms_sends where user_id = auth.uid() and voided_at is null));
+$$;
+
+create or replace function public.admin_sms_counts(ids uuid[])
+returns table (id uuid, n int)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select s.user_id, count(*)::int from public.sms_sends s where s.user_id = any(ids) and s.voided_at is null group by s.user_id;
+end $$;
+
+create or replace function public.admin_reset_sms(target uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare hs text[];
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  select array_agg(distinct phone_hash) into hs from public.sms_sends where user_id = target and voided_at is null;
+  update public.sms_sends set voided_at = now() where voided_at is null and (user_id = target or phone_hash = any(coalesce(hs, '{}')));
+end $$;
+
+-- 依手機號碼重設（例如號碼被別人惡意用掉次數）
+create or replace function public.admin_reset_sms_phone(ph text)
+returns int language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  if coalesce(regexp_replace(ph, '\D', '', 'g'), '') !~ '^(886|0)9\d{8}$' then raise exception '請輸入 09 開頭的 10 碼手機號碼'; end if;
+  update public.sms_sends set voided_at = now()
+   where voided_at is null and phone_hash = private.phone_hash('886' || right(regexp_replace(ph, '\D', '', 'g'), 9));
+  get diagnostics n = row_count; return n;
+end $$;
+revoke execute on function public.admin_reset_sms_phone(text) from anon, public;
+grant execute on function public.admin_reset_sms_phone(text) to authenticated;
+
+-- 恢復原帳號：只有真正的空帳號才可以刪
+create or replace function public.sms_recover_take(uid uuid)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare t uuid; em text; empty boolean;
+begin
+  delete from public.phone_recover where phone_recover.uid = sms_recover_take.uid and expires_at > now() returning target into t;
+  if t is null then return jsonb_build_object('r','expired'); end if;
+  select email into em from auth.users where id = t;
+  select coalesce(p.status, 'incomplete') = 'incomplete' and not coalesce(p.is_admin, false) and p.avatar_path is null
+         and not exists (select 1 from public.photos ph where ph.user_id = sms_recover_take.uid)
+         and not exists (select 1 from auth.users u where u.id = sms_recover_take.uid and nullif(u.phone,'') is not null)
+    into empty from public.profiles p where p.id = sms_recover_take.uid;
+  return jsonb_build_object('r','ok','email',coalesce(em,''),'empty', coalesce(empty, false));
+end $$;
+revoke execute on function public.sms_recover_take(uuid) from anon, authenticated, public;
+grant execute on function public.sms_recover_take(uuid) to service_role;
+
+-- 拋棄式信箱：子網域也擋；註冊與改 Email 都檢查
+create or replace function private.block_disposable_email()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare d text;
+begin
+  if new.email is null then return new; end if;
+  if tg_op = 'UPDATE' and new.email is not distinct from old.email then return new; end if;
+  d := lower(split_part(new.email, '@', 2));
+  if exists (select 1 from public.blocked_email_domains b where d = b.domain or d like '%.' || b.domain) then
+    raise exception 'disposable_email: 這個 Email 無法註冊，請改用常用的信箱';
+  end if;
+  return new;
+end $$;
+drop trigger if exists block_disposable_email on auth.users;
+create trigger block_disposable_email before insert or update of email on auth.users for each row execute function private.block_disposable_email();

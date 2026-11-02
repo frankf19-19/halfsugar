@@ -38,8 +38,26 @@ async function twilio(path: string, body: Record<string, string>) {
   const j = await r.json().catch(() => ({}));
   return { ok: r.ok, status: r.status, j };
 }
+async function twilioSafe(path: string, body: Record<string, string>) {
+  try { return await twilio(path, body); } catch (_) { return { ok: false, status: 0, j: { code: "network" } as Record<string, unknown> }; }
+}
+// 客戶端 IP：優先用 Cloudflare 提供、無法偽造的 cf-connecting-ip；否則取 x-forwarded-for 最後一段（由閘道附加）
+function clientIp(req: Request) {
+  const cf = (req.headers.get("cf-connecting-ip") || "").trim();
+  if (cf) return cf;
+  const xff = (req.headers.get("x-forwarded-for") || "").split(",").map((x) => x.trim()).filter(Boolean);
+  return xff.length ? xff[xff.length - 1] : "";
+}
 
 Deno.serve(async (req) => {
+  try { return await handle(req); }
+  catch (e) {
+    console.error("phone-verify", e);
+    return new Response(JSON.stringify({ error: "server" }), { status: 500, headers: { ...cors(req), "Content-Type": "application/json" } });
+  }
+});
+
+async function handle(req: Request): Promise<Response> {
   const h = cors(req);
   const reply = (o: unknown, status = 200) =>
     new Response(JSON.stringify(o), { status, headers: { ...h, "Content-Type": "application/json" } });
@@ -62,17 +80,23 @@ Deno.serve(async (req) => {
     if (rt?.r !== "ok") return reply({ error: "recover_expired" }, 400);
     if (b.mode === "reset" && rt.email) {
       const anon = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), { auth: { persistSession: false } });
-      await anon.auth.resetPasswordForEmail(rt.email, { redirectTo: "https://onethirdsugar.com/" });
+      const { error: me } = await anon.auth.resetPasswordForEmail(rt.email, { redirectTo: "https://onethirdsugar.com/" });
+      if (me) return reply({ error: /rate|seconds/i.test(me.message) ? "mail_rate" : "mail_failed" }, 502);
     }
-    if (rt.empty) await admin.auth.admin.deleteUser(user.id);   // 剛開的空帳號（還沒建檔）一併刪除
-    return reply({ ok: true, email: maskEmail(rt.email) });
+    let deleted = false;
+    if (rt.empty) {   // 剛開、還沒建檔的空帳號才刪（管理員、有照片的帳號一律不刪）
+      const { error: de } = await admin.auth.admin.deleteUser(user.id);
+      deleted = !de;
+      if (de) console.error("phone-verify recover delete", de.message);
+    }
+    return reply({ ok: true, email: maskEmail(rt.email), deleted });
   }
 
   const phone = String(b.phone || "").replace(/[\s-]/g, "");
   if (!/^\+8869\d{8}$/.test(phone)) return reply({ error: "bad_phone" }, 400);
 
   if (b.action === "send") {
-    const ip = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || (req.headers.get("x-forwarded-for") || "").split(",")[0] || "").trim();
+    const ip = clientIp(req);
     // 真人驗證（Cloudflare Turnstile）：設定了 TURNSTILE_SECRET 才啟用
     if (env("TURNSTILE_SECRET")) {
       const tv = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
@@ -84,12 +108,15 @@ Deno.serve(async (req) => {
     const { data: rs, error: re } = await admin.rpc("sms_reserve", { uid: user.id, ph: phone, ip: ip || null });
     if (re) return reply({ error: "server", detail: re.message }, 500);
     if (rs?.r !== "ok") return reply({ error: rs?.r || "server" }, rs?.r === "already" ? 200 : 429);
-    let t = await twilio("Verifications", { To: phone, Channel: "sms", Locale: "zh-HK" });
-    if (!t.ok && t.j?.code === 60220) t = await twilio("Verifications", { To: phone, Channel: "sms" }); // 不支援語系時退回預設
+    let t = await twilioSafe("Verifications", { To: phone, Channel: "sms", Locale: "zh-HK" });
+    // 語系不被接受時（400 且不是已知的號碼／頻率錯誤），改用預設語系再寄一次
+    if (!t.ok && t.status === 400 && ![60200, 60203, 60205, 60410, 21211, 21408, 21610, 21614].includes(Number(t.j?.code))) {
+      t = await twilioSafe("Verifications", { To: phone, Channel: "sms" });
+    }
     if (!t.ok) {
       await admin.rpc("sms_refund", { rid: rs.id });
       const c = t.j?.code;
-      return reply({ error: c === 60203 ? "twilio_rate" : c === 60200 || c === 60205 || c === 21211 ? "bad_phone" : "send_failed", code: c }, 502);
+      return reply({ error: c === 60203 ? "twilio_rate" : c === 60410 ? "blocked_by_twilio" : c === 60200 || c === 60205 || c === 21211 || c === 21614 ? "bad_phone" : "send_failed", code: c }, 502);
     }
     return reply({ ok: true, left: rs.left });
   }
@@ -97,9 +124,12 @@ Deno.serve(async (req) => {
   if (b.action === "check") {
     const code = String(b.code || "").replace(/\D/g, "");
     if (code.length < 4 || code.length > 10) return reply({ error: "bad_code" }, 400);
-    const t = await twilio("VerificationCheck", { To: phone, Code: code });
+    const { data: ck } = await admin.rpc("sms_check_ok", { uid: user.id, ph: phone });
+    if (ck === "already") return reply({ error: "already" }, 200);
+    if (ck !== "ok") return reply({ error: "expired" }, 400);
+    const t = await twilioSafe("VerificationCheck", { To: phone, Code: code });
     if (t.status === 404) return reply({ error: "expired" }, 400);       // 驗證碼過期或已用完嘗試次數
-    if (!t.ok) return reply({ error: t.j?.code === 60202 ? "too_many_checks" : "check_failed", code: t.j?.code }, 400);
+    if (!t.ok) return reply({ error: t.j?.code === 60202 ? "too_many_checks" : t.status === 0 ? "send_failed" : "check_failed", code: t.j?.code }, 400);
     if (t.j?.status !== "approved") return reply({ error: "wrong_code" }, 400);
     const { data: em, error: re2 } = await admin.rpc("sms_recover_start", { uid: user.id, ph: phone });
     if (re2) return reply({ error: "server", detail: re2.message }, 500);
@@ -112,4 +142,5 @@ Deno.serve(async (req) => {
   }
 
   return reply({ error: "action" }, 400);
-});
+}
+
