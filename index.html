@@ -403,7 +403,7 @@ html{scrollbar-gutter:stable}body.modal-open{overflow:hidden}.modal .box{overscr
 body.kb .chat{min-height:0}
 .admth{position:absolute;right:4px;bottom:4px;width:44%;max-width:90px;aspect-ratio:3/4;background:#ddd center/cover no-repeat;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);font-size:10px;color:#fff;text-shadow:0 0 3px #000;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;pointer-events:none}
 .msg .time{opacity:1;color:var(--grey)}.msg.me .time{color:inherit;opacity:.72}[data-theme=dark] .nowtag{color:#1A1918}
-.doc p,.doc li,.bio,.psec p,.safepg p,.chempty p,.msg div{word-break:normal}
+.doc p,.doc li,.bio,.psec p,.safepg p,.chempty p,.msg div,[style*="pre-wrap"],.req,.dbio,.lastmsg{word-break:normal}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tblwrap .table{min-width:640px}
 @media(max-width:719px){input,select,textarea{font-size:16px!important}.mnav{display:flex;grid-column:2;justify-self:end;gap:2px}.mnav a{padding:8px 10px;font-size:13px;letter-spacing:.14em;text-decoration:none;color:inherit}}
@@ -422,6 +422,7 @@ body.nobnav .bnav{display:none}
 .doc p,.doc li{color:#444;margin-bottom:10px;line-height:2.05} .doc ol,.doc ul{padding-left:22px}
 footer{border-top:1px solid var(--rule);padding:40px 22px;text-align:center;font-size:11px;letter-spacing:.14em;color:var(--grey)}
 footer a{color:var(--ink);margin:0 10px;text-decoration:none}
+footer .flinks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 0;max-width:640px;margin:0 auto}footer .flinks a{margin:0 12px;padding:2px 0}
 @media(max-width:719px){body:not(.nobnav) footer{padding-bottom:calc(96px + env(safe-area-inset-bottom))}body.nobnav footer{display:none}}
 .spinner{width:24px;height:24px;border:1px solid var(--rule);border-top-color:var(--ink);border-radius:50%;animation:sp .9s linear infinite;margin:60px auto}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -805,7 +806,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 <nav class="bnav hidden" id="bnav"></nav>
 
 <footer>
-  <div><a href="#/terms">使用條款</a>·<a href="#/privacy">隱私政策</a>·<a href="#/guidelines">社群守則</a>·<a href="#/safety">安全須知</a>·<a href="#/plans">會員方案</a></div>
+  <div class="flinks"><a href="#/terms">使用條款</a><a href="#/privacy">隱私政策</a><a href="#/guidelines">社群守則</a><a href="#/safety">安全須知</a><a href="#/plans">會員方案</a></div>
   <div class="themesw" role="group" aria-label="外觀"><button type="button" data-th="light">淺色</button><button type="button" data-th="dark">深色</button><button type="button" data-th="auto">跟隨手機</button></div>
   <div class="mt" style="margin-top:10px">© 2026 微糖 1/3 Sugar · 僅限 18 歲以上成年人使用 · <span id="ver"></span></div>
 </footer>
@@ -817,7 +818,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.64.1';
+const BUILD = 'v1.65.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -969,7 +970,7 @@ window.addEventListener('popstate', e=>{ const st = e.state || {};
   if(deadHref && location.href === deadHref){ deadHref = null; ignorePop++; history.back(); } });   // 從失效紀錄退到同一頁：再退一次，不要多按
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('#modal').innerHTML) closeModal(); });
 
-{ const f=document.querySelector('footer div'); if(f) f.insertAdjacentHTML('beforeend', `·<a href="#" data-support>聯絡客服</a>`); }
+{ const f=document.querySelector('footer .flinks'); if(f) f.insertAdjacentHTML('beforeend', `<a href="#" data-support>聯絡客服</a>`); }
 
 /* ---------- 18+ 閘門 ---------- */
 if(!localStorage.getItem('yy_age_ok')){ $('#gate').classList.remove('hidden'); }
@@ -1289,7 +1290,7 @@ async function viewLanding(){
         <div><h3>一支手機，一個帳號</h3><p>每位會員都要用台灣手機收簡訊驗證，一支手機只能有一個帳號，一支號碼也只收得到 3 次驗證碼。被停權的號碼不能再註冊，刪掉帳號重開也洗不掉過去的評價。手機號碼和 Email 不會顯示給任何會員。</p></div>
         <div><h3>想隱身就隱身</h3><p>可以不出現在探索，只讓你心動過的人、或正在聊天的人看到你；也可以隱藏上線狀態。</p></div>
         <div><h3>私密照，親自授權</h3><p>私密相簿只給你點頭的人看，隨時收回；封鎖之後，對方再也找不到你。</p></div>
-        <div><h3>說刪就刪</h3><p>在「我的」頁面就能自己刪除帳號，檔案、照片、對話與綁定手機立即永久刪除。我們不販售、不分享任何會員資料。</p></div>
+        <div><h3>說刪就刪</h3><p>在「我的」頁面就能自己刪除帳號，檔案、照片、對話與手機號碼立即永久刪除。我們不販售、不分享任何會員資料。</p></div>
       </div>
     </div>
   </section>
@@ -1551,7 +1552,7 @@ function smsErr(e){
 async function phoneApi(body){
   try{
     const { data, error } = await sb.functions.invoke('phone-verify', { body });
-    if(error){ let j=null; try{ j = await error.context?.json(); }catch(_){} return { error: j?.error || (error.name==='FunctionsFetchError'?'network':'server') }; }
+    if(error){ let j=null; try{ j = await error.context?.json(); }catch(_){} return { error: j?.error || (error.context?.status===401?'auth':error.name==='FunctionsFetchError'?'network':'server') }; }
     return data || { error:'server' };
   }catch(e){ return { error:'network' }; }
 }
@@ -1571,6 +1572,9 @@ function smsErr2(c){
     bad_code:'請輸入 6 位數驗證碼',
     recover_expired:'等太久了，請重新驗證一次手機。',
     paused:'手機驗證暫停中，請稍後再試。',
+    mail_rate:'信件寄太頻繁了，請過幾分鐘再按一次。',
+    mail_failed:'重設密碼信沒有寄出，請稍後再試，或從網頁最下方「聯絡客服」。',
+    blocked_by_twilio:'這個號碼暫時無法接收驗證碼，請稍後再試，或從網頁最下方「聯絡客服」。',
     ip_limit:'這個網路短時間內申請太多次驗證碼，請稍後再試，或換個網路（例如改用行動網路）。',
     captcha:'真人驗證沒有通過，請重新勾選後再試。',
     network:'網路連線不穩，請稍後再試。',
@@ -1617,11 +1621,19 @@ function viewPhoneVerify(){
   let phone='', timer=null;
   const phErr = t => { const el=$('#phErr'); if(el) el.textContent=t||''; else if(t) toast(t); };
   const otpErr = t => { const el=$('#otpErr'); if(el) el.textContent=t||''; else if(t) toast(t); };
-  const cool = () => { let t=60; const b=$('#otpResend'); b.disabled=true; clearInterval(timer);
-    timer=setInterval(()=>{ if(!document.body.contains(b)) return clearInterval(timer); t--; b.textContent = t>0?`重新傳送（${t}）`:'重新傳送'; if(t<=0){ b.disabled=false; clearInterval(timer); } },1000); };
+  // 傳送後 60 秒內，「重新傳送」和「改用其他號碼」都要等，避免一下子把 3 次用完
+  const stopTimer = () => { clearInterval(timer); timer=null; };
+  const cool = (sec=60) => { let t=sec; const b=$('#otpResend'), ps=$('#phSend'); stopTimer();
+    const tick = () => { if(!document.body.contains(b)) return stopTimer();
+      b.disabled = t>0 || left<=0; ps.disabled = t>0 || left<=0;
+      b.textContent = left<=0 ? '已無法再傳送' : t>0 ? `重新傳送（${t}）` : '重新傳送';
+      ps.textContent = t>0 ? `改用其他號碼（${t}）` : '改用其他號碼重新傳送';
+      if(t<=0) stopTimer(); t--; };
+    tick(); timer=setInterval(tick,1000); };
+  const SK='yy_phone_sent', saveSent = () => { try{ sessionStorage.setItem(SK, JSON.stringify({ uid: me?.id, phone, at: Date.now() })); }catch(_){} };
   let sending=false, left=3;
   const showLeft = () => { const el=$('#phLeft'); if(el) el.textContent = left>0 ? `驗證碼最多可傳送 3 次（每個帳號、每支手機都一樣），目前還剩 ${left} 次。請先確認號碼正確再送出。` : '驗證碼傳送次數已用完。'; };
-  const noMore = keepOtp => { left=0; showLeft(); const rb=$('#otpResend'); if(rb){ rb.disabled=true; rb.textContent='已無法再傳送'; } clearInterval(timer);
+  const noMore = keepOtp => { left=0; showLeft(); const rb=$('#otpResend'); if(rb){ rb.disabled=true; rb.textContent='已無法再傳送'; } stopTimer(); const ps=$('#phSend'); if(ps){ ps.disabled=true; ps.textContent = keepOtp?'已無法再傳送':'傳送驗證碼'; }
     if(!keepOtp){ const b=$('#phSend'); if(b){ b.disabled=true; } phErr('驗證碼傳送次數已用完。請從網頁最下方「聯絡客服」，我們會協助你完成驗證。'); } };
   // 真人驗證（Cloudflare Turnstile）：後台設定了 site key 才出現
   let capKey='', capTok='', capId=null, capWait=null;
@@ -1639,26 +1651,35 @@ function viewPhoneVerify(){
   const useCap = () => { capTok=''; try{ if(capId!==null) window.turnstile.reset(capId); }catch(_){} };
   sb.rpc('my_sms_left').then(({ data })=>{ if(typeof data==='number'){ left=data; showLeft(); if(left<=0) noMore(); } });
   const send = async () => { if(sending) return false; sending=true; const rb=$('#otpResend'); if(rb) rb.disabled=true;
-    const captcha = await getCap(); if(capKey && !captcha){ sending=false; phErr(smsErr2('captcha')); if(rb && !timer) rb.disabled=false; return false; }
+    const captcha = await getCap(); if(capKey && !captcha){ sending=false; phErr(smsErr2('captcha')); if(rb && !timer && left>0) rb.disabled=false; return false; }
     const r = await phoneApi({ action:'send', phone, captcha }).finally(()=>{ sending=false; useCap(); });
     if(r.error==='already'){ await sb.auth.refreshSession(); await loadMe(); toast('這支手機已經驗證過了'); route(); return true; }
-    if(r.error){ phErr(smsErr2(r.error)); if(['user_limit'].includes(r.error)) noMore(); else if(rb && !timer) rb.disabled=false; return false; }
-    left = r.left ?? Math.max(0,left-1);
+    if(r.error){ phErr(smsErr2(r.error)); if(['user_limit'].includes(r.error)) noMore(!$('#otpForm').classList.contains('hidden')); else if(rb && !timer && left>0) rb.disabled=false; return false; }
+    left = r.left ?? Math.max(0,left-1); phErr(''); saveSent();
     $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，請在 10 分鐘內輸入。${left>0?`還可以重新傳送 ${left} 次。`:'這是最後一次傳送機會。'}`;
     showLeft(); $('#otpIn').focus(); if(left>0) cool(); else noMore(true); return true;
   };
+  // 重新整理頁面：10 分鐘內寄過的驗證碼還能用，直接回到輸入驗證碼的畫面
+  try{ const st=JSON.parse(sessionStorage.getItem(SK)||'null');
+    if(st && st.uid===me?.id && /^\+8869\d{8}$/.test(st.phone||'') && Date.now()-st.at < 10*60*1000){
+      phone=st.phone; $('#phNum').value='0'+phone.slice(4);
+      $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，請在收到後 10 分鐘內輸入。`;
+      const rest=Math.ceil((60*1000-(Date.now()-st.at))/1000); if(rest>0) cool(rest); else { $('#phSend').textContent='改用其他號碼重新傳送'; if(left>0) $('#otpResend').disabled=false; }
+    } }catch(_){}
   $('#phForm').onsubmit = async e => { e.preventDefault();
     const n = $('#phNum').value.replace(/[\s-]/g,'');
     if(!/^09\d{8}$/.test(n)) return phErr('請輸入 09 開頭的 10 碼手機號碼'); phErr('');
     phone = '+886'+n.slice(1);
     const b=$('#phSend'); b.disabled=true; b.textContent='傳送中…';
-    const ok = await send(); b.disabled=false; b.textContent = ok?'改用其他號碼重新傳送':'傳送驗證碼'; };
+    const ok = await send(); if(!ok && !timer && left>0){ b.disabled=false; b.textContent = $('#otpForm').classList.contains('hidden')?'傳送驗證碼':'改用其他號碼重新傳送'; } };
   $('#otpResend').onclick = send;
   $('#otpForm').onsubmit = async e => { e.preventDefault();
     const token = $('#otpIn').value.replace(/\D/g,''); if(token.length<6) return otpErr('請輸入 6 位數驗證碼');
     const sb2=e.target.querySelector('button[type=submit]'); if(sb2.disabled) return; sb2.disabled=true; otpErr('');
     const r = await phoneApi({ action:'check', phone, code: token });
+    if(r.error==='already'){ try{ sessionStorage.removeItem(SK); }catch(_){} await sb.auth.refreshSession(); await loadMe(); route(); return; }
     if(r.error){ sb2.disabled=false; return otpErr(smsErr2(r.error)); }
+    try{ sessionStorage.removeItem(SK); }catch(_){}
     if(r.recover){ sb2.disabled=false; return askRecover(r.email); }
     await sb.auth.refreshSession(); await loadMe(); toast('手機驗證完成'); route(); };
 }
@@ -2743,7 +2764,13 @@ async function viewAdmin(){
           <label>同一個網路位址每天最多<input type="number" min="1" max="99999" data-k="sms_ip_day" value="${x.ip_day}"></label>
         </div>
         <button class="btn primary mt2" id="smsSave">儲存上限</button><p class="tiny dim mt">預計會有大量新會員（例如投廣告、活動當天）時，先把全站上限調高。</p>
+      </div>
+      <div class="card mt">
+        <h3 style="font-size:17px;margin:0 0 4px">依手機號碼重設次數</h3><p class="tiny dim mb">會員反映「收驗證碼的次數用完了」，或號碼被別人惡意用掉次數時，輸入他的手機號碼，讓這支號碼可以再收 3 次。</p>
+        <div class="row" style="gap:8px"><input id="smsPh" inputmode="numeric" placeholder="0912345678" maxlength="12" style="max-width:220px"><button class="btn ghost" id="smsPhBtn">重設</button></div>
       </div>`;
+      $('#smsPhBtn').onclick = async ()=>{ const v=$('#smsPh').value.replace(/[\s-]/g,''); if(!/^09\d{8}$/.test(v)) return toast('請輸入 09 開頭的 10 碼手機號碼');
+        const { data, error } = await sb.rpc('admin_reset_sms_phone', { ph: v }); if(error) return toast(error.message); $('#smsPh').value=''; toast(data?`已重設，這支號碼可以再收 3 次（作廢 ${data} 筆紀錄）`:'這支號碼沒有需要重設的紀錄'); };
       $('#smsPause').onclick = async ()=>{ if(!x.paused && !confirm('暫停所有驗證簡訊？新會員會暫時無法完成註冊。')) return;
         const { error } = await sb.rpc('admin_set_sms_config', { k:'sms_paused', v: x.paused?'off':'on' }); toast(error?error.message:(x.paused?'已恢復寄送':'已暫停寄送')); draw(); };
       $('#smsSave').onclick = async ()=>{ for(const i of box.querySelectorAll('.smscfg input')){ const { error } = await sb.rpc('admin_set_sms_config', { k:i.dataset.k, v:String(i.value).trim() }); if(error) return toast(error.message); } toast('已儲存'); draw(); };
