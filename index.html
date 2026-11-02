@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-Fs/0A2acClJyE/0vG+vG/JLFpm2sZRDgaOBeiHxRHlM=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-rI/43WCNRrZlDJavLM/ija1XZwOtu4vF119CVaEztv8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
 <!--security:end-->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>微糖 1/3 Sugar｜台灣甜心交友・包養網・Sugar Daddy 甜心網</title>
-<meta name="description" content="微糖是真人審核的台灣甜心交友平台（很多人稱為包養網、甜心網）。Sugar Daddy、Sugar Mommy 與甜心坦誠彼此期待、認真認識彼此；認真約會、不做性交易，重視隱私與安全。">
+<meta name="description" content="微糖是真人審核的台灣甜心交友平台（很多人稱為包養網、甜心網）。Sugar Daddy、Sugar Mommy 與甜心坦誠彼此期待、認真認識彼此；認真約會、尊重彼此，重視隱私與安全。">
 <meta name="robots" content="index,follow">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjQgNiA1NiA1MiI+PHBhdGggZD0iTTMyIDU0IEMxNCA0MiA4IDMyIDggMjMgQzggMTUgMTQgMTAgMjEgMTAgQzI2IDEwIDMwIDEzIDMyIDE3IFoiIGZpbGw9IiNCMDRBNjIiLz48cGF0aCBkPSJNMzIgNTQgQzE0IDQyIDggMzIgOCAyMyBDOCAxNSAxNCAxMCAyMSAxMCBDMjYgMTAgMzAgMTMgMzIgMTcgQzM0IDEzIDM4IDEwIDQzIDEwIEM1MCAxMCA1NiAxNSA1NiAyMyBDNTYgMzIgNTAgNDIgMzIgNTRaIiBmaWxsPSJub25lIiBzdHJva2U9IiNCMDRBNjIiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==">
 <meta name="theme-color" content="#FFFFFF">
@@ -839,7 +839,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.70.0';
+const BUILD = 'v1.70.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1324,7 +1324,7 @@ async function viewLanding(){
   </section>
 
   <section class="pledge">
-    <blockquote>Sugar Dating 不是性交易。<br>平台不經手、不媒介會員之間的任何金錢，<br class="d">以金錢交換性行為的要求，<br>與色情產業的招攬，一律停權。</blockquote>
+    <blockquote>真誠交往，互相尊重。<br>平台不經手會員之間的任何金錢，<br class="d">業者、詐騙與違規行為，<br>一律停權。</blockquote>
     <div class="who">違反者將直接停權，並保留法律追訴權。<br><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a></div>
   </section>
 
@@ -1388,8 +1388,7 @@ async function viewLanding(){
       <div class="e"><dt>真人認證</dt><dd class="pos">名詞</dd><dd>依系統隨機指定的動作，拍一張自拍和一段短影片，由真人和頭像比對。通過後檔案會出現<span style="white-space:nowrap">「✓ 真人認證」</span>，自拍和影片審核完立即刪除。</dd></div>
       <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件（姓名可以遮住），由真人看過後，檔案上會出現<span style="white-space:nowrap">「✓ 財力認證」</span>。不是必要的，是加分；甜心想看文件可以申請，對方按允許才看得到。</dd></div>
       <div class="e"><dt>審核</dt><dd class="pos">動詞</dd><dd>每一張照片、每一段自介，都由真人看過才公開。業者、假照片、留聯絡方式的，到不了這裡。</dd></div>
-      <div class="e no"><dt>性交易</dt><dd class="pos">名詞　微糖不使用的詞</dd><dd>以金錢或財物交換性行為，違法，也違反本站守則。出現就停權，必要時配合司法調查。平台不代收、不轉交會員之間的任何款項。</dd></div>
-    </dl>
+          </dl>
     <p class="swipehint">← 左右滑動看更多 →</p>
     <div class="ft"><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a>　<a href="#/terms">使用條款</a></div>
   </section>
@@ -1531,7 +1530,7 @@ function profileFormHtml(p={}){
     <label>興趣（最多 8 個）</label>
     <div class="tags" id="tagPick">${TAGS.map(t=>`<button type="button" class="tag ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
     <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額或價碼。">${esc(p.bio||'')}</textarea>
-    <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額價碼或性交易相關字眼，將無法通過審核。</p>`;
+    <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額價碼或不當字眼，將無法通過審核。</p>`;
 }
 function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',()=>{ $('#budgetBox')?.classList.toggle('hidden', r.value==='baby'); const eb=$('#ebBox'); if(eb) eb.style.display = r.value==='baby'?'':'none'; }));
   document.querySelectorAll('input[name=orient]').forEach(r=>r.addEventListener('change',()=>{ const os=document.querySelector('.orient-see'); if(os) os.innerHTML = '<br><b>你選的是「'+esc(ORIENT[r.value]||'')+'」：</b>'+esc(orientSee(r.value)); const c=$('#cupBox'); if(c) c.style.display = r.value.startsWith('male')?'none':'';
@@ -2949,7 +2948,7 @@ privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 11 �
 guidelines: `<h2>社群守則</h2><p>微糖希望成為一個讓成熟成年人可以安心、坦誠認識彼此的地方。以下是我們對每一位會員的要求。</p>
 <h3>做自己</h3><p>使用本人近期的照片，誠實描述自己。冒用他人照片或虛構身分將立即停權。</p>
 <h3>尊重</h3><p>對方沒有回應不代表邀請你再傳十次。任何騷擾、辱罵、威脅或散布他人資訊的行為，一經檢舉查證即停權。</p>
-<h3>Sugar Dating，不是性交易</h3><p>微糖歡迎成年人坦誠彼此的期待與相處方式。但任何以金錢或財物交換性行為的要求、暗示或報價，都違反法律與本守則，一經查證立即停權。平台不經手、不媒介會員之間的任何款項；見面前要求匯款、借貸、投資、預付「車馬費」或「訂金」的，多半是詐騙，請直接檢舉。色情產業相關人士（茶莊、代聊、經紀、應召）不得在此招攬。</p>
+<h3>真誠交往，互相尊重</h3><p>微糖歡迎成年人坦誠彼此的期待與相處方式。任何違反法律或本守則的要求與行為，一經查證立即停權。平台不經手、不媒介會員之間的任何款項；見面前要求匯款、借貸、投資、預付「車馬費」或「訂金」的，多半是詐騙，請直接檢舉。色情產業相關人士（茶莊、代聊、經紀、應召）不得在此招攬。</p>
 <h3>不留站外聯絡方式</h3><p>公開檔案不得出現 LINE、電話、IG 等聯絡方式。請先在站內認識彼此，等雙方都覺得合適再交換。</p>
 <h3>照片規範</h3><p>清楚、正面、近期。不接受裸露、猥褻、暴力、含文字或聯絡方式、明星或網路圖片。私密照同樣需審核，且不得含有裸露內容。</p>
 <h3>檢舉會被認真看待</h3><p>每一件檢舉都會由真人在 24 小時內處理。惡意或不實檢舉同樣會被處理。</p>`,
