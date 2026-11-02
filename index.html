@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-ZML47PNCUsR/YQ5gmLEu+gmY0j79lc3EswCHfDkSJiw=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-PBZgJwJpxwdAxIQRyXYWf8ju692v7fe9F9vY8oDOVHo=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -823,7 +823,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.66.0';
+const BUILD = 'v1.66.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -860,6 +860,9 @@ function openersFor(o){ if(!o) return []; const mine = new Set(me?.tags||[]); co
 const TAGS = ['美食','旅行','咖啡','紅酒','健身','電影','音樂','閱讀','藝術','攝影','高爾夫','登山','游泳','烹飪','寵物','時尚','品茶','露營','瑜伽','投資理財'];
 const ORIENT = { 'male-female':'我是男生，想認識女生', 'female-male':'我是女生，想認識男生', 'male-male':'我是男生，想認識男生', 'female-female':'我是女生，想認識女生' };
 const orientText = p => ORIENT[`${p.gender}-${p.looking_for}`] || '';
+// 選了之後，探索裡會看到誰、誰看得到你
+const ORIENT_SEE = { 'male-female':'想認識男生的女生', 'female-male':'想認識女生的男生', 'male-male':'想認識男生的男生', 'female-female':'想認識女生的女生' };
+const orientSee = k => ORIENT_SEE[k] ? `探索裡只會出現「${ORIENT_SEE[k]}」，也只有他們看得到你。` : '';
 const ROLES = { daddy:'Sugar Daddy', mommy:'Sugar Mommy', baby:'甜心' };
 const ROLE_DESC = { daddy:'事業有成，願意照顧對方的男性', mommy:'事業有成，願意照顧對方的女性', baby:'希望認識成熟、穩定對象的甜心' };
 const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'色情產業招攬', minor:'疑似未成年', other:'其他' };
@@ -1389,7 +1392,7 @@ async function viewAuth(){
         ${mode==='register' ? `
         <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--text);font-size:14px"><input type="checkbox" name="age" required style="width:auto;margin-top:4px"><span>我確認已年滿 18 歲（或所在地法定成年年齡）</span></label>
         <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--text);font-size:14px"><input type="checkbox" name="terms" required style="width:auto;margin-top:4px"><span>我已閱讀並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>，並了解本站禁止任何金錢交易與色情招攬</span></label>` : ''}
-        ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，驗證碼最多收 3 次，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定暱稱、性別與想認識的對象，送出後無法修改。</p>':''}
+        ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，驗證碼最多收 3 次，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定暱稱、性別與想認識的對象：這會決定你在探索看到誰、誰看得到你，送出後無法修改。</p>':''}
         <button class="btn primary block mt2" type="submit">${mode==='register'?'建立帳號':'登入'}</button>
         ${mode==='login' ? `<button class="btn ghost block mt" type="button" id="forgot">忘記密碼</button>`:''}
         <p class="small bad mt" id="authErr"></p>
@@ -1457,9 +1460,9 @@ function profileFormHtml(p={}){
     <div class="fsec"><span>1</span>身分與期待</div>
     ${p.gender && p.looking_for ? `
     <label>想認識的對象</label>
-    <div class="locked"><b>${orientText(p)}</b><small>這項設定送出後就無法修改。如有特殊需要，請<a href="#" data-support>聯絡客服</a>。</small></div>` : `
+    <div class="locked"><b>${orientText(p)}</b><small>${orientSee(p.gender+'-'+p.looking_for)}這項設定送出後就無法修改。如有特殊需要，請<a href="#" data-support>聯絡客服</a>。</small></div>` : `
     <label>想認識的對象 *</label>
-    <div class="orient-note">請選擇你的性別與想認識的對象。<b>送出審核後就無法修改</b>，請確認後再選。</div>
+    <div class="orient-note">請選擇你的性別與想認識的對象。<b>這會決定你在「探索」看到誰、誰看得到你，送出審核後就無法修改</b>，請確認後再選。<span class="orient-see"></span></div>
     <div class="roles orient">${Object.entries(ORIENT).map(([k,v])=>`<label class="rl"><input type="radio" name="orient" value="${k}" required><span><b>${v.replace('我是','').replace('，想認識','　找')}</b><small>${v}</small></span></label>`).join('')}</div>`}
     <label>我的身分 *</label>
     <div class="roles" id="rolePick">${Object.entries(ROLES).filter(([k])=>!(p.gender==='male'&&k==='mommy')&&!(p.gender==='female'&&k==='daddy')).map(([k,v])=>`<label class="rl" data-r="${k}"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div>
@@ -1498,7 +1501,7 @@ function profileFormHtml(p={}){
     <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額價碼或性交易相關字眼，將無法通過審核。</p>`;
 }
 function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',()=>{ $('#budgetBox')?.classList.toggle('hidden', r.value==='baby'); const eb=$('#ebBox'); if(eb) eb.style.display = r.value==='baby'?'':'none'; }));
-  document.querySelectorAll('input[name=orient]').forEach(r=>r.addEventListener('change',()=>{ const c=$('#cupBox'); if(c) c.style.display = r.value.startsWith('male')?'none':'';
+  document.querySelectorAll('input[name=orient]').forEach(r=>r.addEventListener('change',()=>{ const os=document.querySelector('.orient-see'); if(os) os.innerHTML = '<br><b>你選的是「'+esc(ORIENT[r.value]||'')+'」：</b>'+esc(orientSee(r.value)); const c=$('#cupBox'); if(c) c.style.display = r.value.startsWith('male')?'none':'';
     const male=r.value.startsWith('male'); document.querySelectorAll('#rolePick .rl').forEach(l=>{ const hide=(male&&l.dataset.r==='mommy')||(!male&&l.dataset.r==='daddy'); l.style.display=hide?'none':''; if(hide){ const i=l.querySelector('input'); if(i.checked){ i.checked=false; $('#budgetBox')?.classList.add('hidden'); } } }); }));
   $('#relPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(b) b.classList.toggle('on'); }); $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
   if(!b.classList.contains('on') && $('#tagPick').querySelectorAll('.on').length>=8) return toast('最多 8 個興趣'); b.classList.toggle('on'); }); }
@@ -1739,7 +1742,8 @@ async function viewOnboarding(){
         <p class="mt">你選擇的是：</p>
         <p class="serif" style="font-size:22px;margin:10px 0 4px">${ORIENT[p.gender+'-'+p.looking_for]}</p>
         <p class="muted small">暱稱：<b style="color:var(--ink)">${esc(p.nickname)}</b>　身分：${ROLES[p.role]}</p>
-        <div class="banner bad mt">送出後，<b>暱稱</b>、性別與想認識的對象都<b>無法再修改</b>。</div>
+        <p class="small mt">${orientSee(p.gender+'-'+p.looking_for)}</p>
+        <div class="banner bad mt">送出後，<b>暱稱</b>、性別與想認識的對象都<b>無法再修改</b>；之後在探索看到的對象，就是依這個設定決定。</div>
         <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="cfNo">回去修改</button><button class="btn primary" id="cfYes">確認送出</button></div>`);
       $('#cfNo').onclick = () => { closeModal(); res(false); };
       $('#cfYes').onclick = () => { closeModal(); res(true); };
