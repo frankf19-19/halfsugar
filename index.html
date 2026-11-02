@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-sY/0sU5Qi2uPhmDH2saIQRojb4torADycY1KS5hnUCE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-2Yi44A1YesPNb9UgOu2ZQoy72/BUe1Nn5s3xWFj6MoU=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -793,6 +793,22 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 .smsbars .bar{height:8px;border-radius:99px;background:var(--rule);overflow:hidden;margin-top:6px}.smsbars .bar i{display:block;height:100%;background:var(--gold2)}.smsbars .bar i.hot{background:var(--bad)}
 .smscfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 16px}.smscfg label{margin:0;font-size:13px}.smscfg input{margin-top:6px}
 #phCap{min-height:0;margin-top:12px}
+
+/* 底部分頁列：和頁面分開、目前分頁更清楚 */
+@media(max-width:719px){
+.bnav{background:rgba(250,248,246,.97);-webkit-backdrop-filter:saturate(1.5) blur(16px);backdrop-filter:saturate(1.5) blur(16px);border-top:1px solid rgba(40,20,25,.10);box-shadow:0 -10px 28px rgba(40,20,25,.08)}
+.bnav a{color:#8C8783;font-size:11px;letter-spacing:.12em;padding:10px 0 8px;gap:5px;transition:color .15s}
+.bnav a svg{width:23px;height:23px;stroke-width:1.35}
+.bnav a.active{color:var(--wine);font-weight:500}
+.bnav a.active svg{stroke-width:1.8}
+.bnav a.active::before{top:-1px;width:30px;height:2px;background:var(--wine);border-radius:0 0 2px 2px}
+.bnav a:active{opacity:.6}
+.bnav .badge{box-shadow:0 0 0 2px #FAF8F6;font-weight:500}
+html[data-theme=dark] .bnav{background:rgba(30,28,27,.97);border-top-color:rgba(255,255,255,.09);box-shadow:0 -10px 28px rgba(0,0,0,.45)}
+html[data-theme=dark] .bnav a{color:#8F8984}
+html[data-theme=dark] .bnav a.active{color:var(--wine)}
+html[data-theme=dark] .bnav .badge{box-shadow:0 0 0 2px #1E1C1B}
+}
 </style>
 </head>
 <body>
@@ -841,7 +857,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.71.0';
+const BUILD = 'v1.71.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
