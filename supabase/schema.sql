@@ -2668,7 +2668,7 @@ begin
   if public.my_status() = 'suspended' then
     raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
   end if;
-  insert into private.account_deleting (uid) values (uid) on conflict (uid) do update set at = now();
+  insert into private.account_deleting (uid) values (auth.uid()) on conflict on constraint account_deleting_pkey do update set at = now();
   perform set_config('halfsugar.deleting', '1', true);
   update public.profiles set hidden = true, avatar_path = null where id = uid;
   delete from public.photos where user_id = uid;
