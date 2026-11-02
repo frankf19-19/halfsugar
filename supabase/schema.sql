@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.39.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.40.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -1989,3 +1989,93 @@ update public.profiles set approved_avatar_path = avatar_path where status = 'ap
 -- v0.39：回填通過審核的自介、職業、興趣
 update public.profiles set approved_bio = bio, approved_occupation = occupation, approved_tags = tags
  where status = 'approved' and (approved_bio is distinct from bio or approved_occupation is distinct from occupation or approved_tags is distinct from tags);
+
+-- v0.40：手機驗證簡訊改由後端（Edge Function phone-verify）寄送並限制次數
+--   每個帳號最多 3 封、每支手機最多 3 封、全站每小時最多 30 封。
+--   Supabase 內建的 Phone 登入維持關閉，任何人都無法繞過次數限制直接寄簡訊。
+create table if not exists public.sms_sends (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete set null,
+  phone_hash text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists sms_sends_user_idx on public.sms_sends(user_id);
+create index if not exists sms_sends_phone_idx on public.sms_sends(phone_hash);
+create index if not exists sms_sends_time_idx on public.sms_sends(created_at);
+alter table public.sms_sends enable row level security;
+revoke all on public.sms_sends from anon, authenticated;
+
+-- 只給後端（service_role）呼叫：檢查並預留一次寄送額度。回傳 'ok' 或原因代碼。
+create or replace function public.sms_reserve(uid uuid, ph text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare h text := private.phone_hash(ph); nu int; np int; ng int; rid bigint;
+begin
+  if uid is null or coalesce(ph,'') !~ '^\+?8869\d{8}$' then return jsonb_build_object('r','bad_phone'); end if;
+  perform pg_advisory_xact_lock(hashtext('sms_reserve'));
+  if exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null and nullif(u.phone,'') is not null) then
+    return jsonb_build_object('r','already');
+  end if;
+  if exists (select 1 from public.banned_phones b where b.phone_hash = h) then return jsonb_build_object('r','banned'); end if;
+  if exists (select 1 from auth.users u where u.id <> uid and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = h) then
+    return jsonb_build_object('r','phone_exists');
+  end if;
+  select count(*) into nu from public.sms_sends where user_id = uid;
+  if nu >= 3 then return jsonb_build_object('r','user_limit'); end if;
+  select count(*) into np from public.sms_sends where phone_hash = h;
+  if np >= 3 then return jsonb_build_object('r','phone_limit'); end if;
+  select count(*) into ng from public.sms_sends where created_at > now() - interval '1 hour';
+  if ng >= 30 then return jsonb_build_object('r','global_limit'); end if;
+  insert into public.sms_sends (user_id, phone_hash) values (uid, h) returning id into rid;
+  return jsonb_build_object('r','ok','id',rid,'left',2-nu);
+end $$;
+revoke execute on function public.sms_reserve(uuid, text) from anon, authenticated, public;
+grant execute on function public.sms_reserve(uuid, text) to service_role;
+
+-- Twilio 寄送失敗時退回額度
+create or replace function public.sms_refund(rid bigint)
+returns void language sql security definer set search_path = public as $$
+  delete from public.sms_sends where id = rid;
+$$;
+revoke execute on function public.sms_refund(bigint) from anon, authenticated, public;
+grant execute on function public.sms_refund(bigint) to service_role;
+
+-- 驗證成功後，確認這支手機仍未被別人綁定、也不在黑名單
+create or replace function public.sms_phone_free(uid uuid, ph text)
+returns text language sql stable security definer set search_path = public as $$
+  select case
+    when exists (select 1 from public.banned_phones b where b.phone_hash = private.phone_hash(ph)) then 'banned'
+    when exists (select 1 from auth.users u where u.id <> uid and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = private.phone_hash(ph)) then 'phone_exists'
+    else 'ok' end;
+$$;
+revoke execute on function public.sms_phone_free(uuid, text) from anon, authenticated, public;
+grant execute on function public.sms_phone_free(uuid, text) to service_role;
+
+-- 自己還剩幾次
+create or replace function public.my_sms_left()
+returns int language sql stable security definer set search_path = public as $$
+  select greatest(0, 3 - (select count(*)::int from public.sms_sends where user_id = auth.uid()));
+$$;
+revoke execute on function public.my_sms_left() from anon, public;
+grant execute on function public.my_sms_left() to authenticated;
+
+-- 管理員：查看與重設簡訊次數
+create or replace function public.admin_sms_counts(ids uuid[])
+returns table (id uuid, n int)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query select s.user_id, count(*)::int from public.sms_sends s where s.user_id = any(ids) group by s.user_id;
+end $$;
+revoke execute on function public.admin_sms_counts(uuid[]) from anon, public;
+grant execute on function public.admin_sms_counts(uuid[]) to authenticated;
+
+create or replace function public.admin_reset_sms(target uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare hs text[];
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  select array_agg(distinct phone_hash) into hs from public.sms_sends where user_id = target;
+  delete from public.sms_sends where user_id = target or phone_hash = any(coalesce(hs, '{}'));
+end $$;
+revoke execute on function public.admin_reset_sms(uuid) from anon, public;
+grant execute on function public.admin_reset_sms(uuid) to authenticated;

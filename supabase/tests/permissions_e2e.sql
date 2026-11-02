@@ -6,6 +6,7 @@ declare
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
   AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid; V1 uuid := gen_random_uuid(); V2 uuid := gen_random_uuid(); cm3 uuid; iv uuid; tk text;
+  N1 uuid := gen_random_uuid(); N2 uuid := gen_random_uuid(); N3 uuid := gen_random_uuid(); N4 uuid := gen_random_uuid(); j jsonb;
 begin
   perform set_config('storage.allow_delete_query','true',true);
   update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
@@ -862,6 +863,43 @@ begin
   execute 'reset role';
   select count(*) into n from public.profiles where id=V2 and approved_bio='通過版自介' and approved_avatar_path is distinct from V2||'/x.jpg'; out := array_append(out, ('45b 會員改不了通過版內容 = '||n||' (應為1)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 46 手機驗證簡訊次數限制（v0.40）
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  delete from public.sms_sends;
+  insert into auth.users (id, email, aud, role) values (N1,'e2e-n1@test.invalid','authenticated','authenticated'),(N2,'e2e-n2@test.invalid','authenticated','authenticated'),(N3,'e2e-n3@test.invalid','authenticated','authenticated'),(N4,'e2e-n4@test.invalid','authenticated','authenticated');
+  v := '';
+  for i in 1..4 loop v := v || (public.sms_reserve(N1,'+886911000001')->>'r') || ','; end loop;
+  out := array_append(out, ('46a 每個帳號最多 3 封 = '||v||' (應為ok,ok,ok,user_limit,)')::text);
+  v := (public.sms_reserve(N2,'+886911000002')->>'r')||','||(public.sms_reserve(N2,'+886911000002')->>'r')||','||(public.sms_reserve(N3,'+886911000002')->>'r')||','||(public.sms_reserve(N3,'+886911000002')->>'r');
+  out := array_append(out, ('46b 同一支手機最多 3 封（跨帳號） = '||v||' (應為ok,ok,ok,phone_limit)')::text);
+  update auth.users set phone='886911000009', phone_confirmed_at=now() where id=N4;
+  v := public.sms_reserve(N2,'+886911000009')->>'r';
+  out := array_append(out, ('46c 別人已綁定的手機 = '||v||' (應為phone_exists)')::text);
+  insert into public.banned_phones (phone_hash) values (private.phone_hash('+886911000008'));
+  v := (public.sms_reserve(N2,'+886911000008')->>'r')||','||public.sms_phone_free(N2,'+886911000008')||','||public.sms_phone_free(N2,'+886911000009')||','||public.sms_phone_free(N2,'+886911000007');
+  out := array_append(out, ('46d 黑名單手機／驗證後再確認 = '||v||' (應為banned,banned,phone_exists,ok)')::text);
+  v := (public.sms_reserve(N2,'+15551234567')->>'r')||','||(public.sms_reserve(N4,'+886911000003')->>'r');
+  out := array_append(out, ('46e 非台灣號碼／已驗證過 = '||v||' (應為bad_phone,already)')::text);
+  j := public.sms_reserve(N3,'+886911000004'); perform public.sms_refund((j->>'id')::bigint);
+  select count(*) into n from public.sms_sends where user_id=N3;
+  out := array_append(out, ('46f 寄送失敗退回額度 = '||n||' (應為1)')::text);
+  insert into public.sms_sends (user_id, phone_hash) select null, 'x'||g from generate_series(1,30) g;
+  v := public.sms_reserve(N3,'+886911000005')->>'r';
+  out := array_append(out, ('46g 全站每小時 30 封 = '||v||' (應為global_limit)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',N1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', N1::text, true);
+  v := public.my_sms_left()::text;
+  begin perform public.admin_reset_sms(N1); v := v||',會員能重設 ✗'; exception when others then v := v||',擋下'; end;
+  begin perform public.admin_sms_counts(array[N1]); v := v||',會員能查 ✗'; exception when others then v := v||',擋下'; end;
+  out := array_append(out, ('46h 會員剩餘次數／不能重設 = '||v||' (應為0,擋下,擋下)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',AD,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', AD::text, true);
+  select a.n into n from public.admin_sms_counts(array[N1]) a; v := n::text;
+  perform public.admin_reset_sms(N1);
+  perform set_config('request.jwt.claims', json_build_object('sub',N1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', N1::text, true);
+  v := v||','||public.my_sms_left();
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  select count(*) into n from public.sms_sends where phone_hash=private.phone_hash('+886911000001');
+  out := array_append(out, ('46i 管理員查看並重設 = '||v||','||n||' (應為3,3,0)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
