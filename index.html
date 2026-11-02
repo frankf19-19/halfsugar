@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-PBZgJwJpxwdAxIQRyXYWf8ju692v7fe9F9vY8oDOVHo=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-DPTI9ZdXIg3dDi3m91MBC1moHOfoZ4fSS7e1H1LLAJg=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -823,7 +823,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.66.1';
+const BUILD = 'v1.66.2';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -923,6 +923,9 @@ function toast(msg, ms){ const t=$('#toast'); t.textContent=zh(msg);
   const vv = window.visualViewport; t.classList.toggle('top', !!vv && (innerHeight - vv.height) > 120); t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), ms); }
 function containsBadWords(s, chat){ const l=(s||'').toLowerCase(); return BAD_WORDS.filter(w=>!(chat && CHAT_OK.includes(w)) && l.includes(w.toLowerCase())); }
 const CHAT_OK = ['出場','定點','全套','價碼','一次多少','line id','加賴'];   // 日常對話也會用到的詞，訊息裡不擋（自介仍擋）
+// 點開時才產生新的照片連結（畫面上的連結 5 分鐘就失效）；先同步開分頁，避免被瀏覽器擋彈出視窗
+function openFresh(bucket, path){ const w = window.open('about:blank', '_blank'); if(w) try{ w.opener = null; }catch(_){}
+  sb.storage.from(bucket).createSignedUrl(path, 600).then(({ data })=>{ if(data?.signedUrl){ if(w) w.location.href = data.signedUrl; else window.open(data.signedUrl, '_blank', 'noopener,noreferrer'); } else if(w) w.close(); }); }
 const cssu = u => String(u).replace(/["'\\\n\r()]/g, c=>encodeURIComponent(c));
 // 照片連結：同一時間要的合併成一次請求（以前每張照片各發一次，探索頁一進來就是幾十個請求）
 const signWait = new Map(), signPend = new Map(); let signTimer = null;
@@ -957,7 +960,7 @@ async function compressImage(file, max=1080, q=.85){
 let recovering = false, lastUid;
 // 手機「返回」鍵：先關掉視窗，不要整頁跳走。
 // 做法：開視窗時多一筆歷史紀錄；用 × 關掉時不倒退（避免和接著的換頁搶時間），而是把那筆標成失效，之後按返回遇到就自動跳過。
-let modalHist = false, ignorePop = 0, deadHref = null;
+let modalHist = false, ignorePop = 0, deadHref = null, holdModal = false;   // holdModal：信件連結確認視窗開著時，換頁不要關掉它
 function modal(html, opt){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML = `<div class="modal" id="mbg"><div class="box"><button class="x" id="mx" aria-label="關閉">×</button>${html}</div></div>`;
   $('#mx').onclick = ()=>closeModal(); $('#mbg').onclick = e => { if(e.target.id==='mbg') closeModal(); };
   document.body.classList.add('modal-open');
@@ -968,7 +971,7 @@ function modal(html, opt){ if(window.__onModalClose){ try{ window.__onModalClose
     if(history.state && history.state.yyDead && deadHref===location.href) history.replaceState({ yyModal:1 }, '');   // 沿用剛失效的那筆，不會越疊越多
     else history.pushState({ yyModal:1 }, '');
     deadHref = null; modalHist = true; }catch(_){} } }
-function closeModal(){ if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; const wasRec = recovering; recovering=false; if(wasRec) setTimeout(()=>route(), 0);   // 重設密碼視窗被關掉：已經登入了，畫面要跟著更新 document.body.classList.remove('modal-open');
+function closeModal(){ holdModal = false; if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; const wasRec = recovering; recovering=false; if(wasRec) setTimeout(()=>route(), 0);   // 重設密碼視窗被關掉：已經登入了，畫面要跟著更新 document.body.classList.remove('modal-open');
   const rf = window.__modalReturn; window.__modalReturn = null; if(rf && rf.isConnected && rf.focus) try{ rf.focus({ preventScroll:true }); }catch(_){}
   if(history.state && history.state.yyModal){ try{ history.replaceState({ yyDead:1 }, ''); deadHref = location.href; }catch(_){} }
   modalHist = false; }
@@ -1186,7 +1189,7 @@ async function route(){
   if(deadHref && location.href !== deadHref) deadHref = null;   // 已經換到別頁，失效紀錄的記號不再需要
   routeSeq++;
   if(chatChannel){ sb.removeChannel(chatChannel); chatChannel=null; } onChatVisible = null;
-  if(!recovering) closeModal();
+  if(!recovering && !holdModal) closeModal();
   const [path, arg] = (location.hash.replace(/^#\//,'').split('?')[0]||'').split('/');
   renderNav();
   document.body.classList.toggle('home', !path || path==='about');
@@ -1602,11 +1605,15 @@ function askRecover(email){
   modal(`<h2>這支手機已經有帳號了</h2>
     <p class="muted small mt">這支手機已經綁定帳號 <b>${esc(email||'')}</b>。一支手機只能有一個帳號，要恢復原本的帳號嗎？</p>
     <p class="tiny dim mt">恢復後，你剛剛建立、還沒填資料的新帳號會一併刪除。</p>
+    <p class="small bad mt" id="rcErr" role="alert"></p>
     <button class="btn primary block mt2" id="rcReset">恢復原本帳號（寄重設密碼信）</button>
     <button class="btn ghost block mt" id="rcLogin">我記得密碼，直接登入</button>
     <p class="tiny dim mt2">這不是你的帳號？手機號碼可能是電信公司回收後重新發出的，請從網頁最下方「聯絡客服」，我們會協助你。</p>`, { noHist:true });
   const go = async mode => { document.querySelectorAll('#rcReset,#rcLogin').forEach(b=>b.disabled=true);
     const r = await phoneApi({ action:'recover', mode });
+    if(r.error==='mail_rate' || r.error==='mail_failed' || r.error==='network' || r.error==='server'){   // 可以再按一次
+      document.querySelectorAll('#rcReset,#rcLogin').forEach(b=>b.disabled=false);
+      const er=$('#rcErr'); if(er) er.textContent = smsErr2(r.error); return; }
     if(r.error){ closeModal(); return toast(r.error==='recover_expired'?'等太久了，請重新驗證一次手機。':smsErr2(r.error)); }
     await sb.auth.signOut(); closeModal(); location.hash='#/auth?mode=login';
     setTimeout(()=>modal(mode==='reset'
@@ -1665,7 +1672,7 @@ function viewPhoneVerify(){
   });
   const getCap = () => capReady() ? Promise.resolve(capTok) : new Promise(res=>{ capWait=()=>res(capTok); setTimeout(()=>{ if(capWait){ capWait=null; res(''); } }, 15000); });
   const useCap = () => { capTok=''; try{ if(capId!==null) window.turnstile.reset(capId); }catch(_){} };
-  sb.rpc('my_sms_left').then(({ data })=>{ if(typeof data==='number'){ left=data; showLeft(); if(left<=0) noMore(); } });
+  sb.rpc('my_sms_left').then(({ data })=>{ if(typeof data==='number'){ left=data; showLeft(); if(left<=0) noMore(!$('#otpForm').classList.contains('hidden')); } });
   const send = async () => { if(sending) return false; sending=true; const rb=$('#otpResend'); if(rb) rb.disabled=true;
     const captcha = await getCap(); if(capKey && !captcha){ sending=false; phErr(smsErr2('captcha')); if(rb && !timer && left>0) rb.disabled=false; return false; }
     const r = await phoneApi({ action:'send', phone, captcha }).finally(()=>{ sending=false; useCap(); });
@@ -1958,7 +1965,7 @@ async function openProfile(id){
     h.insertAdjacentHTML('beforeend', `<button type="button" class="vbtn" id="vPlay"><span class="vi">▶</span>聽聽 ${esc(p.nickname)} 的聲音${vc.duration?`<span class="tiny dim">0:${String(vc.duration).padStart(2,'0')}</span>`:''}</button>`);
     let au=null; $('#vPlay').onclick = async ()=>{ const b=$('#vPlay');
       if(au && !au.paused){ au.pause(); b.querySelector('.vi').textContent='▶'; return; }
-      if(!au){ const { data: u } = await sb.storage.from('voice').createSignedUrl(vc.path, 300); if(!u?.signedUrl) return toast('目前無法播放'); au = new Audio(u.signedUrl); au.onended=()=>{ if(b.isConnected) b.querySelector('.vi').textContent='▶'; }; }
+      if(!au){ const { data: u } = await sb.storage.from('voice').createSignedUrl(vc.path, 3600); if(!u?.signedUrl) return toast('目前無法播放'); au = new Audio(u.signedUrl); au.onended=()=>{ if(b.isConnected) b.querySelector('.vi').textContent='▶'; }; }
       window.__onModalClose = () => { try{ au && au.pause(); }catch(_){} };
       au.play().then(()=>{ b.querySelector('.vi').textContent='❚❚'; }).catch(()=>toast('無法播放這段語音')); }; });
   if(p.wealth_verified_at && p.id!==me.id) sb.rpc('wealth_doc_status', { owner:id }).then(({ data })=>{ const st=(Array.isArray(data)?data[0]:data)||{}; const el=$('#wDoc'); if(!el) return;
@@ -2429,7 +2436,7 @@ async function viewMe(){
     box.innerHTML = vc ? `<div class="row flexwrap" style="gap:10px;align-items:center"><span class="chip ${ST[vc.status][0]}">${ST[vc.status][1]}</span><audio controls preload="none" id="vcAu" style="height:36px;max-width:100%"></audio></div>
         <div class="row mt flexwrap" style="gap:8px"><button class="btn sm ghost" id="vcRec">重新錄音</button><button class="btn sm ghost" id="vcDel">刪除</button></div>`
       : `<button class="btn sm primary" id="vcRec">🎙 錄一段語音</button>`;
-    if(vc) sb.storage.from('voice').createSignedUrl(vc.path, 300).then(({ data })=>{ if(data?.signedUrl && $('#vcAu')) $('#vcAu').src = data.signedUrl; });
+    if(vc) sb.storage.from('voice').createSignedUrl(vc.path, 3600).then(({ data })=>{ if(data?.signedUrl && $('#vcAu')) $('#vcAu').src = data.signedUrl; });
     $('#vcRec').onclick = () => recordVoice(vc);
     $('#vcDel') && ($('#vcDel').onclick = async ()=>{ if(!confirm('刪除語音自我介紹？')) return; const { error } = await sb.from('voice_intros').delete().eq('user_id', me.id); if(error) return toast(zh(error.message)); sb.storage.from('voice').remove([vc.path]).catch(()=>{}); toast('已刪除'); drawVoice(); }); };
   const recordVoice = (old) => {
@@ -2641,7 +2648,7 @@ async function viewAdmin(){
         modal(`<h3 style="font-size:17px">${esc(d.na)} ⇄ ${esc(d.nb)}</h3><p class="tiny dim">管理員唯讀檢視。標示「已收回」的是會員收回前的原內容。</p>
           <div class="admchat mt">${(ms||[]).map(x=>`<div class="am ${x.sender_id===d.a?'a':'b'}${x.recalled_at?' rc':''}"><div class="tiny dim">${esc(nm(x.sender_id))}・${fmtTime(x.created_at)}${x.recalled_at?`・<span class="bad">已收回（${fmtTime(x.recalled_at)}）</span>`:''}${x.read_at?'・已讀':''}</div>
             ${x.image_path?`<div class="amimg" data-p="${esc(x.image_path)}"></div>`:''}${x.body?`<div class="ab">${esc(x.body)}</div>`:''}</div>`).join('') || '<p class="muted">沒有訊息</p>'}</div>`);
-        document.querySelectorAll('#modal .amimg').forEach(async el=>{ const { data } = await sb.storage.from('chat').createSignedUrl(el.dataset.p, 300);
+        document.querySelectorAll('#modal .amimg').forEach(async el=>{ const { data } = await sb.storage.from('chat').createSignedUrl(el.dataset.p, 3600);
           if(data?.signedUrl && el.isConnected){ el.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; el.onclick=()=>window.open(data.signedUrl,'_blank','noopener,noreferrer'); } else if(el.isConnected) el.textContent='（照片檔已不存在）'; });
       };
       $('#cqb').onclick = list; $('#cq').onkeydown = e=>{ if(e.key==='Enter') list(); };
@@ -2673,7 +2680,7 @@ async function viewAdmin(){
         ${(phBy[p.id]||[]).length?`<div class="tiny dim mt">其他待審照片（${phBy[p.id].length}）　<button class="btn sm ghost phAll" data-u="${p.id}">全部通過</button></div>
           <div class="gallery mt aphs">${phBy[p.id].map(x=>`<div class="g" data-ph="${esc(x.path)}" data-id="${x.id}"><span class="st chip warn">${x.is_private?'🔒 私密':'公開'}</span><div class="aphb"><button class="pok" data-id="${x.id}" aria-label="通過">✓</button><button class="pno" data-id="${x.id}" aria-label="退件">✕</button></div></div>`).join('')}</div>`:''}
         <div class="row mt flexwrap"><button class="btn sm primary ap" data-id="${p.id}">✓ 通過</button><input class="grow note" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px"><button class="btn sm ghost rj" data-id="${p.id}">退件</button><button class="btn sm danger sp" data-id="${p.id}">停權</button></div></div>`).join('');
-      box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank','noopener,noreferrer'); } admThumb(el); });
+      box.querySelectorAll('.avatar').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>openFresh('photos', el.dataset.ph); } admThumb(el); });
       box.querySelectorAll('.aphs .g').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; } admThumb(el); });
       const phDone = (id, ok) => { const g = box.querySelector(`.aphs .g[data-id="${id}"]`); if(g){ g.style.opacity=.35; g.querySelector('.st').textContent = ok?'已通過':'已退件'; g.querySelector('.aphb')?.remove(); } };
       box.querySelectorAll('.pok').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id))) phDone(b.dataset.id,true); });
@@ -2690,8 +2697,8 @@ async function viewAdmin(){
       const vHtml = vrows?.length ? `<h3 style="font-size:16px;margin-bottom:10px">待審語音（${vrows.length}）</h3><div class="list mb">${vrows.map(v=>`<div class="item" style="cursor:default;flex-wrap:wrap"><div class="grow t">${esc(v.p?.nickname||'')}<span class="tiny dim">　${v.duration||''} 秒</span></div><audio controls preload="none" data-vp="${esc(v.path)}" style="height:34px;max-width:100%"></audio><button class="btn sm primary va" data-u="${v.user_id}">通過</button><button class="btn sm ghost vr" data-u="${v.user_id}">退件</button></div>`).join('')}</div>` : '';
       box.innerHTML = vHtml + (rows?.length ? '' : '<p class="muted center">沒有待審照片 ✓</p>') + `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
         <div class="row mt" style="gap:6px"><button class="btn sm primary pa" data-id="${x.id}">通過</button><button class="btn sm ghost pr" data-id="${x.id}">退件</button></div></div></div>`).join('')}</div>`;
-      box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>window.open(u,'_blank','noopener,noreferrer'); }  admThumb(el); });
-      box.querySelectorAll('audio[data-vp]').forEach(async au=>{ const { data } = await sb.storage.from('voice').createSignedUrl(au.dataset.vp, 300); if(data?.signedUrl) au.src = data.signedUrl; });
+      box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>openFresh('photos', el.dataset.ph); }  admThumb(el); });
+      box.querySelectorAll('audio[data-vp]').forEach(async au=>{ const { data } = await sb.storage.from('voice').createSignedUrl(au.dataset.vp, 3600); if(data?.signedUrl) au.src = data.signedUrl; });
       box.querySelectorAll('.va,.vr').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('voice_intros').update({ status: b.classList.contains('va')?'approved':'rejected' }).eq('user_id', b.dataset.u))){ b.closest('.item').style.opacity=.3; } });
       const pdone = b => { const c=b.closest('.pcard'); c.style.opacity=.3; setTimeout(()=>{ c.remove(); if(!box.querySelector('.pcard')) draw(); },300); };
       box.querySelectorAll('.pa').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id))) pdone(b); });
@@ -2708,7 +2715,7 @@ async function viewAdmin(){
       box.querySelectorAll('.msgs').forEach(b=>b.onclick=async()=>{ const { data: ms, error } = await sb.from('report_evidence').select('body,created_at,sender_id,image_path,recalled').eq('report_id',b.dataset.r).order('created_at');
         if(error) return toast(error.message);
         modal(`<h3 style="font-size:16px">檢舉當下雙方的對話（${(ms||[]).length} 則）</h3><p class="tiny dim">送出檢舉時自動備份，對方刪除帳號或結束對話也不會消失。</p>${(ms||[]).map(x=>`<p class="small" style="border-bottom:1px solid var(--rule);padding:6px 0"><b class="tiny ${x.sender_id===b.dataset.id?'bad':''}">${x.sender_id===b.dataset.id?'被檢舉人':'檢舉人'}</b>　<span class="tiny dim">${fmtTime(x.created_at)}</span>${x.recalled?'　<span class="tiny bad">已收回</span>':''}<br>${esc(x.body)}${x.image_path?`<span class="evimg" data-p="${esc(x.image_path)}">［照片］</span>`:''}</p>`).join('')||'<p class="muted mt">兩人之間沒有對話紀錄</p>'}`);
-        document.querySelectorAll('#modal .evimg').forEach(async el=>{ const { data } = await sb.storage.from('chat').createSignedUrl(el.dataset.p, 300); if(data?.signedUrl && el.isConnected){ el.innerHTML=''; el.style.cssText='display:block;width:180px;aspect-ratio:3/4;background:#ddd center/cover;margin-top:6px;cursor:zoom-in;background-image:url("'+cssu(data.signedUrl)+'")'; el.onclick=()=>window.open(data.signedUrl,'_blank','noopener,noreferrer'); } else if(el.isConnected) el.textContent='［照片檔已刪除］'; }); });
+        document.querySelectorAll('#modal .evimg').forEach(async el=>{ const { data } = await sb.storage.from('chat').createSignedUrl(el.dataset.p, 3600); if(data?.signedUrl && el.isConnected){ el.innerHTML=''; el.style.cssText='display:block;width:180px;aspect-ratio:3/4;background:#ddd center/cover;margin-top:6px;cursor:zoom-in;background-image:url("'+cssu(data.signedUrl)+'")'; el.onclick=()=>window.open(data.signedUrl,'_blank','noopener,noreferrer'); } else if(el.isConnected) el.textContent='［照片檔已刪除］'; }); });
     }
     if(tab==='person'){
       const { data: rows, error } = await sb.from('person_verifications').select('*').eq('status','pending').order('submitted_at');
@@ -2726,8 +2733,8 @@ async function viewAdmin(){
           <input class="note mt" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px">
           <div class="row mt" style="gap:8px"><button class="btn sm primary pva" data-id="${r.id}">✓ 通過</button><button class="btn sm ghost pvr" data-id="${r.id}">退件</button></div></div>`; }).join('');
       box.querySelectorAll('.pvimg[data-ph]').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
-      box.querySelectorAll('.pvself').forEach(async a=>{ if(!a.dataset.p) return; const { data } = await sb.storage.from('person').createSignedUrl(a.dataset.p, 300); if(data?.signedUrl){ a.href=data.signedUrl; a.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; } });
-      box.querySelectorAll('.pvvid').forEach(async v=>{ if(!v.dataset.p) return; const { data } = await sb.storage.from('person').createSignedUrl(v.dataset.p, 300); if(data?.signedUrl) v.src=data.signedUrl; });
+      box.querySelectorAll('.pvself').forEach(async a=>{ if(!a.dataset.p) return; const { data } = await sb.storage.from('person').createSignedUrl(a.dataset.p, 3600); if(data?.signedUrl){ a.href=data.signedUrl; a.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; } });
+      box.querySelectorAll('.pvvid').forEach(async v=>{ if(!v.dataset.p) return; const { data } = await sb.storage.from('person').createSignedUrl(v.dataset.p, 3600); if(data?.signedUrl) v.src=data.signedUrl; });
       const pvReview = async (b, approve) => { b.disabled=true; const card=b.closest('.card'); const r = rows.find(x=>x.id===b.dataset.id);
         const { error } = await sb.rpc('admin_review_person', { vid: r.id, approve, note: card.querySelector('.note').value||null });
         if(error){ b.disabled=false; return toast(error.message); }
@@ -2749,7 +2756,7 @@ async function viewAdmin(){
             <div class="small mt">文件：${WEALTH_KINDS[r.kind]||r.kind}</div><div class="tiny dim">送出：${fmtTime(r.created_at)}</div>
             <input class="note mt" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px">
             <div class="row mt" style="gap:8px"><button class="btn sm primary wa" data-id="${r.id}" data-path="${esc(r.path||'')}">✓ 通過</button><button class="btn sm ghost wr" data-id="${r.id}" data-path="${esc(r.path||'')}">退件</button></div></div></div></div>`; }).join('');
-      box.querySelectorAll('.wdoc').forEach(async a=>{ if(!a.dataset.path) return; const { data } = await sb.storage.from('verify').createSignedUrl(a.dataset.path, 300); if(data?.signedUrl){ a.href=data.signedUrl; a.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; } });
+      box.querySelectorAll('.wdoc').forEach(async a=>{ if(!a.dataset.path) return; const { data } = await sb.storage.from('verify').createSignedUrl(a.dataset.path, 3600); if(data?.signedUrl){ a.href=data.signedUrl; a.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; } });
       const review = async (b, approve) => { b.disabled = true; const card=b.closest('.card');
         const { error } = await sb.rpc('admin_review_wealth', { vid: b.dataset.id, approve, note: card.querySelector('.note').value||null });
         if(error){ b.disabled=false; return toast(error.message); }
@@ -2923,8 +2930,8 @@ function viewDoc(k){ $('#app').innerHTML = `<div class="doc card">${DOCS[k]}</di
     else if(tt==='recovery'){ linkGuard = false; recovering = true; lastUid = newUid; await loadMe(); route(); openPasswordReset(); return; }
     else { linkGuard = false;
       if(prev) setTimeout(()=>toast(tt==='email_change'?'Email 已更新':'Email 驗證成功，歡迎加入微糖', 6000), 400);
-      else { await loadMe(); route();   // 沒有登入的人點連結：先確認是不是自己的帳號
-        modal(`<h2>${tt==='email_change'?'Email 已更新':'Email 驗證成功'}</h2><p class="muted small mt">你現在登入的帳號是 <b>${esc(mask)}</b>。</p><p class="tiny dim mt">如果這不是你的帳號（例如別人傳給你的連結），請按「不是我的帳號」，不要在這個帳號裡驗證手機或上傳照片。</p>
+      else { lastUid = newUid; await loadMe(); await route(); await new Promise(r=>setTimeout(r, 350));   // 沒有登入的人點連結：先確認是不是自己的帳號（等換頁結束再問）
+        holdModal = true; modal(`<h2>${tt==='email_change'?'Email 已更新':'Email 驗證成功'}</h2><p class="muted small mt">你現在登入的帳號是 <b>${esc(mask)}</b>。</p><p class="tiny dim mt">如果這不是你的帳號（例如別人傳給你的連結），請按「不是我的帳號」，不要在這個帳號裡驗證手機或上傳照片。</p>
           <div class="row mt2" style="gap:10px;justify-content:flex-end"><button class="btn ghost" id="lkNo">不是我的帳號</button><button class="btn primary" id="lkYes">是我，繼續</button></div>`, { noHist:true });
         $('#lkYes').onclick = closeModal;
         $('#lkNo').onclick = async ()=>{ await sb.auth.signOut({ scope:'local' }).catch(()=>{}); closeModal(); location.hash='#/'; toast('已登出。'); };
