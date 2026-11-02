@@ -124,12 +124,15 @@ async function handle(req: Request): Promise<Response> {
     const bal = await get(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Balance.json`);
     const svc = await get(`https://verify.twilio.com/v2/Services/${env("TWILIO_VERIFY_SID")}`);
     const geo = await get(`https://voice.twilio.com/v1/DialingPermissions/Countries/TW`);
+    const al = await get(`https://monitor.twilio.com/v1/Alerts?PageSize=10`);
+    const alerts = (al.j?.alerts || []).map((a: Record<string, unknown>) => ({ at: a.date_created, code: a.error_code, level: a.log_level, text: String(a.alert_text || "").replace(/\+?\d{8,}/g, "＊").slice(0, 300) }));
     return reply({
       secrets: { sid: !!sid, token: !!env("TWILIO_AUTH_TOKEN"), verify: !!env("TWILIO_VERIFY_SID") },
       account: { status: acc.status, type: acc.j?.type, state: acc.j?.status, code: acc.j?.code, message: acc.j?.message },
       balance: { status: bal.status, balance: bal.j?.balance, currency: bal.j?.currency },
       verify: { status: svc.status, name: svc.j?.friendly_name, code: svc.j?.code, message: svc.j?.message },
       tw_voice: { status: geo.status, low_risk: geo.j?.low_risk_numbers_enabled },
+      alerts_status: al.status, alerts,
     });
   }
 
