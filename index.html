@@ -772,6 +772,9 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 .themesw{display:inline-flex;border:1px solid var(--rule);margin-top:12px}
 .themesw button{padding:6px 14px;font-size:12px;letter-spacing:.14em;color:var(--grey);min-height:34px}
 .themesw button.on{background:var(--ink);color:var(--white)}
+.smsbars .bar{height:8px;border-radius:99px;background:var(--rule);overflow:hidden;margin-top:6px}.smsbars .bar i{display:block;height:100%;background:var(--gold2)}.smsbars .bar i.hot{background:var(--bad)}
+.smscfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 16px}.smscfg label{margin:0;font-size:13px}.smscfg input{margin-top:6px}
+#phCap{min-height:0;margin-top:12px}
 </style>
 </head>
 <body>
@@ -814,7 +817,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.63.0';
+const BUILD = 'v1.64.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -896,7 +899,8 @@ const ZH = [
   [/Email address not authorized/i,'目前無法寄信到這個信箱，請稍後再試'],
   [/reauthenticat/i,'為了安全，請先登出，再用「忘記密碼」重設'],
   [/violates check constraint/i,'資料格式不正確，請檢查後再試'],
-  [/Database error saving new user/i,'註冊暫時失敗，請稍後再試'],
+  [/disposable_email/i,'這個 Email 無法註冊，請改用常用的信箱（Gmail、Yahoo、Outlook 等）'],
+  [/Database error saving new user/i,'註冊沒有成功。如果你用的是臨時信箱，請改用常用的信箱（Gmail、Yahoo、Outlook 等）；否則請稍後再試'],
   [/Payload too large|exceeded the maximum allowed size|entity too large/i,'照片太大，請換一張'],
   [/mime type .* is not supported|invalid mime/i,'只接受 JPG、PNG、WebP 照片'],
   [/new row violates row-level security|permission denied|violates row-level/i,'沒有權限進行這個操作'],
@@ -1565,6 +1569,9 @@ function smsErr2(c){
     too_many_checks:'輸入錯誤太多次，請按「重新傳送」。',
     bad_code:'請輸入 6 位數驗證碼',
     recover_expired:'等太久了，請重新驗證一次手機。',
+    paused:'手機驗證暫停中，請稍後再試。',
+    ip_limit:'這個網路短時間內申請太多次驗證碼，請稍後再試，或換個網路（例如改用行動網路）。',
+    captcha:'真人驗證沒有通過，請重新勾選後再試。',
     network:'網路連線不穩，請稍後再試。',
     auth:'登入已過期，請重新登入。'
   })[c] || '沒有成功，請稍後再試。';
@@ -1594,6 +1601,7 @@ function viewPhoneVerify(){
     <form id="phForm" class="card">
       <label>手機號碼</label>
       <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="12" required></div>
+      <div id="phCap"></div>
       <p class="small bad mt" id="phErr" role="alert"></p><p class="tiny dim mt">目前僅支援台灣手機門號。<span id="phLeft">每個帳號最多可傳送 3 次驗證碼，請先確認號碼正確再送出。</span></p>
       <button class="btn primary block mt2" id="phSend" type="submit">傳送驗證碼</button>
     </form>
@@ -1614,9 +1622,24 @@ function viewPhoneVerify(){
   const showLeft = () => { const el=$('#phLeft'); if(el) el.textContent = left>0 ? `每個帳號最多可傳送 3 次驗證碼，目前還剩 ${left} 次。請先確認號碼正確再送出。` : '驗證碼傳送次數已用完。'; };
   const noMore = keepOtp => { left=0; showLeft(); const rb=$('#otpResend'); if(rb){ rb.disabled=true; rb.textContent='已無法再傳送'; } clearInterval(timer);
     if(!keepOtp){ const b=$('#phSend'); if(b){ b.disabled=true; } phErr('驗證碼傳送次數已用完。請從網頁最下方「聯絡客服」，我們會協助你完成驗證。'); } };
+  // 真人驗證（Cloudflare Turnstile）：後台設定了 site key 才出現
+  let capKey='', capTok='', capId=null, capWait=null;
+  const capReady = () => !capKey || !!capTok;
+  sb.from('app_config').select('value').eq('key','turnstile_sitekey').maybeSingle().then(({ data })=>{
+    capKey = (data?.value||'').trim(); if(!capKey || !$('#phCap')) return;
+    const mount = () => { if(!$('#phCap') || !window.turnstile) return;
+      capId = window.turnstile.render('#phCap', { sitekey: capKey, language:'zh-tw', theme: document.documentElement.dataset.theme==='dark'?'dark':'light', size:'flexible',
+        callback: t => { capTok=t; if(capWait){ const w=capWait; capWait=null; w(); } }, 'expired-callback': ()=>{ capTok=''; }, 'error-callback': ()=>{ capTok=''; } }); };
+    if(window.turnstile) mount();
+    else if(!document.getElementById('tsScript')){ const sc=document.createElement('script'); sc.id='tsScript'; sc.async=true; sc.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.onload=mount; document.head.appendChild(sc); }
+    else document.getElementById('tsScript').addEventListener('load', mount);
+  });
+  const getCap = () => capReady() ? Promise.resolve(capTok) : new Promise(res=>{ capWait=()=>res(capTok); setTimeout(()=>{ if(capWait){ capWait=null; res(''); } }, 15000); });
+  const useCap = () => { capTok=''; try{ if(capId!==null) window.turnstile.reset(capId); }catch(_){} };
   sb.rpc('my_sms_left').then(({ data })=>{ if(typeof data==='number'){ left=data; showLeft(); if(left<=0) noMore(); } });
   const send = async () => { if(sending) return false; sending=true; const rb=$('#otpResend'); if(rb) rb.disabled=true;
-    const r = await phoneApi({ action:'send', phone }).finally(()=>{ sending=false; });
+    const captcha = await getCap(); if(capKey && !captcha){ sending=false; phErr(smsErr2('captcha')); if(rb && !timer) rb.disabled=false; return false; }
+    const r = await phoneApi({ action:'send', phone, captcha }).finally(()=>{ sending=false; useCap(); });
     if(r.error==='already'){ await sb.auth.refreshSession(); await loadMe(); toast('這支手機已經驗證過了'); route(); return true; }
     if(r.error){ phErr(smsErr2(r.error)); if(['user_limit'].includes(r.error)) noMore(); else if(rb && !timer) rb.disabled=false; return false; }
     left = r.left ?? Math.max(0,left-1);
@@ -2557,7 +2580,7 @@ async function viewAdmin(){
   let tab = 'profiles';
   const adm = async q => { const { error } = await q; if(error) toast('沒有完成：'+error.message); return !error; };
   const draw = async ()=>{
-    if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="tabs admtabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='person'?'on':''}" data-t="person">真人認證</button><button class="${tab==='wealth'?'on':''}" data-t="wealth">財力認證</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button><button class="${tab==='support'?'on':''}" data-t="support">客服留言</button><button class="${tab==='convos'?'on':''}" data-t="convos">對話紀錄</button></div><div id="adm"><div class="spinner"></div></div>`;
+    if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="tabs admtabs"><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='person'?'on':''}" data-t="person">真人認證</button><button class="${tab==='wealth'?'on':''}" data-t="wealth">財力認證</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button><button class="${tab==='support'?'on':''}" data-t="support">客服留言</button><button class="${tab==='sms'?'on':''}" data-t="sms">簡訊監控</button><button class="${tab==='convos'?'on':''}" data-t="convos">對話紀錄</button></div><div id="adm"><div class="spinner"></div></div>`;
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
     const box = $('#adm');
     if(tab==='convos'){
@@ -2695,6 +2718,35 @@ async function viewAdmin(){
         toast(approve?'已通過（文件保留給本人允許的人查看）':'已退件，文件已刪除'); card.style.opacity=.3; setTimeout(()=>{ card.remove(); if(!box.querySelector('.card')) draw(); },300); };
       box.querySelectorAll('.wa').forEach(b=>b.onclick=()=>review(b,true));
       box.querySelectorAll('.wr').forEach(b=>b.onclick=()=>review(b,false));
+    }
+    if(tab==='sms'){
+      const { data: x, error } = await sb.rpc('admin_sms_stats'); if(error){ box.innerHTML=`<p class="bad">${esc(error.message)}</p>`; return; }
+      const pct = (a,b) => Math.min(100, Math.round(a*100/Math.max(1,b)));
+      box.innerHTML = `<div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h3 style="font-size:17px;margin:0">驗證簡訊</h3>
+          ${x.paused?'<span class="chip" style="background:var(--bad);color:#fff">已暫停寄送</span>':'<span class="chip ok">正常寄送中</span>'}</div>
+        <div class="smsbars mt2">
+          <div><div class="row small" style="justify-content:space-between"><span>最近 1 小時</span><b>${x.hour} / ${x.max_hour} 封</b></div><div class="bar"><i style="width:${pct(x.hour,x.max_hour)}%" class="${pct(x.hour,x.max_hour)>=80?'hot':''}"></i></div></div>
+          <div class="mt"><div class="row small" style="justify-content:space-between"><span>最近 24 小時</span><b>${x.day} / ${x.max_day} 封</b></div><div class="bar"><i style="width:${pct(x.day,x.max_day)}%" class="${pct(x.day,x.max_day)>=80?'hot':''}"></i></div></div>
+          <p class="tiny dim mt">最近 7 天共 ${x.week} 封，約 NT$${Math.round(x.week*4.3).toLocaleString()}（每封約 NT$4.3）。</p>
+        </div>
+        <button class="btn block mt2 ${x.paused?'primary':'danger'}" id="smsPause">${x.paused?'恢復寄送驗證簡訊':'緊急暫停所有驗證簡訊'}</button>
+        <p class="tiny dim mt">發現異常（短時間內數字暴增）時先按暫停。暫停期間新會員無法完成手機驗證，畫面會請他稍後再試。</p>
+      </div>
+      <div class="card mt">
+        <h3 style="font-size:17px;margin:0 0 4px">上限設定</h3><p class="tiny dim mb">另外固定：每個帳號最多 3 封、每支手機最多 3 封、只開放台灣號碼。</p>
+        <div class="smscfg">
+          <label>全站每小時最多<input type="number" min="1" max="99999" data-k="sms_hour" value="${x.max_hour}"></label>
+          <label>全站每天最多<input type="number" min="1" max="99999" data-k="sms_day" value="${x.max_day}"></label>
+          <label>同一個網路位址每小時最多<input type="number" min="1" max="99999" data-k="sms_ip_hour" value="${x.ip_hour}"></label>
+          <label>同一個網路位址每天最多<input type="number" min="1" max="99999" data-k="sms_ip_day" value="${x.ip_day}"></label>
+        </div>
+        <button class="btn primary mt2" id="smsSave">儲存上限</button><p class="tiny dim mt">預計會有大量新會員（例如投廣告、活動當天）時，先把全站上限調高。</p>
+      </div>`;
+      $('#smsPause').onclick = async ()=>{ if(!x.paused && !confirm('暫停所有驗證簡訊？新會員會暫時無法完成註冊。')) return;
+        const { error } = await sb.rpc('admin_set_sms_config', { k:'sms_paused', v: x.paused?'off':'on' }); toast(error?error.message:(x.paused?'已恢復寄送':'已暫停寄送')); draw(); };
+      $('#smsSave').onclick = async ()=>{ for(const i of box.querySelectorAll('.smscfg input')){ const { error } = await sb.rpc('admin_set_sms_config', { k:i.dataset.k, v:String(i.value).trim() }); if(error) return toast(error.message); } toast('已儲存'); draw(); };
+      return;
     }
     if(tab==='members'){
       box.innerHTML = `<p class="tiny dim mb">「對話行為」標紅 ⚠ 表示可能在大量群發或騷擾：近 7 天主動開啟 7 個以上、對方幾乎都不回、常被結束對話或被封鎖。</p><div class="row mb"><input id="q" placeholder="暱稱關鍵字" style="padding:9px 12px"><select id="qs" style="width:auto;padding:9px 12px"><option value="">所有狀態</option>${Object.entries(STATUS_TXT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><button class="btn sm primary" id="qb">搜尋</button></div><div id="qr"></div>`;
