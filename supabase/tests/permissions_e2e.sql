@@ -899,7 +899,7 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub',N1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', N1::text, true);
   v := v||','||public.my_sms_left();
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
-  select count(*) into n from public.sms_sends where phone_hash=private.phone_hash('+886911000001');
+  select count(*) into n from public.sms_sends where phone_hash=private.phone_hash('+886911000001') and voided_at is null;
   out := array_append(out, ('46i 管理員查看並重設 = '||v||','||n||' (應為3,3,0)')::text);
   -- 47 簡訊防護加強（v0.42）
   delete from public.sms_sends;
