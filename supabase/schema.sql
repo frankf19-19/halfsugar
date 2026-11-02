@@ -2624,6 +2624,8 @@ revoke execute on function public.profiles_words_guard() from anon, authenticate
 
 -- 7. 聊天照片：送出後就不能刪掉或換成別張（證據不會消失）；刪帳號時才能清掉
 create table if not exists private.account_deleting (uid uuid primary key, at timestamptz not null default now());
+alter table private.account_deleting enable row level security;
+revoke all on private.account_deleting from anon, authenticated, public;
 create or replace function private.am_deleting()
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from private.account_deleting where uid = auth.uid() and at > now() - interval '1 hour');
