@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.41.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.42.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -2115,3 +2115,110 @@ begin
 end $$;
 revoke execute on function public.sms_recover_take(uuid) from anon, authenticated, public;
 grant execute on function public.sms_recover_take(uuid) to service_role;
+
+-- v0.42：簡訊防護加強
+--   同一個 IP 每小時／每天上限、全站每小時／每天上限（後台可調）、緊急暫停、拋棄式信箱不能註冊
+alter table public.sms_sends add column if not exists ip_hash text;
+create index if not exists sms_sends_ip_idx on public.sms_sends(ip_hash) where ip_hash is not null;
+insert into public.app_config (key, value) values
+  ('sms_paused','off'), ('sms_ip_hour','5'), ('sms_ip_day','10'), ('sms_hour','100'), ('sms_day','300'), ('turnstile_sitekey','')
+  on conflict (key) do nothing;
+
+create or replace function private.cfg_int(k text, d int)
+returns int language sql stable security definer set search_path = public as $$
+  select coalesce((select case when value ~ '^\d{1,6}$' then value::int end from public.app_config where key = k), d);
+$$;
+
+drop function if exists public.sms_reserve(uuid, text);
+create or replace function public.sms_reserve(uid uuid, ph text, ip text default null)
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare h text := private.phone_hash(ph); ih text; nu int; np int; n int; rid bigint;
+begin
+  if uid is null or coalesce(ph,'') !~ '^\+?8869\d{8}$' then return jsonb_build_object('r','bad_phone'); end if;
+  if coalesce((select value from public.app_config where key = 'sms_paused'), 'off') = 'on' then return jsonb_build_object('r','paused'); end if;
+  perform pg_advisory_xact_lock(hashtext('sms_reserve'));
+  if exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null and nullif(u.phone,'') is not null) then
+    return jsonb_build_object('r','already');
+  end if;
+  if exists (select 1 from public.banned_phones b where b.phone_hash = h) then return jsonb_build_object('r','banned'); end if;
+  -- 手機已綁定別的帳號時照樣寄（驗證後改問「要不要恢復原本帳號」），一樣計入次數
+  select count(*) into nu from public.sms_sends where user_id = uid;
+  if nu >= 3 then return jsonb_build_object('r','user_limit'); end if;
+  select count(*) into np from public.sms_sends where phone_hash = h;
+  if np >= 3 then return jsonb_build_object('r','phone_limit'); end if;
+  if nullif(ip,'') is not null then
+    ih := encode(digest('halfsugar-ip:' || ip, 'sha256'), 'hex');
+    select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 hour';
+    if n >= private.cfg_int('sms_ip_hour', 5) then return jsonb_build_object('r','ip_limit'); end if;
+    select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 day';
+    if n >= private.cfg_int('sms_ip_day', 10) then return jsonb_build_object('r','ip_limit'); end if;
+  end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_hour', 100) then return jsonb_build_object('r','global_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_day', 300) then return jsonb_build_object('r','global_limit'); end if;
+  insert into public.sms_sends (user_id, phone_hash, ip_hash) values (uid, h, ih) returning id into rid;
+  return jsonb_build_object('r','ok','id',rid,'left',2-nu);
+end $$;
+revoke execute on function public.sms_reserve(uuid, text, text) from anon, authenticated, public;
+grant execute on function public.sms_reserve(uuid, text, text) to service_role;
+
+-- 管理員：簡訊監控與設定
+create or replace function public.admin_sms_stats()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return jsonb_build_object(
+    'hour', (select count(*) from public.sms_sends where created_at > now() - interval '1 hour'),
+    'day',  (select count(*) from public.sms_sends where created_at > now() - interval '1 day'),
+    'week', (select count(*) from public.sms_sends where created_at > now() - interval '7 days'),
+    'paused', coalesce((select value from public.app_config where key = 'sms_paused'), 'off') = 'on',
+    'ip_hour', private.cfg_int('sms_ip_hour', 5), 'ip_day', private.cfg_int('sms_ip_day', 10),
+    'max_hour', private.cfg_int('sms_hour', 100), 'max_day', private.cfg_int('sms_day', 300));
+end $$;
+revoke execute on function public.admin_sms_stats() from anon, public;
+grant execute on function public.admin_sms_stats() to authenticated;
+
+create or replace function public.admin_set_sms_config(k text, v text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  if k = 'sms_paused' then
+    if v not in ('on','off') then raise exception '設定值不正確'; end if;
+  elsif k in ('sms_ip_hour','sms_ip_day','sms_hour','sms_day') then
+    if coalesce(v,'') !~ '^\d{1,5}$' or v::int < 1 then raise exception '請輸入 1 以上的整數'; end if;
+  else raise exception '不能修改這個設定';
+  end if;
+  insert into public.app_config (key, value) values (k, v) on conflict (key) do update set value = excluded.value;
+end $$;
+revoke execute on function public.admin_set_sms_config(text, text) from anon, public;
+grant execute on function public.admin_set_sms_config(text, text) to authenticated;
+
+-- 拋棄式（臨時）信箱不能註冊
+create table if not exists public.blocked_email_domains (domain text primary key);
+alter table public.blocked_email_domains enable row level security;
+revoke all on public.blocked_email_domains from anon, authenticated;
+insert into public.blocked_email_domains (domain) values
+  ('mailinator.com'),('guerrillamail.com'),('guerrillamail.net'),('guerrillamail.org'),('guerrillamailblock.com'),('sharklasers.com'),('grr.la'),
+  ('10minutemail.com'),('10minutemail.net'),('10minemail.com'),('temp-mail.org'),('temp-mail.io'),('tempmail.com'),('tempmail.net'),('tempmail.dev'),
+  ('tempmailo.com'),('tempr.email'),('tempail.com'),('throwawaymail.com'),('yopmail.com'),('yopmail.net'),('yopmail.fr'),('getnada.com'),('nada.email'),
+  ('dispostable.com'),('maildrop.cc'),('mailnesia.com'),('mintemail.com'),('mohmal.com'),('emailondeck.com'),('fakeinbox.com'),('trashmail.com'),
+  ('trashmail.de'),('trashmail.net'),('mytemp.email'),('tempinbox.com'),('spamgourmet.com'),('mailcatch.com'),('moakt.com'),('emailfake.com'),
+  ('fakemail.net'),('burnermail.io'),('inboxkitten.com'),('mail.tm'),('mail.gw'),('linshiyouxiang.net'),('1secmail.com'),('1secmail.org'),
+  ('1secmail.net'),('byom.de'),('discard.email'),('dropmail.me'),('etranquil.com'),('harakirimail.com'),('jetable.org'),('mailpoof.com'),
+  ('mailsac.com'),('mailtemp.info'),('minuteinbox.com'),('owlymail.com'),('spambox.us'),('tmpmail.org'),('tmpmail.net'),('tmail.ws'),
+  ('vomoto.com'),('wegwerfmail.de'),('xojxe.com'),('zetmail.com'),('emltmp.com'),('tmpeml.com'),('tmpbox.net'),('crazymailing.com'),
+  ('cuvox.de'),('dayrep.com'),('einrot.com'),('fleckens.hu'),('gustr.com'),('jourrapide.com'),('rhyta.com'),('superrito.com'),('teleworm.us'),
+  ('armyspy.com'),('anonbox.net'),('mailforspam.com'),('spam4.me'),('tempemail.net'),('instantemailaddress.com'),('temporarymail.com')
+  on conflict do nothing;
+
+create or replace function private.block_disposable_email()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.email is not null and exists (select 1 from public.blocked_email_domains d where d.domain = lower(split_part(new.email, '@', 2))) then
+    raise exception 'disposable_email: 這個 Email 無法註冊，請改用常用的信箱';
+  end if;
+  return new;
+end $$;
+drop trigger if exists block_disposable_email on auth.users;
+create trigger block_disposable_email before insert on auth.users for each row execute function private.block_disposable_email();

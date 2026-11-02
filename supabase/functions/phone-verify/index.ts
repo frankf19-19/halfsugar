@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
   const user = ud?.user;
   if (ue || !user) return reply({ error: "auth" }, 401);
 
-  let b: { action?: string; phone?: string; code?: string; mode?: string } = {};
+  let b: { action?: string; phone?: string; code?: string; mode?: string; captcha?: string } = {};
   try { b = await req.json(); } catch { /* ignore */ }
 
   // 恢復原本帳號（手機已驗證、且屬於另一個帳號時才會走到這裡）
@@ -72,7 +72,16 @@ Deno.serve(async (req) => {
   if (!/^\+8869\d{8}$/.test(phone)) return reply({ error: "bad_phone" }, 400);
 
   if (b.action === "send") {
-    const { data: rs, error: re } = await admin.rpc("sms_reserve", { uid: user.id, ph: phone });
+    const ip = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || (req.headers.get("x-forwarded-for") || "").split(",")[0] || "").trim();
+    // 真人驗證（Cloudflare Turnstile）：設定了 TURNSTILE_SECRET 才啟用
+    if (env("TURNSTILE_SECRET")) {
+      const tv = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        body: new URLSearchParams({ secret: env("TURNSTILE_SECRET"), response: String(b.captcha || ""), ...(ip ? { remoteip: ip } : {}) }),
+      }).then((r) => r.json()).catch(() => ({ success: false }));
+      if (!tv?.success) return reply({ error: "captcha" }, 400);
+    }
+    const { data: rs, error: re } = await admin.rpc("sms_reserve", { uid: user.id, ph: phone, ip: ip || null });
     if (re) return reply({ error: "server", detail: re.message }, 500);
     if (rs?.r !== "ok") return reply({ error: rs?.r || "server" }, rs?.r === "already" ? 200 : 429);
     let t = await twilio("Verifications", { To: phone, Channel: "sms", Locale: "zh-HK" });

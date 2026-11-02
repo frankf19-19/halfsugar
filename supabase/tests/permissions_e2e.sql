@@ -6,7 +6,7 @@ declare
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
   out text[] := '{}'; n int; v text; mid uuid; ok boolean;
   AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid; V1 uuid := gen_random_uuid(); V2 uuid := gen_random_uuid(); cm3 uuid; iv uuid; tk text;
-  N1 uuid := gen_random_uuid(); N2 uuid := gen_random_uuid(); N3 uuid := gen_random_uuid(); N4 uuid := gen_random_uuid(); j jsonb;
+  N1 uuid := gen_random_uuid(); N2 uuid := gen_random_uuid(); N3 uuid := gen_random_uuid(); N4 uuid := gen_random_uuid(); j jsonb; Z1 uuid := gen_random_uuid(); Z2 uuid := gen_random_uuid(); Z3 uuid := gen_random_uuid(); Z4 uuid := gen_random_uuid();
 begin
   perform set_config('storage.allow_delete_query','true',true);
   update public.app_config set value='off' where key='free_launch';   -- 先測正式收費後的規則（交易結束會回滾）
@@ -885,9 +885,9 @@ begin
   j := public.sms_reserve(N3,'+886911000004'); perform public.sms_refund((j->>'id')::bigint);
   select count(*) into n from public.sms_sends where user_id=N3;
   out := array_append(out, ('46f 寄送失敗退回額度 = '||n||' (應為1)')::text);
-  insert into public.sms_sends (user_id, phone_hash) select null, 'x'||gs.k from generate_series(1,30) as gs(k);
+  insert into public.sms_sends (user_id, phone_hash) select null, 'x'||gs.k from generate_series(1,100) as gs(k);
   v := public.sms_reserve(N3,'+886911000005')->>'r';
-  out := array_append(out, ('46g 全站每小時 30 封 = '||v||' (應為global_limit)')::text);
+  out := array_append(out, ('46g 全站每小時 100 封 = '||v||' (應為global_limit)')::text);
   perform set_config('request.jwt.claims', json_build_object('sub',N1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', N1::text, true);
   v := public.my_sms_left()::text;
   begin perform public.admin_reset_sms(N1); v := v||',會員能重設 ✗'; exception when others then v := v||',擋下'; end;
@@ -901,6 +901,29 @@ begin
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   select count(*) into n from public.sms_sends where phone_hash=private.phone_hash('+886911000001');
   out := array_append(out, ('46i 管理員查看並重設 = '||v||','||n||' (應為3,3,0)')::text);
+  -- 47 簡訊防護加強（v0.42）
+  delete from public.sms_sends;
+  insert into auth.users (id, email, aud, role) values (Z1,'e2e-z1@test.invalid','authenticated','authenticated'),(Z2,'e2e-z2@test.invalid','authenticated','authenticated'),(Z3,'e2e-z3@test.invalid','authenticated','authenticated');
+  v := '';
+  v := v||(public.sms_reserve(Z1,'+886922000001','1.2.3.4')->>'r')||','||(public.sms_reserve(Z1,'+886922000002','1.2.3.4')->>'r')||','||(public.sms_reserve(Z1,'+886922000003','1.2.3.4')->>'r')||',';
+  v := v||(public.sms_reserve(Z2,'+886922000004','1.2.3.4')->>'r')||','||(public.sms_reserve(Z2,'+886922000005','1.2.3.4')->>'r')||','||(public.sms_reserve(Z2,'+886922000006','1.2.3.4')->>'r')||',';
+  v := v||(public.sms_reserve(Z3,'+886922000007','5.6.7.8')->>'r');
+  out := array_append(out, ('47a 同一個 IP 每小時 5 封 = '||v||' (應為ok,ok,ok,ok,ok,ip_limit,ok)')::text);
+  perform set_config('request.jwt.claims', json_build_object('sub',AD,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', AD::text, true);
+  perform public.admin_set_sms_config('sms_paused','on');
+  v := (public.admin_sms_stats()->>'hour')||','||(public.admin_sms_stats()->>'paused');
+  begin perform public.admin_set_sms_config('free_launch','off'); v := v||',可改別的設定 ✗'; exception when others then v := v||',擋下'; end;
+  begin perform public.admin_set_sms_config('sms_hour','abc'); v := v||',接受亂填 ✗'; exception when others then v := v||',擋下'; end;
+  perform set_config('request.jwt.claims', json_build_object('sub',A,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', A::text, true);
+  begin perform public.admin_set_sms_config('sms_paused','off'); v := v||',會員能改 ✗'; exception when others then v := v||',擋下'; end;
+  begin perform public.admin_sms_stats(); v := v||',會員能看 ✗'; exception when others then v := v||',擋下'; end;
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  v := v||','||(public.sms_reserve(Z3,'+886922000008','9.9.9.9')->>'r');
+  out := array_append(out, ('47b 管理員暫停／監控、會員不能動 = '||v||' (應為6,true,擋下,擋下,擋下,擋下,paused)')::text);
+  update public.app_config set value='off' where key='sms_paused';
+  begin insert into auth.users (id, email, aud, role) values (gen_random_uuid(),'x@Mailinator.com','authenticated','authenticated'); v := '沒擋 ✗'; exception when others then v := '擋下'; end;
+  begin insert into auth.users (id, email, aud, role) values (Z4,'e2e-z4-not-real@gmail.com','authenticated','authenticated'); v := v||',正常'; exception when others then v := v||',誤擋 ✗'; end;
+  out := array_append(out, ('47c 拋棄式信箱不能註冊 = '||v||' (應為擋下,正常)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
