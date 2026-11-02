@@ -18,6 +18,14 @@ const cors = (req: Request) => {
 const env = (k: string) => Deno.env.get(k) ?? "";
 const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
 
+// f***k@gmail.com：只露出頭尾，讓本人認得、別人猜不到
+function maskEmail(e: string) {
+  const [u, d] = String(e || "").split("@");
+  if (!d) return "";
+  const m = u.length <= 2 ? u[0] + "*" : u[0] + "*".repeat(Math.min(6, u.length - 2)) + u[u.length - 1];
+  return m + "@" + d;
+}
+
 async function twilio(path: string, body: Record<string, string>) {
   const r = await fetch(`https://verify.twilio.com/v2/Services/${env("TWILIO_VERIFY_SID")}/${path}`, {
     method: "POST",
@@ -44,8 +52,22 @@ Deno.serve(async (req) => {
   const user = ud?.user;
   if (ue || !user) return reply({ error: "auth" }, 401);
 
-  let b: { action?: string; phone?: string; code?: string } = {};
+  let b: { action?: string; phone?: string; code?: string; mode?: string } = {};
   try { b = await req.json(); } catch { /* ignore */ }
+
+  // 恢復原本帳號（手機已驗證、且屬於另一個帳號時才會走到這裡）
+  if (b.action === "recover") {
+    const { data: rt, error: re } = await admin.rpc("sms_recover_take", { uid: user.id });
+    if (re) return reply({ error: "server", detail: re.message }, 500);
+    if (rt?.r !== "ok") return reply({ error: "recover_expired" }, 400);
+    if (b.mode === "reset" && rt.email) {
+      const anon = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), { auth: { persistSession: false } });
+      await anon.auth.resetPasswordForEmail(rt.email, { redirectTo: "https://onethirdsugar.com/" });
+    }
+    if (rt.empty) await admin.auth.admin.deleteUser(user.id);   // 剛開的空帳號（還沒建檔）一併刪除
+    return reply({ ok: true, email: maskEmail(rt.email) });
+  }
+
   const phone = String(b.phone || "").replace(/[\s-]/g, "");
   if (!/^\+8869\d{8}$/.test(phone)) return reply({ error: "bad_phone" }, 400);
 
@@ -70,6 +92,9 @@ Deno.serve(async (req) => {
     if (t.status === 404) return reply({ error: "expired" }, 400);       // 驗證碼過期或已用完嘗試次數
     if (!t.ok) return reply({ error: t.j?.code === 60202 ? "too_many_checks" : "check_failed", code: t.j?.code }, 400);
     if (t.j?.status !== "approved") return reply({ error: "wrong_code" }, 400);
+    const { data: em, error: re2 } = await admin.rpc("sms_recover_start", { uid: user.id, ph: phone });
+    if (re2) return reply({ error: "server", detail: re2.message }, 500);
+    if (em !== null && em !== undefined) return reply({ recover: true, email: maskEmail(em) });
     const { data: free } = await admin.rpc("sms_phone_free", { uid: user.id, ph: phone });
     if (free !== "ok") return reply({ error: free || "server" }, 409);
     const { error: ue2 } = await admin.auth.admin.updateUserById(user.id, { phone: phone.slice(1), phone_confirm: true });

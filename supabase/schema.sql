@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.40.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.41.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -2016,9 +2016,7 @@ begin
     return jsonb_build_object('r','already');
   end if;
   if exists (select 1 from public.banned_phones b where b.phone_hash = h) then return jsonb_build_object('r','banned'); end if;
-  if exists (select 1 from auth.users u where u.id <> uid and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = h) then
-    return jsonb_build_object('r','phone_exists');
-  end if;
+  -- 手機已綁定別的帳號時照樣寄（v0.41：驗證後改問「要不要恢復原本帳號」），一樣計入次數
   select count(*) into nu from public.sms_sends where user_id = uid;
   if nu >= 3 then return jsonb_build_object('r','user_limit'); end if;
   select count(*) into np from public.sms_sends where phone_hash = h;
@@ -2079,3 +2077,41 @@ begin
 end $$;
 revoke execute on function public.admin_reset_sms(uuid) from anon, public;
 grant execute on function public.admin_reset_sms(uuid) to authenticated;
+
+-- v0.41：同一支手機再註冊 → 驗證手機後詢問是否恢復原本帳號（一支手機仍只能綁一個帳號）
+create table if not exists public.phone_recover (
+  uid uuid primary key references auth.users(id) on delete cascade,
+  target uuid not null references auth.users(id) on delete cascade,
+  expires_at timestamptz not null
+);
+alter table public.phone_recover enable row level security;
+revoke all on public.phone_recover from anon, authenticated;
+
+-- 驗證成功後：這支手機屬於別的帳號嗎？是的話記下來（15 分鐘內可以恢復），回傳原帳號 Email
+create or replace function public.sms_recover_start(uid uuid, ph text)
+returns text language plpgsql security definer set search_path = public as $$
+declare t uuid; em text;
+begin
+  select u.id, u.email into t, em from auth.users u
+   where u.id <> uid and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = private.phone_hash(ph) limit 1;
+  if t is null then return null; end if;
+  insert into public.phone_recover (uid, target, expires_at) values (uid, t, now() + interval '15 minutes')
+    on conflict (uid) do update set target = excluded.target, expires_at = excluded.expires_at;
+  return coalesce(em, '');
+end $$;
+revoke execute on function public.sms_recover_start(uuid, text) from anon, authenticated, public;
+grant execute on function public.sms_recover_start(uuid, text) to service_role;
+
+-- 使用者選擇恢復：取出原帳號 Email（只能用一次），並回傳目前這個新帳號是不是還沒建檔的空帳號
+create or replace function public.sms_recover_take(uid uuid)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare t uuid; em text; st text;
+begin
+  delete from public.phone_recover where phone_recover.uid = sms_recover_take.uid and expires_at > now() returning target into t;
+  if t is null then return jsonb_build_object('r','expired'); end if;
+  select email into em from auth.users where id = t;
+  select status into st from public.profiles where id = uid;
+  return jsonb_build_object('r','ok','email',coalesce(em,''),'empty', coalesce(st,'incomplete') = 'incomplete');
+end $$;
+revoke execute on function public.sms_recover_take(uuid) from anon, authenticated, public;
+grant execute on function public.sms_recover_take(uuid) to service_role;

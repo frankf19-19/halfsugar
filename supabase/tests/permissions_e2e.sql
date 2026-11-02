@@ -874,8 +874,9 @@ begin
   v := (public.sms_reserve(N2,'+886911000002')->>'r')||','||(public.sms_reserve(N2,'+886911000002')->>'r')||','||(public.sms_reserve(N3,'+886911000002')->>'r')||','||(public.sms_reserve(N3,'+886911000002')->>'r');
   out := array_append(out, ('46b 同一支手機最多 3 封（跨帳號） = '||v||' (應為ok,ok,ok,phone_limit)')::text);
   update auth.users set phone='886911000009', phone_confirmed_at=now() where id=N4;
-  v := public.sms_reserve(N2,'+886911000009')->>'r';
-  out := array_append(out, ('46c 別人已綁定的手機 = '||v||' (應為phone_exists)')::text);
+  v := (public.sms_reserve(N2,'+886911000009')->>'r')||','||coalesce(public.sms_recover_start(N2,'+886911000009'),'null')||','||coalesce(public.sms_recover_start(N2,'+886911000006'),'null');
+  v := v||','||(public.sms_recover_take(N2)->>'email')||','||(public.sms_recover_take(N2)->>'r');
+  out := array_append(out, ('46c 別人已綁定的手機 → 可恢復原帳號（只能用一次） = '||v||' (應為ok,e2e-n4@test.invalid,null,e2e-n4@test.invalid,expired)')::text);
   insert into public.banned_phones (phone_hash) values (private.phone_hash('+886911000008'));
   v := (public.sms_reserve(N2,'+886911000008')->>'r')||','||public.sms_phone_free(N2,'+886911000008')||','||public.sms_phone_free(N2,'+886911000009')||','||public.sms_phone_free(N2,'+886911000007');
   out := array_append(out, ('46d 黑名單手機／驗證後再確認 = '||v||' (應為banned,banned,phone_exists,ok)')::text);
