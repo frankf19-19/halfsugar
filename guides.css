@@ -1,6 +1,7 @@
 :root{--ink:#1A1A1A;--grey:#5f5b57;--rule:#E3E1DD;--wine:#B04A62;--paper:#F7F6F4}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);background:#fff;line-height:1.9;line-break:strict;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);background:#fff;line-height:1.9;line-break:strict;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased}
+p,li,dd,.lead{text-wrap:pretty}
 html{overflow-x:hidden}
 a{color:inherit;text-underline-offset:4px}
 header{border-bottom:1px solid var(--rule)}

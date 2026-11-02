@@ -412,7 +412,8 @@ PAGES = [
 CSS = '''
 :root{--ink:#1A1A1A;--grey:#5f5b57;--rule:#E3E1DD;--wine:#B04A62;--paper:#F7F6F4}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);background:#fff;line-height:1.9;line-break:strict;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);background:#fff;line-height:1.9;line-break:strict;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased}
+p,li,dd,.lead{text-wrap:pretty}
 html{overflow-x:hidden}
 a{color:inherit;text-underline-offset:4px}
 header{border-bottom:1px solid var(--rule)}
@@ -525,6 +526,12 @@ def hub():
 hub()
 
 urls = [(f'{SITE}/', '1.0', 'weekly'), (f'{SITE}/guide/', '0.9', 'weekly')] + [(f"{SITE}/{p['slug']}/", '0.8', 'monthly') for p in PAGES]
+import subprocess, shutil
+if shutil.which('node'):
+    files=[str(ROOT / p['slug'] / 'index.html') for p in PAGES]+[str(ROOT / 'guide' / 'index.html')]
+    subprocess.run(['node', str(ROOT / 'tools' / 'wbr.js'), *files], check=True)
+else:
+    print('注意：找不到 node，介紹頁沒有加上斷行點')
 (ROOT / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + ''.join(f'  <url><loc>{u}</loc><lastmod>{TODAY}</lastmod><changefreq>{c}</changefreq><priority>{pr}</priority></url>\n' for u, pr, c in urls)
     + '</urlset>\n', encoding='utf-8')
