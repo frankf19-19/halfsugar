@@ -75,7 +75,7 @@ async function handle(req: Request): Promise<Response> {
 
   // 恢復原本帳號（手機已驗證、且屬於另一個帳號時才會走到這裡）
   if (b.action === "recover") {
-    const { data: rt, error: re } = await admin.rpc("sms_recover_take", { uid: user.id });
+    const { data: rt, error: re } = await admin.rpc("sms_recover_peek", { uid: user.id });   // 先確認，不用掉
     if (re) return reply({ error: "server", detail: re.message }, 500);
     if (rt?.r !== "ok") return reply({ error: "recover_expired" }, 400);
     if (b.mode === "reset" && rt.email) {
@@ -83,6 +83,7 @@ async function handle(req: Request): Promise<Response> {
       const { error: me } = await anon.auth.resetPasswordForEmail(rt.email, { redirectTo: "https://onethirdsugar.com/" });
       if (me) return reply({ error: /rate|seconds/i.test(me.message) ? "mail_rate" : "mail_failed" }, 502);
     }
+    await admin.rpc("sms_recover_take", { uid: user.id });   // 信寄出（或選擇直接登入）後才用掉
     let deleted = false;
     if (rt.empty) {   // 剛開、還沒建檔的空帳號才刪（管理員、有照片的帳號一律不刪）
       const { error: de } = await admin.auth.admin.deleteUser(user.id);

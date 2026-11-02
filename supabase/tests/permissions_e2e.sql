@@ -945,8 +945,9 @@ begin
   update public.profiles set status='incomplete', is_admin=true where id=Z2;
   update public.profiles set status='incomplete', is_admin=false, avatar_path=null where id=Z3;
   insert into public.phone_recover (uid, target, expires_at) values (Z2, N4, now()+interval '5 minutes'), (Z3, N4, now()+interval '5 minutes'), (Z1, N4, now()-interval '1 minute');
-  v := (public.sms_recover_take(Z2)->>'empty')||','||(public.sms_recover_take(Z3)->>'empty')||','||(public.sms_recover_take(Z1)->>'r');
-  out := array_append(out, ('48e 管理員帳號不算空帳號／過期不能恢復 = '||v||' (應為false,true,expired)')::text);
+  v := (public.sms_recover_peek(Z3)->>'empty')||','||(public.sms_recover_peek(Z3)->>'r')||',';   -- 先確認不會用掉
+  v := v||(public.sms_recover_take(Z2)->>'empty')||','||(public.sms_recover_take(Z3)->>'empty')||','||(public.sms_recover_take(Z1)->>'r');
+  out := array_append(out, ('48e 管理員帳號不算空帳號／過期不能恢復 = '||v||' (應為true,ok,false,true,expired)')::text);
   perform set_config('request.jwt.claims', json_build_object('sub',Z1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', Z1::text, true);
   v := '';
   begin execute 'set local role authenticated'; perform public.sms_reserve(Z1,'+886933000009'); execute 'reset role'; v := v||'會員能呼叫 ✗'; exception when others then v := v||'擋下'; end;

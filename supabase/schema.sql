@@ -1,5 +1,5 @@
 -- =====================================================================
--- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.44.0)
+-- 微糖 1/3 SUGAR — Supabase 資料庫結構  (schema v0.45.0)
 -- 在 Supabase Dashboard → SQL Editor 整段貼上執行（可重複執行）
 -- =====================================================================
 
@@ -2699,3 +2699,20 @@ begin
   delete from private.account_deleting d where d.uid = auth.uid();
   delete from auth.users where id = uid;
 end $$;
+
+-- v0.45：恢復原帳號時，先確認（不消耗），重設密碼信寄出成功後才用掉，寄失敗可以再按一次
+create or replace function public.sms_recover_peek(uid uuid)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare t uuid; em text; empty boolean;
+begin
+  select target into t from public.phone_recover where phone_recover.uid = sms_recover_peek.uid and expires_at > now();
+  if t is null then return jsonb_build_object('r','expired'); end if;
+  select email into em from auth.users where id = t;
+  select coalesce(p.status, 'incomplete') = 'incomplete' and not coalesce(p.is_admin, false) and p.avatar_path is null
+         and not exists (select 1 from public.photos ph where ph.user_id = sms_recover_peek.uid)
+         and not exists (select 1 from auth.users u where u.id = sms_recover_peek.uid and nullif(u.phone,'') is not null)
+    into empty from public.profiles p where p.id = sms_recover_peek.uid;
+  return jsonb_build_object('r','ok','email',coalesce(em,''),'empty', coalesce(empty, false));
+end $$;
+revoke execute on function public.sms_recover_peek(uuid) from anon, authenticated, public;
+grant execute on function public.sms_recover_peek(uuid) to service_role;
