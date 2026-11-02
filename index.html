@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-9KlbELQyv2FqOFu7FYd/SzhfSoDAFc3zbYWOi1owpGk=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-6JMCQJCEUYcqaAJe4yLiJ6z+Id4FwJyx40+Utm1EFyo=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -55,7 +55,8 @@ try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>a
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:clip;-webkit-text-size-adjust:100%}
-body{line-break:strict;font-family:var(--sans);font-weight:400;background:var(--white);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+body{line-break:strict;font-family:var(--sans);font-weight:400;background:var(--white);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased;word-break:normal;overflow-wrap:break-word;line-break:strict}
+h1,h2,h3,.btn,.tag,.chip,.pbadge,.wbadge,.locked b,a,.lnk{word-break:keep-all}
 a{color:inherit;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;text-decoration-color:var(--grey2)}
 a:hover{text-decoration-color:var(--ink)}
 h1,h2,h3,.serif{font-family:"Noto Serif TC",serif;font-weight:300;letter-spacing:.06em;text-wrap:balance}
@@ -67,26 +68,32 @@ select{-webkit-appearance:none;appearance:none;background:url("data:image/svg+xm
 textarea{min-height:120px;resize:vertical;border:1px solid var(--rule);padding:12px 14px}
 input[type=checkbox]{width:auto;accent-color:var(--ink)}
 input[type=file]{border:0;font-size:13px;color:var(--grey)}
-label.ckl{letter-spacing:.02em!important;line-height:1.65;font-size:14px!important;text-transform:none}label.ckl input{flex:0 0 auto;width:18px!important;height:18px;margin-top:3px!important}label{display:block;font-size:12px;letter-spacing:.14em;color:var(--grey);margin:24px 0 2px}
+label.ckl{min-height:44px;letter-spacing:.02em!important;line-height:1.65;font-size:14px!important;text-transform:none}label.ckl input{flex:0 0 auto;width:18px!important;height:18px;margin-top:3px!important}label{display:block;font-size:12px;letter-spacing:.14em;color:var(--grey);margin:24px 0 2px}
 :focus-visible{outline:1px solid var(--ink);outline-offset:4px}
+:is(input,textarea,select):focus-visible{outline:none}
+input.otp:focus{border-color:var(--wine)}
 .hidden{display:none!important}
+.card>label:first-child,.card>form>label:first-child,form.card>label:first-child{margin-top:0}
+.vh{position:absolute!important;opacity:0;width:1px;height:1px;overflow:hidden;pointer-events:none}
+label:focus-within{outline:1px solid var(--ink);outline-offset:3px}
+label.ckl:focus-within,label.rl:focus-within,.phrow label:focus-within{outline:none}
 .muted{color:var(--grey)} .dim{color:var(--grey2)} .small{font-size:13px} .tiny{font-size:13px;line-height:1.75}
 .gold,.rose{color:var(--wine)} .ok{color:var(--ok)} .bad{color:var(--bad)}
 .center{text-align:center}
 .row{display:flex;gap:10px;align-items:center} .row.flexwrap{flex-wrap:wrap} .grow{flex:1}
 .mt{margin-top:16px} .mt2{margin-top:30px} .mb{margin-bottom:16px}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 36px;border-radius:0;font-size:13px;letter-spacing:.24em;border:1px solid var(--ink);color:var(--ink);background:transparent;text-decoration:none;white-space:nowrap;transition:background .3s,color .3s}
-.btn:hover{background:var(--ink);color:var(--white)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 36px 0 calc(36px + .24em);border-radius:0;font-size:13px;letter-spacing:.24em;border:1px solid var(--ink);color:var(--ink);background:transparent;text-decoration:none;white-space:nowrap;transition:background .3s,color .3s}
+@media(hover:hover){.btn:not(:disabled):hover{background:var(--ink);color:var(--white)}}
 .btn.primary{background:var(--black);border-color:var(--black);color:var(--white)}
-.btn.primary:hover{background:var(--wine);border-color:var(--wine)}
-.btn.ghost{border-color:var(--rule)} .btn.ghost:hover{border-color:var(--ink)}
-.btn.rose{background:var(--wine);border-color:var(--wine);color:var(--white)} .btn.rose:hover{background:var(--black);border-color:var(--black)}
-.btn.danger{border-color:var(--bad);color:var(--bad)} .btn.danger:hover{background:var(--bad);color:#fff}
-.btn.sm{min-height:36px;padding:0 16px;font-size:12px;letter-spacing:.14em} .btn.block{width:100%}
+@media(hover:hover){.btn.primary:not(:disabled):hover{background:var(--wine);border-color:var(--wine)}}
+.btn.ghost{border-color:var(--rule)} @media(hover:hover){.btn.ghost:not(:disabled):hover{border-color:var(--ink)}}
+.btn.rose{background:var(--wine);border-color:var(--wine);color:var(--white)} @media(hover:hover){.btn.rose:not(:disabled):hover{background:var(--black);border-color:var(--black)}}
+.btn.danger{border-color:var(--bad);color:var(--bad)} @media(hover:hover){.btn.danger:not(:disabled):hover{background:var(--bad);color:#fff}}
+.btn.sm{min-height:36px;padding:0 16px 0 calc(16px + .14em);font-size:12px;letter-spacing:.14em} .btn.block{width:100%}
 .btn:disabled{opacity:.35;cursor:not-allowed}
-.btn.light{border-color:var(--white);color:var(--white)} .btn.light:hover{background:var(--white);color:var(--black)}
-.btn.light.primary{background:var(--white);color:var(--black)} .btn.light.primary:hover{background:transparent;color:var(--white)}
+.btn.light{border-color:var(--white);color:var(--white)} @media(hover:hover){.btn.light:not(:disabled):hover{background:var(--white);color:var(--black)}}
+.btn.light.primary{background:var(--white);color:var(--black)} @media(hover:hover){.btn.light.primary:not(:disabled):hover{background:transparent;color:var(--white)}}
 
 .topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);border-bottom:1px solid var(--rule)}
 .topbar .in{max-width:1320px;margin:0 auto;padding:0 30px;height:66px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
@@ -342,6 +349,7 @@ br.d{display:none}
 .tags{display:flex;flex-wrap:wrap;gap:8px}
 .tag{font-size:12px;letter-spacing:.08em;padding:5px 13px;border:1px solid var(--rule);color:var(--grey)}
 .tag.on{border-color:var(--ink);color:var(--ink)}
+button.tag.on{background:var(--ink);color:var(--white)}
 .chip{font-size:11px;letter-spacing:.1em;padding:2px 9px;border:1px solid var(--rule);color:var(--grey)}
 .chip.ok{color:var(--ok);border-color:currentColor} .chip.warn{color:var(--warn);border-color:currentColor} .chip.bad{color:var(--bad);border-color:currentColor}
 
@@ -427,7 +435,7 @@ body.nobnav .bnav{display:none}
 .doc p,.doc li{color:#444;margin-bottom:10px;line-height:2.05} .doc ol,.doc ul{padding-left:22px}
 footer{border-top:1px solid var(--rule);padding:40px 22px;text-align:center;font-size:11px;letter-spacing:.14em;color:var(--grey)}
 footer a{color:var(--ink);margin:0 10px;text-decoration:none}
-footer .flinks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 0;max-width:640px;margin:0 auto}footer .flinks a{margin:0 12px;padding:2px 0}
+footer .flinks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 0;max-width:640px;margin:0 auto}footer .flinks a{margin:0 8px;padding:10px 4px}
 @media(max-width:719px){body:not(.nobnav) footer{padding-bottom:calc(96px + env(safe-area-inset-bottom))}body.nobnav footer{display:none}}
 .spinner{width:24px;height:24px;border:1px solid var(--rule);border-top-color:var(--ink);border-radius:50%;animation:sp .9s linear infinite;margin:60px auto}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -757,7 +765,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 .safepg h1{font-family:"Noto Serif TC",serif;font-weight:300;font-size:26px;letter-spacing:.12em;margin:6px 0 18px}
 .safest{padding:16px 18px;border-left:3px solid var(--grey2);background:var(--paper);font-size:15px;line-height:1.8}
 .safest.ok{border-left-color:var(--ok)}.safest.warn{border-left-color:var(--warn)}.safest.bad{border-left-color:var(--bad);color:var(--bad);font-weight:500}
-.lnk{text-decoration:underline;text-underline-offset:4px;font-size:12px}.lnk.bad{color:var(--bad)}
+.lnk{text-decoration:underline;text-underline-offset:4px;font-size:12px;padding:10px 4px;margin:-10px -4px}.lnk.bad{color:var(--bad)}
 .chph.off{opacity:.3}
 .chat form .chph{margin:0;padding:0;background:none;border:0;height:44px;width:40px;align-self:center}
 /* v1.51 新功能細修 */
@@ -789,10 +797,10 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 <div id="gate" class="gate hidden">
   <div class="box">
     <div class="logo"><svg class="lm" viewBox="4 6 56 52" aria-hidden="true"><path d="M32 54 C14 42 8 32 8 23 C8 15 14 10 21 10 C26 10 30 13 32 17 Z" fill="#B04A62"/><path d="M32 54 C14 42 8 32 8 23 C8 15 14 10 21 10 C26 10 30 13 32 17 C34 13 38 10 43 10 C50 10 56 15 56 23 C56 32 50 42 32 54Z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/></svg><span>微糖</span></div>
-    <h2 style="margin:26px 0 12px;font-size:22px;font-weight:500">僅限年滿 18 歲的成年人</h2>
-    <p class="muted small">進入即表示你已年滿 18 歲（或你所在地之法定成年年齡），並同意本站<a href="#/terms">使用條款</a>與<a href="#/privacy">隱私政策</a>。本站為成年人之間的甜心交友平台，禁止任何以金錢交換性行為的要求，以及色情產業的招攬。</p>
+    <h2 style="margin:26px 0 12px;font-size:22px;font-weight:500">僅限年滿 18 歲的成年人</h2>
+    <p class="muted small">進入即表示你已年滿 18 歲（或你所在地之法定成年年齡），並同意本站<a href="#/terms">使用條款</a>與<a href="#/privacy">隱私政策</a>。本站為成年人之間的甜心交友平台，禁止任何以金錢交換性行為的要求，以及色情產業的招攬。</p>
     <div class="row mt2" style="justify-content:center">
-      <button class="btn primary" id="gateYes">我已年滿 18 歲，進入</button>
+      <button class="btn primary" id="gateYes">我已年滿 18 歲，進入</button>
       <a class="btn ghost" href="https://www.google.com">離開</a>
     </div>
   </div>
@@ -823,7 +831,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.67.0';
+const BUILD = 'v1.68.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -863,7 +871,7 @@ const orientText = p => ORIENT[`${p.gender}-${p.looking_for}`] || '';
 // 選了之後，探索裡會看到誰、誰看得到你
 const ORIENT_SEE = { 'male-female':'想認識男生的女生', 'female-male':'想認識女生的男生', 'male-male':'想認識男生的男生', 'female-female':'想認識女生的女生' };
 const orientSee = k => ORIENT_SEE[k] ? `探索裡只會出現「${ORIENT_SEE[k]}」，也只有他們看得到你。` : '';
-const ROLES = { daddy:'Sugar Daddy', mommy:'Sugar Mommy', baby:'甜心' };
+const ROLES = { daddy:'Sugar Daddy', mommy:'Sugar Mommy', baby:'甜心' };
 const ROLE_DESC = { daddy:'事業有成，願意照顧對方的男性', mommy:'事業有成，願意照顧對方的女性', baby:'希望認識成熟、穩定對象的甜心' };
 const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'色情產業招攬', minor:'疑似未成年', other:'其他' };
 const STATUS_TXT = { incomplete:'尚未完成建檔', pending:'審核中', approved:'已上架', rejected:'未通過審核', suspended:'已停權' };
@@ -885,7 +893,7 @@ const replyLabel = r => { if(!r || r.n < 3) return ''; const rate = Math.round(r
   const sp = m==null ? '' : m < 60 ? '通常 1 小時內回覆' : m < 360 ? '通常幾小時內回覆' : m < 1440 ? '通常 1 天內回覆' : '回覆較慢';
   return `回覆率 ${rate}%${sp?'・'+sp:''}`; };
 const fmtTime = t => { const d = new Date(t); if(!t || isNaN(d)) return '—'; const now = new Date();
-  return d.toDateString()===now.toDateString() ? d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}); };
+  return d.toDateString()===now.toDateString() ? d.toLocaleTimeString('zh-TW',{hour:'numeric',minute:'2-digit'}) : d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}); };
 const seen = t => { if(!t) return ''; const m=(Date.now()-new Date(t))/60000;
   if(m<15) return '在線上'; if(m<60*24) return '今天上線'; if(m<60*24*3) return '近三天上線'; if(m<60*24*7) return '本週上線'; return ''; };
 const wmText = () => `微糖 · ${(me?.id||'').slice(0,8)}`;
@@ -1248,7 +1256,12 @@ function statusBanner(){
    頁面：首頁
    ===================================================================== */
 /* 圖片：Unsplash（免費授權），正式上線前建議下載後放進 repo 自行託管 */
-const IMG = {
+// 依螢幕寬度要剛好大小的圖（手機不用下載桌機尺寸的大圖）
+const fitImg = (u) => { try{ const url=new URL(u); const w=+url.searchParams.get('w')||1200, h=+url.searchParams.get('h')||0;
+  const need = Math.ceil(Math.min(window.innerWidth||1200, 1600) * Math.min(window.devicePixelRatio||1, 2) / 100) * 100;
+  const nw = Math.min(w, Math.max(600, need)); url.searchParams.set('w', nw); if(h) url.searchParams.set('h', Math.round(h*nw/w));
+  if((window.innerWidth||1200) < 720) url.searchParams.set('q', '70'); return url.toString(); }catch(_){ return u; } };
+const IMG_RAW = {
   h1:     'https://images.unsplash.com/photo-1764593827458-9345bf5fe251?auto=format&fit=crop&w=1200&h=1800&q=80',
   h2:     'https://images.unsplash.com/photo-1594760136382-0c07cc163715?auto=format&fit=crop&w=1200&h=1800&q=80',
   h3:     'https://images.unsplash.com/photo-1762740960551-653b0a780adc?auto=format&fit=crop&w=1200&h=1800&q=80',
@@ -1262,6 +1275,13 @@ const IMG = {
   d2:     'https://images.unsplash.com/photo-1613467678197-6054e47c5fc0?auto=format&fit=crop&crop=focalpoint&fp-x=0.5&fp-y=0.53&w=900&h=675&q=80',
   d3:     'https://images.unsplash.com/photo-1722109266414-ea5e0e79cd00?auto=format&fit=crop&w=900&h=675&q=80',
 };
+const IMG = Object.fromEntries(Object.entries(IMG_RAW).map(([k,v])=>[k, fitImg(v)]));
+// 背景圖：快捲到時才下載（省流量、首頁開得更快）
+function lazyBg(root){ const els=[...root.querySelectorAll('[data-bg]')]; if(!els.length) return;
+  const show = el => { el.style.backgroundImage = `url('${cssu(el.dataset.bg)}')`; el.removeAttribute('data-bg'); };
+  if(!('IntersectionObserver' in window)) return els.forEach(show);
+  const io = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ io.unobserve(e.target); show(e.target); } }), { rootMargin:'600px 0px' });
+  els.forEach(el=>io.observe(el)); }
 async function viewLanding(){
   const two = (light) => me ? `<a class="btn ${light?'light primary':'primary'}" href="#/browse">開始探索</a>`
     : `<a class="btn ${light?'light primary':'primary'}" href="#/auth">申請加入</a><a class="btn ${light?'light':''}" href="#/auth?mode=login">登入</a>`;
@@ -1283,15 +1303,15 @@ async function viewLanding(){
   </section>
 
   <section class="chapter">
-    <div class="img" style="background-image:url('${IMG.c1}')"></div>
-    <div class="txt"><div class="no">第一章</div><h3>每一位會員，<br>都經過真人審核。</h3><p>Sugar Daddy、Sugar Mommy 與甜心的照片和自我介紹，都由真人看過才公開。假照片、網路圖片、留下聯絡方式的檔案，以及茶莊、代聊等業者，不會出現在這裡。</p></div>
+    <div class="img" data-bg="${IMG.c1}"></div>
+    <div class="txt"><div class="no">第一章</div><h3>每一位會員，<br>都經過真人審核。</h3><p>Sugar Daddy、Sugar Mommy 與甜心的照片和自我介紹，都由真人看過才公開。假照片、網路圖片、留下聯絡方式的檔案，以及茶莊、代聊等業者，不會出現在這裡。</p></div>
   </section>
   <section class="chapter rev">
-    <div class="img" style="background-image:url('${IMG.c2}')"></div>
+    <div class="img" data-bg="${IMG.c2}"></div>
     <div class="txt"><div class="no">第二章</div><h3>先把期待說清楚，<br>再決定要不要見面。</h3><p>遇到想認識的人，直接傳一則訊息，說說你為什麼想認識對方。對方回覆，對話才會繼續。見面頻率、相處方式、彼此的界線，都可以在見面前先聊清楚；不合適，就不必勉強。</p></div>
   </section>
   <section class="chapter">
-    <div class="img" style="background-image:url('${IMG.c3}')"></div>
+    <div class="img" data-bg="${IMG.c3}"></div>
     <div class="txt"><div class="no">第三章</div><h3>私密的部分，<br>由你決定給誰看。</h3><p>私密相簿只對你親自授權的會員開放，任何時候都可以收回。封鎖之後，對方再也看不到你。</p></div>
   </section>
 
@@ -1326,16 +1346,16 @@ async function viewLanding(){
   <section class="demo" aria-label="會員檔案示意">
     <div class="hd"><h2>會員檔案長這樣</h2><p>加入之前，先看看裡面是什麼樣子。<br class="d">以下為<b>示意檔案</b>，照片為形象示意圖，並非真實會員。</p></div>
     <div class="dcards">
-      <div class="dcard"><div class="dph" style="background-image:url('${IMG.d1}')"><span class="stamp">示意</span><span class="seen on">在線上</span></div>
-        <div class="dinfo"><div class="dn"><span>Wesley</span><span>45</span></div><div class="dm"><span class="rtag">Sugar Daddy</span>台北市 · 科技業主管</div>
+      <div class="dcard"><div class="dph" data-bg="${IMG.d1}"><span class="stamp">示意</span><span class="seen on">在線上</span></div>
+        <div class="dinfo"><div class="dn"><span>Wesley</span><span>45</span></div><div class="dm"><span class="rtag">Sugar Daddy</span>台北市 · 科技業主管</div>
           <div class="budget">每月預算 8–12 萬</div><span class="pbadge">✓ 真人認證</span><span class="wbadge">✓ 財力認證</span>
           <p class="dbio">喜歡安靜的餐廳和週末的短程旅行。希望先好好聊，彼此舒服再見面。</p></div></div>
-      <div class="dcard"><div class="dph" style="background-image:url('${IMG.d2}')"><span class="stamp">示意</span><span class="seen">今天上線</span></div>
+      <div class="dcard"><div class="dph" data-bg="${IMG.d2}"><span class="stamp">示意</span><span class="seen">今天上線</span></div>
         <div class="dinfo"><div class="dn"><span>Claire</span><span>26</span></div><div class="dm"><span class="rtag">甜心</span>台北市 · 設計師</div>
           <span class="pbadge">✓ 真人認證</span><div class="dtags"><span>咖啡</span><span>展覽</span><span>攝影</span></div><div class="dlock">🔒 2 張私密照，需對方同意才看得到</div>
           <p class="dbio">正在念設計研究所。喜歡有想法、說話溫和的人，期待成熟穩定的相處。</p></div></div>
-      <div class="dcard"><div class="dph" style="background-image:url('${IMG.d3}')"><span class="stamp">示意</span></div>
-        <div class="dinfo"><div class="dn"><span>Vivian</span><span>41</span></div><div class="dm"><span class="rtag">Sugar Mommy</span>新北市 · 品牌創辦人</div>
+      <div class="dcard"><div class="dph" data-bg="${IMG.d3}"><span class="stamp">示意</span></div>
+        <div class="dinfo"><div class="dn"><span>Vivian</span><span>41</span></div><div class="dm"><span class="rtag">Sugar Mommy</span>新北市 · 品牌創辦人</div>
           <div class="budget">每月預算 見面再談</div>
           <p class="dbio">工作忙，但願意為對的人留時間。重視坦誠，第一則訊息請說說你自己。</p></div></div>
     </div>
@@ -1343,7 +1363,7 @@ async function viewLanding(){
     <ul class="dnotes">
       <li><b>真人審核</b>每一張照片、每一段自介都由真人看過才上架。</li>
       <li><b>手機驗證</b>一支台灣手機只能有一個帳號，被停權的人換帳號也回不來。</li>
-      <li><b>每月預算</b>Sugar Daddy／Mommy 註冊時填寫，彼此一開始就清楚期待。</li>
+      <li><b>每月預算</b>Sugar Daddy／Mommy 註冊時填寫，彼此一開始就清楚期待。</li>
       <li><b>真人認證</b>依隨機指定動作拍自拍與短影片，確認照片就是本人。</li>
       <li><b>財力認證</b>自願上傳文件、真人確認後顯示，甜心可以申請查看。</li>
       <li><b>私密照</b>只給你同意的人看，看的時候會疊上對方的代號浮水印。</li>
@@ -1354,11 +1374,11 @@ async function viewLanding(){
     <div class="hd"><h2>微糖小辭典</h2><p>在這裡，有幾個詞你會常常看到。</p></div>
     <dl>
       <div class="e"><dt>甜心</dt><dd class="pos">名詞　亦作 Sugar Baby</dd><dd>有自己的生活與追求，希望認識成熟、穩定、懂得照顧人的對象。不分性別。</dd></div>
-      <div class="e"><dt>Sugar Daddy<br>Sugar Mommy</dt><dd class="pos">名詞</dd><dd>事業與生活都已穩定，願意把時間和心力，放在一段讓彼此都舒服的關係裡。</dd></div>
+      <div class="e"><dt>Sugar Daddy<br>Sugar Mommy</dt><dd class="pos">名詞</dd><dd>事業與生活都已穩定，願意把時間和心力，放在一段讓彼此都舒服的關係裡。</dd></div>
       <div class="e"><dt>坦誠</dt><dd class="pos">形容詞</dd><dd>微糖最重要的一個詞。見面之前，先把彼此期待的相處方式、見面節奏說清楚；不合適，就不必勉強。</dd></div>
       <div class="e"><dt>界線</dt><dd class="pos">名詞</dd><dd>每個人都有，也都該被尊重。對方說不，就是不。封鎖一次，對方就再也看不到你。</dd></div>
       <div class="e"><dt>真人認證</dt><dd class="pos">名詞</dd><dd>依系統隨機指定的動作，拍一張自拍和一段短影片，由真人和頭像比對。通過後檔案會出現<span style="white-space:nowrap">「✓ 真人認證」</span>，自拍和影片審核完立即刪除。</dd></div>
-      <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件（姓名可以遮住），由真人看過後，檔案上會出現<span style="white-space:nowrap">「✓ 財力認證」</span>。不是必要的，是加分；甜心想看文件可以申請，對方按允許才看得到。</dd></div>
+      <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件（姓名可以遮住），由真人看過後，檔案上會出現<span style="white-space:nowrap">「✓ 財力認證」</span>。不是必要的，是加分；甜心想看文件可以申請，對方按允許才看得到。</dd></div>
       <div class="e"><dt>審核</dt><dd class="pos">動詞</dd><dd>每一張照片、每一段自介，都由真人看過才公開。業者、假照片、留聯絡方式的，到不了這裡。</dd></div>
       <div class="e no"><dt>性交易</dt><dd class="pos">名詞　微糖不使用的詞</dd><dd>以金錢或財物交換性行為，違法，也違反本站守則。出現就停權，必要時配合司法調查。平台不代收、不轉交會員之間的任何款項。</dd></div>
     </dl>
@@ -1366,15 +1386,16 @@ async function viewLanding(){
     <div class="ft"><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a>　<a href="#/terms">使用條款</a></div>
   </section>
 
-  <section class="cta" style="background-image:url('${IMG.cta}')">
+  <section class="cta" data-bg="${IMG.cta}">
     <div class="in">
       <h2>坦誠的關係，<br>從真人審核開始。</h2>
-      <p>建立檔案免費　僅限年滿 18 歲</p>
+      <p>建立檔案免費　僅限年滿 18 歲</p>
       <div class="row flexwrap">${two(true)}</div>
     </div>
   </section>
   <div class="credit">頁面圖片為形象示意，並非本站會員。</div>
   </div>`;
+  lazyBg($('#app'));
 }
 
 /* =====================================================================
@@ -1391,9 +1412,9 @@ async function viewAuth(){
       <div id="oauthBox"></div>
       <form id="authForm">
         <label>Email</label><input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
-        <label>密碼</label><div class="pwrap"><input type="password" name="password" required minlength="8" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="至少 8 碼，英文加數字"><button type="button" class="pwshow" aria-label="顯示密碼">顯示</button></div>
+        <label>密碼</label><div class="pwrap"><input type="password" name="password" required minlength="8" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="${mode==='login'?'輸入密碼':'至少 8 碼，英文加數字'}"><button type="button" class="pwshow" aria-label="顯示密碼">顯示</button></div>
         ${mode==='register' ? `
-        <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--text);font-size:14px"><input type="checkbox" name="age" required style="width:auto;margin-top:4px"><span>我確認已年滿 18 歲（或所在地法定成年年齡）</span></label>
+        <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--text);font-size:14px"><input type="checkbox" name="age" required style="width:auto;margin-top:4px"><span>我確認已年滿 18 歲（或所在地法定成年年齡）</span></label>
         <label class="ckl" style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--text);font-size:14px"><input type="checkbox" name="terms" required style="width:auto;margin-top:4px"><span>我已閱讀並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>，並了解本站禁止任何金錢交易與色情招攬</span></label>` : ''}
         ${mode==='register'?'<p class="tiny dim mt">註冊流程：驗證 Email → 簡訊驗證手機（一支手機只能註冊一個帳號，驗證碼最多收 3 次，號碼不會給任何會員看到）→ 建立檔案。建立檔案時會請你設定暱稱、性別與想認識的對象：這會決定你在探索看到誰、誰看得到你，送出後無法修改。</p>':''}
         <button class="btn primary block mt2" type="submit">${mode==='register'?'建立帳號':'登入'}</button>
@@ -1403,7 +1424,7 @@ async function viewAuth(){
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ mode=b.dataset.m; draw(); });
     loadOAuth().then(av=>{ const box=$('#oauthBox'); if(!box || (!av.google && !av.line)) return;
       box.innerHTML = `<div class="oauth">${av.line?`<button type="button" class="btn block obtn" data-k="line">${OAUTH_ICON.line}使用 LINE ${mode==='register'?'註冊':'登入'}</button>`:''}${av.google?`<button type="button" class="btn block obtn" data-k="google">${OAUTH_ICON.google}使用 Google ${mode==='register'?'註冊':'登入'}</button>`:''}
-        ${mode==='register'?'<p class="tiny dim">繼續即表示你確認已年滿 18 歲，並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>。我們只會取得你的 Email、名稱與大頭貼，不會公開你的名稱，也不會在你的社群帳號發文。</p>':''}
+        ${mode==='register'?'<p class="tiny dim">繼續即表示你確認已年滿 18 歲，並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>。我們只會取得你的 Email、名稱與大頭貼，不會公開你的名稱，也不會在你的社群帳號發文。</p>':''}
         <div class="or"><span>或使用 Email</span></div></div>`;
       box.querySelectorAll('.obtn').forEach(b=>b.onclick=()=>{ b.disabled=true; oauthSignIn(b.dataset.k); }); });
     $('.pwshow').onclick = e => { const i=e.target.previousElementSibling; const sh=i.type==='password'; i.type=sh?'text':'password'; e.target.textContent=sh?'隱藏':'顯示'; };
@@ -1434,7 +1455,7 @@ async function viewAuth(){
           $('#reAuth').onclick = async ev=>{ ev.preventDefault(); const { error } = await sb.auth.resend({ type:'signup', email, options:{ emailRedirectTo: location.origin + location.pathname } }); toast(error?error.message:'已重寄，請到信箱收信'); }; } }
     };
     const fa = $('#findAcc'); if(fa) fa.onclick = openFindAccount;
-    const fg = $('#forgot'); if(fg) fg.onclick = async ()=>{ const email = $('input[name=email]').value.trim(); if(!email) return toast('請先輸入 Email');
+    const fg = $('#forgot'); if(fg) fg.onclick = async ()=>{ const email = $('input[name=email]').value.trim(); if(!email){ $('input[name=email]').focus(); $('#authErr').textContent='請先在上面輸入你的 Email，再按「忘記密碼」。'; return; }
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); if(error) return toast(zh(error.message));
       modal(`<h2>重設密碼</h2><p class="muted small mt">如果 <b>${esc(email)}</b> 有註冊微糖，我們已寄出一封重設密碼信。按信中的按鈕，或在這裡輸入信中的驗證碼。</p>${codeBox('rpCode')}<p class="tiny dim mt">沒收到？請看看垃圾郵件匣。</p>`);
       $('#rpCode').onsubmit = async ev=>{ ev.preventDefault(); const b=ev.target.querySelector('button'); b.disabled=true;
@@ -1477,15 +1498,15 @@ function profileFormHtml(p={}){
     </div>
     <div class="fsec"><span>2</span>基本資料</div>
     ${p.nickname && !['incomplete','rejected'].includes(p.status) ? `<label>暱稱</label><div class="locked"><b>${esc(p.nickname)}</b><small>暱稱確定後就無法修改。</small></div><input type="hidden" name="nickname" value="${esc(p.nickname)}">`
-    : `<label>暱稱 *</label><input name="nickname" required maxlength="20" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="tiny" style="color:var(--wine);margin-top:6px">送出審核後，暱稱就<b>無法再修改</b>，請想好再填。</p>`}
+    : `<label>暱稱 *</label><input name="nickname" required maxlength="20" autocomplete="nickname" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="tiny" style="color:var(--wine);margin-top:6px">送出審核後，暱稱就<b>無法再修改</b>，請想好再填。</p>`}
 
     <div class="row">
       <div class="grow"><label>出生年 *</label><select name="birth_year" required><option value="">請選擇</option>${years.map(y=>`<option value="${y}" ${p.birth_year==y?'selected':''}>${y}（${age(y)} 歲）</option>`).join('')}</select></div>
       <div class="grow"><label>所在地 *</label><select name="city" required><option value="">請選擇</option>${CITIES.map(c=>`<option ${p.city===c?'selected':''}>${c}</option>`).join('')}</select></div>
     </div>
     <div class="row">
-      <div class="grow"><label>身高（cm）</label><input name="height_cm" type="number" min="100" max="250" value="${esc(p.height_cm||'')}"></div>
-      <div class="grow"><label>職業</label><input name="occupation" maxlength="30" value="${esc(p.occupation||'')}" placeholder="例如：外商主管、設計師"></div>
+      <div class="grow"><label>身高（cm）</label><input name="height_cm" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" value="${esc(p.height_cm||'')}"></div>
+      <div class="grow"><label>職業</label><input name="occupation" maxlength="30" autocomplete="organization-title" value="${esc(p.occupation||'')}" placeholder="例如：外商主管、設計師"></div>
     </div>
     <div class="row">
       <div class="grow"><label>身材 *</label><select name="body_type" required><option value="">請選擇</option>${Object.entries(BODY).map(([k,v])=>`<option value="${k}" ${p.body_type===k?'selected':''}>${v}</option>`).join('')}</select></div>
@@ -1519,9 +1540,9 @@ function readProfileForm(form){
   let gender = me?.gender, looking_for = me?.looking_for;
   if(f.get('orient')) [gender, looking_for] = f.get('orient').split('-');
   if(!gender || !looking_for) { toast('請選擇想認識的對象'); return null; }
-  if(+f.get('birth_year')===new Date().getFullYear()-18 && +f.get('birth_year')!==me?.birth_year && !confirm(`你選的出生年是 ${f.get('birth_year')} 年。\n本站僅限年滿 18 歲，請確認你今年的生日已經過了。`)) return null;
-  if(f.get('role')==='daddy' && gender!=='male') { toast('Sugar Daddy 限男性，女性請選 Sugar Mommy'); return null; }
-  if(f.get('role')==='mommy' && gender!=='female') { toast('Sugar Mommy 限女性，男性請選 Sugar Daddy'); return null; }
+  if(+f.get('birth_year')===new Date().getFullYear()-18 && +f.get('birth_year')!==me?.birth_year && !confirm(`你選的出生年是 ${f.get('birth_year')} 年。\n本站僅限年滿 18 歲，請確認你今年的生日已經過了。`)) return null;
+  if(f.get('role')==='daddy' && gender!=='male') { toast('Sugar Daddy 限男性，女性請選 Sugar Mommy'); return null; }
+  if(f.get('role')==='mommy' && gender!=='female') { toast('Sugar Mommy 限女性，男性請選 Sugar Daddy'); return null; }
   const budget = f.get('role')==='baby' ? null : (f.get('budget')||null);
   if(f.get('role')!=='baby' && !budget){ toast('請選擇每月相處預算'); return null; }
   if(!f.get('body_type')){ toast('請選擇身材'); return null; }
@@ -1625,13 +1646,13 @@ function askRecover(email){
 // 用手機找回帳號（忘記用哪個 Email 註冊）：驗證手機後，把重設密碼信寄到那個帳號的 Email
 function openFindAccount(){
   modal(`<h2>用手機找回帳號</h2><p class="muted small mt">輸入註冊時驗證過的手機號碼。驗證後，我們會把重設密碼信寄到那個帳號的 Email，並告訴你是哪個信箱。</p>
-    <form id="fdForm"><label>手機號碼</label><div class="phrow"><span class="cc">台灣 +886</span><input id="fdNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="12" required></div>
+    <form id="fdForm"><label>手機號碼</label><div class="phrow"><span class="cc">台灣 +886</span><input id="fdNum" inputmode="numeric" autocomplete="tel-national" placeholder="例如 0912 345 678" maxlength="12" required></div>
       <div id="fdCap"></div><p class="small bad mt" id="fdErr" role="alert"></p>
       <button class="btn primary block mt2" id="fdSend" type="submit">傳送驗證碼</button></form>
     <form id="fdOtp" class="hidden mt2"><p class="small" id="fdHint"></p><label>簡訊驗證碼</label>
       <input id="fdCode" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" required>
       <p class="small bad mt" id="fdErr2" role="alert"></p><button class="btn primary block mt2" type="submit">確認</button></form>
-    <p class="tiny dim mt2">每支手機每 30 天最多可以找回 2 次。號碼換了或收不到簡訊，請從網頁最下方「聯絡客服」。</p>`);
+    <p class="tiny dim mt2">每支手機每 30 天最多可以找回 2 次。號碼換了或收不到簡訊，請從網頁最下方「聯絡客服」。</p>`);
   let phone='', capKey='', capTok='', capId=null;
   sb.from('app_config').select('value').eq('key','turnstile_sitekey').maybeSingle().then(({ data })=>{
     capKey=(data?.value||'').trim(); if(!capKey || !$('#fdCap')) return;
@@ -1646,8 +1667,8 @@ function openFindAccount(){
     const r = await phoneApi({ action:'find_send', phone, captcha: capTok }); capTok=''; try{ if(capId!==null) window.turnstile.reset(capId); }catch(_){}
     if(r.error){ b.disabled=false; b.textContent='傳送驗證碼'; return $('#fdErr').textContent=smsErr2(r.error); }
     b.textContent='已送出'; $('#fdOtp').classList.remove('hidden');
-    $('#fdHint').textContent=`如果 ${maskPhone(phone.replace('+',''))} 有註冊微糖，你會在一分鐘內收到驗證碼，請在 10 分鐘內輸入。沒收到的話，代表這支號碼沒有註冊過，或這 30 天內的找回次數已用完。`;
-    $('#fdCode').focus(); setTimeout(()=>{ if($('#fdSend')){ $('#fdSend').disabled=false; $('#fdSend').textContent='重新傳送'; } }, 60000); };
+    $('#fdHint').textContent=`如果 ${maskPhone(phone.replace('+',''))} 有註冊微糖，你會在一分鐘內收到驗證碼，請在 10 分鐘內輸入。沒收到的話，代表這支號碼沒有註冊過，或這 30 天內的找回次數已用完。`;
+    $('#fdCode').focus(); let t=60; const tick=()=>{ const b2=$('#fdSend'); if(!b2) return clearInterval(iv); if(--t<=0){ clearInterval(iv); b2.disabled=false; b2.textContent='重新傳送'; } else b2.textContent=`重新傳送（${t}）`; }; const iv=setInterval(tick,1000); tick(); };
   $('#fdOtp').onsubmit = async e => { e.preventDefault(); const code=$('#fdCode').value.replace(/\D/g,''); if(code.length<6) return $('#fdErr2').textContent='請輸入 6 位數驗證碼';
     const b=e.target.querySelector('button'); b.disabled=true; $('#fdErr2').textContent='';
     const r = await phoneApi({ action:'find_check', phone, code });
@@ -1655,8 +1676,8 @@ function openFindAccount(){
     modal(`<h2>找到你的帳號了</h2><p class="mt">你的帳號是 <b>${esc(r.email||'')}</b>。</p>
       <p class="muted small mt">${r.mailed?'我們已寄一封重設密碼信到這個信箱，按信中的按鈕設定新密碼，就能登入。':'重設密碼信這次沒有寄出，請在登入頁輸入這個 Email，按「忘記密碼」。'}</p>
       <p class="tiny dim mt">沒收到？請看看垃圾郵件匣。如果這個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>
-      <button class="btn primary block mt2" id="fdOk">好</button>`);
-    $('#fdOk').onclick = closeModal; };
+      <button class="btn primary block mt2" id="fdOk">回到登入</button>`);
+    $('#fdOk').onclick = ()=>{ closeModal(); location.hash='#/auth?mode=login'; }; };
 }
 function viewPhoneVerify(){
   $('#app').innerHTML = `<div class="narrow">
@@ -1665,12 +1686,13 @@ function viewPhoneVerify(){
     <p class="muted small mt mb">每位會員都要用台灣手機驗證，一支手機只能有一個帳號。被停權的號碼不能再註冊，所以在這裡遇到的人，都沒辦法換個帳號重來。你的號碼不會顯示給任何會員。</p>
     <form id="phForm" class="card">
       <label>手機號碼</label>
-      <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="0912345678" maxlength="12" required></div>
+      <div class="phrow"><span class="cc">台灣 +886</span><input id="phNum" inputmode="numeric" autocomplete="tel-national" placeholder="例如 0912 345 678" maxlength="12" required></div>
       <div id="phCap"></div>
-      <p class="small bad mt" id="phErr" role="alert"></p><p class="tiny dim mt">目前僅支援台灣手機門號。<span id="phLeft">驗證碼最多可傳送 3 次（每個帳號、每支手機都一樣），請先確認號碼正確再送出。</span></p>
+      <p class="small bad mt" id="phErr" role="alert"></p><p class="tiny dim mt">目前僅支援台灣手機門號。<span id="phLeft">驗證碼最多可傳送 3 次（每個帳號、每支手機都一樣），請先確認號碼正確再送出。</span></p>
       <button class="btn primary block mt2" id="phSend" type="submit">傳送驗證碼</button>
     </form>
     <form id="otpForm" class="card mt hidden">
+      <p class="small mb" id="phSum"></p>
       <label>簡訊驗證碼</label>
       <input id="otpIn" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" required>
       <p class="small bad mt" id="otpErr" role="alert"></p><p class="tiny dim mt" id="otpHint"></p>
@@ -1679,22 +1701,29 @@ function viewPhoneVerify(){
     </form><p class="tiny dim center mt2">不是你的帳號？<button type="button" class="lnk obOut" style="font-size:inherit">登出</button>　·　<a href="#/me">帳號與刪除</a></p></div>`;
   document.querySelectorAll('.obOut').forEach(a=>a.onclick=async()=>{ await sb.auth.signOut(); location.hash='#/'; });
   let phone='', timer=null;
-  const phErr = t => { const el=$('#phErr'); if(el) el.textContent=t||''; else if(t) toast(t); };
-  const otpErr = t => { const el=$('#otpErr'); if(el) el.textContent=t||''; else if(t) toast(t); };
+  const errHtml = t => esc(t||'').replace(/「?聯絡客服」?/, '<a href="#" data-support>聯絡客服</a>');
+  const phErr = t => { const el=$('#phErr'); if(el) el.innerHTML=errHtml(t); else if(t) toast(t); };
+  const otpErr = t => { const el=$('#otpErr'); if(el) el.innerHTML=errHtml(t); else if(t) toast(t); };
+  // 寄出後：上面的號碼表單收起來，只留「已傳送到 0912-***-678　修改號碼」
+  const collapse = () => { $('#phForm').classList.add('hidden');
+    $('#phSum').innerHTML = `驗證碼已傳送到 <b>${esc(maskPhone(phone.replace('+','')))}</b>　${left>0?'<button type="button" class="lnk" id="phEdit" style="font-size:inherit">修改號碼</button>':''}`;
+    const ed=$('#phEdit'); if(ed) ed.onclick = ()=>{ $('#phForm').classList.remove('hidden'); $('#phNum').focus(); $('#phNum').select(); ed.remove(); }; };
   // 傳送後 60 秒內，「重新傳送」和「改用其他號碼」都要等，避免一下子把 3 次用完
   const stopTimer = () => { clearInterval(timer); timer=null; };
   const cool = (sec=60) => { let t=sec; const b=$('#otpResend'), ps=$('#phSend'); stopTimer();
     const tick = () => { if(!document.body.contains(b)) return stopTimer();
       b.disabled = t>0 || left<=0; ps.disabled = t>0 || left<=0;
       b.textContent = left<=0 ? '已無法再傳送' : t>0 ? `重新傳送（${t}）` : '重新傳送';
-      ps.textContent = t>0 ? `改用其他號碼（${t}）` : '改用其他號碼重新傳送';
+      ps.textContent = t>0 ? `${t} 秒後可以改用其他號碼` : '傳送到這個號碼';
       if(t<=0) stopTimer(); t--; };
     tick(); timer=setInterval(tick,1000); };
   const SK='yy_phone_sent', saveSent = () => { try{ sessionStorage.setItem(SK, JSON.stringify({ uid: me?.id, phone, at: Date.now() })); }catch(_){} };
   let sending=false, left=3;
-  const showLeft = () => { const el=$('#phLeft'); if(el) el.textContent = left>0 ? `驗證碼最多可傳送 3 次（每個帳號、每支手機都一樣），目前還剩 ${left} 次。請先確認號碼正確再送出。` : '驗證碼傳送次數已用完。'; };
+  const showLeft = () => { const el=$('#phLeft'); if(el) el.textContent = left>0 ? `驗證碼最多可傳送 3 次（每個帳號、每支手機都一樣），目前還剩 ${left} 次。請先確認號碼正確再送出。` : '驗證碼傳送次數已用完。'; };
   const noMore = keepOtp => { left=0; showLeft(); const rb=$('#otpResend'); if(rb){ rb.disabled=true; rb.textContent='已無法再傳送'; } stopTimer(); const ps=$('#phSend'); if(ps){ ps.disabled=true; ps.textContent = keepOtp?'已無法再傳送':'傳送驗證碼'; }
-    if(!keepOtp){ const b=$('#phSend'); if(b){ b.disabled=true; } phErr('驗證碼傳送次數已用完。請從網頁最下方「聯絡客服」，我們會協助你完成驗證。'); } };
+    if(!keepOtp){ const b=$('#phSend'); if(b){ b.disabled=true; } const n=$('#phNum'); if(n) n.disabled=true; const pl=$('#phLeft'); if(pl) pl.textContent='';
+      phErr('驗證碼傳送次數已用完。請「聯絡客服」，我們會協助你完成驗證。'); }
+    const ed=$('#phEdit'); if(ed) ed.remove(); };
   // 真人驗證（Cloudflare Turnstile）：後台設定了 site key 才出現
   let capKey='', capTok='', capId=null, capWait=null;
   const capReady = () => !capKey || !!capTok;
@@ -1716,22 +1745,22 @@ function viewPhoneVerify(){
     if(r.error==='already'){ await sb.auth.refreshSession(); await loadMe(); toast('這支手機已經驗證過了'); route(); return true; }
     if(r.error){ phErr(smsErr2(r.error)); if(['user_limit'].includes(r.error)) noMore(!$('#otpForm').classList.contains('hidden')); else if(rb && !timer && left>0) rb.disabled=false; return false; }
     left = r.left ?? Math.max(0,left-1); phErr(''); saveSent();
-    $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，請在 10 分鐘內輸入。${left>0?`還可以重新傳送 ${left} 次。`:'這是最後一次傳送機會。'}`;
+    $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`請在 10 分鐘內輸入。${left>0?`沒收到的話，還可以重新傳送 ${left} 次。`:'這是最後一次傳送機會。'}`; collapse();
     showLeft(); $('#otpIn').focus(); if(left>0) cool(); else noMore(true); return true;
   };
   // 重新整理頁面：10 分鐘內寄過的驗證碼還能用，直接回到輸入驗證碼的畫面
   try{ const st=JSON.parse(sessionStorage.getItem(SK)||'null');
     if(st && st.uid===me?.id && /^\+8869\d{8}$/.test(st.phone||'') && Date.now()-st.at < 10*60*1000){
       phone=st.phone; $('#phNum').value='0'+phone.slice(4);
-      $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`驗證碼已傳送到 ${maskPhone(phone.replace('+',''))}，請在收到後 10 分鐘內輸入。`;
-      const rest=Math.ceil((60*1000-(Date.now()-st.at))/1000); if(rest>0) cool(rest); else { $('#phSend').textContent='改用其他號碼重新傳送'; if(left>0) $('#otpResend').disabled=false; }
+      $('#otpForm').classList.remove('hidden'); $('#otpHint').textContent=`請在收到後 10 分鐘內輸入。`; collapse();
+      const rest=Math.ceil((60*1000-(Date.now()-st.at))/1000); if(rest>0) cool(rest); else { $('#phSend').textContent='傳送到這個號碼'; if(left>0) $('#otpResend').disabled=false; }
     } }catch(_){}
   $('#phForm').onsubmit = async e => { e.preventDefault();
     const n = $('#phNum').value.replace(/[\s-]/g,'');
     if(!/^09\d{8}$/.test(n)) return phErr('請輸入 09 開頭的 10 碼手機號碼'); phErr('');
     phone = '+886'+n.slice(1);
     const b=$('#phSend'); b.disabled=true; b.textContent='傳送中…';
-    const ok = await send(); if(!ok && !timer && left>0){ b.disabled=false; b.textContent = $('#otpForm').classList.contains('hidden')?'傳送驗證碼':'改用其他號碼重新傳送'; } };
+    const ok = await send(); if(!ok && !timer && left>0){ b.disabled=false; b.textContent = $('#otpForm').classList.contains('hidden')?'傳送驗證碼':'傳送到這個號碼'; } };
   $('#otpResend').onclick = send;
   $('#otpForm').onsubmit = async e => { e.preventDefault();
     const token = $('#otpIn').value.replace(/\D/g,''); if(token.length<6) return otpErr('請輸入 6 位數驗證碼');
@@ -1756,13 +1785,13 @@ async function viewOnboarding(){
       ${profileFormHtml(me)}
       <div class="fsec"><span>5</span>照片</div>
       <label>頭像照片 *</label>
-      <div class="row"><label class="avatar lg avpick" id="avPrev" style="margin:0;cursor:pointer" aria-label="選擇頭像照片">＋<input type="file" accept="image/*" id="avFile" class="hidden"></label><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><label class="btn sm ghost" style="margin:10px 0 0;color:var(--ink)">選擇頭像<input type="file" accept="image/*" class="hidden avFile2"></label></div></div>
+      <div class="row"><label class="avatar lg avpick" id="avPrev" style="margin:0;cursor:pointer" aria-label="選擇頭像照片">＋<input type="file" accept="image/*" id="avFile" class="vh"></label><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><label class="btn sm ghost" style="margin:10px 0 0;color:var(--ink)">選擇頭像<input type="file" accept="image/*" class="vh avFile2"></label></div></div>
       <label>更多照片（選填，可一次選多張，最多 20 張）</label>
       <div class="gallery" id="obGal"></div>
-      <label class="btn sm ghost" style="margin-top:8px">＋ 選擇照片<input type="file" accept="image/*" multiple id="obFiles" class="hidden"></label>
+      <label class="btn sm ghost" style="margin-top:8px">＋ 選擇照片<input type="file" accept="image/*" multiple id="obFiles" class="vh"></label>
       <p class="tiny dim">每一張照片都會由真人審核，通過後才會出現在你的檔案上。頭像和檔案通過審核後，就能開始使用網站。</p>
       <button class="btn primary block mt2" type="submit">送出審核</button>
-      <p class="tiny dim mt center">送出即表示你再次確認已年滿 18 歲並同意<a href="#/terms" target="_blank">使用條款</a></p>
+      <p class="tiny dim mt center">送出即表示你再次確認已年滿 18 歲並同意<a href="#/terms" target="_blank">使用條款</a></p>
     </form><p class="tiny dim center mt2">不是你的帳號？<button type="button" class="lnk obOut" style="font-size:inherit">登出</button>　·　<a href="#/me">帳號與刪除</a></p></div>`;
   document.querySelectorAll('.obOut').forEach(a=>a.onclick=async()=>{ await sb.auth.signOut(); location.hash='#/'; });
   bindTagPick();
@@ -1855,7 +1884,7 @@ async function viewBrowse(){
     : `<header class="phd"><h1>探索</h1><p>${orientText(me)}，只顯示方向互相吻合的會員</p></header>`}
     <div class="filters">
       ${adminView?`<select id="fGender" aria-label="性別"><option value="">男女都看</option><option value="female" ${browseState.agender==='female'?'selected':''}>只看女生</option><option value="male" ${browseState.agender==='male'?'selected':''}>只看男生</option></select>`:''}
-      <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
+      <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
       <select id="fRegion" aria-label="地區"><option value="">地區不限</option>${Object.keys(REGIONS).map(r=>`<option ${browseState.region===r?'selected':''}>${r}</option>`).join('')}</select>
       <select id="fCity" aria-label="城市"><option value="">城市不限</option></select>
       <button type="button" class="fbtn" id="fMore">更多篩選${advCount()?`<b>${advCount()}</b>`:''}</button>
@@ -2161,12 +2190,12 @@ async function viewChat(matchId){
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
     <div class="banner ${closed?'':'hidden'}" id="chClosed" style="margin:8px 0 0">對方已結束這段對話，無法再傳訊息。如果有不當內容，仍可以從右上角「⋯」檢舉或封鎖。</div>
     <div class="revbar hidden" id="revBar"></div>
-    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><label class="chph" id="chPh" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="hidden" aria-label="傳照片"></label><input id="chIn" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
+    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><label class="chph" id="chPh" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="vh" aria-label="傳照片"></label><input id="chIn" enterkeyhint="send" aria-label="訊息" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
 </div>`;
   if(o) signedThumb(pubAv(o)).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   const box = $('#msgs');
   let lastDay='', lastAt=null, bulk=false; const seenIds=new Set();
-  const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+  const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'numeric',minute:'2-digit'});
   const invInner = id => { const v = inv[id]; if(!v) return '<p class="tiny dim">載入中…</p>';
     const mineV = v.from_id===me.id, past = new Date(v.date_at) < new Date(), c = myChk[id];
     const expired = v.status==='pending' && past;
@@ -2384,13 +2413,13 @@ async function viewMe(){
       ${hasDoc ? `<p class="tiny dim mt">你的文件保存在私有空間，只有你按「允許」的甜心看得到，查看時會疊上對方的代號浮水印。你可以隨時刪除文件，認證標章會保留。</p>
         ${wPend.length?`<div class="list mt">${wPend.map(x=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(x.requester_id)} <span class="tiny dim">想看你的財力證明</span></div><button class="btn sm primary wGrant" data-id="${x.requester_id}">允許</button><button class="btn sm ghost wDeny" data-id="${x.requester_id}">婉拒</button></div>`).join('')}</div>`:''}
         ${wGrant.length?`<p class="tiny dim mt">已允許查看：</p><div class="list">${wGrant.map(x=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(x.requester_id)}</div><button class="btn sm ghost wRevoke" data-id="${x.requester_id}">收回</button></div>`).join('')}</div>`:''}
-        <button class="btn sm ghost mt" id="wDelDoc">刪除我的財力文件</button>` : `<p class="tiny dim mt">文件已刪除，甜心無法申請查看。想讓甜心看，可以重新上傳一份。</p><label class="btn sm ghost mt">重新上傳文件<input type="file" accept="image/*" id="wFile" class="hidden"></label><input type="hidden" id="wKind" value="other">`}`
+        <button class="btn sm ghost mt" id="wDelDoc">刪除我的財力文件</button>` : `<p class="tiny dim mt">文件已刪除，甜心無法申請查看。想讓甜心看，可以重新上傳一份。</p><label class="btn sm ghost mt">重新上傳文件<input type="file" accept="image/*" id="wFile" class="vh"></label><input type="hidden" id="wKind" value="other">`}`
     : `<p class="small muted mt">通過認證後，你的檔案會顯示<span style="white-space:nowrap">「✓ 財力認證」</span>，甜心可以只看有認證的會員，回覆率通常比較高。</p>
       ${lastWv?.status==='rejected'?`<div class="banner warn mt">上一份文件沒有通過：${esc(lastWv.review_note||'')}</div>`:''}
       <p class="tiny dim mt">上傳<b>任一種</b>看得出經濟能力的文件照片即可。<b>姓名、帳號、身分證字號、地址都可以遮住</b>，看得到大概金額就好。</p>
       <details class="more mt"><summary>文件怎麼保存？</summary><p class="tiny dim">沒通過的立即刪除；通過的保存在私有空間，只有你按「允許」的甜心看得到，查看時會疊上對方代號浮水印。你可以隨時刪除。財力認證不是必要的，是加分。</p></details>
       <label class="mt">文件種類</label><select id="wKind">${Object.entries(WEALTH_KINDS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
-      <label class="btn primary mt2" style="margin-top:14px">選擇文件照片並送出<input type="file" accept="image/*" id="wFile" class="hidden"></label>`}
+      <label class="btn primary mt2" style="margin-top:14px">選擇文件照片並送出<input type="file" accept="image/*" id="wFile" class="vh"></label>`}
   </div>`;
   const st = { incomplete:'warn', pending:'warn', approved:'ok', rejected:'bad', suspended:'bad' }[me.status];
   const accountCard = `<div class="card mt"><h3 style="font-size:17px">帳號</h3><p class="small muted">${esc(authUser?.email||session.user.email)}<br>手機　${phoneOk()?esc(maskPhone(authUser.phone))+'（已驗證）':'尚未驗證'}</p>
@@ -2412,7 +2441,7 @@ async function viewMe(){
   if(!TABS.some(t=>t[0]===meTab)) meTab='profile';
   if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="narrow">${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}
     <header class="mehd">
-      <label class="meav" title="更換頭像"><span class="avatar" id="meAv"></span><input type="file" accept="image/*" id="meAvFile" class="hidden"><em>更換</em></label>
+      <label class="meav" title="更換頭像"><span class="avatar" id="meAv"></span><input type="file" accept="image/*" id="meAvFile" class="vh"><em>更換</em></label>
       <div class="grow"><h1>${esc(me.nickname||'（未命名）')}</h1>
         <p class="sub"><span class="chip ${st}">${STATUS_TXT[me.status]}</span>${personBadge(me)}${wealthBadge(me)}</p>
         ${me.role?`<p class="tiny dim" style="letter-spacing:.14em;margin-top:6px"><span style="white-space:nowrap">${ROLES[me.role]}</span>${me.city?'　<span style="white-space:nowrap">'+esc(me.city)+'</span>':''}${age(me.birth_year)?'　<span style="white-space:nowrap">'+age(me.birth_year)+' 歲</span>':''}</p>`:''}</div>
@@ -2426,7 +2455,7 @@ async function viewMe(){
     <div class="card" id="voiceCard"><h3 style="font-size:17px;margin-bottom:6px">語音自我介紹</h3><p class="tiny dim">錄一段 15 秒內的聲音，說說你是怎樣的人。審核通過後，方向吻合的會員打開你的檔案就能聽。</p><div id="vcBody" class="mt"><div class="spinner"></div></div></div>
     <div class="card"><h3 style="font-size:17px;margin-bottom:6px">相簿</h3><p class="tiny dim">公開照所有會員可見；私密照需你授權。每張照片都需審核。</p>
       <div class="gallery" id="meGal">${(photos||[]).map(x=>`<div class="g" data-ph="${esc(x.path)}"><span class="st chip ${x.status==='approved'?'ok':x.status==='rejected'?'bad':'warn'}">${x.is_private?'🔒 ':''}${({pending:'審核中',approved:'已通過',rejected:'未通過'})[x.status]}</span><button class="del" data-id="${x.id}" data-path="${esc(x.path)}" aria-label="刪除照片">✕</button></div>`).join('')}</div>
-      <div class="row mt flexwrap"><label class="btn sm ghost" style="margin:0">＋ 公開照<input type="file" accept="image/*" data-priv="0" class="hidden mePh"></label><label class="btn sm ghost" style="margin:0">＋ 私密照<input type="file" accept="image/*" data-priv="1" class="hidden mePh"></label></div>
+      <div class="row mt flexwrap"><label class="btn sm ghost" style="margin:0">＋ 公開照<input type="file" accept="image/*" data-priv="0" class="vh mePh"></label><label class="btn sm ghost" style="margin:0">＋ 私密照<input type="file" accept="image/*" data-priv="1" class="vh mePh"></label></div>
     </div>
     ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(r.requester_id)}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
     ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(g.viewer_id)}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
@@ -2569,9 +2598,9 @@ async function viewMe(){
     const t = Array.isArray(task) ? task[0] : task;
     $('#pCard').innerHTML = `<h3 style="font-size:17px">真人認證</h3>
       <div class="pvstep mt"><b>1　自拍照片</b><p>請用前鏡頭拍一張：<span class="pvtask">${esc(t.photo_task)}</span></p>
-        <label class="btn sm ghost">拍照或選擇照片<input type="file" accept="image/*" capture="user" id="pvPhoto" class="hidden"></label><span class="tiny dim" id="pvPhotoOk"></span></div>
+        <label class="btn sm ghost">拍照或選擇照片<input type="file" accept="image/*" capture="user" id="pvPhoto" class="vh"></label><span class="tiny dim" id="pvPhotoOk"></span></div>
       <div class="pvstep mt"><b>2　10 秒內短影片</b><p>請錄一段影片：<span class="pvtask">${esc(t.video_task)}</span>，並在影片中念出數字 <span class="pvtask">${esc(t.code)}</span></p>
-        <label class="btn sm ghost">錄影或選擇影片<input type="file" accept="video/*" capture="user" id="pvVideo" class="hidden"></label><span class="tiny dim" id="pvVideoOk"></span></div>
+        <label class="btn sm ghost">錄影或選擇影片<input type="file" accept="video/*" capture="user" id="pvVideo" class="vh"></label><span class="tiny dim" id="pvVideoOk"></span></div>
       <p class="tiny dim mt">臉要清楚、光線充足，不要戴口罩或墨鏡。這組動作 2 小時內有效。</p>
       <button class="btn primary mt2" id="pvSubmit" disabled>送出審核</button>`;
     let pf=null, vf=null; const ready = () => $('#pvSubmit').disabled = !(pf && vf);
@@ -2828,7 +2857,7 @@ async function viewAdmin(){
       </div>
       <div class="card mt">
         <h3 style="font-size:17px;margin:0 0 4px">依手機號碼重設次數</h3><p class="tiny dim mb">會員反映「收驗證碼的次數用完了」，或號碼被別人惡意用掉次數時，輸入他的手機號碼，讓這支號碼可以再收 3 次。</p>
-        <div class="row" style="gap:8px"><input id="smsPh" inputmode="numeric" placeholder="0912345678" maxlength="12" style="max-width:220px"><button class="btn ghost" id="smsPhBtn">重設</button></div>
+        <div class="row" style="gap:8px"><input id="smsPh" inputmode="numeric" placeholder="例如 0912 345 678" maxlength="12" style="max-width:220px"><button class="btn ghost" id="smsPhBtn">重設</button></div>
       </div>`;
       $('#smsPhBtn').onclick = async ()=>{ const v=$('#smsPh').value.replace(/[\s-]/g,''); if(!/^09\d{8}$/.test(v)) return toast('請輸入 09 開頭的 10 碼手機號碼');
         const { data, error } = await sb.rpc('admin_reset_sms_phone', { ph: v }); if(error) return toast(error.message); $('#smsPh').value=''; toast(data?`已重設，這支號碼可以再收 3 次（作廢 ${data} 筆紀錄）`:'這支號碼沒有需要重設的紀錄'); };
@@ -2879,8 +2908,8 @@ async function viewAdmin(){
 const DOCS = {
 terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 30 日</p>
 <h3>第一條　契約主體與服務性質</h3><p>本條款為微糖 1/3 Sugar（以下稱「本平台」）與使用本平台服務之會員（以下稱「你」）間之契約。本平台提供成年人之間的線上交友服務（包括 Sugar Dating 甜心交友）。本平台僅提供資訊展示與會員間之溝通工具，不介入、不安排、不保證任何會員之間的實際互動或關係。</p>
-<h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
-<h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。你於建立檔案時設定之暱稱、性別與想認識的對象，送出審核後即無法自行修改（暱稱於檔案未通過審核時得修改）；如有特殊需要，得來信客服申請，由本平台審酌處理。Sugar Daddy 身分限男性、Sugar Mommy 身分限女性。</p>
+<h3>第二條　年齡與資格</h3><p>本平台僅供年滿 18 歲，或達你所在地法定成年年齡（以較高者為準）之自然人使用。註冊時你必須確認符合此資格；本平台得隨時要求你提供年齡證明，拒絕提供者將停止服務。本平台如發現或合理懷疑任何帳號由未成年人使用，將立即停權並視情況通報主管機關。</p>
+<h3>第三條　帳號</h3><p>每人限持有一個帳號。你應妥善保管帳號密碼，並對該帳號下之一切行為負責。你不得將帳號出借、轉讓或售予他人。你於建立檔案時設定之暱稱、性別與想認識的對象，送出審核後即無法自行修改（暱稱於檔案未通過審核時得修改）；如有特殊需要，得來信客服申請，由本平台審酌處理。Sugar Daddy 身分限男性、Sugar Mommy 身分限女性。</p>
 <h3>第四條　禁止行為</h3><p>你同意不得於本平台從事以下行為，違者本平台得逕行停權、刪除內容，並保留法律追訴權：</p><ol>
 <li>上傳非本人、冒用他人、或未經授權之照片或資料。</li>
 <li>以金錢、財物或其他對價交換性交或猥褻行為，或以任何方式要求、提供、暗示此類交換。</li><li>於見面前以任何名義向其他會員要求匯款、借貸、投資、訂金或保證金。</li>
@@ -2930,12 +2959,12 @@ function viewPlans(){
   $('#app').innerHTML = `<div style="max-width:1120px;margin:0 auto">
     <header class="phd" style="text-align:center"><h1>會員方案</h1><p>開站期間，所有人都免費升級為微糖會員</p></header>
     <div class="freeall"><p class="serif big">全部免費</p>
-      <p class="muted">現在加入，甜心、Sugar Daddy、Sugar Mommy 都直接享有下方「微糖會員」的全部功能。<br>不需要綁信用卡，也不會自動扣款。</p>
+      <p class="muted">現在加入，甜心、Sugar Daddy、Sugar Mommy 都直接享有下方「微糖會員」的全部功能。<br>不需要綁信用卡，也不會自動扣款。</p>
       <div class="mt2">${join}</div></div>
     <div class="plans">
       <div class="plan"><div class="who">甜心</div><h3>甜心會員</h3><div class="price">免費</div><div class="alt">通過真人審核即開通</div>
         <ul><li>建立檔案、公開與私密相簿</li><li>探索、心動、回覆所有訊息</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>看誰對我心動</li><li>真人認證</li></ul></div>
-      <div class="plan"><div class="who">Sugar Daddy／Mommy</div><h3>基本會員</h3><div class="price">免費</div><div class="alt">先認識看看</div>
+      <div class="plan"><div class="who">Sugar Daddy／Mommy</div><h3>基本會員</h3><div class="price">免費</div><div class="alt">先認識看看</div>
         <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>真人認證、財力認證</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>回覆所有訊息</li><li>看誰對我心動</li><li class="no">探索結果優先曝光</li><li class="no">不出現在探索、隱藏上線狀態</li></ul></div>
       <div class="plan hl"><div class="who">所有會員</div><h3>微糖會員 ${now}</h3><div class="price"><s class="was">NT$1,680</s> 免費<small>開站期間</small></div><div class="alt">正式收費後的預計定價：每月 NT$1,680</div>
         <ul><li>基本會員全部功能</li><li><b>主動開啟新對話不限次數</b></li><li><b>探索結果優先曝光</b></li><li><b>不出現在探索、隱藏上線狀態</b></li><li><b>審核與客服優先處理</b></li></ul></div>
