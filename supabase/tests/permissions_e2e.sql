@@ -885,7 +885,7 @@ begin
   j := public.sms_reserve(N3,'+886911000004'); perform public.sms_refund((j->>'id')::bigint);
   select count(*) into n from public.sms_sends where user_id=N3;
   out := array_append(out, ('46f 寄送失敗退回額度 = '||n||' (應為1)')::text);
-  insert into public.sms_sends (user_id, phone_hash) select null, 'x'||g from generate_series(1,30) g;
+  insert into public.sms_sends (user_id, phone_hash) select null, 'x'||gs.k from generate_series(1,30) as gs(k);
   v := public.sms_reserve(N3,'+886911000005')->>'r';
   out := array_append(out, ('46g 全站每小時 30 封 = '||v||' (應為global_limit)')::text);
   perform set_config('request.jwt.claims', json_build_object('sub',N1,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', N1::text, true);
