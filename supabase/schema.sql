@@ -2692,6 +2692,6 @@ begin
     raise exception '照片檔案還沒刪完，請再按一次刪除';
   end if;
   delete from public.photos where user_id = uid;
-  delete from private.account_deleting where account_deleting.uid = delete_my_account.uid;
+  delete from private.account_deleting d where d.uid = auth.uid();
   delete from auth.users where id = uid;
 end $$;
