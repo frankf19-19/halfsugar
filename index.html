@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-2Yi44A1YesPNb9UgOu2ZQoy72/BUe1Nn5s3xWFj6MoU=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-tvcRUr+bvCWMXH5qb87zEtOgVm6Fg00i/YaNmviU+Hg=' 'sha256-t8xMJfpEGawBd+4sUyRs+a3Quc5OOTZ4IICopfBby2Q=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -809,6 +809,53 @@ html[data-theme=dark] .bnav a{color:#8F8984}
 html[data-theme=dark] .bnav a.active{color:var(--wine)}
 html[data-theme=dark] .bnav .badge{box-shadow:0 0 0 2px #1E1C1B}
 }
+
+/* ===== 介面細修：圓角、層次、聊天泡泡（v1.72） ===== */
+.btn,.fbtn,#fMore{border-radius:10px}
+.btn.sm{border-radius:8px}
+.filters select,.sortsel select{border-radius:10px}
+.pcard .ph{border-radius:14px}
+.pcard .seen,.pcard .liked{border-radius:999px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.chip,.pbadge,.wbadge,.stamp{border-radius:999px}
+.modal .x{border-radius:50%}
+.avatar{box-shadow:0 0 0 1px rgba(0,0,0,.04)}
+.todo .td,.sortbar .tonight,.meav em{border-radius:999px}
+.todo .td.done{border-style:solid;background:#F4F2EF;border-color:transparent}
+html[data-theme=dark] .todo .td.done{background:#1F1D1B}
+.themesw{border-radius:999px;overflow:hidden}
+.card{border-radius:16px}
+.photo-big,.gallery .g,.thumbs .g{border-radius:14px}
+.banner{border-radius:12px}
+/* 聊天泡泡 */
+.chat .msgs{gap:8px}
+.msg{border-radius:20px;padding:10px 16px;line-height:1.65;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.msg.me{background:var(--wine);color:#fff;border-bottom-right-radius:6px}
+.msg.them{background:#F2EFEB;border-bottom-left-radius:6px}
+.msg .time{font-size:10.5px;letter-spacing:.04em;opacity:.75}
+.msg .mimg{border-radius:12px}
+.msg.hasimg,.msg.recalled{box-shadow:none}
+.chat form{gap:8px}
+.chat form input{border:0!important;background:#F2EFEB;border-radius:999px!important;padding:12px 18px!important;min-height:44px}
+.chat form input:focus{outline:2px solid rgba(176,74,98,.35);outline-offset:0}
+.chat form .btn{border-radius:999px;background:var(--wine);border-color:var(--wine);color:#fff;min-height:44px;padding:0 20px;letter-spacing:.14em}
+.chat form .chph{border-radius:50%}
+html[data-theme=dark] .chat .msgs .msg.me{background:#9C3F56;color:#fff}
+html[data-theme=dark] .chat .msgs .msg.them{background:#262321;color:#ECE7E2}
+html[data-theme=dark] .chat form input{background:#24211F}
+html[data-theme=dark] .chat form .btn{background:#9C3F56!important;border-color:#9C3F56!important;color:#fff!important}
+@media(max-width:719px){
+  body:not(.home) .topbar,body.home.scrolled .topbar{background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(1.5) blur(16px);backdrop-filter:saturate(1.5) blur(16px);border-bottom-color:rgba(40,20,25,.07)}
+  html[data-theme=dark] body:not(.home) .topbar,html[data-theme=dark] body.home.scrolled .topbar{background:rgba(18,17,17,.88)}
+  .topbar .in{height:54px}
+  /* 篩選：淡底色、無粗框 */
+  .filters select{background-color:#F4F2EF;border-color:transparent}
+  html[data-theme=dark] .filters select{background-color:#1F1D1B}
+  #fMore{border-color:#D8D3CD}
+  .filters{margin-bottom:18px}
+  .pcard .name,.pcard h3{letter-spacing:.08em}
+  /* 登入後的頁面不顯示介紹文章連結，畫面比較乾淨 */
+  body:has(#bnav:not(.hidden)) .glinks{display:none}
+}
 </style>
 </head>
 <body>
@@ -857,7 +904,7 @@ html[data-theme=dark] .bnav .badge{box-shadow:0 0 0 2px #1E1C1B}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.71.1';
+const BUILD = 'v1.72.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
