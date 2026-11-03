@@ -3261,3 +3261,23 @@ revoke execute on function public.my_viewers_count(timestamptz) from public, ano
 grant execute on function public.my_viewers_count(timestamptz) to authenticated;
 
 alter table public.profiles drop column if exists view_trace;
+
+-- ============ v0.57 修正：審核中／被退件的會員刪帳號會卡住 ============
+-- 上次通過的頭像（approved_avatar_path）也要清掉，照片檔案才刪得掉
+create or replace function public.begin_account_deletion()
+returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() = 'suspended' then
+    raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
+  end if;
+  insert into private.account_deleting (uid) values (auth.uid()) on conflict on constraint account_deleting_pkey do update set at = now();
+  perform set_config('halfsugar.deleting', '1', true);
+  update public.profiles set hidden = true, avatar_path = null, approved_avatar_path = null where id = uid;
+  delete from public.photos where user_id = uid;
+  delete from public.wealth_verifications where user_id = uid;
+  delete from public.person_verifications where user_id = uid;
+  if to_regclass('public.voice_intros') is not null then execute 'delete from public.voice_intros where user_id = $1' using uid; end if;
+  perform set_config('halfsugar.deleting', '0', true);
+end $$;

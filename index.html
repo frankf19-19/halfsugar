@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-AWfHQwCrPikrrw2850y7rMK6mDmlGWy4HNrvFt94whM=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-ZIvSF7+3V5U3akQHO6E+b3QEAJDEDLcNNevYRR7XtWc=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1167,7 +1167,7 @@ html[data-theme=dark] .zmode{border-color:#ECE7E1}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.86.3';
+const BUILD = 'v1.86.4';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1339,7 +1339,7 @@ const WB = (() => {
 /* 登出：頂端選單與「我的」頁右上角 */
 document.addEventListener('click', async e => { const t = e.target.closest('[data-logout]'); if(!t) return; e.preventDefault();
   if(!confirm('確定要登出嗎？')) return;
-  await sb.auth.signOut().catch(()=>{}); try{ Object.keys(sessionStorage).filter(k=>k.startsWith('yy_')).forEach(k=>sessionStorage.removeItem(k)); }catch(_){}
+  await sb.auth.signOut().catch(()=>{}); Object.keys(drafts).forEach(k=>delete drafts[k]); Object.keys(scrollMem).forEach(k=>delete scrollMem[k]); try{ Object.keys(sessionStorage).filter(k=>k.startsWith('yy_')).forEach(k=>sessionStorage.removeItem(k)); }catch(_){}
   location.hash = '#/'; toast('已登出。'); });
 function containsBadWords(s, chat){ const l=(s||'').toLowerCase(); return BAD_WORDS.filter(w=>!(chat && CHAT_OK.includes(w)) && l.includes(w.toLowerCase())); }
 const CHAT_OK = ['出場','定點','全套','價碼','一次多少','line id','加賴'];   // 日常對話也會用到的詞，訊息裡不擋（自介仍擋）
@@ -2026,6 +2026,19 @@ const noThumb = new Map();
 const USE_THUMBS = true;    // 縮圖：送審後鎖住、跟原圖一起審核（schema v0.35）
 async function signedThumb(p){ if(!p) return null; if(!USE_THUMBS || (noThumb.get(p)||0) > Date.now()) return signed(p);
   const u = await signed(thumbOf(p)); if(u) return u; noThumb.set(p, Date.now()+10*60*1000); return signed(p); }
+// 清掉沒在用的舊照片檔（例如換頭像後、上次通過審核的舊頭像），避免佔用 30 張的空間；只清 10 分鐘以前的檔案，避免刪到正在上傳的
+let sweptAt = 0;
+async function sweepOrphans(){
+  if(!me || Date.now()-sweptAt < 6*3600e3) return; sweptAt = Date.now();
+  try{
+    const [{ data: files }, { data: ps }] = await Promise.all([ sb.storage.from('photos').list(me.id, { limit: 200 }), sb.from('photos').select('path').eq('user_id', me.id) ]);
+    if(!files || !ps) return;
+    const base = n => n.replace(/[tb]\.jpg$/, '.jpg');
+    const used = new Set([me.avatar_path, me.approved_avatar_path, ...ps.map(x=>x.path)].filter(Boolean).map(x=>x.split('/').pop()));
+    const old = files.filter(f => f.name.endsWith('.jpg') && !used.has(base(f.name)) && Date.now() - new Date(f.created_at||0) > 600e3).map(f => me.id + '/' + f.name);
+    if(old.length) await sb.storage.from('photos').remove(old);
+  }catch(_){}
+}
 const rmPhotos = paths => { const ps = paths.filter(Boolean); return ps.length ? sb.storage.from('photos').remove([...ps, ...ps.map(thumbOf), ...ps.map(blurOf)]) : Promise.resolve({}); };
 // 後台審核：把別人在卡片上會看到的小圖一起顯示，確認跟原圖是同一張
 async function admThumb(el){ const p = el.dataset.ph; if(!p) return; const t = await signed(thumbOf(p)); if(!t || !el.isConnected) return;
@@ -2293,7 +2306,7 @@ async function viewOnboarding(){
       if(upd && upd.status==='incomplete'){ await loadMe(); throw new Error(phoneOk()?'資料還不完整，請檢查每個必填欄位':'請先完成手機驗證'); }
       let failed = 0;
       for(let i=0;i<extra.length;i++){ btn.textContent=`上傳照片 ${i+1}／${extra.length}…`;
-        try{ const ph = await uploadPhoto(extra[i]); const { error: pe } = await sb.from('photos').insert({ user_id:me.id, path:ph, is_private:false }); if(pe) failed++; }catch(_){ failed++; } }
+        try{ const ph = await uploadPhoto(extra[i]); const { error: pe } = await sb.from('photos').insert({ user_id:me.id, path:ph, is_private:false }); if(pe){ failed++; rmPhotos([ph]).catch(()=>{}); } }catch(_){ failed++; } }
       await loadMe(); toast(failed?`已送出審核（有 ${failed} 張照片沒上傳成功，可以之後在「我的」補上）`:'已送出審核', 5000); location.hash='#/me';
     }catch(err){ toast('沒有送出：'+zh(err.message)); btn.disabled=false; btn.textContent='送出審核'; }
   };
@@ -2524,7 +2537,7 @@ async function openProfile(id){
       <div class="row mt2" style="justify-content:flex-end;gap:10px"><button class="btn" id="fmBack">返回</button><button class="btn primary" id="fmSend">送出</button></div>`);
     if(!matchMedia('(pointer:coarse)').matches) $('#fmIn').focus();
     sb.rpc('my_start_quota').then(({ data: q })=>{ const el=$('#fmQuota'); if(!el || typeof q!=='number') return;
-      el.innerHTML = q>=999 ? `開站期間所有人都是微糖會員，主動開啟新對話不限次數。` : q>0 ? `你還可以主動開啟 <b>${q}</b> 個新對話（前 10 個用完後，每天可再開 1 個）` : `<span class="bad">今天主動開啟的新對話已達上限，明天再來吧。</span>回覆別人的訊息不受限制。`;
+      el.innerHTML = q>=999 ? `開站期間所有人都是微糖會員，主動開啟新對話不限次數（為防止濫發，每天最多 30 個）。` : q>0 ? `你還可以主動開啟 <b>${q}</b> 個新對話（前 10 個用完後，每天可再開 1 個）` : `<span class="bad">今天主動開啟的新對話已達上限，明天再來吧。</span>回覆別人的訊息不受限制。`;
       if(q<=0) $('#fmSend').disabled = true; });
     $('#fmIn').oninput = e => { drafts[id] = e.target.value; };
     $('#fmBack').onclick = ()=>openProfile(id);
@@ -2785,7 +2798,7 @@ async function viewChat(matchId){
     $('#chWait').classList.toggle('hidden', !off); };
   gate();
   sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread(true));
-  chatChannel = sb.channel('chat:'+matchId).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
+  chatChannel = sb.channel('chat:'+matchId+':'+routeSeq).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
     add(payload.new);   // 自己的訊息也處理（例如另一台裝置傳的），seenIds 會去重
     if(payload.new.sender_id!==me.id){ otherReplied=true; gate(); if(document.visibilityState==='visible') sb.from('messages').update({ read_at:new Date().toISOString() }).eq('id', payload.new.id).then(()=>{}); }   // 手機在背景時不送已讀，回到畫面時再一起標記
   }).on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages', filter:`match_id=eq.${matchId}` }, payload => {
@@ -2799,9 +2812,10 @@ async function viewChat(matchId){
     const [{ data: nw }, { data: rc }] = await Promise.all([q, sb.from('messages').select('id,sender_id,recalled_at').eq('match_id', matchId).not('recalled_at','is',null)]);
     if(my!==routeSeq) return;
     (rc||[]).forEach(x=>{ const el=box.querySelector(`[data-mid="${x.id}"]`); if(el && !el.classList.contains('recalled')) markRecalled(x); });
+    sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread(true));   // 回到畫面就算已讀（背景時即時連線收到的也算）
     if(!nw?.length) return;
     const theirs = nw.filter(x=>x.sender_id!==me.id); nw.forEach(add);
-    if(theirs.length){ otherReplied=true; gate(); sb.from('messages').update({ read_at:new Date().toISOString() }).eq('match_id', matchId).neq('sender_id', me.id).is('read_at', null).then(()=>refreshUnread(true)); }
+    if(theirs.length){ otherReplied=true; gate(); }
     box.scrollTop = box.scrollHeight; };
   $('#chInv').onclick = () => { if($('#chInv').classList.contains('off')) return toast(otherReplied?'目前無法送出邀請':'對方回覆後就能送出約會邀請'); openInvite(); };
   $('#chPh').onclick = e => { window.__pickingPhoto = true; if($('#chFile').disabled){ window.__pickingPhoto = false; e.preventDefault(); toast(otherReplied?'目前無法傳照片':'對方回覆後就能傳照片'); } };
@@ -2851,6 +2865,7 @@ async function viewChat(matchId){
    頁面：我的
    ===================================================================== */
 async function viewMe(){
+  sweepOrphans();
   const rs = routeSeq;
   const uid = me.id;   // 個人資料和其他資料同時查，不用多等一輪
   const [, { data: photos }, { data: reqs }, { data: grants }, { data: blocks }, { data: wv }, { data: wr }, { data: pvs }] = await Promise.all([
