@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-ihqQQ3UPUFYjY89wZ/Y619fUCeEeC7QI/OrXP5yG2MQ=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-SHTUrCpeNzP4MtCwtQNndmtVyKo3HBGrjMBWsv5c9xw=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1104,6 +1104,9 @@ html[data-theme=dark] .pcard.picked .ph{outline-color:#ECE7E1}
 .photo-big.bl::after{content:"模糊照・對方同意後才看得清楚";position:absolute;inset:auto;left:50%;bottom:16px;display:block;text-shadow:none;transform:translateX(-50%);white-space:nowrap;font-size:12px;letter-spacing:.12em;color:#fff;background:rgba(0,0,0,.5);padding:6px 14px}
 #meGal .g .blurT{position:absolute;left:6px;top:6px;font-size:11px;letter-spacing:.08em;padding:4px 8px;background:rgba(255,255,255,.92);color:var(--ink);border:0;border-radius:2px;cursor:pointer;z-index:2}
 #meGal .g{position:relative}
+.zmode{display:inline-flex;margin:0 0 10px;border:1px solid var(--ink)}
+.zmode button{font:inherit;font-size:13px;letter-spacing:.08em;padding:8px 16px;min-height:36px;background:transparent;color:var(--ink);border:0;border-radius:0;cursor:pointer}
+.zmode button.on{background:var(--ink);color:var(--bg,#fff)}
 </style>
 </head>
 <body>
@@ -1152,7 +1155,7 @@ html[data-theme=dark] .pcard.picked .ph{outline-color:#ECE7E1}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.82.0';
+const BUILD = 'v1.82.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2275,7 +2278,7 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], zx:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
+const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], zx:[], zm:'ex', freq:'', budget:'', ebudget:'', wealth:'', person:'' };
 // 別人重新送審中：顯示上一次通過審核的頭像（新頭像審核通過前不給別人看）
 // 別人重新送審中：自介、職業、興趣也顯示上一次通過審核的版本
 const pubView = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_bio != null)
@@ -2287,7 +2290,7 @@ const travelOn = r => !!(r && r.travel_city && r.travel_to && r.travel_from && r
 const mdOf = x => { const [, m, d] = String(x).split('-'); return `${+m}/${+d}`; };
 const travelText = r => `${mdOf(r.travel_from)}${r.travel_to!==r.travel_from?'–'+mdOf(r.travel_to):''} 在${esc(String(r.travel_city).replace(/市$/,''))}`;
 const availHtml = r => (isFree(r)?'<span class="avl free">今晚有空</span>':'') + (travelOn(r)?`<span class="avl trv">✈ ${travelText(r)}</span>`:'');
-const resetBrowse = () => Object.assign(browseState, { tonight:'', region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], zx:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' });
+const resetBrowse = () => Object.assign(browseState, { tonight:'', region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], zx:[], zm:'ex', freq:'', budget:'', ebudget:'', wealth:'', person:'' });
 const advCount = () => ['tonight','amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth','person'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0) + (browseState.zx.length?1:0);
 const SORTS = { rec:'近期上線＋附近', online:'最近上線', near:'離我最近', new:'最新註冊' };
 const regionOf = c => Object.keys(REGIONS).find(k=>REGIONS[k].includes(c)) || '';
@@ -2347,7 +2350,7 @@ async function viewBrowse(){
     if(lookF() && (B.cmin||B.cmax)){ const i0 = B.cmin?CUPS.indexOf(B.cmin):0, i1 = B.cmax?CUPS.indexOf(B.cmax):CUPS.length-1; q = q.in('cup', CUPS.slice(i0, i1+1)); }
     if(B.rel.length) q = q.overlaps('relation_types', B.rel);
     if(B.freq) q = q.eq('meet_freq', B.freq);
-    if(B.zx.length) ors.push(`zodiac.is.null,zodiac.not.in.(${B.zx.join(',')})`);   // 排除星座：沒填星座的人保留
+    if(B.zx.length){ if(B.zm==='in') q = q.in('zodiac', B.zx); else ors.push(`zodiac.is.null,zodiac.not.in.(${B.zx.join(',')})`); }   // 只看／排除星座；排除時沒填星座的人保留
     if(ors.length===1) q = q.or(ors[0]); else if(ors.length>1) q = q.or(`and(${ors.map(o=>`or(${o})`).join(',')})`);
     if(B.person) q = q.not('person_verified_at','is',null);
     if(sugarView()){
@@ -2386,7 +2389,7 @@ async function viewBrowse(){
       <div class="fg"><label>身材（可複選）</label><div class="tags" id="xBody">${Object.entries(BODY).map(([k,v])=>`<button type="button" class="tag ${B.body.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
       ${lookF()?`<div class="fg"><label>罩杯</label><div class="two"><select id="xCmin"><option value="">不限</option>${opt(CUPS,B.cmin)}</select><span>—</span><select id="xCmax"><option value="">不限</option>${opt(CUPS,B.cmax)}</select></div><p class="tiny dim">只會篩選到有填寫罩杯的會員。</p></div>`:''}
       <div class="fg"><label>相處方式（符合任一項）</label><div class="tags" id="xRel">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${B.rel.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
-      <div class="fg"><label>排除星座（點選不想看到的）</label><div class="tags" id="xZx">${Object.entries(ZODIAC).map(([k,v])=>`<button type="button" class="tag ${B.zx.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div><p class="tiny dim">沒有填星座的會員仍會顯示。</p></div>
+      <div class="fg"><label>星座</label><div class="zmode" id="xZm"><button type="button" data-m="in" class="${B.zm==='in'?'on':''}">只看這些</button><button type="button" data-m="ex" class="${B.zm!=='in'?'on':''}">排除這些</button></div><div class="tags" id="xZx">${Object.entries(ZODIAC).map(([k,v])=>`<button type="button" class="tag ${B.zx.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div><p class="tiny dim" id="xZh">${B.zm==='in'?'只會顯示有填這些星座的會員。':'沒有填星座的會員仍會顯示。'}</p></div>
       <div class="fg"><label class="sw" style="margin:0"><input type="checkbox" id="xPerson" ${B.person?'checked':''}><span><b>只看真人認證</b></span></label></div>
       <div class="fg"><label>見面頻率</label><select id="xFreq"><option value="">不限</option>${Object.entries(FREQ).map(([k,v])=>`<option value="${k}" ${B.freq===k?'selected':''}>${v}</option>`).join('')}</select></div>
       ${sugarView()?`<div class="fg"><label>對方每月預算</label><select id="xBudget"><option value="">不限</option>${Object.entries({'30to50k':'3 萬以上','50to80k':'5 萬以上','80to120k':'8 萬以上','gt120k':'12 萬以上'}).map(([k,v])=>`<option value="${k}" ${B.budget===k?'selected':''}>${v}</option>`).join('')}</select></div>
@@ -2394,13 +2397,14 @@ async function viewBrowse(){
       :`<div class="fg"><label>甜心期望的每月預算</label><select id="xEb"><option value="">不限</option>${Object.entries({'lt30k':'3 萬以下','30to50k':'5 萬以下','50to80k':'8 萬以下','80to120k':'12 萬以下'}).map(([k,v])=>`<option value="${k}" ${B.ebudget===k?'selected':''}>${v}（含見面再談）</option>`).join('')}</select></div>`}
       <div class="fact"><button class="btn" id="xClear">全部清除</button><button class="btn primary" id="xApply">套用篩選</button></div></div>`);
     document.querySelectorAll('#xBody .tag,#xRel .tag,#xZx .tag').forEach(t=>t.onclick=()=>t.classList.toggle('on'));
+    document.querySelectorAll('#xZm button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('#xZm button').forEach(x=>x.classList.toggle('on', x===b)); $('#xZh').textContent = b.dataset.m==='in'?'只會顯示有填這些星座的會員。':'沒有填星座的會員仍會顯示。'; });
     $('#xClear').onclick = ()=>{ resetBrowse(); closeModal(); viewBrowse(); };
     $('#xApply').onclick = ()=>{ const v = id => $(id)?.value || '';
       let [a0,a1] = [v('#xAmin'), v('#xAmax')]; if(a0&&a1&&+a0>+a1) [a0,a1]=[a1,a0];
       let [h0,h1] = [v('#xHmin'), v('#xHmax')]; if(h0&&h1&&+h0>+h1) [h0,h1]=[h1,h0];
       let [c0,c1] = [v('#xCmin'), v('#xCmax')]; if(c0&&c1&&CUPS.indexOf(c0)>CUPS.indexOf(c1)) [c0,c1]=[c1,c0];
       Object.assign(B, { amin:a0, amax:a1, hmin:h0, hmax:h1, cmin:c0, cmax:c1, freq:v('#xFreq'), budget:v('#xBudget'), ebudget:v('#xEb'), wealth: $('#xWealth')?.checked ? '1' : '', person: $('#xPerson')?.checked ? '1' : '',
-        body:[...document.querySelectorAll('#xBody .on')].map(t=>t.dataset.v), rel:[...document.querySelectorAll('#xRel .on')].map(t=>t.dataset.v), zx:[...document.querySelectorAll('#xZx .on')].map(t=>t.dataset.v) });
+        body:[...document.querySelectorAll('#xBody .on')].map(t=>t.dataset.v), rel:[...document.querySelectorAll('#xRel .on')].map(t=>t.dataset.v), zx:[...document.querySelectorAll('#xZx .on')].map(t=>t.dataset.v), zm: document.querySelector('#xZm .on')?.dataset.m||'ex' });
       closeModal(); reload(); };
   };
   await reload();
