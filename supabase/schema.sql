@@ -3411,3 +3411,22 @@ begin
 end $$;
 -- 之前不是甜心的人提出的申請一併清掉
 delete from public.wealth_requests w using public.profiles p where p.id = w.requester_id and p.role is distinct from 'baby';
+
+-- ============ v0.60 解除停權：資料還沒填完的帳號回到「未完成」，不會直接進待審 ============
+create or replace function public.profiles_unsuspend_check()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if old.status = 'suspended' and new.status = 'pending'
+     and not (nullif(btrim(new.nickname),'') is not null and new.gender is not null and new.looking_for is not null and new.role is not null
+       and new.birth_year is not null and new.city is not null and new.avatar_path is not null
+       and new.body_type is not null and nullif(btrim(new.bio),'') is not null
+       and new.age_confirmed and new.agreed_terms_at is not null
+       and (new.role = 'baby' or new.budget is not null)
+       and exists (select 1 from auth.users u where u.id = new.id and u.phone is not null and u.phone_confirmed_at is not null)) then
+    new.status := 'incomplete';
+  end if;
+  return new;
+end $$;
+drop trigger if exists profiles_zunsuspend on public.profiles;
+create trigger profiles_zunsuspend before update on public.profiles for each row execute function public.profiles_unsuspend_check();
+revoke execute on function public.profiles_unsuspend_check() from public, anon, authenticated;
