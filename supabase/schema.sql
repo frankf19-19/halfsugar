@@ -2819,3 +2819,128 @@ begin
   if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
   return query select s.user_id, count(*)::int from public.sms_sends s where s.user_id = any(ids) and s.voided_at is null and s.kind = 'verify' group by s.user_id;
 end $$;
+
+-- =====================================================================
+-- v0.47：模糊照
+--   會員可以把相簿照片設成「模糊」：其他會員只拿得到模糊版（檔名加 b），
+--   被授權看私密照的人才拿得到清楚的原圖。改成模糊時重新審核（審核員會同時看到兩張）。
+-- =====================================================================
+alter table public.photos add column if not exists blurred boolean not null default false;
+
+create or replace function private.photo_blur_name(p text)
+returns text language sql immutable as $$ select regexp_replace(p, '\.jpg$', 'b.jpg') $$;
+
+create or replace function public.photos_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or public.is_admin() then return new; end if;
+  if tg_op = 'INSERT' then
+    new.user_id := auth.uid(); new.status := 'pending'; new.review_note := null; new.created_at := now();
+    perform pg_advisory_xact_lock(hashtext('photos:' || auth.uid()::text));   -- 同時上傳多張時也不會超過上限
+    if (select count(*) from public.photos where user_id = auth.uid()) >= 20 then raise exception '相簿最多 20 張'; end if;
+    if new.blurred and not exists (select 1 from storage.objects where bucket_id = 'photos' and name = private.photo_blur_name(new.path)) then
+      raise exception '模糊版照片還沒上傳完成，請再試一次';
+    end if;
+  else
+    new.user_id := old.user_id; new.path := old.path; new.status := old.status;
+    new.review_note := old.review_note; new.created_at := old.created_at;
+    -- 私密照改成公開照：重新審核
+    if old.is_private and not new.is_private then new.status := 'pending'; end if;
+    -- 改成模糊照：模糊版要先上傳好，並重新審核
+    if new.blurred and not old.blurred then
+      if not exists (select 1 from storage.objects where bucket_id = 'photos' and name = private.photo_blur_name(old.path)) then
+        raise exception '模糊版照片還沒上傳完成，請再試一次';
+      end if;
+      new.status := 'pending';
+    end if;
+  end if;
+  return new;
+end $$;
+
+-- 數量上限：縮圖（t）與模糊版（b）都不算在 30 個檔案裡，另有各自的上限
+create or replace function private.my_file_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%' and name !~ '[tb]\.jpg$';
+$$;
+create or replace function private.my_blur_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from storage.objects where bucket_id = 'photos' and name like auth.uid()::text || '/%' and name ~ 'b\.jpg$';
+$$;
+grant execute on function private.my_blur_count() to authenticated;
+create or replace function private.photo_is_blurred(p text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.photos where path = p and blurred);
+$$;
+grant execute on function private.photo_is_blurred(text) to authenticated;
+
+drop policy if exists "photos_storage_insert" on storage.objects;
+create policy "photos_storage_insert" on storage.objects for insert to authenticated
+  with check (bucket_id = 'photos'
+              and exists (select 1 from public.profiles where id = auth.uid() and status <> 'suspended')
+              and (
+                (name ~ ('^' || auth.uid()::text || '/[0-9]+\.jpg$')
+                 and private.my_file_count() < 30
+                 and not private.photo_path_in_use(name))
+                or (name ~ ('^' || auth.uid()::text || '/[0-9]+t\.jpg$')
+                    and private.my_photo_file_exists(regexp_replace(name, 't\.jpg$', '.jpg'))
+                    and not private.photo_path_in_use(regexp_replace(name, 't\.jpg$', '.jpg'))
+                    and private.my_thumb_count() < 30)
+                -- 模糊版（檔名加 b）：要對應自己已上傳的原圖；照片設成模糊之後就鎖住，不能換
+                or (name ~ ('^' || auth.uid()::text || '/[0-9]+b\.jpg$')
+                    and private.my_photo_file_exists(regexp_replace(name, 'b\.jpg$', '.jpg'))
+                    and not private.photo_is_blurred(regexp_replace(name, 'b\.jpg$', '.jpg'))
+                    and private.my_blur_count() < 30)
+              ));
+
+drop policy if exists "photos_storage_delete" on storage.objects;
+create policy "photos_storage_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'photos' and (public.is_admin()
+         or ((storage.foldername(name))[1] = auth.uid()::text and not private.photo_path_in_use(name)
+             and not private.photo_path_in_use(regexp_replace(name, 't\.jpg$', '.jpg'))
+             and not private.photo_is_blurred(regexp_replace(name, 'b\.jpg$', '.jpg')))));   -- 模糊照使用中的模糊版不能刪
+
+-- 原圖：模糊照要被授權（photo_grants）才看得到
+create or replace function private.can_see_photo(p_name text)
+returns boolean language sql stable set search_path = public as $$
+  select ((storage.foldername(p_name))[1] = auth.uid()::text
+      or public.is_admin()
+      or exists (select 1 from public.profiles p
+                 where ((p.avatar_path = p_name and p.status = 'approved')
+                        or (p.approved_avatar_path = p_name and p.status = 'pending' and private.has_open_match(p.id)))
+                   and (storage.foldername(p_name))[1] = p.id::text
+                   and private.can_browse() and private.is_compatible(p.id)
+                   and not private.is_blocked_with(p.id))
+      or exists (select 1 from public.photos ph
+                 where ph.path = p_name and ph.status = 'approved'
+                   and (storage.foldername(p_name))[1] = ph.user_id::text
+                   and exists (select 1 from public.profiles op where op.id = ph.user_id and (op.status = 'approved' or (op.status = 'pending' and private.has_open_match(op.id))))
+                   and private.can_browse() and private.is_compatible(ph.user_id)
+                   and not private.is_blocked_with(ph.user_id)
+                   and ((not ph.is_private and not ph.blurred) or exists (select 1 from public.photo_grants g
+                                                     where g.owner_id = ph.user_id and g.viewer_id = auth.uid())))
+  );
+$$;
+-- 模糊版：看得到這張照片（列）的人都看得到模糊版
+create or replace function private.can_see_blur(p_name text)
+returns boolean language sql stable set search_path = public as $$
+  select (storage.foldername(p_name))[1] = auth.uid()::text
+      or public.is_admin()
+      or exists (select 1 from public.photos ph
+                 where ph.path = regexp_replace(p_name, 'b\.jpg$', '.jpg') and ph.blurred and ph.status = 'approved'
+                   and (storage.foldername(p_name))[1] = ph.user_id::text
+                   and exists (select 1 from public.profiles op where op.id = ph.user_id and (op.status = 'approved' or (op.status = 'pending' and private.has_open_match(op.id))))
+                   and private.can_browse() and private.is_compatible(ph.user_id)
+                   and not private.is_blocked_with(ph.user_id)
+                   and (not ph.is_private or exists (select 1 from public.photo_grants g where g.owner_id = ph.user_id and g.viewer_id = auth.uid())));
+$$;
+grant execute on function private.can_see_photo(text) to authenticated;
+grant execute on function private.can_see_blur(text) to authenticated;
+drop policy if exists "photos_storage_select" on storage.objects;
+create policy "photos_storage_select" on storage.objects for select to authenticated
+  using (
+    bucket_id = 'photos' and (
+      (name !~ 'b\.jpg$' and private.can_see_photo(name))
+      or (name ~ 't\.jpg$' and private.can_see_photo(regexp_replace(name, 't\.jpg$', '.jpg')))
+      or (name ~ 'b\.jpg$' and private.can_see_blur(name))
+    )
+  );

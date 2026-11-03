@@ -4,7 +4,7 @@ declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
-  out text[] := '{}'; n int; v text; mid uuid; ok boolean;
+  out text[] := '{}'; n int; v text; v2 text; mid uuid; ok boolean;
   AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid; V1 uuid := gen_random_uuid(); V2 uuid := gen_random_uuid(); cm3 uuid; iv uuid; tk text;
   N1 uuid := gen_random_uuid(); N2 uuid := gen_random_uuid(); N3 uuid := gen_random_uuid(); N4 uuid := gen_random_uuid(); j jsonb; Z1 uuid := gen_random_uuid(); Z2 uuid := gen_random_uuid(); Z3 uuid := gen_random_uuid(); Z4 uuid := gen_random_uuid(); Q1 uuid := gen_random_uuid(); Q2 uuid := gen_random_uuid(); Q3 uuid := gen_random_uuid(); Q4 uuid := gen_random_uuid(); qm uuid;
 begin
@@ -1020,6 +1020,49 @@ begin
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   out := array_append(out, ('50c 找回不佔註冊次數、不能直接呼叫 = '||v||' (應為3,擋下,擋下)')::text);
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+
+  -- 51 模糊照（v0.47）：別人只拿得到模糊版；授權後才看得到原圖；模糊版鎖住不能刪換
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  declare BA uuid := gen_random_uuid(); BB uuid := gen_random_uuid(); begin
+    insert into auth.users (id, email, aud, role) values (BA,'e2e-ba@test.invalid','authenticated','authenticated'),(BB,'e2e-bb@test.invalid','authenticated','authenticated');
+    update public.profiles set nickname='BA', gender='male', looking_for='female', role='daddy', budget='50to80k', birth_year=1984, city='台北市', status='approved', avatar_path=BA||'/av.jpg', age_confirmed=true, agreed_terms_at=now() where id=BA;
+    update public.profiles set nickname='BB', gender='female', looking_for='male', role='baby', birth_year=1997, city='台北市', status='approved', avatar_path=BB||'/av.jpg', age_confirmed=true, agreed_terms_at=now() where id=BB;
+    insert into storage.objects (bucket_id, name, owner) values ('photos', BB||'/5.jpg', BB), ('photos', BB||'/6.jpg', BB);
+    -- 沒上傳模糊版就設成模糊：擋下
+    perform set_config('request.jwt.claims', json_build_object('sub',BB,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', BB::text, true);
+    execute 'set local role authenticated';
+    begin insert into public.photos (user_id, path, blurred) values (BB, BB||'/6.jpg', true); v := '沒模糊版也能設 ✗'; exception when others then v := '擋下'; end;
+    -- 上傳模糊版（自己可以）
+    begin insert into storage.objects (bucket_id, name, owner) values ('photos', BB||'/5b.jpg', BB); v := v||',可上傳模糊版'; exception when others then v := v||',模糊版上傳被擋 ✗'; end;
+    insert into public.photos (user_id, path, blurred) values (BB, BB||'/5.jpg', true);
+    begin delete from storage.objects where name = BB||'/5b.jpg'; get diagnostics n = row_count; v := v||',刪模糊版='||n; exception when others then v := v||',刪模糊版擋下'; end;
+    begin insert into storage.objects (bucket_id, name, owner) values ('photos', BB||'/5b.jpg', BB); v := v||',可重傳 ✗'; exception when others then v := v||',重傳擋下'; end;
+    execute 'reset role';
+    perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+    update public.photos set status='approved' where path = BB||'/5.jpg';
+    -- BA 看：列看得到、原圖拿不到、模糊版拿得到
+    perform set_config('request.jwt.claims', json_build_object('sub',BA,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', BA::text, true);
+    execute 'set local role authenticated';
+    select count(*) into n from public.photos where user_id = BB; v := v||',列='||n;
+    select count(*) into n from storage.objects where name = BB||'/5.jpg'; v := v||',原圖='||n;
+    select count(*) into n from storage.objects where name = BB||'/5b.jpg'; v := v||',模糊版='||n;
+    execute 'reset role';
+    perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+    insert into public.photo_grants (owner_id, viewer_id) values (BB, BA);
+    perform set_config('request.jwt.claims', json_build_object('sub',BA,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', BA::text, true);
+    execute 'set local role authenticated';
+    select count(*) into n from storage.objects where name = BB||'/5.jpg'; v := v||',授權後原圖='||n;
+    execute 'reset role';
+    -- 再改成模糊（關掉再打開）會重新送審
+    perform set_config('request.jwt.claims', json_build_object('sub',BB,'role','authenticated')::text, true); perform set_config('request.jwt.claim.sub', BB::text, true);
+    execute 'set local role authenticated';
+    update public.photos set blurred=false where path = BB||'/5.jpg';
+    update public.photos set blurred=true where path = BB||'/5.jpg';
+    execute 'reset role';
+    select status into v2 from public.photos where path = BB||'/5.jpg'; v := v||','||v2;
+  end;
+  perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
+  out := array_append(out, ('51 模糊照 = '||v||' (應為擋下,可上傳模糊版,刪模糊版=0,重傳擋下,列=1,原圖=0,模糊版=1,授權後原圖=1,pending)')::text);
 
   raise exception E'E2E 結果（已全部回滾）:\n%', array_to_string(out, E'\n');
 end $t$;
