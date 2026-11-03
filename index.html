@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-S/jM19F1kei4LExT11G3VSlVyCWLnUp4YS6WFInieak=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-VbiuuiuZ+EH55BYI1uJwuEMeSVLFucCUB2Jm7BO90lc=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1156,7 +1156,7 @@ html[data-theme=dark] .pcard.picked .ph{outline-color:#ECE7E1}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.83.0';
+const BUILD = 'v1.84.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2927,6 +2927,10 @@ async function viewMe(){
       <label class="sw"><input type="checkbox" id="pvAccept" ${me.accept_from==='liked'?'checked':''}><span><b>只接受我心動過的人傳訊息</b><small>開啟後，只有你按過「心動」的人能主動傳第一則訊息給你，可以減少陌生訊息。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvOnline" ${me.show_online===false?'':'checked'}><span><b>顯示上線狀態</b><small>關閉後，別人看不到你「在線上」或「今天上線」。</small></span></label>
     </div>
+    <div class="card"><h3 style="font-size:17px">Email 通知</h3><p class="tiny dim">你不在線上時，有新動態會寄信到${authUser?.email?'「'+esc(authUser.email)+'」':'你的 Email'}。同一小時最多一封，信裡不會出現訊息內容。</p>
+      <label class="sw"><input type="checkbox" id="ntMsg" ${me.notify_email_msg===false?'':'checked'}><span><b>收到新訊息時通知我</b></span></label>
+      <label class="sw"><input type="checkbox" id="ntLike" ${me.notify_email_like===false?'':'checked'}><span><b>有人對我心動時通知我</b></span></label>
+    </div>
     ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(b.blocked_id)}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
     ${accountCard}
     </section>
@@ -3101,6 +3105,8 @@ async function viewMe(){
   const pv = async (patch, msg, el) => { const { error } = await sb.from('profiles').update(patch).eq('id', me.id); if(error){ if(el) el.checked=!el.checked; return toast(error.message); } Object.assign(me, patch); toast(msg); };
   $('#pvHidden').onchange = e => pv({ hidden: e.target.checked }, e.target.checked ? '已隱藏，你不會出現在探索' : '已恢復出現在探索', e.target);
   $('#pvAccept').onchange = e => pv({ accept_from: e.target.checked ? 'liked' : 'all' }, e.target.checked ? '只接受你心動過的人傳訊息' : '所有會員都能傳訊息給你', e.target);
+  $('#ntMsg').onchange = e => pv({ notify_email_msg: e.target.checked }, e.target.checked ? '已開啟新訊息通知' : '已關閉新訊息通知', e.target);
+  $('#ntLike').onchange = e => pv({ notify_email_like: e.target.checked }, e.target.checked ? '已開啟心動通知' : '已關閉心動通知', e.target);
   $('#pvOnline').onchange = e => pv({ show_online: e.target.checked }, e.target.checked ? '已開啟上線狀態' : '已隱藏上線狀態', e.target);
   $('#meForm').onsubmit = async e=>{ e.preventDefault(); const p=readProfileForm(e.target); if(!p) return;
     const btn=e.target.querySelector('button[type=submit]'); btn.disabled=true;
