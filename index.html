@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-K3WTAM/vq7FqZebVlK9cvXqiEk99zSQTPfUSPlmvPo8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-OzckSMFi/Ti1b4ja9AYl8Et6HwehWe2ZE3IXlnQM5qI=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1029,6 +1029,20 @@ select{padding-left:12px!important;padding-right:30px!important;background-posit
 /* 卡片點下去的回饋 */
 .pcard:active .ph{opacity:.88}
 .list .item:active,.convo:active{background:var(--paper)}
+
+/* ===== 選擇卡片重做（v1.78）：桌機手機一致；底部一條「選擇」行動列 ===== */
+.roles.orient{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+@media(min-width:720px){.roles:not(.orient){grid-template-columns:repeat(auto-fit,minmax(190px,1fr))!important}}
+.roles{gap:12px!important}
+.roles .rl{display:flex}
+.roles .rl>span,.roles.orient .rl>span{display:flex!important;flex-direction:column;width:100%;padding:18px 18px 0!important;min-height:0!important}
+.roles .rl b{font-size:18px!important;line-height:1.4;word-break:keep-all;overflow-wrap:normal;padding-right:0!important}
+.roles .rl small{font-size:13px!important;line-height:1.7;margin-top:6px}
+.roles .rl>span::after{content:"選擇"!important;position:static!important;display:block!important;margin:16px -18px 0!important;margin-top:auto!important;padding:11px 0 12px!important;border-top:1px solid var(--fieldline)!important;text-align:center;font-size:12px;letter-spacing:.3em;color:var(--ink)!important;background:none!important;width:auto!important;height:auto!important;border-radius:0!important;transform:none!important}
+.roles .rl>span small{margin-bottom:16px}
+.roles .rl input:checked+span::after{content:"已選擇 ✓"!important;color:#fff!important;border-top-color:rgba(255,255,255,.25)!important}
+html[data-theme=dark] .roles .rl input:checked+span::after{color:#121111!important;border-top-color:rgba(0,0,0,.18)!important}
+.roles .rl:hover>span::after{text-decoration:underline;text-underline-offset:4px}
 </style>
 </head>
 <body>
@@ -1077,7 +1091,7 @@ select{padding-left:12px!important;padding-right:30px!important;background-posit
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.77.1';
+const BUILD = 'v1.78.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
