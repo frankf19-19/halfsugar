@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-8eF3MFGz6dpD4ifRCe30mqv4ZIASiPjby3tI0sfH4pQ=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-3F30BBBcbIJWvYV9CN9K530cm43u4Yn1ADoH04gnnuA=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1168,7 +1168,7 @@ html[data-theme=dark] .zmode{border-color:#ECE7E1}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.86.6';
+const BUILD = 'v1.86.7';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2513,12 +2513,12 @@ async function openProfile(id){
       if(!au){ const { data: u } = await sb.storage.from('voice').createSignedUrl(vc.path, 3600); if(!u?.signedUrl) return toast('目前無法播放'); au = new Audio(u.signedUrl); au.onended=()=>{ if(b.isConnected) b.querySelector('.vi').textContent='▶'; }; }
       window.__onModalClose = () => { try{ au && au.pause(); }catch(_){} };
       au.play().then(()=>{ b.querySelector('.vi').textContent='❚❚'; }).catch(()=>toast('無法播放這段語音')); }; });
-  if(p.wealth_verified_at && p.id!==me.id) sb.rpc('wealth_doc_status', { owner:id }).then(({ data })=>{ const st=(Array.isArray(data)?data[0]:data)||{}; const el=$('#wDoc'); if(!el) return;
+  if(p.wealth_verified_at && p.id!==me.id && me.role==='baby' && ['daddy','mommy'].includes(p.role)) sb.rpc('wealth_doc_status', { owner:id }).then(({ data })=>{ const st=(Array.isArray(data)?data[0]:data)||{}; const el=$('#wDoc'); if(!el) return;   // 只有甜心能申請查看
     if(st.state==='can_request') el.innerHTML = `<button class="btn sm ghost" id="wReq" ${canAct?'':'disabled'}>申請查看財力證明</button>`;
     else if(st.state==='pending') el.innerHTML = `<span class="muted">已申請查看財力證明，等待對方同意</span>`;
     else if(st.state==='denied') el.innerHTML = `<span class="muted">對方這次沒有同意查看財力證明</span> <button class="btn sm ghost" id="wReq" ${canAct?'':'disabled'}>再問一次</button>`;
     else if(st.state==='granted' && st.path) el.innerHTML = `<button class="btn sm ghost" id="wView">查看財力證明</button>`;
-    $('#wReq') && ($('#wReq').onclick = async ()=>{ const { error } = await sb.rpc('request_wealth_view', { owner:id }); toast(error?error.message:'已送出申請，對方同意後就能查看'); if(!error) openProfile(id); });
+    $('#wReq') && ($('#wReq').onclick = async ()=>{ const { error } = await sb.rpc('request_wealth_view', { owner:id }); toast(error?zh(error.message):'已送出申請，對方同意後就能查看'); if(!error) openProfile(id); });
     $('#wView') && ($('#wView').onclick = async ()=>{ const { data: u } = await sb.storage.from('verify').createSignedUrl(st.path, 300); if(!u?.signedUrl) return toast('目前無法查看');
       modal(`<h3 style="font-size:17px">${esc(p.nickname)} 的財力證明</h3><p class="tiny dim">僅供你參考，請勿截圖外流。畫面上的浮水印是你的會員代號。</p>
         <div class="wm mt" data-wm="${wmText()}" style="position:relative;aspect-ratio:3/4;background:#ECEAE6 center/contain no-repeat;background-image:url('${cssu(u.signedUrl)}')"></div>

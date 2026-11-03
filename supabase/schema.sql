@@ -3384,3 +3384,30 @@ begin
   insert into public.sms_sends (user_id, phone_hash, ip_hash, kind) values (owner, h, ih, 'find') returning id into rid;
   return jsonb_build_object('r','ok','id',rid);
 end $$;
+
+-- ============ v0.59 財力證明：只有甜心可以申請查看 ============
+create or replace function public.request_wealth_view(owner uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare r public.wealth_requests;
+begin
+  if public.my_status() is distinct from 'approved' then raise exception '檔案審核通過後才能申請查看'; end if;
+  -- 只有「甜心」身分（男女都可以）能申請看 Sugar Daddy／Mommy 的財力證明
+  if not exists (select 1 from public.profiles where id = auth.uid() and role = 'baby') then raise exception '只有甜心可以申請查看財力證明'; end if;
+  if not exists (select 1 from public.profiles where id = owner and role in ('daddy','mommy')) then raise exception '這位會員目前沒有可查看的財力證明'; end if;
+  if owner = auth.uid() or not private.profile_visible(owner)
+     or not exists (select 1 from public.profiles where id = owner and status = 'approved')
+     or private.wealth_doc_path(owner) is null then
+    raise exception '這位會員目前沒有可查看的財力證明';
+  end if;
+  select * into r from public.wealth_requests where requester_id = auth.uid() and owner_id = owner;
+  if found then
+    if r.status = 'pending' then raise exception '已送出申請，等待對方同意'; end if;
+    if r.status = 'granted' then return; end if;
+    if r.created_at > now() - interval '3 days' then raise exception '對方剛婉拒，3 天後才能再申請'; end if;
+    update public.wealth_requests set status = 'pending', created_at = now() where requester_id = auth.uid() and owner_id = owner;
+  else
+    insert into public.wealth_requests (requester_id, owner_id) values (auth.uid(), owner);
+  end if;
+end $$;
+-- 之前不是甜心的人提出的申請一併清掉
+delete from public.wealth_requests w using public.profiles p where p.id = w.requester_id and p.role is distinct from 'baby';
