@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-VbiuuiuZ+EH55BYI1uJwuEMeSVLFucCUB2Jm7BO90lc=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-JMWj1U4Z9CoFUCJtFRxpqG/hIxU13H1x65ZYIOjbrBQ=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1108,6 +1108,10 @@ html[data-theme=dark] .pcard.picked .ph{outline-color:#ECE7E1}
 .zmode button{font:inherit;font-size:13px;letter-spacing:.08em;padding:8px 16px;min-height:36px;background:transparent;color:var(--ink);border:0;border-radius:0;cursor:pointer}
 .zmode button.on{background:var(--ink);color:var(--bg,#fff)}
 .admtabs .badge{display:inline-block;min-width:16px;height:16px;line-height:16px;border-radius:8px;background:var(--wine);color:#fff;font-size:10px;text-align:center;padding:0 4px;margin-left:5px;vertical-align:1px;letter-spacing:0}
+.oseen{display:inline-block;margin-left:8px;font-size:11px;font-weight:400;letter-spacing:.06em;color:var(--grey);vertical-align:1px}
+.chat .hd .name .oseen{display:block;margin:2px 0 0;font-size:11px}
+.oseen.on{color:#3E9A61}
+.oseen.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#3E9A61;margin-right:5px;vertical-align:1px}
 </style>
 </head>
 <body>
@@ -1156,7 +1160,7 @@ html[data-theme=dark] .pcard.picked .ph{outline-color:#ECE7E1}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.84.0';
+const BUILD = 'v1.85.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1507,6 +1511,10 @@ async function refreshUnread(force){
   applyBadges();
 }
 setInterval(()=>{ if(document.visibilityState==='visible') refreshUnread(true); }, 60000);
+// 上線狀態：畫面開著時每 5 分鐘回報一次，回到畫面時也回報（隱藏上線狀態的人不回報）
+let beatAt = Date.now();
+const beat = () => { if(!me || me.show_online===false || document.visibilityState!=='visible' || Date.now()-beatAt < 240000) return; beatAt = Date.now(); sb.from('profiles').update({ last_active_at: new Date().toISOString() }).eq('id', me.id).then(()=>{}); };
+setInterval(beat, 60000); document.addEventListener('visibilitychange', beat);
 let lastHidden = 0;
 document.addEventListener('visibilitychange', async ()=>{
   if(document.visibilityState==='hidden'){ lastHidden = Date.now(); return; }
@@ -2580,7 +2588,7 @@ async function viewMatches(){
   if(!ms || !ms.length){ if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>訊息</h1></header><div class="empty"><p class="serif">還沒有對話</p><p class="muted small">到「探索」看看，遇到想認識的人，就直接傳一則訊息。</p><a class="btn mt2" href="#/browse">去探索</a></div>`; return; }
   const ids = ms.map(m=> m.user_a===me.id ? m.user_b : m.user_a);
   const [{ data: ps }, { data: nm }, { data: unread }] = await Promise.all([
-    sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,status,role,birth_year,city').in('id', ids),
+    sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,status,role,birth_year,city,last_active_at').in('id', ids),
     sb.rpc('related_names', { ids }),
     sb.from('messages').select('match_id').is('read_at', null).is('recalled_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id)),
   ]);
@@ -2593,7 +2601,7 @@ async function viewMatches(){
   const row = m => { const oid = m.user_a===me.id?m.user_b:m.user_a; const o = pm[oid] || { nickname: names[oid] || '對方', avatar_path:'' }; const k = kind(m);
     const sub = k==='closed' ? '<i>對方已結束對話</i>' : k==='waiting' ? '<i>等待對方回覆</i>' : (m.last_message?esc(m.last_message):'');
     return `<div class="item ${k==='closed'?'closed':''}${uc[m.id]?' unread':''}" data-id="${m.id}"><div class="avatar" data-ph="${esc(pubAv(o)||'')}"></div>
-      <div class="grow"><div class="t">${esc(o.nickname)} ${o.birth_year?`<span class="muted small">${age(o.birth_year)}</span>`:''}</div>
+      <div class="grow"><div class="t">${esc(o.nickname)} ${o.birth_year?`<span class="muted small">${age(o.birth_year)}</span>`:''}${seen(o.last_active_at)?`<span class="oseen ${seen(o.last_active_at)==='在線上'?'on':''}">${seen(o.last_active_at)}</span>`:''}</div>
       ${k==='request'?`<div class="tiny dim">${o.role?ROLES[o.role]+' · ':''}${esc(o.city||'')}</div><div class="req">${esc(m.last_message||'')}</div>
         <div class="row mt" style="gap:8px"><button class="btn sm primary rq-reply" data-id="${m.id}">回覆</button><button class="btn sm ghost rq-no" data-id="${m.id}">不感興趣</button></div>`
       :`<div class="s">${sub}</div>`}</div>
@@ -2618,7 +2626,7 @@ async function viewChat(matchId){
   if(cErr && cErr.code!=='PGRST116') throw cErr;
   if(!m){ $('#app').innerHTML='<div class="center" style="padding:60px 0"><p class="muted">這段對話已經關閉。</p><a class="btn mt2" href="#/matches">回到訊息</a></div>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
-  const [{ data: o0 }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,approved_occupation,approved_tags,status,tags,occupation,city').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
+  const [{ data: o0 }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,approved_occupation,approved_tags,status,tags,occupation,city,last_active_at').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
   const o = pubView(o0);
   const oname = o?.nickname || (Array.isArray(nm)&&nm[0]?.nickname) || '對方';
   const closed = !!m.closed_at;
@@ -2632,7 +2640,7 @@ async function viewChat(matchId){
   if(my!==routeSeq) return;   // 使用者已經離開這個對話
   $('#app').innerHTML = `<div class="chat">
     <div class="hd"><a href="#/matches" class="ib" aria-label="返回">‹</a>
-      <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${esc(oname)}</div>
+      <div class="avatar" id="chAv" style="width:38px;height:38px"></div><div class="grow name">${esc(oname)}${seen(o?.last_active_at)?`<small class="oseen ${seen(o.last_active_at)==='在線上'?'on':''}">${seen(o.last_active_at)}</small>`:''}</div>
       <button class="ib" id="chMore" aria-label="更多">⋯</button></div>
     <div class="msgs" id="msgs"></div>
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
