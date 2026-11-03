@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-RrMZxqVjcG+1FyH8W7PDNKOIrotIjFkgfr1OOnDrndM=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-ihqQQ3UPUFYjY89wZ/Y619fUCeEeC7QI/OrXP5yG2MQ=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1152,7 +1152,7 @@ html[data-theme=dark] .pcard.picked .ph{outline-color:#ECE7E1}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.81.2';
+const BUILD = 'v1.82.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1869,6 +1869,10 @@ const BUDGET_ORDER = ['lt30k','30to50k','50to80k','80to120k','gt120k'];
 const REGIONS = { '北部':['台北市','新北市','基隆','桃園市','新竹','宜蘭'], '中部':['苗栗','台中市','彰化','南投','雲林'], '南部':['嘉義','台南市','高雄市','屏東'], '東部':['花蓮','台東'], '離島':['澎湖','金門'], '海外':['海外'] };
 const BODY = { slim:'纖細', fit:'勻稱', average:'標準', athletic:'健壯', curvy:'曲線', chubby:'微胖' };
 const CUPS = ['A','B','C','D','E','F+'];
+const ZODIAC = { aries:'牡羊座', taurus:'金牛座', gemini:'雙子座', cancer:'巨蟹座', leo:'獅子座', virgo:'處女座', libra:'天秤座', scorpio:'天蠍座', sagittarius:'射手座', capricorn:'摩羯座', aquarius:'水瓶座', pisces:'雙魚座' };
+const DRINK = { never:'不喝酒', social:'社交場合會喝', often:'經常喝' };
+const SMOKE = { never:'不抽菸', social:'偶爾抽', often:'經常抽' };
+const LANGS = { zh:'國語', tw:'台語', hakka:'客語', cantonese:'粵語', en:'英文', ja:'日文', ko:'韓文', fr:'法文', de:'德文', es:'西班牙文', th:'泰文', vi:'越南文' };
 const RELS = { long:'長期穩定', short:'短期相處', dinner:'晚餐約會', travel:'旅伴', companion:'生活陪伴' };
 const FREQ = { weekly:'每週 1 次以上', twomonth:'每月 2–3 次', monthly:'每月 1 次', flexible:'時間彈性' };
 const WEALTH_KINDS = { deposit:'存款證明或存摺內頁', income:'薪資單或收入證明', tax:'所得扣繳憑單', property:'房屋或土地權狀', car:'名下車輛行照', business:'公司負責人證明（名片＋登記資料）', other:'其他可看出經濟能力的文件' };
@@ -1908,6 +1912,16 @@ function profileFormHtml(p={}){
       <div class="grow"><label>身材 *</label><select name="body_type" required><option value="">請選擇</option>${Object.entries(BODY).map(([k,v])=>`<option value="${k}" ${p.body_type===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="grow" id="cupBox" ${p.gender==='male'?'style="display:none"':''}><label>罩杯（選填）</label><select name="cup"><option value="">不填</option>${CUPS.map(c=>`<option ${p.cup===c?'selected':''}>${c}</option>`).join('')}</select></div>
     </div>
+    <div class="row">
+      <div class="grow"><label>星座（選填）</label><select name="zodiac"><option value="">不填</option>${Object.entries(ZODIAC).map(([k,v])=>`<option value="${k}" ${p.zodiac===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="grow" aria-hidden="true"></div>
+    </div>
+    <div class="row">
+      <div class="grow"><label>喝酒（選填）</label><select name="drink"><option value="">不填</option>${Object.entries(DRINK).map(([k,v])=>`<option value="${k}" ${p.drink===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="grow"><label>抽菸（選填）</label><select name="smoke"><option value="">不填</option>${Object.entries(SMOKE).map(([k,v])=>`<option value="${k}" ${p.smoke===k?'selected':''}>${v}</option>`).join('')}</select></div>
+    </div>
+    <label>會說的語言（選填，可複選）</label>
+    <div class="tags" id="langPick">${Object.entries(LANGS).map(([k,v])=>`<button type="button" class="tag ${(p.languages||[]).includes(k)?'on':''}" data-l="${k}">${v}</button>`).join('')}</div>
     <div class="fsec"><span>3</span>想要的相處</div>
     <label>相處方式（點選，可複選）</label>
     <div class="tags" id="relPick">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${(p.relation_types||[]).includes(k)?'on':''}" data-r="${k}">${v}</button>`).join('')}</div>
@@ -1926,7 +1940,7 @@ function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=
     const male=r.value.startsWith('male'); document.querySelectorAll('#rolePick .rl').forEach(l=>{ const hide=(male&&l.dataset.r==='mommy')||(!male&&l.dataset.r==='daddy'); l.style.display=hide?'none':''; if(hide){ const i=l.querySelector('input'); if(i.checked){ i.checked=false; $('#budgetBox')?.classList.add('hidden'); } } }); }));
   const showRole = () => { const r=document.querySelector('input[name=role]:checked'), d=$('#roleDesc'); if(!d) return; if(r && ROLE_DESC[r.value]){ d.textContent = ROLE_DESC[r.value]+'。'; d.classList.remove('hidden'); } else d.classList.add('hidden'); };
   document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change', showRole)); showRole();
-  $('#relPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(b) b.classList.toggle('on'); }); $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
+  $('#relPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(b) b.classList.toggle('on'); }); $('#langPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(b) b.classList.toggle('on'); }); $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
   if(!b.classList.contains('on') && $('#tagPick').querySelectorAll('.on').length>=8) return toast('最多 8 個興趣'); b.classList.toggle('on'); }); }
 function readProfileForm(form){
   const f = new FormData(form); const tags=[...$('#tagPick').querySelectorAll('.on')].map(b=>b.dataset.t);
@@ -1946,6 +1960,7 @@ function readProfileForm(form){
   if(!f.get('body_type')){ toast('請選擇身材'); return null; }
   const relation_types = [...document.querySelectorAll('#relPick .on')].map(b=>b.dataset.r);
   const extra = { body_type: f.get('body_type'), cup: gender==='female' ? (f.get('cup')||null) : null, relation_types, meet_freq: f.get('meet_freq')||null,
+    zodiac: f.get('zodiac')||null, drink: f.get('drink')||null, smoke: f.get('smoke')||null, languages: [...document.querySelectorAll('#langPick .on')].map(b=>b.dataset.l),
     expect_budget: f.get('role')==='baby' ? (f.get('expect_budget')||null) : null };
   return { ...extra, role:f.get('role'), budget, nickname:f.get('nickname').trim(), gender, looking_for, birth_year:+f.get('birth_year'),
     city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
@@ -1994,7 +2009,7 @@ function missingBasics(p){ if(!p) return [];
   const m=[]; if(!(p.nickname||'').trim()) m.push('暱稱'); if(!p.gender||!p.looking_for) m.push('想認識的對象'); if(!p.role) m.push('身分');
   if(!p.birth_year) m.push('年齡'); if(!p.city) m.push('所在地'); if(!p.body_type) m.push('身材'); if(!(p.bio||'').trim()) m.push('自我介紹');
   if((p.role==='daddy'||p.role==='mommy') && !p.budget) m.push('每月相處預算'); if(!p.avatar_path) m.push('頭像'); return m; }
-const PUB_COLS = 'approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,zodiac,drink,smoke,languages,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -2260,7 +2275,7 @@ async function viewOnboarding(){
 /* =====================================================================
    頁面：探索
    ===================================================================== */
-const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
+const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], zx:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' };
 // 別人重新送審中：顯示上一次通過審核的頭像（新頭像審核通過前不給別人看）
 // 別人重新送審中：自介、職業、興趣也顯示上一次通過審核的版本
 const pubView = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_bio != null)
@@ -2272,8 +2287,8 @@ const travelOn = r => !!(r && r.travel_city && r.travel_to && r.travel_from && r
 const mdOf = x => { const [, m, d] = String(x).split('-'); return `${+m}/${+d}`; };
 const travelText = r => `${mdOf(r.travel_from)}${r.travel_to!==r.travel_from?'–'+mdOf(r.travel_to):''} 在${esc(String(r.travel_city).replace(/市$/,''))}`;
 const availHtml = r => (isFree(r)?'<span class="avl free">今晚有空</span>':'') + (travelOn(r)?`<span class="avl trv">✈ ${travelText(r)}</span>`:'');
-const resetBrowse = () => Object.assign(browseState, { tonight:'', region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' });
-const advCount = () => ['tonight','amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth','person'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0);
+const resetBrowse = () => Object.assign(browseState, { tonight:'', region:'', city:'', amin:'', amax:'', hmin:'', hmax:'', body:[], cmin:'', cmax:'', rel:[], zx:[], freq:'', budget:'', ebudget:'', wealth:'', person:'' });
+const advCount = () => ['tonight','amin','amax','hmin','hmax','cmin','cmax','freq','budget','ebudget','wealth','person'].filter(k=>browseState[k]).length + (browseState.body.length?1:0) + (browseState.rel.length?1:0) + (browseState.zx.length?1:0);
 const SORTS = { rec:'近期上線＋附近', online:'最近上線', near:'離我最近', new:'最新註冊' };
 const regionOf = c => Object.keys(REGIONS).find(k=>REGIONS[k].includes(c)) || '';
 const nearScore = c => !me?.city ? 0 : c===me.city ? 2 : (regionOf(c) && regionOf(c)===regionOf(me.city)) ? 1 : 0;
@@ -2320,8 +2335,9 @@ async function viewBrowse(){
     q = q.limit(150);
     if(B.role==='baby') q = q.eq('role','baby'); else if(B.role==='sugar') q = q.in('role',['daddy','mommy']);
     if(adminView){ if(B.agender) q = q.eq('gender', B.agender); } else q = q.eq('gender', me.looking_for).eq('looking_for', me.gender);
+    const ors = [];
     { const qt = c => `"${c}"`, d0 = ymdOf(new Date()), d1 = ymdOf(new Date(Date.now()+14*864e5)), cs = B.city ? [B.city] : B.region ? REGIONS[B.region] : null;
-      if(cs) q = q.or(`city.in.(${cs.map(qt).join(',')}),and(travel_city.in.(${cs.map(qt).join(',')}),travel_to.gte.${d0},travel_from.lte.${d1})`); }   // 旅行模式：出發前兩週起也出現在當地
+      if(cs) ors.push(`city.in.(${cs.map(qt).join(',')}),and(travel_city.in.(${cs.map(qt).join(',')}),travel_to.gte.${d0},travel_from.lte.${d1})`); }   // 旅行模式：出發前兩週起也出現在當地
     if(B.tonight) q = q.gt('free_until', new Date().toISOString());
     if(B.amin) q = q.lte('birth_year', y - +B.amin);
     if(B.amax) q = q.gte('birth_year', y - +B.amax);
@@ -2331,6 +2347,8 @@ async function viewBrowse(){
     if(lookF() && (B.cmin||B.cmax)){ const i0 = B.cmin?CUPS.indexOf(B.cmin):0, i1 = B.cmax?CUPS.indexOf(B.cmax):CUPS.length-1; q = q.in('cup', CUPS.slice(i0, i1+1)); }
     if(B.rel.length) q = q.overlaps('relation_types', B.rel);
     if(B.freq) q = q.eq('meet_freq', B.freq);
+    if(B.zx.length) ors.push(`zodiac.is.null,zodiac.not.in.(${B.zx.join(',')})`);   // 排除星座：沒填星座的人保留
+    if(ors.length===1) q = q.or(ors[0]); else if(ors.length>1) q = q.or(`and(${ors.map(o=>`or(${o})`).join(',')})`);
     if(B.person) q = q.not('person_verified_at','is',null);
     if(sugarView()){
       if(B.wealth) q = q.not('wealth_verified_at','is',null);
@@ -2368,20 +2386,21 @@ async function viewBrowse(){
       <div class="fg"><label>身材（可複選）</label><div class="tags" id="xBody">${Object.entries(BODY).map(([k,v])=>`<button type="button" class="tag ${B.body.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
       ${lookF()?`<div class="fg"><label>罩杯</label><div class="two"><select id="xCmin"><option value="">不限</option>${opt(CUPS,B.cmin)}</select><span>—</span><select id="xCmax"><option value="">不限</option>${opt(CUPS,B.cmax)}</select></div><p class="tiny dim">只會篩選到有填寫罩杯的會員。</p></div>`:''}
       <div class="fg"><label>相處方式（符合任一項）</label><div class="tags" id="xRel">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${B.rel.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div></div>
+      <div class="fg"><label>排除星座（點選不想看到的）</label><div class="tags" id="xZx">${Object.entries(ZODIAC).map(([k,v])=>`<button type="button" class="tag ${B.zx.includes(k)?'on':''}" data-v="${k}">${v}</button>`).join('')}</div><p class="tiny dim">沒有填星座的會員仍會顯示。</p></div>
       <div class="fg"><label class="sw" style="margin:0"><input type="checkbox" id="xPerson" ${B.person?'checked':''}><span><b>只看真人認證</b></span></label></div>
       <div class="fg"><label>見面頻率</label><select id="xFreq"><option value="">不限</option>${Object.entries(FREQ).map(([k,v])=>`<option value="${k}" ${B.freq===k?'selected':''}>${v}</option>`).join('')}</select></div>
       ${sugarView()?`<div class="fg"><label>對方每月預算</label><select id="xBudget"><option value="">不限</option>${Object.entries({'30to50k':'3 萬以上','50to80k':'5 萬以上','80to120k':'8 萬以上','gt120k':'12 萬以上'}).map(([k,v])=>`<option value="${k}" ${B.budget===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="fg"><label class="sw" style="margin:0"><input type="checkbox" id="xWealth" ${B.wealth?'checked':''}><span><b>只看財力認證</b></span></label></div>`
       :`<div class="fg"><label>甜心期望的每月預算</label><select id="xEb"><option value="">不限</option>${Object.entries({'lt30k':'3 萬以下','30to50k':'5 萬以下','50to80k':'8 萬以下','80to120k':'12 萬以下'}).map(([k,v])=>`<option value="${k}" ${B.ebudget===k?'selected':''}>${v}（含見面再談）</option>`).join('')}</select></div>`}
       <div class="fact"><button class="btn" id="xClear">全部清除</button><button class="btn primary" id="xApply">套用篩選</button></div></div>`);
-    document.querySelectorAll('#xBody .tag,#xRel .tag').forEach(t=>t.onclick=()=>t.classList.toggle('on'));
+    document.querySelectorAll('#xBody .tag,#xRel .tag,#xZx .tag').forEach(t=>t.onclick=()=>t.classList.toggle('on'));
     $('#xClear').onclick = ()=>{ resetBrowse(); closeModal(); viewBrowse(); };
     $('#xApply').onclick = ()=>{ const v = id => $(id)?.value || '';
       let [a0,a1] = [v('#xAmin'), v('#xAmax')]; if(a0&&a1&&+a0>+a1) [a0,a1]=[a1,a0];
       let [h0,h1] = [v('#xHmin'), v('#xHmax')]; if(h0&&h1&&+h0>+h1) [h0,h1]=[h1,h0];
       let [c0,c1] = [v('#xCmin'), v('#xCmax')]; if(c0&&c1&&CUPS.indexOf(c0)>CUPS.indexOf(c1)) [c0,c1]=[c1,c0];
       Object.assign(B, { amin:a0, amax:a1, hmin:h0, hmax:h1, cmin:c0, cmax:c1, freq:v('#xFreq'), budget:v('#xBudget'), ebudget:v('#xEb'), wealth: $('#xWealth')?.checked ? '1' : '', person: $('#xPerson')?.checked ? '1' : '',
-        body:[...document.querySelectorAll('#xBody .on')].map(t=>t.dataset.v), rel:[...document.querySelectorAll('#xRel .on')].map(t=>t.dataset.v) });
+        body:[...document.querySelectorAll('#xBody .on')].map(t=>t.dataset.v), rel:[...document.querySelectorAll('#xRel .on')].map(t=>t.dataset.v), zx:[...document.querySelectorAll('#xZx .on')].map(t=>t.dataset.v) });
       closeModal(); reload(); };
   };
   await reload();
@@ -2424,7 +2443,7 @@ async function openProfile(id){
     </div>
     ${p.bio?`<section class="psec"><h4>關於我</h4><p class="bio">${esc(p.bio)}</p></section>`:''}
     <section class="psec"><h4>基本資料</h4><dl class="pdl">
-      ${[['所在地',esc(p.city||'')],['年齡',age(p.birth_year)?age(p.birth_year)+' 歲':''],['身高',p.height_cm?p.height_cm+' cm':''],['身材',p.body_type?BODY[p.body_type]:''],['罩杯',p.cup?esc(p.cup):''],['職業',p.occupation?esc(p.occupation):'']].filter(x=>x[1]).map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+      ${[['所在地',esc(p.city||'')],['年齡',age(p.birth_year)?age(p.birth_year)+' 歲':''],['身高',p.height_cm?p.height_cm+' cm':''],['身材',p.body_type?BODY[p.body_type]:''],['罩杯',p.cup?esc(p.cup):''],['職業',p.occupation?esc(p.occupation):''],['星座',ZODIAC[p.zodiac]||''],['喝酒',DRINK[p.drink]||''],['抽菸',SMOKE[p.smoke]||''],['語言',(p.languages||[]).map(l=>LANGS[l]).filter(Boolean).join('、')]].filter(x=>x[1]).map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
     </dl></section>
     ${(p.relation_types||[]).length||p.meet_freq||p.budget||p.expect_budget?`<section class="psec"><h4>期待的相處</h4><dl class="pdl">
       ${p.budget?`<div><dt>每月預算</dt><dd class="budget">${p.budget==='negotiable'?'見面再談':BUDGETS[p.budget]}</dd></div>`:''}
