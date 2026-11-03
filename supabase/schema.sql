@@ -3023,3 +3023,21 @@ revoke execute on function private.admin_notify_run() from public, anon, authent
 
 select cron.unschedule('admin-notify') where exists (select 1 from cron.job where jobname = 'admin-notify');
 select cron.schedule('admin-notify', '*/10 * * * *', $$select private.admin_notify_run()$$);
+
+-- ============ v0.50 改成在網站上通知管理員（停用寄信排程） ============
+select cron.unschedule('admin-notify') where exists (select 1 from cron.job where jobname = 'admin-notify');
+
+create or replace function public.admin_pending_counts()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return jsonb_build_object(
+    'profiles', (select count(*) from profiles where status = 'pending'),
+    'photos',   (select count(*) from photos where status = 'pending'),
+    'person',   (select count(*) from person_verifications where status = 'pending'),
+    'wealth',   (select count(*) from wealth_verifications where status = 'pending'),
+    'reports',  (select count(*) from reports where status = 'open'),
+    'support',  (select count(*) from support_tickets where status = 'open'));
+end $$;
+revoke execute on function public.admin_pending_counts() from public, anon;
+grant execute on function public.admin_pending_counts() to authenticated;
