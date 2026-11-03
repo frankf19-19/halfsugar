@@ -3173,3 +3173,20 @@ begin
 end $$;
 drop trigger if exists blocks_clear_views on public.blocks;
 create trigger blocks_clear_views after insert on public.blocks for each row execute function private.blocks_clear_views();
+
+-- ============ v0.54 誰看過我：會員一律留下紀錄（只有管理員不留） ============
+create or replace function public.record_view(p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare v uuid := auth.uid();
+begin
+  if v is null or p_id is null or v = p_id then return; end if;
+  if not exists (select 1 from profiles where id = v and status = 'approved' and not is_admin) then return; end if;
+  if not exists (select 1 from profiles where id = p_id and status = 'approved') then return; end if;
+  if exists (select 1 from blocks b where (b.blocker_id = v and b.blocked_id = p_id) or (b.blocker_id = p_id and b.blocked_id = v)) then return; end if;
+  insert into profile_views as pv (viewer_id, viewed_id) values (v, p_id)
+  on conflict (viewer_id, viewed_id) do update
+    set times = pv.times + case when pv.last_at < now() - interval '30 minutes' then 1 else 0 end, last_at = now();
+end $$;
+update public.profiles set view_trace = true where not view_trace;
+-- 管理員過去若有瀏覽紀錄，一併刪除
+delete from public.profile_views v using public.profiles p where p.id = v.viewer_id and p.is_admin;

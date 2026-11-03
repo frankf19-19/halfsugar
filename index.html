@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-SurUeJvNxOLn2HfkwHE6HecrWqM4HkZ+Etcduzp83MM=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-8CvbJvdJMN6xOe52+l2zwluC7HnaIWyepuyThDG6uoE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1163,7 +1163,7 @@ html[data-theme=dark] .oseen.on{color:#7BCB9A}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.86.0';
+const BUILD = 'v1.86.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2581,7 +2581,7 @@ async function viewLikes(){
     : `<div class="empty"><p class="serif">${key==='c'?'還沒有人看過你的檔案':key==='b'?'還沒有心動過的人':'還沒有人對你心動'}</p><p class="muted small">${key==='b'?'在探索看到喜歡的人，按「心動」讓對方知道。':'把檔案和照片準備好，被看見的機會更高。'}</p><a class="btn mt2" href="${key==='b'?'#/browse':'#/me'}">${key==='b'?'去探索':'完善我的檔案'}</a></div>`;
   const vNew = ok(views).filter(v=>v.last_at > vSeen).length, vTab = location.hash.includes('views');
   if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>心動</h1><p>對你心動的人、你心動過的人，和看過你檔案的人。</p></header><div class="tabs"><button class="${vTab?'':'on'}" data-t="a">對我心動（${ok(toMe).length}）</button><button data-t="b">我心動的（${ok(fromMe).length}）</button><button class="${vTab?'on':''}" data-t="c">誰看過我（${ok(views).length}）${vNew?`<span class="badge">${vNew}</span>`:''}</button></div>
-    <div id="ta" class="${vTab?'hidden':''}">${list(toMe,'a')}</div><div id="tb" class="hidden">${list(fromMe,'b')}</div><div id="tc" class="${vTab?'':'hidden'}">${me.view_trace===false?'<p class="tiny dim vnote">你已關閉「瀏覽時留下足跡」，別人不會在這裡看到你。</p>':''}${list(views,'c')}</div>`;
+    <div id="ta" class="${vTab?'hidden':''}">${list(toMe,'a')}</div><div id="tb" class="hidden">${list(fromMe,'b')}</div><div id="tc" class="${vTab?'':'hidden'}">${list(views,'c')}</div>`;
   if(vTab) localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString());
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); $('#tc').classList.toggle('hidden', b.dataset.t!=='c'); if(b.dataset.t==='c'){ localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString()); b.querySelector('.badge')?.remove(); } });
   $('#app').querySelectorAll('.pcard').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
@@ -2943,7 +2943,6 @@ async function viewMe(){
     <div class="card"><h3 style="font-size:17px">隱私設定</h3><p class="tiny dim">隨時可以改，不需要重新審核。</p>
       <label class="sw"><input type="checkbox" id="pvHidden" ${me.hidden?'checked':''}><span><b>不出現在探索</b><small>開啟後，只有你心動過的人、或正在和你聊天的人看得到你。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvAccept" ${me.accept_from==='liked'?'checked':''}><span><b>只接受我心動過的人傳訊息</b><small>開啟後，只有你按過「心動」的人能主動傳第一則訊息給你，可以減少陌生訊息。</small></span></label>
-      <label class="sw"><input type="checkbox" id="pvTrace" ${me.view_trace===false?'':'checked'}><span><b>瀏覽時留下足跡</b><small>開啟時，你看過的人會在「誰看過我」看到你。關閉後就不會留下紀錄。</small></span></label>
       <label class="sw"><input type="checkbox" id="pvOnline" ${me.show_online===false?'':'checked'}><span><b>顯示上線狀態</b><small>關閉後，別人看不到你「在線上」或「今天上線」。</small></span></label>
     </div>
     ${authUser?.email?`<div class="card"><h3 style="font-size:17px">Email 通知</h3><p class="tiny dim">你不在網站上時，有新動態會寄信到「${esc(authUser.email)}」。同一小時最多一封，信裡不會出現訊息內容。</p>
@@ -3126,7 +3125,6 @@ async function viewMe(){
   $('#pvAccept').onchange = e => pv({ accept_from: e.target.checked ? 'liked' : 'all' }, e.target.checked ? '只接受你心動過的人傳訊息' : '所有會員都能傳訊息給你', e.target);
   if($('#ntMsg')) $('#ntMsg').onchange = e => pv({ notify_email_msg: e.target.checked }, e.target.checked ? '已開啟新訊息通知' : '已關閉新訊息通知', e.target);
   if($('#ntLike')) $('#ntLike').onchange = e => pv({ notify_email_like: e.target.checked }, e.target.checked ? '已開啟心動通知' : '已關閉心動通知', e.target);
-  $('#pvTrace').onchange = e => pv({ view_trace: e.target.checked }, e.target.checked ? '已開啟瀏覽足跡' : '已關閉瀏覽足跡', e.target);
   $('#pvOnline').onchange = e => pv({ show_online: e.target.checked }, e.target.checked ? '已開啟上線狀態' : '已隱藏上線狀態', e.target);
   $('#meForm').onsubmit = async e=>{ e.preventDefault(); const p=readProfileForm(e.target); if(!p) return;
     const btn=e.target.querySelector('button[type=submit]'); btn.disabled=true;
