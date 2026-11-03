@@ -2944,3 +2944,12 @@ create policy "photos_storage_select" on storage.objects for select to authentic
       or (name ~ 'b\.jpg$' and private.can_see_blur(name))
     )
   );
+
+-- ============ v0.48 星座、喝酒、抽菸、語言（皆選填，不需重新審核） ============
+alter table public.profiles add column if not exists zodiac text
+  check (zodiac in ('aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'));
+alter table public.profiles add column if not exists drink text check (drink in ('never','social','often'));
+alter table public.profiles add column if not exists smoke text check (smoke in ('never','social','often'));
+alter table public.profiles add column if not exists languages text[] not null default '{}'
+  check (languages <@ array['zh','tw','hakka','cantonese','en','ja','ko','fr','de','es','th','vi']);
+grant select (zodiac, drink, smoke, languages) on public.profiles to authenticated;
