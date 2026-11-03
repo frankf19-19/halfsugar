@@ -3130,3 +3130,37 @@ begin
   return n;
 end $$;
 revoke execute on function private.member_notify_run() from public, anon, authenticated;
+
+-- ============ v0.53 誰看過我 ============
+alter table public.profiles add column if not exists view_trace boolean not null default true;   -- 瀏覽時留下足跡
+
+create table if not exists public.profile_views (
+  viewer_id uuid not null references public.profiles(id) on delete cascade,
+  viewed_id uuid not null references public.profiles(id) on delete cascade,
+  last_at   timestamptz not null default now(),
+  times     int not null default 1,
+  primary key (viewer_id, viewed_id),
+  check (viewer_id <> viewed_id)
+);
+create index if not exists profile_views_viewed_idx on public.profile_views(viewed_id, last_at desc);
+alter table public.profile_views enable row level security;
+revoke all on public.profile_views from anon, authenticated;
+grant select on public.profile_views to authenticated;
+drop policy if exists "views_own" on public.profile_views;
+create policy "views_own" on public.profile_views for select to authenticated using (viewed_id = auth.uid());
+
+-- 開啟別人的檔案時記錄；管理員、關閉足跡的人、未通過審核的人、有封鎖關係的都不記錄
+create or replace function public.record_view(p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare v uuid := auth.uid();
+begin
+  if v is null or p_id is null or v = p_id then return; end if;
+  if not exists (select 1 from profiles where id = v and status = 'approved' and not is_admin and view_trace) then return; end if;
+  if not exists (select 1 from profiles where id = p_id and status = 'approved') then return; end if;
+  if exists (select 1 from blocks b where (b.blocker_id = v and b.blocked_id = p_id) or (b.blocker_id = p_id and b.blocked_id = v)) then return; end if;
+  insert into profile_views as pv (viewer_id, viewed_id) values (v, p_id)
+  on conflict (viewer_id, viewed_id) do update
+    set times = pv.times + case when pv.last_at < now() - interval '30 minutes' then 1 else 0 end, last_at = now();
+end $$;
+revoke execute on function public.record_view(uuid) from public, anon;
+grant execute on function public.record_view(uuid) to authenticated;
