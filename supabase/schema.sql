@@ -3190,3 +3190,29 @@ end $$;
 update public.profiles set view_trace = true where not view_trace;
 -- 管理員過去若有瀏覽紀錄，一併刪除
 delete from public.profile_views v using public.profiles p where p.id = v.viewer_id and p.is_admin;
+
+-- ============ v0.55 誰看過我：還沒通過審核的會員也留下紀錄 ============
+create or replace function public.record_view(p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare v uuid := auth.uid();
+begin
+  if v is null or p_id is null or v = p_id then return; end if;
+  if not exists (select 1 from profiles where id = v and status <> 'suspended' and not is_admin) then return; end if;   -- 只有管理員、停權者不留
+  if not exists (select 1 from profiles where id = p_id and status = 'approved') then return; end if;
+  if exists (select 1 from blocks b where (b.blocker_id = v and b.blocked_id = p_id) or (b.blocker_id = p_id and b.blocked_id = v)) then return; end if;
+  insert into profile_views as pv (viewer_id, viewed_id) values (v, p_id)
+  on conflict (viewer_id, viewed_id) do update
+    set times = pv.times + case when pv.last_at < now() - interval '30 minutes' then 1 else 0 end, last_at = now();
+end $$;
+
+-- 我的訪客清單：審核中的訪客只告訴你「有一位審核中的新會員」，不給名字和照片（還沒審過）
+create or replace function public.my_viewers()
+returns table (viewer_id uuid, last_at timestamptz, times int, approved boolean)
+language sql stable security definer set search_path = public as $$
+  select v.viewer_id, v.last_at, v.times, p.status = 'approved'
+    from profile_views v join profiles p on p.id = v.viewer_id
+   where v.viewed_id = auth.uid() and p.status <> 'suspended' and not p.is_admin
+   order by v.last_at desc limit 100;
+$$;
+revoke execute on function public.my_viewers() from public, anon;
+grant execute on function public.my_viewers() to authenticated;
