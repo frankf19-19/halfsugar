@@ -3216,3 +3216,48 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke execute on function public.my_viewers() from public, anon;
 grant execute on function public.my_viewers() to authenticated;
+
+-- ============ v0.56 誰看過我：修正 ============
+-- 1. 只有「真的看得到對方」的會員才會留下紀錄（同樣套用探索的可見規則），避免直接呼叫 API 灌紀錄
+-- 2. 30 分鐘內重複打開同一人只算一次，也不會讓紅點重新亮起
+-- 3. 紀錄只能透過 RPC 讀取（不能直接查表，避免審核中訪客被對出身分）；紅點數字與清單用同一套規則
+create or replace function public.record_view(p_id uuid)
+returns void language plpgsql security definer set search_path = public, private as $$
+declare v uuid := auth.uid();
+begin
+  if v is null or p_id is null or v = p_id then return; end if;
+  if not private.can_browse() then return; end if;
+  if exists (select 1 from profiles where id = v and is_admin) then return; end if;   -- 管理員不留紀錄
+  if not exists (select 1 from profiles p where p.id = p_id and p.status = 'approved'
+                 and private.is_compatible(p.id) and not private.is_blocked_with(p.id)
+                 and (not p.hidden or exists (select 1 from likes l where l.from_id = p.id and l.to_id = v) or private.has_open_match(p.id))) then return; end if;
+  insert into profile_views as pv (viewer_id, viewed_id) values (v, p_id)
+  on conflict (viewer_id, viewed_id) do update
+    set times = pv.times + 1, last_at = now()
+    where pv.last_at < now() - interval '30 minutes';
+end $$;
+
+revoke select on public.profile_views from authenticated;
+drop policy if exists "views_own" on public.profile_views;
+
+create or replace function public.my_viewers()
+returns table (viewer_id uuid, last_at timestamptz, times int, approved boolean)
+language sql stable security definer set search_path = public as $$
+  select v.viewer_id, v.last_at, v.times, p.status = 'approved'
+    from profile_views v join profiles p on p.id = v.viewer_id
+   where v.viewed_id = auth.uid() and p.status in ('approved','pending') and not p.is_admin
+   order by v.last_at desc limit 100;
+$$;
+
+create or replace function public.my_viewers_count(p_since timestamptz)
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from (
+    select 1 from profile_views v join profiles p on p.id = v.viewer_id
+     where v.viewed_id = auth.uid() and p.status in ('approved','pending') and not p.is_admin
+       and v.last_at > coalesce(p_since, '-infinity')
+     order by v.last_at desc limit 100) x;
+$$;
+revoke execute on function public.my_viewers_count(timestamptz) from public, anon;
+grant execute on function public.my_viewers_count(timestamptz) to authenticated;
+
+alter table public.profiles drop column if exists view_trace;

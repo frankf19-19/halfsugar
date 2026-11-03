@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-ieA6e2bVN1fWZc4iGunV5dZ0W0DRxd1m4gztAe/yVNM=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-AWfHQwCrPikrrw2850y7rMK6mDmlGWy4HNrvFt94whM=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1117,6 +1117,8 @@ html[data-theme=dark] .oseen.on{color:#7BCB9A}
 .vnote{margin:0 0 14px}
 .pcard.pend{cursor:default}
 .pcard.pend .ph{background:var(--paper,#F1EEEA)}
+html[data-theme=dark] button.tag:not(.on){background:#35302C!important;border:1px solid #4A443F!important;color:#ECE7E1}
+html[data-theme=dark] .zmode{border-color:#ECE7E1}
 </style>
 </head>
 <body>
@@ -1165,7 +1167,7 @@ html[data-theme=dark] .oseen.on{color:#7BCB9A}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.86.2';
+const BUILD = 'v1.86.3';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1500,16 +1502,16 @@ async function refreshUnread(force){
   if(!force && Date.now() - unread.at < 20000) return;
   unread.at = Date.now(); const my = ++unread.seq;   // 只採用最新一次查詢的結果
   const seenL = localStorage.getItem('yy_likes_seen_'+me.id) || '1970-01-01T00:00:00Z';
-  const [{ data: ms }, { count: lc }, { count: vc }] = await Promise.all([
+  const [{ data: ms }, { count: lc }, { data: vc }] = await Promise.all([
     sb.from('matches').select('id').or(`user_a.eq.${me.id},user_b.eq.${me.id}`),
     location.hash.startsWith('#/likes') ? Promise.resolve({ count:0 }) : sb.from('likes').select('from_id',{count:'exact',head:true}).eq('to_id', me.id).gt('created_at', seenL),
-    location.hash.includes('likes/views') ? Promise.resolve({ count:0 }) : sb.from('profile_views').select('viewer_id',{count:'exact',head:true}).eq('viewed_id', me.id).gt('last_at', localStorage.getItem('yy_views_seen_'+me.id) || '1970-01-01T00:00:00Z') ]);
+    location.hash.includes('likes/views') ? Promise.resolve({ data:0 }) : sb.rpc('my_viewers_count', { p_since: localStorage.getItem('yy_views_seen_'+me.id) || null }) ]);
   if(my !== unread.seq) return;
   if(!ms){ unread.at = 0; return; }   // 查詢失敗：保留原本的數字，下次再查
   let m = 0;
   if(ms.length){ const { count, error } = await sb.from('messages').select('id',{count:'exact',head:true}).is('read_at',null).is('recalled_at',null).neq('sender_id',me.id).in('match_id',ms.map(x=>x.id)); if(error){ unread.at = 0; return; } m = count || 0; }
   if(my !== unread.seq) return;
-  unread.l = (lc || 0) + (vc || 0); unread.m = m;
+  unread.l = (lc || 0) + (+vc || 0); unread.m = m;
   if(me.is_admin){ const { data: ac } = await sb.rpc('admin_pending_counts');   // 管理員：後台待處理數量
     if(my !== unread.seq) return;
     if(ac){ unread.ac = ac; unread.a = Object.values(ac).reduce((x,y)=>x+(+y||0),0);
@@ -2576,21 +2578,21 @@ async function viewLikes(){
     sb.rpc('my_viewers'),
   ]);
   if(le1||le2) throw (le1||le2);
-  let views = [];   // 誰看過我：通過審核的顯示檔案，審核中的只顯示「審核中的新會員」
+  let views = [];   // 誰看過我：通過審核的顯示檔案，審核中的只顯示「審核中的會員」
   { const vr = Array.isArray(vraw) ? vraw : [], ids = vr.filter(v=>v.approved).map(v=>v.viewer_id);
     const { data: vp } = ids.length ? await sb.from('profiles').select('id,nickname,role,birth_year,city,occupation,avatar_path,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at').in('id', ids) : { data: [] };
     const pm = Object.fromEntries((vp||[]).map(x=>[x.id,x]));
     views = vr.map(v=>({ ...v, p: v.approved ? pm[v.viewer_id] : { status:'approved', pending:true } })).filter(v=>v.p); }
   const ok = rows => (rows||[]).filter(r=>r.p&&r.p.status==='approved');
-  const list = (rows, key) => ok(rows).length ? `<div class="grid lgrid">${ok(rows).map(r=> r.p.pending ? `<div class="pcard pend"><div class="ph"></div><div class="info"><div class="name"><span>審核中的新會員</span></div><div class="meta">審核通過後顯示</div><div class="tiny dim" style="margin-top:2px">${fmtTime(r.last_at)} 看過${r.times>1?`・共 ${r.times} 次`:''}</div></div></div>` : `<div class="pcard" data-id="${r.p.id}">
+  const list = (rows, key) => ok(rows).length ? `<div class="grid lgrid">${ok(rows).map(r=> r.p.pending ? `<div class="pcard pend"><div class="ph"></div><div class="info"><div class="name"><span>審核中的會員</span></div><div class="meta">審核通過後顯示</div><div class="tiny dim" style="margin-top:2px">${fmtTime(r.last_at)} 看過${r.times>1?`・共 ${r.times} 次`:''}</div></div></div>` : `<div class="pcard" data-id="${r.p.id}">
       <div class="ph" data-ph="${esc(pubAv(r.p)||'')}"></div>${seen(r.p.last_active_at)?`<span class="seen ${seen(r.p.last_active_at)==='在線上'?'on':''}">${seen(r.p.last_active_at)}</span>`:''}
       <div class="info"><div class="name"><span>${esc(r.p.nickname)}</span><span class="muted small">${age(r.p.birth_year)}</span></div><div class="meta">${r.p.role?`<span class="rtag">${ROLES[r.p.role]}</span>`:''}${esc(r.p.city||'')}</div><div class="tiny dim" style="margin-top:2px">${key==='c'?`${fmtTime(r.last_at)} 看過${r.times>1?`・共 ${r.times} 次`:''}`:`${fmtTime(r.created_at)} 心動`}</div></div></div>`).join('')}</div>`
     : `<div class="empty"><p class="serif">${key==='c'?'還沒有人看過你的檔案':key==='b'?'還沒有心動過的人':'還沒有人對你心動'}</p><p class="muted small">${key==='b'?'在探索看到喜歡的人，按「心動」讓對方知道。':'把檔案和照片準備好，被看見的機會更高。'}</p><a class="btn mt2" href="${key==='b'?'#/browse':'#/me'}">${key==='b'?'去探索':'完善我的檔案'}</a></div>`;
-  const vNew = ok(views).filter(v=>v.last_at > vSeen).length, vTab = location.hash.includes('views');
+  const vNew = ok(views).filter(v=>new Date(v.last_at) > new Date(vSeen)).length, vTab = location.hash.includes('views');
   if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>心動</h1><p>對你心動的人、你心動過的人，和看過你檔案的人。</p></header><div class="tabs"><button class="${vTab?'':'on'}" data-t="a">對我心動（${ok(toMe).length}）</button><button data-t="b">我心動的（${ok(fromMe).length}）</button><button class="${vTab?'on':''}" data-t="c">誰看過我（${ok(views).length}）${vNew&&!vTab?`<span class="badge">${vNew}</span>`:''}</button></div>
     <div id="ta" class="${vTab?'hidden':''}">${list(toMe,'a')}</div><div id="tb" class="hidden">${list(fromMe,'b')}</div><div id="tc" class="${vTab?'':'hidden'}">${list(views,'c')}</div>`;
   if(vTab) localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString());
-  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); $('#tc').classList.toggle('hidden', b.dataset.t!=='c'); if(b.dataset.t==='c'){ localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString()); b.querySelector('.badge')?.remove(); } });
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); $('#tc').classList.toggle('hidden', b.dataset.t!=='c'); if(b.dataset.t==='c'){ localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString()); b.querySelector('.badge')?.remove(); refreshUnread(true); } });
   $('#app').querySelectorAll('.pcard[data-id]').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
   lazyPh($('#app').querySelectorAll('.ph'));
 }
