@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-vkPtouwVS4XIEpZzHUbeyfWFr7xdfXRh56bsiHFl4ng=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-WViprfLAKW4MHh+U5uRfKVIcxWPcd1Ibutw2r44FDg8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1087,6 +1087,16 @@ html[data-theme=dark] .roles .rl:hover>span{background:#302C29!important}
 button.tag{background:#F1EEEA!important;font-size:14px}
 button.tag:hover{background:#E7E2DC!important}
 html[data-theme=dark] button.tag{background:#262321!important}
+
+/* 後台照片：多選 */
+.pbulk{position:sticky;top:60px;z-index:5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);padding:10px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--fieldline)}
+@media(max-width:719px){.pbulk{top:54px}}
+.pcard{position:relative}
+.psel{position:absolute;top:8px;left:8px;z-index:3;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);border-radius:2px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.psel input{width:20px;height:20px;margin:0}
+.pcard.picked .ph{outline:3px solid var(--ink);outline-offset:-3px}
+html[data-theme=dark] .psel{background:rgba(18,17,17,.85)}
+html[data-theme=dark] .pcard.picked .ph{outline-color:#ECE7E1}
 </style>
 </head>
 <body>
@@ -1135,7 +1145,7 @@ html[data-theme=dark] button.tag{background:#262321!important}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.79.2';
+const BUILD = 'v1.80.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -3143,7 +3153,8 @@ async function viewAdmin(){
       const [{ data: rows }, { data: vrows }] = await Promise.all([sb.from('photos').select('*, p:profiles(nickname)').eq('status','pending').order('created_at'), sb.from('voice_intros').select('*, p:profiles(nickname)').eq('status','pending').order('created_at')]);
       if(!rows?.length && !vrows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">沒有待審照片或語音 ✓</p>'; return; }
       const vHtml = vrows?.length ? `<h3 style="font-size:16px;margin-bottom:10px">待審語音（${vrows.length}）</h3><div class="list mb">${vrows.map(v=>`<div class="item" style="cursor:default;flex-wrap:wrap"><div class="grow t">${esc(v.p?.nickname||'')}<span class="tiny dim">　${v.duration||''} 秒</span></div><audio controls preload="none" data-vp="${esc(v.path)}" style="height:34px;max-width:100%"></audio><button class="btn sm primary va" data-u="${v.user_id}">通過</button><button class="btn sm ghost vr" data-u="${v.user_id}">退件</button></div>`).join('')}</div>` : '';
-      box.innerHTML = vHtml + (rows?.length ? '' : '<p class="muted center">沒有待審照片 ✓</p>') + `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default"><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
+      const bar = rows?.length ? `<div class="pbulk"><label class="ckl"><input type="checkbox" id="pSelAll"> 全選</label><span class="tiny dim" id="pSelN">已選 0 張</span><span class="grow"></span><button class="btn sm primary" id="pBulkOk" disabled>核准所選</button><button class="btn sm ghost" id="pBulkNo" disabled>退件所選</button></div>` : '';
+      box.innerHTML = vHtml + (rows?.length ? '' : '<p class="muted center">沒有待審照片 ✓</p>') + bar + `<div class="grid">${rows.map(x=>`<div class="pcard" style="cursor:default" data-id="${x.id}"><label class="psel" aria-label="選取這張照片"><input type="checkbox" class="pchk" value="${x.id}"></label><div class="ph" data-ph="${esc(x.path)}"></div><div class="info"><div class="small">${esc(x.p?.nickname||'')} ${x.is_private?'🔒':''}</div>
         <div class="row mt" style="gap:6px"><button class="btn sm primary pa" data-id="${x.id}">通過</button><button class="btn sm ghost pr" data-id="${x.id}">退件</button></div></div></div>`).join('')}</div>`;
       box.querySelectorAll('.ph').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>openFresh('photos', el.dataset.ph); }  admThumb(el); });
       box.querySelectorAll('audio[data-vp]').forEach(async au=>{ const { data } = await sb.storage.from('voice').createSignedUrl(au.dataset.vp, 3600); if(data?.signedUrl) au.src = data.signedUrl; });
@@ -3151,6 +3162,17 @@ async function viewAdmin(){
       const pdone = b => { const c=b.closest('.pcard'); c.style.opacity=.3; setTimeout(()=>{ c.remove(); if(!box.querySelector('.pcard')) draw(); },300); };
       box.querySelectorAll('.pa').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'approved' }).eq('id',b.dataset.id))) pdone(b); });
       box.querySelectorAll('.pr').forEach(b=>b.onclick=async()=>{ if(await adm(sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).eq('id',b.dataset.id))) pdone(b); });
+      /* 一次勾選多張照片，一起核准或退件 */
+      const chks = () => [...box.querySelectorAll('.pchk')];
+      const sync = () => { const sel = chks().filter(c=>c.checked); const n = sel.length; const el=$('#pSelN'); if(el) el.textContent = `已選 ${n} 張`; ['#pBulkOk','#pBulkNo'].forEach(q=>{ const b=$(q); if(b) b.disabled = !n; }); const all=$('#pSelAll'); if(all){ all.checked = n>0 && n===chks().length; all.indeterminate = n>0 && n<chks().length; } chks().forEach(c=>c.closest('.pcard').classList.toggle('picked', c.checked)); };
+      chks().forEach(c=>c.onchange=sync);
+      const sa=$('#pSelAll'); if(sa) sa.onchange=()=>{ chks().forEach(c=>c.checked=sa.checked); sync(); };
+      const bulk = async ok => { const ids = chks().filter(c=>c.checked).map(c=>c.value); if(!ids.length) return;
+        if(!ok && !confirm(`確定退件這 ${ids.length} 張照片？`)) return;
+        const bo=$('#pBulkOk'), bn=$('#pBulkNo'); bo.disabled=bn.disabled=true;
+        const q = ok ? sb.from('photos').update({ status:'approved' }).in('id', ids) : sb.from('photos').update({ status:'rejected', review_note:'不符合照片規範' }).in('id', ids);
+        if(await adm(q)){ toast(ok?`已核准 ${ids.length} 張`:`已退件 ${ids.length} 張`); draw(); } else sync(); };
+      const bo=$('#pBulkOk'); if(bo) bo.onclick=()=>bulk(true); const bn=$('#pBulkNo'); if(bn) bn.onclick=()=>bulk(false);
     }
     if(tab==='reports'){
       const { data: rows } = await sb.from('reports').select('*, r:profiles!reports_reporter_id_fkey(nickname), t:profiles!reports_reported_id_fkey(id,nickname,status)').eq('status','open').order('created_at');
