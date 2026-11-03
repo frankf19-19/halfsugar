@@ -3041,3 +3041,79 @@ begin
 end $$;
 revoke execute on function public.admin_pending_counts() from public, anon;
 grant execute on function public.admin_pending_counts() to authenticated;
+
+-- ============ v0.51 會員 Email 通知（新訊息、新心動），會員可自行開關 ============
+-- 每 10 分鐘檢查一次。只寄給「不在線上」的人；同一人最多每小時一封，信裡不放訊息內容。
+-- 寄信用 Resend（與驗證信同一個網域 noreply@onethirdsugar.com）；金鑰放在 Supabase Vault，名稱 resend_api_key。
+alter table public.profiles add column if not exists notify_email_msg  boolean not null default true;
+alter table public.profiles add column if not exists notify_email_like boolean not null default true;
+
+create table if not exists private.mail_config (
+  id         int primary key default 1 check (id = 1),
+  from_email text not null default '微糖 1/3 Sugar <noreply@onethirdsugar.com>',
+  enabled    boolean not null default true
+);
+insert into private.mail_config (id) values (1) on conflict (id) do nothing;
+revoke all on private.mail_config from public, anon, authenticated;
+
+create table if not exists private.member_notify (
+  user_id   uuid primary key references public.profiles(id) on delete cascade,
+  last_at   timestamptz not null default now(),   -- 之後出現的訊息／心動才算新的
+  last_sent timestamptz
+);
+revoke all on private.member_notify from public, anon, authenticated;
+-- 上線時先把所有人的起點設成現在，避免一開就寄出舊通知
+insert into private.member_notify (user_id) select id from public.profiles on conflict (user_id) do nothing;
+
+create or replace function private.member_notify_run()
+returns int language plpgsql security definer set search_path = public, private, extensions as $$
+declare
+  cfg private.mail_config%rowtype; k text; t0 timestamptz := now(); n int := 0; r record; parts text[]; html text;
+begin
+  select * into cfg from private.mail_config where id = 1;
+  if not coalesce(cfg.enabled, false) then return 0; end if;
+  select decrypted_secret into k from vault.decrypted_secrets where name = 'resend_api_key' limit 1;
+  if k is null then return 0; end if;
+
+  insert into private.member_notify (user_id) select id from profiles on conflict (user_id) do nothing;
+
+  for r in
+    select p.id, u.email, x.msgs, x.likes from profiles p
+      join auth.users u on u.id = p.id
+      join private.member_notify mn on mn.user_id = p.id
+      cross join lateral (select
+        case when p.notify_email_msg then (select count(*) from messages m join matches mt on mt.id = m.match_id
+              where (mt.user_a = p.id or mt.user_b = p.id) and m.sender_id <> p.id
+                and m.read_at is null and m.recalled_at is null and m.created_at > mn.last_at) else 0 end as msgs,
+        case when p.notify_email_like then (select count(*) from likes l
+              where l.to_id = p.id and l.created_at > mn.last_at
+                and not exists (select 1 from blocks b where (b.blocker_id = p.id and b.blocked_id = l.from_id) or (b.blocker_id = l.from_id and b.blocked_id = p.id))) else 0 end as likes) x
+    where p.status = 'approved' and (p.notify_email_msg or p.notify_email_like)
+      and u.email is not null and u.email <> ''
+      and (p.last_active_at is null or p.last_active_at < t0 - interval '10 minutes')
+      and (mn.last_sent is null or mn.last_sent < t0 - interval '1 hour')
+      and (x.msgs > 0 or x.likes > 0)
+    limit 80
+  loop
+    parts := array[]::text[];
+    if r.msgs  > 0 then parts := parts || (r.msgs  || ' 則新訊息'); end if;
+    if r.likes > 0 then parts := parts || (r.likes || ' 個人對你心動'); end if;
+    html := '<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#111;max-width:480px">'
+      || '<p>你在微糖有 ' || array_to_string(parts, '、') || '。</p>'
+      || '<p><a href="https://onethirdsugar.com/#/' || case when r.msgs > 0 then 'matches' else 'likes' end
+      || '" style="display:inline-block;background:#111;color:#fff;padding:10px 22px;text-decoration:none">打開微糖查看</a></p>'
+      || '<p style="font-size:12px;color:#777">不想收到這類通知？登入後到「我的 → 設定 → Email 通知」關閉。</p></div>';
+    perform net.http_post(
+      url := 'https://api.resend.com/emails',
+      headers := jsonb_build_object('Authorization', 'Bearer ' || k, 'Content-Type', 'application/json'),
+      body := jsonb_build_object('from', cfg.from_email, 'to', jsonb_build_array(r.email),
+                'subject', '你在微糖有新動態', 'html', html));
+    update private.member_notify set last_at = t0, last_sent = t0 where user_id = r.id;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+revoke execute on function private.member_notify_run() from public, anon, authenticated;
+
+select cron.unschedule('member-notify') where exists (select 1 from cron.job where jobname = 'member-notify');
+select cron.schedule('member-notify', '*/10 * * * *', $$select private.member_notify_run()$$);
