@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-VS0g+hf0KWzCR3lEr1r3GhlzO/caodE76nhAaCI3wqw=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-vkPtouwVS4XIEpZzHUbeyfWFr7xdfXRh56bsiHFl4ng=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1921,7 +1921,7 @@ function readProfileForm(form){
   let gender = me?.gender, looking_for = me?.looking_for;
   if(f.get('orient')) [gender, looking_for] = f.get('orient').split('-');
   if(!gender || !looking_for) { toast('請選擇想認識的對象'); return null; }
-  if(+f.get('birth_year')===new Date().getFullYear()-18 && +f.get('birth_year')!==me?.birth_year && !confirm(`你選的出生年是 ${f.get('birth_year')} 年。\n本站僅限年滿 18 歲，請確認你今年的生日已經過了。`)) return null;
+  if(+f.get('birth_year')===new Date().getFullYear()-18 && +f.get('birth_year')!==me?.birth_year && !confirm(`你選的是 18 歲。\n本站僅限年滿 18 歲，請確認你已經滿 18 歲（今年的生日已經過了）。`)) return null;
   if(f.get('role')==='daddy' && gender!=='male') { toast('Sugar Daddy 限男性，女性請選 Sugar Mommy'); return null; }
   if(f.get('role')==='mommy' && gender!=='female') { toast('Sugar Mommy 限女性，男性請選 Sugar Daddy'); return null; }
   const budget = f.get('role')==='baby' ? null : (f.get('budget')||null);
