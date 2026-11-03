@@ -3164,3 +3164,12 @@ begin
 end $$;
 revoke execute on function public.record_view(uuid) from public, anon;
 grant execute on function public.record_view(uuid) to authenticated;
+-- 封鎖時，雙方的瀏覽紀錄一併刪除
+create or replace function private.blocks_clear_views()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  delete from public.profile_views where (viewer_id = new.blocker_id and viewed_id = new.blocked_id) or (viewer_id = new.blocked_id and viewed_id = new.blocker_id);
+  return new;
+end $$;
+drop trigger if exists blocks_clear_views on public.blocks;
+create trigger blocks_clear_views after insert on public.blocks for each row execute function private.blocks_clear_views();
