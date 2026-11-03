@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-sK8td3sAjkQPh9LEIvM6lDSxP5P9y8U/hSs0yeAe3G4=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-CBjDPPejTp9pTOP5lBWX1ON+/Urf/m/UjPrxFBEjlIE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -981,6 +981,17 @@ button.tag:hover{border-color:var(--ink)}
 html[data-theme=dark] .tabs:not(.admtabs) button.on{color:#F3ECE6!important;box-shadow:inset 0 -2px 0 #ECE7E1!important}
 /* 篩選：白底細框 */
 .filters select,.sortsel select{background-color:var(--field)!important}
+
+/* ===== 選擇卡片：不用圓圈；選到時整張反白成黑底白字（v1.76） ===== */
+.roles .rl>span::after{content:none!important;display:none!important}
+.roles .rl>span,.roles.orient .rl>span{padding:16px 18px!important;min-height:0!important}
+.roles.orient .rl>span{padding:16px 14px!important}
+.roles .rl>span{transition:background .2s,border-color .2s,color .2s}
+.roles .rl input:checked+span{background:var(--ink)!important;border-color:var(--ink)!important;box-shadow:none!important}
+.roles .rl input:checked+span b,.roles .rl input:checked+span small{color:#fff!important}
+.roles .rl input:checked+span small{opacity:.78}
+html[data-theme=dark] .roles .rl input:checked+span{background:#ECE7E1!important;border-color:#ECE7E1!important}
+html[data-theme=dark] .roles .rl input:checked+span b,html[data-theme=dark] .roles .rl input:checked+span small{color:#121111!important}
 </style>
 </head>
 <body>
@@ -1029,7 +1040,7 @@ html[data-theme=dark] .tabs:not(.admtabs) button.on{color:#F3ECE6!important;box-
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.75.0';
+const BUILD = 'v1.76.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1149,7 +1160,7 @@ const WB = (() => {
   function fixNode(n) {
     if (done.has(n) || !n.parentElement || !n.isConnected) return;
     const par = n.parentElement; if (par.closest(SKIP)) return;
-    const cs = getComputedStyle(par); if (/nowrap|pre/.test(cs.whiteSpace) || /flex|grid/.test(cs.display)) { done.add(n); return; }   // flex／grid 容器裡包 span 會變成一格一格，跳過
+    const cs = getComputedStyle(par); if (/^(nowrap|pre)$/.test(cs.whiteSpace) || /flex|grid/.test(cs.display)) { done.add(n); return; }   // flex／grid 容器裡包 span 會變成一格一格，跳過
     let t = n.data.replace(/\b(Sugar|1\/3) (Daddy|Mommy|Baby|Dating|Sugar)\b/g, '$1\u00a0$2').replace(/(\d) (?=[\u3400-\u9fff])/g, '$1\u00a0'); let blk = par;
     while (blk.parentElement && blk !== document.body && /^inline/.test(getComputedStyle(blk).display) && !blk.matches(BLOCK)) blk = blk.parentElement;
     if (!HAN.test(t) && !HAN.test(blk.textContent)) { done.add(n); return; }
