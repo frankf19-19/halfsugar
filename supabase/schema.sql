@@ -3281,3 +3281,106 @@ begin
   if to_regclass('public.voice_intros') is not null then execute 'delete from public.voice_intros where user_id = $1' using uid; end if;
   perform set_config('halfsugar.deleting', '0', true);
 end $$;
+
+-- ============ v0.58 後台與註冊流程修正 ============
+-- 管理員刪除停權帳號：檢舉證據照片不擋刪除
+create or replace function public.admin_delete_account(target uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  if target = auth.uid() then raise exception '不能刪除自己的管理員帳號'; end if;
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','chat','voice') and name like target::text || '/%'
+             and not (bucket_id = 'chat' and private.is_evidence_photo(name))) then   -- 檢舉證據照片保留給管理員，不擋刪除
+    raise exception '這位會員的照片或認證檔案還沒刪完';
+  end if;
+  update public.reports set status = 'resolved' where reported_id = target and status = 'open';
+  delete from public.photos where user_id = target;
+  delete from auth.users where id = target;
+end $$;
+
+-- 認證審核不能重複執行（先按通過再按退件、或兩位管理員同時審）
+create or replace function public.admin_review_wealth(vid uuid, approve boolean, note text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.wealth_verifications;
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  select * into v from public.wealth_verifications where id = vid and status = 'pending' for update;
+  if not found then raise exception '這筆申請已經審核過了，請重新整理'; end if;
+  update public.wealth_verifications
+     set status = case when approve then 'approved' else 'rejected' end,
+         review_note = case when approve then null else coalesce(nullif(note,''), '文件看不出財力，請換一份更清楚的文件') end,
+         reviewed_at = now(), path = case when approve then path else null end   -- 通過的文件保留（只給本人允許的人看），退件的刪除
+   where id = vid;
+  if approve then update public.profiles set wealth_verified_at = now() where id = v.user_id; end if;
+end $$;
+
+create or replace function public.admin_review_person(vid uuid, approve boolean, note text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.person_verifications;
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  select * into v from public.person_verifications where id = vid and status = 'pending' for update;
+  if not found then raise exception '這筆申請已經審核過了，請重新整理'; end if;
+  update public.person_verifications
+     set status = case when approve then 'approved' else 'rejected' end,
+         review_note = case when approve then null else coalesce(nullif(note,''), '動作或長相和頭像對不起來，請重新拍攝') end,
+         reviewed_at = now(), photo_path = null, video_path = null
+   where id = vid;
+  if approve then update public.profiles set person_verified_at = now() where id = v.user_id; end if;
+end $$;
+
+-- 剩餘簡訊次數同時考慮這支手機已用的次數
+create or replace function public.sms_reserve(uid uuid, ph text, ip text default null)
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare h text := private.phone_hash(ph); ih text; nu int; np int; n int; rid bigint;
+begin
+  if uid is null or coalesce(ph,'') !~ '^\+?8869\d{8}$' then return jsonb_build_object('r','bad_phone'); end if;
+  if coalesce((select value from public.app_config where key = 'sms_paused'), 'off') = 'on' then return jsonb_build_object('r','paused'); end if;
+  perform pg_advisory_xact_lock(hashtext('sms_reserve'));
+  if exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null and nullif(u.phone,'') is not null) then
+    return jsonb_build_object('r','already');
+  end if;
+  if exists (select 1 from public.banned_phones b where b.phone_hash = h) then return jsonb_build_object('r','banned'); end if;
+  select count(*) into nu from public.sms_sends where user_id = uid and voided_at is null and kind = 'verify';
+  if nu >= 3 then return jsonb_build_object('r','user_limit'); end if;
+  select count(*) into np from public.sms_sends where phone_hash = h and voided_at is null and kind = 'verify';
+  if np >= 3 then return jsonb_build_object('r','phone_limit'); end if;
+  ih := encode(digest('halfsugar-ip:' || coalesce(nullif(ip,''), 'unknown'), 'sha256'), 'hex');
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_ip_hour', 5) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_ip_day', 10) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_hour', 100) then return jsonb_build_object('r','global_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_day', 300) then return jsonb_build_object('r','global_limit'); end if;
+  insert into public.sms_sends (user_id, phone_hash, ip_hash, kind) values (uid, h, ih, 'verify') returning id into rid;
+  return jsonb_build_object('r','ok','id',rid,'left',greatest(0, least(2-nu, 2-np)));
+end $$;
+
+-- 用手機找回帳號：停權的號碼不寄
+create or replace function public.sms_find_reserve(ph text, ip text default null)
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare h text := private.phone_hash(ph); ih text; owner uuid; n int; rid bigint;
+begin
+  if coalesce(ph,'') !~ '^\+?8869\d{8}$' then return jsonb_build_object('r','bad_phone'); end if;
+  if coalesce((select value from public.app_config where key = 'sms_paused'), 'off') = 'on' then return jsonb_build_object('r','paused'); end if;
+  perform pg_advisory_xact_lock(hashtext('sms_reserve'));
+  ih := encode(digest('halfsugar-ip:' || coalesce(nullif(ip,''), 'unknown'), 'sha256'), 'hex');
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_ip_hour', 5) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where ip_hash = ih and created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_ip_day', 10) * (case when nullif(ip,'') is null then 4 else 1 end) then return jsonb_build_object('r','ip_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 hour';
+  if n >= private.cfg_int('sms_hour', 100) then return jsonb_build_object('r','global_limit'); end if;
+  select count(*) into n from public.sms_sends where created_at > now() - interval '1 day';
+  if n >= private.cfg_int('sms_day', 300) then return jsonb_build_object('r','global_limit'); end if;
+  select u.id into owner from auth.users u
+   where u.phone_confirmed_at is not null and nullif(u.phone,'') is not null and private.phone_hash(u.phone) = h limit 1;
+  if owner is null then return jsonb_build_object('r','none'); end if;
+  if exists (select 1 from public.banned_phones b where b.phone_hash = h) then return jsonb_build_object('r','none'); end if;   -- 停權的號碼不寄
+  select count(*) into n from public.sms_sends where phone_hash = h and kind = 'find' and voided_at is null and created_at > now() - interval '30 days';
+  if n >= 2 then return jsonb_build_object('r','none'); end if;
+  insert into public.sms_sends (user_id, phone_hash, ip_hash, kind) values (owner, h, ih, 'find') returning id into rid;
+  return jsonb_build_object('r','ok','id',rid);
+end $$;
