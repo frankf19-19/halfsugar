@@ -2953,3 +2953,73 @@ alter table public.profiles add column if not exists smoke text check (smoke in 
 alter table public.profiles add column if not exists languages text[] not null default '{}'
   check (languages <@ array['zh','tw','hakka','cantonese','en','ja','ko','fr','de','es','th','vi']);
 grant select (zodiac, drink, smoke, languages) on public.profiles to authenticated;
+
+-- ============ v0.49 有東西要審核時，寄信通知管理員 ============
+-- 每 10 分鐘檢查一次；有「新的」待審項目才寄，一封信列出全部待審數量。
+-- 寄信用 Resend（金鑰放在 Supabase Vault，名稱 resend_api_key，由站長自己設定）。
+create extension if not exists pg_net;
+create extension if not exists pg_cron;
+
+create table if not exists private.admin_notify (
+  id         int primary key default 1 check (id = 1),
+  to_email   text,                                  -- 收通知的信箱
+  from_email text not null default '微糖 1/3 Sugar <onboarding@resend.dev>',
+  last_at    timestamptz not null default now(),    -- 上次寄信時間；之後出現的才算「新的」
+  last_sent  timestamptz,
+  last_resp  bigint                                 -- pg_net 請求編號，除錯用
+);
+insert into private.admin_notify (id) values (1) on conflict (id) do nothing;
+revoke all on private.admin_notify from public, anon, authenticated;
+
+create or replace function private.admin_notify_run()
+returns text language plpgsql security definer set search_path = public, private, extensions as $$
+declare
+  cfg private.admin_notify%rowtype; k text; t0 timestamptz := now();
+  n_new int; c_prof int; c_photo int; c_person int; c_wealth int; c_rep int; c_sup int; body text;
+begin
+  select * into cfg from private.admin_notify where id = 1 for update;
+  if cfg.to_email is null or cfg.to_email = '' then return 'no recipient'; end if;
+
+  select (select count(*) from profiles where status = 'pending' and coalesce(submitted_at, created_at) > cfg.last_at)
+       + (select count(*) from photos where status = 'pending' and created_at > cfg.last_at)
+       + (select count(*) from person_verifications where status = 'pending' and submitted_at > cfg.last_at)
+       + (select count(*) from wealth_verifications where status = 'pending' and created_at > cfg.last_at)
+       + (select count(*) from reports where status = 'open' and created_at > cfg.last_at)
+       + (select count(*) from support_tickets where status = 'open' and created_at > cfg.last_at)
+    into n_new;
+  if n_new = 0 then return 'nothing new'; end if;
+
+  select decrypted_secret into k from vault.decrypted_secrets where name = 'resend_api_key' limit 1;
+  if k is null then return 'no api key'; end if;
+
+  select count(*) into c_prof   from profiles where status = 'pending';
+  select count(*) into c_photo  from photos where status = 'pending';
+  select count(*) into c_person from person_verifications where status = 'pending';
+  select count(*) into c_wealth from wealth_verifications where status = 'pending';
+  select count(*) into c_rep    from reports where status = 'open';
+  select count(*) into c_sup    from support_tickets where status = 'open';
+
+  body := '<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#111">'
+    || '<p>微糖後台有 <b>' || n_new || '</b> 筆新的項目等你處理。</p><p>目前待處理：</p><ul>'
+    || case when c_prof   > 0 then '<li>待審會員：' || c_prof   || '</li>' else '' end
+    || case when c_photo  > 0 then '<li>待審照片：' || c_photo  || '</li>' else '' end
+    || case when c_person > 0 then '<li>真人認證：' || c_person || '</li>' else '' end
+    || case when c_wealth > 0 then '<li>財力認證：' || c_wealth || '</li>' else '' end
+    || case when c_rep    > 0 then '<li>檢舉：'     || c_rep    || '</li>' else '' end
+    || case when c_sup    > 0 then '<li>客服留言：' || c_sup    || '</li>' else '' end
+    || '</ul><p><a href="https://onethirdsugar.com/#/admin" style="display:inline-block;background:#111;color:#fff;padding:10px 22px;text-decoration:none">前往後台</a></p></div>';
+
+  update private.admin_notify set last_at = t0, last_sent = t0,
+    last_resp = net.http_post(
+      url := 'https://api.resend.com/emails',
+      headers := jsonb_build_object('Authorization', 'Bearer ' || k, 'Content-Type', 'application/json'),
+      body := jsonb_build_object('from', cfg.from_email, 'to', jsonb_build_array(cfg.to_email),
+                'subject', '微糖後台：' || n_new || ' 筆新的待審項目', 'html', body)
+    )
+  where id = 1;
+  return 'sent ' || n_new;
+end $$;
+revoke execute on function private.admin_notify_run() from public, anon, authenticated;
+
+select cron.unschedule('admin-notify') where exists (select 1 from cron.job where jobname = 'admin-notify');
+select cron.schedule('admin-notify', '*/10 * * * *', $$select private.admin_notify_run()$$);
