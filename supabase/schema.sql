@@ -3048,3 +3048,85 @@ revoke execute on function private.member_notify_run() from public, anon, authen
 
 select cron.unschedule('member-notify') where exists (select 1 from cron.job where jobname = 'member-notify');
 select cron.schedule('member-notify', '*/10 * * * *', $$select private.member_notify_run()$$);
+
+-- ============ v0.52 會員 Email 通知修正 ============
+-- 1. 另記「最後在網站上的時間」（不受隱藏上線狀態影響），在線上的人不寄；在網站上看過的動態也不再補寄。
+-- 2. 只寄給 Email 已驗證的會員；對話已結束、已封鎖、對方帳號不是正常狀態的都不算。
+-- 3. 改成從「最近的新訊息／新心動」反查收件人，會員變多也不會變慢；每人每天最多 6 封。
+alter table private.member_notify add column if not exists last_seen timestamptz;
+alter table private.member_notify add column if not exists day_count int not null default 0;
+alter table private.member_notify add column if not exists day_on date;
+create index if not exists messages_created_idx on public.messages(created_at);
+create index if not exists likes_created_idx on public.likes(created_at);
+create index if not exists matches_user_b_idx on public.matches(user_b);
+
+create or replace function public.touch_seen()
+returns void language sql security definer set search_path = public, private as $$
+  insert into private.member_notify as mn (user_id, last_at, last_seen) select auth.uid(), now(), now() where auth.uid() is not null
+  on conflict (user_id) do update set last_seen = now(), last_at = greatest(mn.last_at, now());
+$$;
+revoke execute on function public.touch_seen() from public, anon;
+grant execute on function public.touch_seen() to authenticated;
+
+create or replace function private.member_notify_run()
+returns int language plpgsql security definer set search_path = public, private, extensions as $$
+declare
+  cfg private.mail_config%rowtype; k text; t0 timestamptz := now(); n int := 0; r record; parts text[]; html text;
+begin
+  select * into cfg from private.mail_config where id = 1;
+  if not coalesce(cfg.enabled, false) then return 0; end if;
+  select decrypted_secret into k from vault.decrypted_secrets where name = 'resend_api_key' limit 1;
+  if k is null then return 0; end if;
+
+  insert into private.member_notify (user_id) select id from profiles on conflict (user_id) do nothing;
+
+  for r in
+    with ev as (   -- 最近一天內的新訊息與新心動，算出收件人
+      select case when mt.user_a = m.sender_id then mt.user_b else mt.user_a end as uid, 'm' as kind, m.created_at
+        from messages m join matches mt on mt.id = m.match_id
+       where m.created_at > t0 - interval '1 day' and m.read_at is null and m.recalled_at is null and mt.closed_at is null
+      union all
+      select l.to_id, 'l', l.created_at from likes l
+        join profiles s on s.id = l.from_id and s.status = 'approved'
+       where l.created_at > t0 - interval '1 day'
+         and not exists (select 1 from blocks b where (b.blocker_id = l.to_id and b.blocked_id = l.from_id) or (b.blocker_id = l.from_id and b.blocked_id = l.to_id))
+    )
+    select p.id, u.email,
+           count(*) filter (where ev.kind = 'm' and p.notify_email_msg)  as msgs,
+           count(*) filter (where ev.kind = 'l' and p.notify_email_like) as likes
+      from ev
+      join profiles p on p.id = ev.uid
+      join auth.users u on u.id = p.id
+      join private.member_notify mn on mn.user_id = p.id
+     where ev.created_at > mn.last_at
+       and p.status = 'approved'
+       and u.email is not null and u.email <> '' and u.email_confirmed_at is not null
+       and (mn.last_seen is null or mn.last_seen < t0 - interval '10 minutes')
+       and (mn.last_sent is null or mn.last_sent < t0 - interval '1 hour')
+       and (mn.day_on is distinct from current_date or mn.day_count < 6)
+     group by p.id, u.email
+    having count(*) filter (where ev.kind = 'm' and p.notify_email_msg) > 0
+        or count(*) filter (where ev.kind = 'l' and p.notify_email_like) > 0
+     limit 80
+  loop
+    parts := array[]::text[];
+    if r.msgs  > 0 then parts := parts || (r.msgs  || ' 則新訊息'); end if;
+    if r.likes > 0 then parts := parts || (r.likes || ' 個人對你心動'); end if;
+    html := '<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#111;max-width:480px">'
+      || '<p>你在微糖有 ' || array_to_string(parts, '、') || '。</p>'
+      || '<p><a href="https://onethirdsugar.com/#/' || case when r.msgs > 0 then 'matches' else 'likes' end
+      || '" style="display:inline-block;background:#111;color:#fff;padding:10px 22px;text-decoration:none">打開微糖查看</a></p>'
+      || '<p style="font-size:12px;color:#777">不想收到這類通知？登入後到「我的 → 設定 → Email 通知」關閉。</p></div>';
+    perform net.http_post(
+      url := 'https://api.resend.com/emails',
+      headers := jsonb_build_object('Authorization', 'Bearer ' || k, 'Content-Type', 'application/json'),
+      body := jsonb_build_object('from', cfg.from_email, 'to', jsonb_build_array(r.email),
+                'subject', '你在微糖有新動態', 'html', html));
+    update private.member_notify set last_at = t0, last_sent = t0,
+      day_count = case when day_on = current_date then day_count + 1 else 1 end, day_on = current_date
+     where user_id = r.id;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+revoke execute on function private.member_notify_run() from public, anon, authenticated;
