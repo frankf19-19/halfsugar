@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-i372NXUDTdHbn2vMRMF7KUvKuRTZ4w61Qs3dpXGxZg8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-K3WTAM/vq7FqZebVlK9cvXqiEk99zSQTPfUSPlmvPo8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -797,7 +797,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 /* 底部分頁列：和頁面分開、目前分頁更清楚 */
 @media(max-width:719px){
 .bnav{background:rgba(255,255,255,.96);-webkit-backdrop-filter:saturate(1.5) blur(16px);backdrop-filter:saturate(1.5) blur(16px);border-top:1px solid rgba(40,20,25,.10);box-shadow:0 -10px 28px rgba(40,20,25,.08)}
-.bnav a{color:#8C8783;font-size:11px;letter-spacing:.12em;padding:10px 0 8px;gap:5px;transition:color .15s}
+.bnav a{color:#6B6661;font-size:11px;letter-spacing:.12em;padding:10px 0 8px;gap:5px;transition:color .15s}
 .bnav a svg{width:23px;height:23px;stroke-width:1.35}
 .bnav a.active{color:var(--ink);font-weight:500}
 .bnav a.active svg{stroke-width:1.8}
@@ -805,7 +805,7 @@ html[data-theme=dark] .todo .td.done span{color:var(--ok)}
 .bnav a:active{opacity:.6}
 .bnav .badge{box-shadow:0 0 0 2px #fff;font-weight:500}
 html[data-theme=dark] .bnav{background:rgba(18,17,17,.96);border-top-color:rgba(255,255,255,.09);box-shadow:0 -10px 28px rgba(0,0,0,.45)}
-html[data-theme=dark] .bnav a{color:#8F8984}
+html[data-theme=dark] .bnav a{color:#A39C95}
 html[data-theme=dark] .bnav a.active{color:#F3ECE6}
 html[data-theme=dark] .bnav .badge{box-shadow:0 0 0 2px #121111}
 }
@@ -831,7 +831,11 @@ html[data-theme=dark] .todo .td.done{background:#1F1D1B}
 .msg{border-radius:20px;padding:10px 16px;line-height:1.65;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .msg.me{background:var(--ink);color:#fff;border-bottom-right-radius:6px}
 .msg.them{background:var(--paper);border-bottom-left-radius:6px}
-.msg .time{font-size:10.5px;letter-spacing:.04em;opacity:.75}
+.msg .time{font-size:10.5px;letter-spacing:.04em;opacity:1}
+.msg.them .time{color:#66615C}
+.msg.me .time{color:rgba(255,255,255,.8)}
+html[data-theme=dark] .msg.them .time{color:#B0A9A2}
+html[data-theme=dark] .msg.me .time{color:#4A4541}
 .msg .mimg{border-radius:12px}
 .msg.hasimg,.msg.recalled{box-shadow:none}
 .chat form{gap:8px}
@@ -1010,6 +1014,21 @@ button.tag:hover{box-shadow:0 3px 12px rgba(40,25,25,.12)}
 button.tag.on{box-shadow:0 3px 12px rgba(0,0,0,.18)}
 button.tag.on::before{margin-right:5px;width:auto}
 html[data-theme=dark] button.tag{border-color:#56504B;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+
+/* ===== 精修（v1.77） ===== */
+/* 無法修改的欄位：淡底＋鎖頭，不用虛線 */
+.locked{border:0!important;background:var(--paper);border-radius:4px;padding:14px 16px 14px 42px!important;position:relative}
+.locked::before{content:"";position:absolute;left:15px;top:17px;width:14px;height:16px;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16' fill='none' stroke='%23767676' stroke-width='1.3'%3E%3Crect x='1.5' y='7' width='11' height='8' rx='1'/%3E%3Cpath d='M4 7V4.6a3 3 0 0 1 6 0V7'/%3E%3C/svg%3E")}
+/* 下拉選單文字空間 */
+select{padding-left:12px!important;padding-right:30px!important;background-position:right 10px center!important}
+.sortsel select{padding-right:30px!important}
+/* 頁首標題：下方一道酒紅細線 */
+.phd h1::after{content:"";display:block;width:26px;height:1px;background:var(--wine);margin-top:12px}
+/* 探索：篩選到卡片的距離收緊 */
+@media(max-width:719px){.sortbar{margin-bottom:14px!important}#grid{margin-top:4px}}
+/* 卡片點下去的回饋 */
+.pcard:active .ph{opacity:.88}
+.list .item:active,.convo:active{background:var(--paper)}
 </style>
 </head>
 <body>
@@ -1058,7 +1077,7 @@ html[data-theme=dark] button.tag{border-color:#56504B;box-shadow:0 2px 8px rgba(
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.76.2';
+const BUILD = 'v1.77.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1161,7 +1180,7 @@ const WB = (() => {
   const SEG = (typeof Intl !== 'undefined' && Intl.Segmenter) ? new Intl.Segmenter('zh-Hant', { granularity: 'word' }) : null;
   const HAN = /[㐀-鿿豈-﫿]/, CLOSE = /[，。、；：？！）」』》〉】…—·～,.;:?!)\]%]/, OPEN = /[（「『《〈【(\[]/, SPACE = /[\s ⁠]/, TAIL = 5;
   const BLOCK = 'p,li,h1,h2,h3,h4,h5,h6,dd,dt,div,blockquote,td,th,label,summary,figcaption,section,a,button';
-  const SKIP = 'script,style,textarea,input,select,option,svg,code,pre,[contenteditable],#toast,.nowb';
+  const SKIP = 'script,style,textarea,input,select,option,svg,code,pre,[contenteditable],#toast,.nowb,button,.pwshow,.opener';
   const done = new WeakSet();
   function points(text, after) {
     if (!SEG || !HAN.test(text)) return [];
@@ -1175,18 +1194,29 @@ const WB = (() => {
     }
     return out;
   }
-  function fixNode(n) {
-    if (done.has(n) || !n.parentElement || !n.isConnected) return;
-    const par = n.parentElement; if (par.closest(SKIP)) return;
-    const cs = getComputedStyle(par); if (/^(nowrap|pre)$/.test(cs.whiteSpace) || /flex|grid/.test(cs.display)) { done.add(n); return; }   // flex／grid 容器裡包 span 會變成一格一格，跳過
-    let t = n.data.replace(/\b(Sugar|1\/3) (Daddy|Mommy|Baby|Dating|Sugar)\b/g, '$1\u00a0$2').replace(/(\d) (?=[\u3400-\u9fff])/g, '$1\u00a0'); let blk = par;
+  /* 先讀（版面樣式）再寫（換成 span），避免每個文字節點都強迫瀏覽器重算樣式 */
+  function plan(n) {
+    if (done.has(n) || !n.parentElement || !n.isConnected) return null;
+    const d = n.data;
+    if (!/\S/.test(d)) { done.add(n); return null; }   // 只有空白的文字節點不動（改成不換行空白會多出一行空白）
+    const hasHan = HAN.test(d);
+    if (!hasHan && !/Sugar |1\/3 |\d /.test(d)) { done.add(n); return null; }
+    const par = n.parentElement; if (par.closest(SKIP)) { done.add(n); return null; }
+    const cs = getComputedStyle(par); if (/^(nowrap|pre)$/.test(cs.whiteSpace) || /flex|grid/.test(cs.display)) { done.add(n); return null; }   // flex／grid 容器裡包 span 會變成一格一格，跳過
+    let blk = par;
     while (blk.parentElement && blk !== document.body && /^inline/.test(getComputedStyle(blk).display) && !blk.matches(BLOCK)) blk = blk.parentElement;
-    if (!HAN.test(t) && !HAN.test(blk.textContent)) { done.add(n); return; }
+    if (!hasHan && !HAN.test(blk.textContent)) { done.add(n); return null; }
     let after = 0; try { const r = document.createRange(); r.setStartAfter(n); r.setEnd(blk, blk.childNodes.length); after = r.toString().length; } catch(e) {}
+    return { n, after };
+  }
+  function apply({ n, after }) {
+    if (!n.isConnected) return;
+    let t = n.data.replace(/\b(Sugar|1\/3) (Daddy|Mommy|Baby|Dating|Sugar)\b/g, '$1 $2').replace(/(\d) (?=[㐀-鿿])/g, '$1 ');
     /* 段落最後幾個字中間的空白改成不換行空白（例如「每天再開 1 個」） */
-    if (/ /.test(t)) { const a = [...t]; for (let i = 0; i < a.length; i++) if (a[i] === ' ' && a.length - i + after < TAIL + 1 && i > 0) a[i] = '\u00a0'; const t2 = a.join(''); if (t2 !== t) { t = t2; } }
-    if (!HAN.test(t)) { done.add(n); if (t !== n.data) n.data = t; return; }
-    const pts = points(t, after); done.add(n);
+    if (/ /.test(t)) { const a = [...t]; for (let i = 1; i < a.length; i++) if (a[i] === ' ' && a.length - i + after < TAIL + 1) a[i] = ' '; t = a.join(''); }
+    done.add(n);
+    if (!HAN.test(t)) { if (t !== n.data) n.data = t; return; }
+    const pts = points(t, after);
     /* 每一段「不能拆開的字」包成不換行的 span；段與段之間照一般中文規則換行（iPhone Safari 也一致） */
     const cuts = [0, ...pts, t.length], f = document.createDocumentFragment(); let changed = false;
     for (let i = 0; i < cuts.length - 1; i++) {
@@ -1200,16 +1230,17 @@ const WB = (() => {
     if (!changed) { if (t !== n.data) n.data = t; return; }
     n.replaceWith(f);
   }
-  function fix(root) {
-    if (!SEG || !root) return;
-    if (root.nodeType === 3) return fixNode(root);
+  function collect(root, list) {
+    if (!root) return;
+    if (root.nodeType === 3) { if (!done.has(root)) list.push(root); return; }
     if (root.nodeType !== 1 || root.closest?.(SKIP)) return;
-    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); const list = []; let n;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
     while (n = w.nextNode()) if (!done.has(n)) list.push(n);
-    list.forEach(fixNode);
   }
+  function run(list) { const plans = list.map(plan).filter(Boolean); plans.forEach(apply); }
+  function fix(root) { if (!SEG) return; const list = []; collect(root, list); run(list); }
   if (SEG) {
-    const mo = new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(fix); });
+    const mo = new MutationObserver(ms => { const list = []; for (const m of ms) m.addedNodes.forEach(x => collect(x, list)); if (list.length) run(list); });
     const go = () => { fix(document.body); mo.observe(document.body, { childList: true, subtree: true }); };
     document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', go) : go();
   }
@@ -1270,7 +1301,7 @@ function modal(html, opt){ if(window.__onModalClose){ try{ window.__onModalClose
     if(history.state && history.state.yyDead && deadHref===location.href) history.replaceState({ yyModal:1 }, '');   // 沿用剛失效的那筆，不會越疊越多
     else history.pushState({ yyModal:1 }, '');
     deadHref = null; modalHist = true; }catch(_){} } }
-function closeModal(){ holdModal = false; if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; const wasRec = recovering; recovering=false; if(wasRec) setTimeout(()=>route(), 0);   // 重設密碼視窗被關掉：已經登入了，畫面要跟著更新 document.body.classList.remove('modal-open');
+function closeModal(){ holdModal = false; if(window.__onModalClose){ try{ window.__onModalClose(); }catch(_){} window.__onModalClose=null; } $('#modal').innerHTML=''; const wasRec = recovering; recovering=false; if(wasRec) setTimeout(()=>route(), 0);   document.body.classList.remove('modal-open');   // 重設密碼視窗被關掉：已經登入了，畫面要跟著更新
   const rf = window.__modalReturn; window.__modalReturn = null; if(rf && rf.isConnected && rf.focus) try{ rf.focus({ preventScroll:true }); }catch(_){}
   if(history.state && history.state.yyModal){ try{ history.replaceState({ yyDead:1 }, ''); deadHref = location.href; }catch(_){} }
   modalHist = false; }
@@ -1717,7 +1748,7 @@ async function viewAuth(){
         ${mode==='register'?'<p class="tiny dim">繼續即表示你確認已年滿 18 歲，並同意<a href="#/terms" target="_blank">使用條款</a>、<a href="#/privacy" target="_blank">隱私政策</a>與<a href="#/guidelines" target="_blank">社群守則</a>。我們只會取得你的 Email、名稱與大頭貼，不會公開你的名稱，也不會在你的社群帳號發文。</p>':''}
         <div class="or"><span>或使用 Email</span></div></div>`;
       box.querySelectorAll('.obtn').forEach(b=>b.onclick=()=>{ b.disabled=true; oauthSignIn(b.dataset.k); }); });
-    $('.pwshow').onclick = e => { const i=e.target.previousElementSibling; const sh=i.type==='password'; i.type=sh?'text':'password'; e.target.textContent=sh?'隱藏':'顯示'; };
+    $('.pwshow').onclick = e => { const bt=e.currentTarget, i=bt.previousElementSibling; const sh=i.type==='password'; i.type=sh?'text':'password'; bt.textContent=sh?'隱藏':'顯示'; };
     $('#authForm').onsubmit = async e => {
       e.preventDefault(); const f = new FormData(e.target); const email=f.get('email').trim(), password=f.get('password');
       const btn = e.target.querySelector('button[type=submit]'); btn.disabled=true;

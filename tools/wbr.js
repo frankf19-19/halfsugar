@@ -56,7 +56,7 @@ if (typeof module !== 'undefined' && require.main === module) {
       for (let k = 0; k < parts.length; k++) {
         let pt = parts[k]; if (k % 2 === 1) { out += pt; continue; }
         let rest = 0; for (let m = k + 1; m < parts.length; m++) rest += m % 2 ? 1 : parts[m].length;
-        { const a = [...pt]; for (let q = 1; q < a.length; q++) if (a[q] === ' ' && a.length - q + rest + after < 6) a[q] = '\u00a0'; pt = a.join(''); }
+        if (/\S/.test(pt)) { const a = [...pt]; for (let q = 1; q < a.length; q++) if (a[q] === ' ' && a.length - q + rest + after < 6) a[q] = '\u00a0'; pt = a.join(''); }
         const pts = WB.points(pt, rest + after); const cuts = [0, ...pts, pt.length];
         for (let c = 0; c < cuts.length - 1; c++) {
           for (const seg of pt.slice(cuts[c], cuts[c + 1]).split(/( +)/)) { if (!seg) continue;
