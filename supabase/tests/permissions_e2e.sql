@@ -4,7 +4,7 @@ declare
   A uuid := gen_random_uuid(); B uuid := gen_random_uuid(); C uuid := gen_random_uuid();
   D uuid := gen_random_uuid(); E uuid := gen_random_uuid();
   Z uuid := gen_random_uuid(); P uuid := gen_random_uuid(); Q uuid := gen_random_uuid(); R uuid := gen_random_uuid(); S2 uuid := gen_random_uuid(); K uuid := gen_random_uuid(); T uuid; i int; F uuid := gen_random_uuid(); G uuid := gen_random_uuid(); H uuid := gen_random_uuid(); rid uuid; Y uuid := gen_random_uuid();
-  out text[] := '{}'; n int; v text; v2 text; mid uuid; ok boolean;
+  out text[] := '{}'; n int; v text; st51 text; mid uuid; ok boolean;
   AD uuid := gen_random_uuid(); W uuid := gen_random_uuid(); X1 uuid := gen_random_uuid(); X2 uuid := gen_random_uuid(); cm uuid; cm2 uuid; m1 bigint; m2 bigint; rid2 uuid; V1 uuid := gen_random_uuid(); V2 uuid := gen_random_uuid(); cm3 uuid; iv uuid; tk text;
   N1 uuid := gen_random_uuid(); N2 uuid := gen_random_uuid(); N3 uuid := gen_random_uuid(); N4 uuid := gen_random_uuid(); j jsonb; Z1 uuid := gen_random_uuid(); Z2 uuid := gen_random_uuid(); Z3 uuid := gen_random_uuid(); Z4 uuid := gen_random_uuid(); Q1 uuid := gen_random_uuid(); Q2 uuid := gen_random_uuid(); Q3 uuid := gen_random_uuid(); Q4 uuid := gen_random_uuid(); qm uuid;
 begin
@@ -1059,7 +1059,7 @@ begin
     update public.photos set blurred=false where path = BB||'/5.jpg';
     update public.photos set blurred=true where path = BB||'/5.jpg';
     execute 'reset role';
-    select status into v2 from public.photos where path = BB||'/5.jpg'; v := v||','||v2;
+    select status into st51 from public.photos where path = BB||'/5.jpg'; v := v||','||st51;
   end;
   perform set_config('request.jwt.claims','',true); perform set_config('request.jwt.claim.sub','',true);
   out := array_append(out, ('51 模糊照 = '||v||' (應為擋下,可上傳模糊版,刪模糊版=0,重傳擋下,列=1,原圖=0,模糊版=1,授權後原圖=1,pending)')::text);
