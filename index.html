@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-PZu8alhydwIwytBXgchFHptjLwNVqQd/VN78yar7UTY=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-m4BIHw00bMCNvpa8HZ/5yrjJ8hrZ4SR1qkQtagX1fsE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1203,7 +1203,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.91.9';
+const BUILD = 'v1.92.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1245,6 +1245,13 @@ const ORIENT_SEE = { 'male-female':'想認識男生的女生', 'female-male':'�
 const orientSee = k => ORIENT_SEE[k] ? `探索裡只會出現「${ORIENT_SEE[k]}」，也只有他們看得到你。` : '';
 const ROLES = { daddy:'Sugar Daddy', mommy:'Sugar Mommy', baby:'甜心' };
 const ROLE_DESC = { daddy:'事業有成，願意照顧對方的男性', mommy:'事業有成，願意照顧對方的女性', baby:'希望認識成熟、穩定對象的甜心' };
+// 身分說明：甜心要講清楚「想認識的是 Sugar Daddy 還是 Sugar Mommy」
+const roleDesc = (role, gender, looking) => {
+  if(role==='daddy') return 'Sugar Daddy：照顧對方的一方，事業有成、願意在生活上照顧對方的男性。';
+  if(role==='mommy') return 'Sugar Mommy：照顧對方的一方，事業有成、願意在生活上照顧對方的女性。';
+  if(role==='baby'){ const who = looking==='female' ? 'Sugar Mommy（事業有成、願意照顧你的女性）' : looking==='male' ? 'Sugar Daddy（事業有成、願意照顧你的男性）' : 'Sugar Daddy 或 Sugar Mommy';
+    return `甜心：被照顧的一方${gender==='male'?'（男生也可以是甜心）':''}，你想認識的是 ${who}。`; }
+  return ''; };
 const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'業者招攬／廣告', minor:'疑似未成年', other:'其他' };
 const STATUS_TXT = { incomplete:'尚未完成建檔', pending:'審核中', approved:'已上架', rejected:'未通過審核', suspended:'已停權' };
 const BAD_WORDS = ['援交','援助交際','約炮','外送茶','茶莊','魚訊','出場','買春','賣春','性交易','嫖','陪睡','包夜','全套','半套','定點','價碼','一次多少','一晚多少','代聊','line id','加賴'];
@@ -1924,8 +1931,11 @@ function profileFormHtml(p={}){
     <label>想認識的對象 * <span class="lockwarn">⚠ 送出後不能改</span></label>
     <div class="orient-note lockbox">這會決定你在「探索」看到誰、誰看得到你。<b>選了就不能再改，請確認自己的性別和想認識的對象。</b></div>
     <div class="roles orient">${Object.entries(ORIENT).map(([k,v])=>`<label class="rl"><input type="radio" name="orient" value="${k}" required><span><b>${v.replace('我是','').replace('，想認識','找')}</b><small>${v}</small></span></label>`).join('')}</div><p class="choice-desc orient-see hidden"></p>`}
-    <label>我的身分 *</label>
-    <div class="roles" id="rolePick">${Object.entries(ROLES).filter(([k])=>!(p.gender==='male'&&k==='mommy')&&!(p.gender==='female'&&k==='daddy')).map(([k,v])=>`<label class="rl" data-r="${k}"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div><p class="choice-desc hidden" id="roleDesc"></p>
+    ${p.role && !['incomplete','rejected'].includes(p.status) ? `<label>我的身分</label>
+    <div class="locked"><b>${ROLES[p.role]}</b><small>${roleDesc(p.role, p.gender, p.looking_for)}身分送出後就無法修改。如有特殊需要，請<a href="#" data-support>聯絡客服</a>。</small></div><input type="hidden" name="role" value="${p.role}">` : `
+    <label>我的身分 * <span class="lockwarn">⚠ 送出後不能改</span></label>
+    <div class="lockbox" style="margin-bottom:10px">Sugar Daddy／Sugar Mommy 是<b>照顧對方的一方</b>；甜心是<b>被照顧的一方</b>，男生女生都可以是甜心。<br>例如：男生想找 Sugar Mommy，請選「甜心」。<b>選了就不能再改。</b></div>
+    <div class="roles" id="rolePick">${Object.entries(ROLES).filter(([k])=>!(p.gender==='male'&&k==='mommy')&&!(p.gender==='female'&&k==='daddy')).map(([k,v])=>`<label class="rl" data-r="${k}"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div><p class="choice-desc hidden" id="roleDesc"></p>`}
     <div id="budgetBox" class="${p.role==='daddy'||p.role==='mommy'?'':'hidden'}">
       <label>生活方式預算 *</label>
       <select name="budget"><option value="">請選擇</option>${Object.entries(BUDGETS).map(([k,v])=>`<option value="${k}" ${p.budget===k?'selected':''}>${v}${BUDGET_AMT[k]?'（約 '+BUDGET_AMT[k]+'／月）':''}</option>`).join('')}</select>
@@ -1975,8 +1985,10 @@ function profileFormHtml(p={}){
 function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',()=>{ $('#budgetBox')?.classList.toggle('hidden', r.value==='baby'); const eb=$('#ebBox'); if(eb) eb.style.display = r.value==='baby'?'':'none'; }));
   document.querySelectorAll('input[name=orient]').forEach(r=>r.addEventListener('change',()=>{ const os=document.querySelector('.orient-see'); if(os){ os.innerHTML = '<b>你選的是「'+esc(ORIENT[r.value]||'')+'」</b><br>'+esc(orientSee(r.value)); os.classList.remove('hidden'); } const c=$('#cupBox'); if(c) c.style.display = r.value.startsWith('male')?'none':'';
     const male=r.value.startsWith('male'); document.querySelectorAll('#rolePick .rl').forEach(l=>{ const hide=(male&&l.dataset.r==='mommy')||(!male&&l.dataset.r==='daddy'); l.style.display=hide?'none':''; if(hide){ const i=l.querySelector('input'); if(i.checked){ i.checked=false; $('#budgetBox')?.classList.add('hidden'); } } }); }));
-  const showRole = () => { const r=document.querySelector('input[name=role]:checked'), d=$('#roleDesc'); if(!d) return; if(r && ROLE_DESC[r.value]){ d.textContent = ROLE_DESC[r.value]+'。'; d.classList.remove('hidden'); } else d.classList.add('hidden'); };
-  document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change', showRole)); showRole();
+  const showRole = () => { const r=document.querySelector('input[name=role]:checked'), d=$('#roleDesc'); if(!d) return;
+    const o=document.querySelector('input[name=orient]:checked')?.value; const [g,l] = o ? o.split('-') : [me?.gender, me?.looking_for];
+    if(r && ROLES[r.value]){ d.textContent = roleDesc(r.value, g, l); d.classList.remove('hidden'); } else d.classList.add('hidden'); };
+  document.querySelectorAll('input[name=role],input[name=orient]').forEach(r=>r.addEventListener('change', showRole)); showRole();
   $('#relPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(b) b.classList.toggle('on'); }); $('#langPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(b) b.classList.toggle('on'); }); $('#tagPick')?.addEventListener('click', e=>{ const b=e.target.closest('.tag'); if(!b) return;
   if(!b.classList.contains('on') && $('#tagPick').querySelectorAll('.on').length>=8) return toast('最多 8 個興趣'); b.classList.toggle('on'); }); }
 function readProfileForm(form){

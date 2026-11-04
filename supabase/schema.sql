@@ -3595,3 +3595,16 @@ $$;
 drop policy if exists "photos_blur_admin_insert" on storage.objects;
 create policy "photos_blur_admin_insert" on storage.objects for insert to authenticated
   with check (bucket_id = 'photos' and public.is_admin() and name ~ '/[0-9]+b\.jpg$');
+
+-- ============ v0.64：身分（Sugar Daddy／Mommy／甜心）送出審核後就不能改（跟暱稱一樣，只有被退件時可以改）
+-- 名字用 profiles_a_ 開頭，讓它比 profiles_guard_trg 先跑（預算欄位的清理要看到鎖定後的身分）
+create or replace function public.profiles_role_lock()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or public.is_admin() then return new; end if;
+  if old.role is not null and old.status not in ('incomplete','rejected') then new.role := old.role; end if;
+  return new;
+end $$;
+drop trigger if exists profiles_a_role_lock_trg on public.profiles;
+create trigger profiles_a_role_lock_trg before update on public.profiles
+  for each row execute function public.profiles_role_lock();
