@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-Q/OsbHcLAuooH23VuQGpgpg1aRkULeKeYP5/hsv2C1Y=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-JFd4yI6E+hIVTsaBiUfJ2liAOPyW/gm8snHzDMF0DMA=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1203,7 +1203,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.92.1';
+const BUILD = 'v1.92.2';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1257,7 +1257,7 @@ const roleDesc = (role, gender, looking) => {
   if(role==='daddy') return 'Sugar Daddy：照顧對方的一方，事業有成、願意在生活上照顧對方的男性。';
   if(role==='mommy') return 'Sugar Mommy：照顧對方的一方，事業有成、願意在生活上照顧對方的女性。';
   if(role==='baby'){ const who = looking==='female' ? 'Sugar Mommy（事業有成、願意照顧你的女性）' : looking==='male' ? 'Sugar Daddy（事業有成、願意照顧你的男性）' : 'Sugar Daddy 或 Sugar Mommy';
-    return `甜心：被照顧的一方${gender==='male'?'（男生也可以是甜心）':''}，你想認識的是 ${who}。`; }
+    return `甜心：被照顧的一方${gender==='male'?'（男生也可以是甜心）':gender==='female'?'（女生）':''}，你想認識的是 ${who}。`; }
   return ''; };
 const REPORT_REASONS = { fake:'假照片／冒用身分', harass:'騷擾、辱罵', money:'要求或提供金錢交易', adult_industry:'業者招攬／廣告', minor:'疑似未成年', other:'其他' };
 const STATUS_TXT = { incomplete:'尚未完成建檔', pending:'審核中', approved:'已上架', rejected:'未通過審核', suspended:'已停權' };
@@ -1945,7 +1945,7 @@ function profileFormHtml(p={}){
     ${p.role && !['incomplete','rejected'].includes(p.status) ? `<label>我的身分</label>
     <div class="locked"><b>${ROLES[p.role]}</b><small>${roleDesc(p.role, p.gender, p.looking_for)}身分送出後就無法修改。如有特殊需要，請<a href="#" data-support>聯絡客服</a>。</small></div><input type="hidden" name="role" value="${p.role}">` : `
     <label>我的身分 * <span class="lockwarn">⚠ 送出後不能改</span></label>
-    <div class="lockbox" style="margin-bottom:10px">Sugar Daddy／Sugar Mommy 是<b>照顧對方的一方</b>；甜心是<b>被照顧的一方</b>，男生女生都可以是甜心。<br>例如：男生想找 Sugar Mommy，請選「甜心」。<b>選了就不能再改。</b></div>
+    <div class="lockbox" style="margin-bottom:10px">Sugar Daddy／Sugar Mommy 是<b>照顧對方的一方</b>；甜心是<b>被照顧的一方</b>，男生女生都可以是甜心。<br>例如：女生想找 Sugar Daddy、男生想找 Sugar Mommy，都請選「甜心」。<b>選了就不能再改。</b></div>
     <div class="roles" id="rolePick">${Object.entries(ROLES).filter(([k])=>!(p.gender==='male'&&k==='mommy')&&!(p.gender==='female'&&k==='daddy')).map(([k,v])=>`<label class="rl" data-r="${k}"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div><p class="choice-desc hidden" id="roleDesc"></p>`}
     <div id="budgetBox" class="${p.role==='daddy'||p.role==='mommy'?'':'hidden'}">
       <label>生活方式預算 *</label>
