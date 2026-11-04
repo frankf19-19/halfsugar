@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-UdYaafH/lwHwaf/FjpyiVfabru6/FKkomNvWT40pn3g=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-12y6XQTJ0lx6Pw6X0cs3PuBsg0w9v1F+gnO7H8UbKi8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1120,6 +1120,21 @@ html[data-theme=dark] .oseen.on{color:#7BCB9A}
 html[data-theme=dark] button.tag:not(.on){background:#35302C!important;border:1px solid #4A443F!important;color:#ECE7E1}
 html[data-theme=dark] .zmode{border-color:#ECE7E1}
 .loadold{display:block;margin:4px auto 14px;padding:8px 18px;font:inherit;font-size:12px;letter-spacing:.08em;color:var(--grey);background:transparent;border:1px solid var(--line,#E2DDD6);border-radius:0;cursor:pointer}
+details.extra{margin:6px 0 14px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+details.extra>summary{list-style:none;cursor:pointer;padding:14px 0;font-size:14px;letter-spacing:.06em;display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;min-height:48px;color:var(--ink);text-decoration:none}
+details.extra>summary span.w{text-decoration:none}
+details.extra>summary::-webkit-details-marker{display:none}
+details.extra>summary::before{content:"＋";font-size:16px;color:var(--wine);width:18px}
+details.extra[open]>summary::before{content:"－"}
+details.extra>summary small{color:var(--grey);font-size:12px;letter-spacing:.04em;white-space:nowrap}
+details.extra>.row:last-of-type{margin-bottom:0}
+details.extra>.tags{margin-bottom:16px}
+.stickycta{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid var(--rule);transform:translateY(110%);transition:transform .25s}
+.stickycta.show{transform:none}
+.stickycta span{font-size:13px;letter-spacing:.08em;color:var(--grey)}
+.stickycta .btn{min-height:44px;padding:0 26px}
+@media(min-width:720px){.stickycta{display:none}}
+html[data-theme=dark] .stickycta{background:rgba(18,17,17,.96);border-top-color:#3A3335}
 </style>
 </head>
 <body>
@@ -1168,7 +1183,7 @@ html[data-theme=dark] .zmode{border-color:#ECE7E1}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.86.8';
+const BUILD = 'v1.87.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1665,7 +1680,7 @@ if(window.visualViewport){ const vv = window.visualViewport; let kbWas = false;
   vv.addEventListener('resize', upd); upd(); }
 window.addEventListener('offline', ()=>toast('目前沒有網路連線', 4000));
 window.addEventListener('online', ()=>{ toast('已恢復連線'); if($('#retryBtn')) route(); });
-window.addEventListener('scroll', ()=>document.body.classList.toggle('scrolled', window.scrollY>40), {passive:true});
+window.addEventListener('scroll', ()=>{ document.body.classList.toggle('scrolled', window.scrollY>40); const sc=$('#stickyCta'); if(sc) sc.classList.toggle('show', window.scrollY > innerHeight*0.9); }, {passive:true});
 
 /* ---------- 狀態提示列 ---------- */
 function statusBanner(){
@@ -1712,6 +1727,7 @@ async function viewLanding(){
   const two = (light) => me ? `<a class="btn ${light?'light primary':'primary'}" href="#/browse">開始探索</a>`
     : `<a class="btn ${light?'light primary':'primary'}" href="#/auth">申請加入</a><a class="btn ${light?'light':''}" href="#/auth?mode=login">登入</a>`;
   $('#app').innerHTML = `<div class="landing">
+  ${me?'':'<div class="stickycta" id="stickyCta"><span>開站期間全部免費</span><a class="btn primary" href="#/auth">免費加入</a></div>'}
   <section class="hero">
     <div class="pn" style="background-image:url('${IMG.h1}')"></div>
     <div class="pn" style="background-image:url('${IMG.h2}')"></div>
@@ -1916,7 +1932,7 @@ function profileFormHtml(p={}){
     <label>想認識的對象</label>
     <div class="locked"><b>${orientText(p)}</b><small>${orientSee(p.gender+'-'+p.looking_for)}這項設定送出後就無法修改。如有特殊需要，請<a href="#" data-support>聯絡客服</a>。</small></div>` : `
     <label>想認識的對象 *</label>
-    <div class="orient-note">請選擇你的性別與想認識的對象。<b>這會決定你在「探索」看到誰、誰看得到你，送出審核後就無法修改</b>，請確認後再選。</div>
+    <div class="orient-note">這會決定你在「探索」看到誰、誰看得到你。</div>
     <div class="roles orient">${Object.entries(ORIENT).map(([k,v])=>`<label class="rl"><input type="radio" name="orient" value="${k}" required><span><b>${v.replace('我是','').replace('，想認識','找')}</b><small>${v}</small></span></label>`).join('')}</div><p class="choice-desc orient-see hidden"></p>`}
     <label>我的身分 *</label>
     <div class="roles" id="rolePick">${Object.entries(ROLES).filter(([k])=>!(p.gender==='male'&&k==='mommy')&&!(p.gender==='female'&&k==='daddy')).map(([k,v])=>`<label class="rl" data-r="${k}"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div><p class="choice-desc hidden" id="roleDesc"></p>
@@ -1927,7 +1943,7 @@ function profileFormHtml(p={}){
     </div>
     <div class="fsec"><span>2</span>基本資料</div>
     ${p.nickname && !['incomplete','rejected'].includes(p.status) ? `<label>暱稱</label><div class="locked"><b>${esc(p.nickname)}</b><small>暱稱確定後就無法修改。</small></div><input type="hidden" name="nickname" value="${esc(p.nickname)}">`
-    : `<label>暱稱 *</label><input name="nickname" required maxlength="20" autocomplete="nickname" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="tiny" style="color:var(--wine);margin-top:6px">送出審核後，暱稱就<b>無法再修改</b>，請想好再填。</p>`}
+    : `<label>暱稱 *</label><input name="nickname" required maxlength="20" autocomplete="nickname" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="tiny dim" style="margin-top:6px">其他會員看到的名字，送出後不能改。</p>`}
 
     <div class="row">
       <div class="grow"><label>年齡 *</label><select name="birth_year" required><option value="">請選擇</option>${years.map(y=>`<option value="${y}" ${p.birth_year==y?'selected':''}>${age(y)} 歲</option>`).join('')}</select></div>
@@ -1941,6 +1957,7 @@ function profileFormHtml(p={}){
       <div class="grow"><label>身材 *</label><select name="body_type" required><option value="">請選擇</option>${Object.entries(BODY).map(([k,v])=>`<option value="${k}" ${p.body_type===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="grow" id="cupBox" ${p.gender==='male'?'style="display:none"':''}><label>罩杯（選填）</label><select name="cup"><option value="">不填</option>${CUPS.map(c=>`<option ${p.cup===c?'selected':''}>${c}</option>`).join('')}</select></div>
     </div>
+    <details class="extra" ${p.zodiac||p.drink||p.smoke||(p.languages||[]).length?'open':''}><summary>更多關於你（選填）<small>星座・喝酒・抽菸・語言</small></summary>
     <div class="row">
       <div class="grow"><label>星座（選填）</label><select name="zodiac"><option value="">不填</option>${Object.entries(ZODIAC).map(([k,v])=>`<option value="${k}" ${p.zodiac===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="grow" aria-hidden="true"></div>
@@ -1951,6 +1968,7 @@ function profileFormHtml(p={}){
     </div>
     <label>會說的語言（選填，可複選）</label>
     <div class="tags" id="langPick">${Object.entries(LANGS).map(([k,v])=>`<button type="button" class="tag ${(p.languages||[]).includes(k)?'on':''}" data-l="${k}">${v}</button>`).join('')}</div>
+    </details>
     <div class="fsec"><span>3</span>想要的相處</div>
     <label>相處方式（點選，可複選）</label>
     <div class="tags" id="relPick">${Object.entries(RELS).map(([k,v])=>`<button type="button" class="tag ${(p.relation_types||[]).includes(k)?'on':''}" data-r="${k}">${v}</button>`).join('')}</div>
@@ -2253,7 +2271,7 @@ async function viewOnboarding(){
     <div class="obsteps"><span class="done">1　手機驗證 ✓</span><span class="on">2　建立檔案</span></div>
     <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
-    <div class="banner">以下基本資料都要填完才能送出。<b>暱稱</b>、<b>性別</b>與<b>想認識的對象</b>送出後就<b>無法修改</b>，請先確認再送出。</div>
+    <div class="banner">有 * 的都要填。<b>暱稱、性別、想認識的對象</b>送出後不能改，其他都可以之後再改。</div>
     <form id="obForm" class="card">
       ${profileFormHtml(me)}
       <div class="fsec"><span>5</span>照片</div>
@@ -2968,9 +2986,8 @@ async function viewMe(){
         ${me.role?`<p class="tiny dim" style="letter-spacing:.14em;margin-top:6px"><span style="white-space:nowrap">${ROLES[me.role]}</span>${me.city?'　<span style="white-space:nowrap">'+esc(me.city)+'</span>':''}${age(me.birth_year)?'　<span style="white-space:nowrap">'+age(me.birth_year)+' 歲</span>':''}</p>`:''}</div>
     </header>
     ${todo.some(t=>!t[1])?`<div class="prog"><div class="pl"><span>完成你的檔案</span><span>${todo.filter(t=>t[1]).length} ／ ${todo.length}</span></div><div class="bar"><i style="width:${Math.round(todo.filter(t=>t[1]).length/todo.length*100)}%"></i></div>
-      <div class="todo">${todo.map(([tab,done,txt])=>`<button type="button" class="td ${done?'done':''}" data-go="${tab==='相簿'?'album':'verify'}"><span>${done?'✓':'○'}</span>${txt}</button>`).join('')}</div></div>`:''}
+      <div class="todo">${todo.map(([tab,done,txt])=>`<button type="button" class="td ${done?'done':''}" data-go="${tab==='相簿'?'album':'verify'}"><span>${done?'✓':'→'}</span>${txt}</button>`).join('')}</div></div>`:''}
     <div class="tabs metabs" role="tablist">${TABS.map(([k,v,n])=>`<button type="button" role="tab" aria-selected="${k===meTab}" class="${k===meTab?'on':''}" data-mt="${k}">${v}${n?`<i class="dot">${n}</i>`:''}</button>`).join('')}</div>
-    <div class="card mb" id="availCard"></div>
     <div id="openItems"></div>
     <section class="mt-pane" data-mt="album">
     <div class="card" id="voiceCard"><h3 style="font-size:17px;margin-bottom:6px">語音自我介紹</h3><p class="tiny dim">錄一段 15 秒內的聲音，說說你是怎樣的人。審核通過後，方向吻合的會員打開你的檔案就能聽。</p><div id="vcBody" class="mt"><div class="spinner"></div></div></div>
@@ -2987,6 +3004,7 @@ async function viewMe(){
     ${wealthCard}
     </section>
     <section class="mt-pane" data-mt="profile">
+    <div class="card mb" id="availCard"></div>
     <form class="card" id="meForm"><h3 style="font-size:17px">編輯檔案</h3><p class="tiny dim">修改自介、職業、興趣或頭像後會重新送審。審核期間新的會員暫時看不到你，正在聊天的人仍可以繼續聊。</p>
       ${profileFormHtml(me)}<button class="btn primary block mt2" type="submit">儲存</button></form>
     </section>
