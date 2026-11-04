@@ -549,6 +549,11 @@ footer .copy{margin-top:12px}
 @media(max-width:600px){h1{font-size:26px;margin-top:40px}.top a.btn{padding:0 14px}}
 '''
 
+import sys, os as _os
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from guides_extra import EXTRA
+PAGES += EXTRA
+
 def page(p, hub_items=None, hub_ld=None):
     e = html.escape
     url = f"{SITE}/{p['slug']}/"
