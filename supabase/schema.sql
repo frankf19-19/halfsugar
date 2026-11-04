@@ -3430,3 +3430,114 @@ end $$;
 drop trigger if exists profiles_zunsuspend on public.profiles;
 create trigger profiles_zunsuspend before update on public.profiles for each row execute function public.profiles_unsuspend_check();
 revoke execute on function public.profiles_unsuspend_check() from public, anon, authenticated;
+
+-- ============ v0.61 上線前安全審查修正 ============
+-- 1. 「開始刪除帳號」的一小時緩衝期不再允許刪除已送出的聊天圖片（避免傳圖後刪證據再反悔不刪帳號）
+drop policy if exists "chat_storage_delete" on storage.objects;
+create policy "chat_storage_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'chat' and (public.is_admin()
+         or ((storage.foldername(name))[1] = auth.uid()::text and not private.is_evidence_photo(name)
+             and not private.chat_file_used(name))));
+-- 刪帳號時聊天圖片不必先清空（帳號刪除後對話一併消失，檔案只有管理員能讀）
+create or replace function public.delete_my_account()
+returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() = 'suspended' then
+    raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
+  end if;
+  if exists (select 1 from storage.objects where bucket_id in ('photos','verify','person','voice') and name like uid::text || '/%') then
+    raise exception '照片檔案還沒刪完，請再按一次刪除';
+  end if;
+  delete from public.photos where user_id = uid;
+  delete from private.account_deleting d where d.uid = auth.uid();
+  delete from auth.users where id = uid;
+end $$;
+
+-- 2. 頭像只要變動（含清空後再上傳），真人認證標章一律清除；開始刪除帳號時也清除
+create or replace function public.profiles_avatar_badge()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.avatar_path is distinct from old.avatar_path then new.person_verified_at := null; end if;
+  return new;
+end $$;
+revoke all on function public.profiles_avatar_badge() from public, anon, authenticated;
+drop trigger if exists profiles_zzz_avatar_badge on public.profiles;
+create trigger profiles_zzz_avatar_badge before update of avatar_path on public.profiles
+  for each row execute function public.profiles_avatar_badge();
+
+create or replace function public.begin_account_deletion()
+returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception '請先登入'; end if;
+  if public.my_status() = 'suspended' then
+    raise exception '你的帳號有待處理的事項，暫時無法自行刪除。如有疑問請聯絡客服。';
+  end if;
+  insert into private.account_deleting (uid) values (auth.uid()) on conflict on constraint account_deleting_pkey do update set at = now();
+  perform set_config('halfsugar.deleting', '1', true);
+  update public.profiles set hidden = true, avatar_path = null, approved_avatar_path = null, person_verified_at = null where id = uid;
+  delete from public.photos where user_id = uid;
+  delete from public.wealth_verifications where user_id = uid;
+  delete from public.person_verifications where user_id = uid;
+  if to_regclass('public.voice_intros') is not null then execute 'delete from public.voice_intros where user_id = $1' using uid; end if;
+  perform set_config('halfsugar.deleting', '0', true);
+end $$;
+
+-- 3. 看過我的人（含審核中會員）一定可以被封鎖、檢舉
+create or replace function private.viewed_me(x uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profile_views v where v.viewer_id = x and v.viewed_id = auth.uid());
+$$;
+revoke all on function private.viewed_me(uuid) from public, anon;
+grant execute on function private.viewed_me(uuid) to authenticated;
+drop policy if exists "blocks_insert" on public.blocks;
+create policy "blocks_insert" on public.blocks for insert to authenticated
+  with check (blocker_id = auth.uid() and blocked_id <> auth.uid()
+              and (private.profile_visible(blocked_id) or private.related_to(blocked_id) or private.viewed_me(blocked_id)));
+drop policy if exists "reports_insert" on public.reports;
+create policy "reports_insert" on public.reports for insert to authenticated
+  with check (reporter_id = auth.uid() and status = 'open' and reported_id <> auth.uid()
+              and public.my_status() in ('pending','approved','rejected')
+              and char_length(coalesce(detail,'')) <= 1000
+              and private.my_reports_today() < 5
+              and (private.profile_visible(reported_id) or private.related_to(reported_id) or private.viewed_me(reported_id)));
+
+-- 4. 照片／模糊照／語音檔案讀取改用 profile_visible（隱藏帳號的檔案就算知道路徑也讀不到）
+create or replace function private.can_see_photo(p_name text)
+returns boolean language sql stable set search_path = public as $$
+  select ((storage.foldername(p_name))[1] = auth.uid()::text
+      or public.is_admin()
+      or exists (select 1 from public.profiles p
+                 where ((p.avatar_path = p_name and p.status = 'approved')
+                        or (p.approved_avatar_path = p_name and p.status = 'pending'))
+                   and (storage.foldername(p_name))[1] = p.id::text
+                   and private.profile_visible(p.id))
+      or exists (select 1 from public.photos ph
+                 where ph.path = p_name and ph.status = 'approved'
+                   and (storage.foldername(p_name))[1] = ph.user_id::text
+                   and private.profile_visible(ph.user_id)
+                   and ((not ph.is_private and not ph.blurred) or exists (select 1 from public.photo_grants g
+                                                     where g.owner_id = ph.user_id and g.viewer_id = auth.uid())))
+  );
+$$;
+create or replace function private.can_see_blur(p_name text)
+returns boolean language sql stable set search_path = public as $$
+  select (storage.foldername(p_name))[1] = auth.uid()::text
+      or public.is_admin()
+      or exists (select 1 from public.photos ph
+                 where ph.path = regexp_replace(p_name, 'b\.jpg$', '.jpg') and ph.blurred and ph.status = 'approved'
+                   and (storage.foldername(p_name))[1] = ph.user_id::text
+                   and private.profile_visible(ph.user_id)
+                   and (not ph.is_private or exists (select 1 from public.photo_grants g where g.owner_id = ph.user_id and g.viewer_id = auth.uid())));
+$$;
+drop policy if exists "voice_storage_select" on storage.objects;
+create policy "voice_storage_select" on storage.objects for select to authenticated
+  using (bucket_id = 'voice' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()
+         or exists (select 1 from public.voice_intros v where v.path = name and v.status = 'approved'
+                      and private.profile_visible(v.user_id))));
+
+-- 5. 只有 SECURITY DEFINER 函式內部會用到的輔助函式，不開放給會員
+revoke execute on function private.wealth_doc_path(uuid) from authenticated;
+revoke execute on function private.cfg_int(text, int) from authenticated;
