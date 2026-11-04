@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-wM6eKUOmsT8mTvEgci6TQZsNMnmotggGef+F5zmvo5I=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-bIClXXYmsO9ai+kn92C8+7VF9NYCD1PobppHzR0shz0=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -146,7 +146,11 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .aphb{position:absolute;left:0;right:0;bottom:0;display:flex}
 .aphb button{flex:1;padding:10px 0;min-height:40px;border:0;font-size:15px;color:#fff;cursor:pointer}
 .aphb .pok{background:rgba(26,26,26,.82)}.aphb .pno{background:rgba(176,74,98,.88)}
-.aphs .g .admth{bottom:46px}   /* 小圖往上移，不要蓋在 ✕ 退件鍵上 */
+.aphs .g .admth{bottom:46px}
+.lockwarn{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:4px;background:#A63F58;color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;vertical-align:2px;white-space:nowrap}
+.lockbox{border-left:4px solid #A63F58;background:rgba(166,63,88,.08);padding:10px 14px;font-size:14px;line-height:1.6;color:var(--ink)}
+.lockbox b{color:#A63F58}
+html[data-theme=dark] .lockbox{background:rgba(217,138,157,.12)} html[data-theme=dark] .lockbox b{color:#E79AAE}   /* 小圖往上移，不要蓋在 ✕ 退件鍵上 */
 .pvstep{padding:14px 0;border-top:1px solid var(--rule)}.pvstep p{font-size:14px;margin:6px 0 10px;line-height:1.8}
 .pvtask{color:var(--wine);font-weight:500}
 .pvgrid{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:760px){.pvgrid{grid-template-columns:1fr 1fr 1.2fr}}
@@ -1196,7 +1200,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.91.0';
+const BUILD = 'v1.91.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1914,8 +1918,8 @@ function profileFormHtml(p={}){
     ${p.gender && p.looking_for ? `
     <label>想認識的對象</label>
     <div class="locked"><b>${orientText(p)}</b><small>${orientSee(p.gender+'-'+p.looking_for)}這項設定送出後就無法修改。如有特殊需要，請<a href="#" data-support>聯絡客服</a>。</small></div>` : `
-    <label>想認識的對象 *</label>
-    <div class="orient-note">這會決定你在「探索」看到誰、誰看得到你。</div>
+    <label>想認識的對象 * <span class="lockwarn">⚠ 送出後不能改</span></label>
+    <div class="orient-note lockbox">這會決定你在「探索」看到誰、誰看得到你。<b>選了就不能再改，請確認自己的性別和想認識的對象。</b></div>
     <div class="roles orient">${Object.entries(ORIENT).map(([k,v])=>`<label class="rl"><input type="radio" name="orient" value="${k}" required><span><b>${v.replace('我是','').replace('，想認識','找')}</b><small>${v}</small></span></label>`).join('')}</div><p class="choice-desc orient-see hidden"></p>`}
     <label>我的身分 *</label>
     <div class="roles" id="rolePick">${Object.entries(ROLES).filter(([k])=>!(p.gender==='male'&&k==='mommy')&&!(p.gender==='female'&&k==='daddy')).map(([k,v])=>`<label class="rl" data-r="${k}"><input type="radio" name="role" value="${k}" required ${p.role===k?'checked':''}><span><b>${v}</b><small>${ROLE_DESC[k]}</small></span></label>`).join('')}</div><p class="choice-desc hidden" id="roleDesc"></p>
@@ -1926,7 +1930,7 @@ function profileFormHtml(p={}){
     </div>
     <div class="fsec"><span>2</span>基本資料</div>
     ${p.nickname && !['incomplete','rejected'].includes(p.status) ? `<label>暱稱</label><div class="locked"><b>${esc(p.nickname)}</b><small>暱稱確定後就無法修改。</small></div><input type="hidden" name="nickname" value="${esc(p.nickname)}">`
-    : `<label>暱稱 *</label><input name="nickname" required maxlength="20" autocomplete="nickname" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="tiny dim" style="margin-top:6px">其他會員看到的名字，送出後不能改。</p>`}
+    : `<label>暱稱 * <span class="lockwarn">⚠ 送出後不能改</span></label><input name="nickname" required maxlength="20" autocomplete="nickname" value="${esc(p.nickname||'')}" placeholder="其他會員看到的名字"><p class="lockbox" style="margin-top:6px">其他會員看到的名字。<b>送出後就不能改，請不要用真實全名。</b></p>`}
 
     <div class="row">
       <div class="grow"><label>年齡 *</label><select name="birth_year" required><option value="">請選擇</option>${years.map(y=>`<option value="${y}" ${p.birth_year==y?'selected':''}>${age(y)} 歲</option>`).join('')}</select></div>
@@ -2254,7 +2258,7 @@ async function viewOnboarding(){
     <div class="obsteps"><span class="done">1　手機驗證 ✓</span><span class="on">2　建立檔案</span></div>
     <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
-    <div class="banner bad" style="font-size:15px;line-height:1.6">有 * 的都要填。<br><b style="font-size:17px">⚠ 暱稱、性別、想認識的對象：送出後就不能改。</b><br>請在送出前再看一次；其他欄位之後都可以改。</div>
+    <div class="banner">有 * 的都要填。標著 <span class="lockwarn">⚠ 送出後不能改</span> 的欄位請特別確認，其他都可以之後再改。</div>
     <form id="obForm" class="card">
       ${profileFormHtml(me)}
       <div class="fsec"><span>5</span>照片</div>
