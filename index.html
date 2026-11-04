@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-ru/i+8Qgu+AvClrna+GZ7iE2A0/FFYGF4BmRkg+Q1gk=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-wM6eKUOmsT8mTvEgci6TQZsNMnmotggGef+F5zmvo5I=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1196,7 +1196,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.90.0';
+const BUILD = 'v1.91.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2004,7 +2004,7 @@ async function uploadPhoto(file){
   return path;
 }
 // 縮圖：探索卡片、列表、小頭像用（約原圖的 1/5 大小）；沒有縮圖的舊照片自動改用原圖
-const thumbOf = p => String(p).replace(/\.jpg$/, 't.jpg');
+const thumbOf = p => /b\.jpg$/.test(String(p)) ? String(p) : String(p).replace(/\.jpg$/, 't.jpg');   // 模糊版本身就小，不另做縮圖
 const blurOf = p => String(p).replace(/\.jpg$/, 'b.jpg');
 /* 模糊版：先縮小再放大（輕度模糊：看得出輪廓和氛圍，認不出臉；每個瀏覽器都能做，而且還原不回來） */
 async function makeBlurBlob(src){
@@ -2052,7 +2052,7 @@ function missingBasics(p){ if(!p) return [];
   const m=[]; if(!(p.nickname||'').trim()) m.push('暱稱'); if(!p.gender||!p.looking_for) m.push('想認識的對象'); if(!p.role) m.push('身分');
   if(!p.birth_year) m.push('年齡'); if(!p.city) m.push('所在地'); if(!p.body_type) m.push('身材'); if(!(p.bio||'').trim()) m.push('自我介紹');
   if((p.role==='daddy'||p.role==='mommy') && !p.budget) m.push('生活方式預算'); if(!p.avatar_path) m.push('頭像'); return m; }
-const PUB_COLS = 'approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,zodiac,drink,smoke,languages,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'avatar_blurred,approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,zodiac,drink,smoke,languages,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -2254,7 +2254,7 @@ async function viewOnboarding(){
     <div class="obsteps"><span class="done">1　手機驗證 ✓</span><span class="on">2　建立檔案</span></div>
     <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
-    <div class="banner">有 * 的都要填。<b>暱稱、性別、想認識的對象</b>送出後不能改，其他都可以之後再改。</div>
+    <div class="banner bad" style="font-size:15px;line-height:1.6">有 * 的都要填。<br><b style="font-size:17px">⚠ 暱稱、性別、想認識的對象：送出後就不能改。</b><br>請在送出前再看一次；其他欄位之後都可以改。</div>
     <form id="obForm" class="card">
       ${profileFormHtml(me)}
       <div class="fsec"><span>5</span>照片</div>
@@ -2270,14 +2270,22 @@ async function viewOnboarding(){
     </form><p class="tiny dim center mt2">不是你的帳號？<button type="button" class="lnk obOut" style="font-size:inherit">登出</button>　·　<a href="#/me">帳號與刪除</a></p></div>`;
   document.querySelectorAll('.obOut').forEach(a=>a.onclick=async()=>{ await sb.auth.signOut(); location.hash='#/'; });
   bindTagPick();
-  let avatarFile=null, extra=[];
+  let avatarFile=null, avatarBlur=false, extra=[];
+  // 選完照片先問要怎麼顯示（公開／模糊／私密）
+  const askMode = (title, withPriv) => new Promise(res => { modal(`<h3 style="font-size:17px">${title}</h3>
+      <div class="row mt2" style="flex-direction:column;gap:10px;align-items:stretch">
+        <button class="btn primary" data-m="pub">清楚顯示（推薦）</button>
+        <button class="btn" data-m="blur">模糊：別人只看得到模糊版，你同意後才看得清楚</button>
+        ${withPriv?'<button class="btn" data-m="priv">🔒 私密：只給你同意的人看</button>':''}</div>`);
+    $('#modal').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ closeModal(); res(b.dataset.m); }); $('#mx').onclick=()=>{ closeModal(); res('pub'); }; });
   // 每張照片可以點左下角的標籤切換：公開 → 模糊 → 私密（和「我的」相簿一樣的三種）
   const MODES = [['pub','公開',''],['blur','模糊','warn'],['priv','🔒 私密','warn']];
   const drawExtra = () => { $('#obGal').innerHTML = extra.map((x,i)=>{ const m = MODES.find(z=>z[0]===x.mode); return `<div class="g${x.mode==='blur'?' isblur':''}" style="background-image:url(${URL.createObjectURL(x.f)})"><button type="button" class="st chip ${m[2]} obMode" data-i="${i}" title="點一下切換公開／模糊／私密" style="cursor:pointer;border:0">${m[1]} ▾</button><button type="button" class="del" data-i="${i}" aria-label="移除">✕</button></div>`; }).join('');
     $('#obGal').querySelectorAll('.del').forEach(b=>b.onclick=()=>{ extra.splice(+b.dataset.i,1); drawExtra(); });
     $('#obGal').querySelectorAll('.obMode').forEach(b=>b.onclick=()=>{ const x=extra[+b.dataset.i]; const k=MODES.findIndex(z=>z[0]===x.mode); x.mode=MODES[(k+1)%MODES.length][0]; drawExtra(); }); };
-  $('#obFiles').onchange = e => { extra = extra.concat([...e.target.files].map(f=>({ f, mode:'pub' }))).slice(0,19); e.target.value=''; drawExtra(); };
-  const pickAv = e => { avatarFile = e.target.files[0]; if(avatarFile){ $('#avPrev').style.backgroundImage=`url(${URL.createObjectURL(avatarFile)})`; $('#avPrev').childNodes[0].textContent=''; } };
+  $('#obFiles').onchange = async e => { const fs=[...e.target.files]; e.target.value=''; if(!fs.length) return; const mode = await askMode(fs.length>1?`這 ${fs.length} 張照片要怎麼顯示？（之後可以一張一張改）`:'這張照片要怎麼顯示？', true); extra = extra.concat(fs.map(f=>({ f, mode }))).slice(0,19); drawExtra(); };
+  const drawAvMode = () => { let t=$('#avModeTag'); if(!t){ $('#avPrev').insertAdjacentHTML('afterend','<button type="button" class="chip" id="avModeTag" style="margin-top:8px;cursor:pointer;border-color:var(--ink)"></button>'); t=$('#avModeTag'); t.onclick=async()=>{ avatarBlur = (await askMode('頭像要怎麼顯示？', false))==='blur'; drawAvMode(); }; } t.textContent = avatarBlur?'頭像：模糊 ▾':'頭像：清楚 ▾'; };
+  const pickAv = async e => { avatarFile = e.target.files[0]; if(avatarFile){ $('#avPrev').style.backgroundImage=`url(${URL.createObjectURL(avatarFile)})`; $('#avPrev').childNodes[0].textContent=''; avatarBlur = (await askMode('頭像要怎麼顯示？', false))==='blur'; drawAvMode(); } };
   $('#avFile').onchange = pickAv; document.querySelector('.avFile2').onchange = pickAv;
   // 用 Google／LINE 登入的人：可以一鍵帶入原本的大頭貼（仍需審核）
   const socialPic = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture;
@@ -2305,8 +2313,8 @@ async function viewOnboarding(){
     let path = null;
     try{
       const prevAv = me.avatar_path;
-      path = await uploadPhoto(avatarFile);
-      const { data: upd, error } = await sb.from('profiles').update({ ...p, avatar_path: path, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id).select('status').maybeSingle();
+      path = await uploadPhoto(avatarFile); if(avatarBlur) await uploadBlur(avatarFile, path);
+      const { data: upd, error } = await sb.from('profiles').update({ ...p, avatar_path: path, avatar_blurred: avatarBlur, age_confirmed:true, agreed_terms_at:new Date().toISOString() }).eq('id', me.id).select('status').maybeSingle();
       if(error){ rmPhotos([path]).catch(()=>{}); throw error; }
       if(prevAv && prevAv!==path) rmPhotos([prevAv]).catch(()=>{});   // 重送時清掉上一次的頭像，避免占用空間
       if(upd && upd.status==='incomplete'){ await loadMe(); throw new Error(phoneOk()?'資料還不完整，請檢查每個必填欄位':'請先完成手機驗證'); }
@@ -2327,7 +2335,10 @@ const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'',
 // 別人重新送審中：自介、職業、興趣也顯示上一次通過審核的版本
 const pubView = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_bio != null)
   ? { ...p, bio: p.approved_bio, occupation: p.approved_occupation, tags: p.approved_tags || [] } : p;
-const pubAv = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_avatar_path) ? p.approved_avatar_path : p?.avatar_path;
+const pubAvRaw = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_avatar_path) ? p.approved_avatar_path : p?.avatar_path;
+// 模糊頭像：別人預設只看得到模糊版（拿到私密照授權的人在檔案頁會看到原圖，見 openProfile）
+const avBlurred = p => !!(p && p.avatar_blurred && me && p.id !== me.id && !me.is_admin);
+const pubAv = p => { const a = pubAvRaw(p); return (a && avBlurred(p)) ? blurOf(a) : a; };
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const isFree = r => !!(r && r.free_until && new Date(r.free_until) > new Date());
 const travelOn = r => !!(r && r.travel_city && r.travel_to && r.travel_from && r.travel_to >= ymdOf(new Date()) && r.travel_from <= ymdOf(new Date(Date.now()+14*864e5)));
@@ -2377,7 +2388,7 @@ async function viewBrowse(){
     $('#grid').style.opacity = .45;
     $('#fMore').innerHTML = '更多篩選' + (advCount()?`<b>${advCount()}</b>`:'');
     const y = new Date().getFullYear(); const B = browseState;
-    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,person_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,last_active_at,created_at,founder_boost_until,free_until,travel_city,travel_from,travel_to').eq('status','approved').neq('id', me.id).eq('hidden',false);
+    let q = sb.from('profiles').select('id,nickname,role,budget,wealth_verified_at,person_verified_at,gender,birth_year,city,height_cm,body_type,occupation,avatar_path,avatar_blurred,last_active_at,created_at,founder_boost_until,free_until,travel_city,travel_from,travel_to').eq('status','approved').neq('id', me.id).eq('hidden',false);
     q = B.sort==='new' ? q.order('created_at',{ascending:false}) : q.order('last_active_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false});
     q = q.limit(150);
     if(B.role==='baby') q = q.eq('role','baby'); else if(B.role==='sugar') q = q.in('role',['daddy','mommy']);
@@ -2413,7 +2424,7 @@ async function viewBrowse(){
         : `<div class="empty" style="grid-column:1/-1"><p class="serif">${filtered?'這個條件下暫時沒有會員':'會員陸續加入中'}</p><p class="muted small">${filtered?'放寬一些條件看看。':'晚點再回來看看。'}</p>${filtered?'<button class="btn mt2" id="clrF">清除篩選</button>':''}</div>`;
       $('#clrF') && ($('#clrF').onclick=()=>{ resetBrowse(); viewBrowse(); }); return; }
     $('#grid').innerHTML = rows.map(r => `<div class="pcard" data-id="${r.id}">
-        <div class="ph" data-ph="${esc(r.avatar_path||'')}"></div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
+        <div class="ph${avBlurred(r)?' bl':''}" data-ph="${esc(pubAv(r)||'')}"></div>${liked.has(r.id)?'<span class="liked">♥ 已心動</span>':''}
         ${seen(r.last_active_at)?`<span class="seen ${seen(r.last_active_at)==='在線上'?'on':''}">${seen(r.last_active_at)}</span>`:(isNew(r)?'<span class="seen">新會員</span>':'')}<div class="info"><div class="name"><span>${esc(r.nickname)}</span><span class="muted small">${age(r.birth_year)}</span></div><div class="meta">${r.role?`<span class="rtag">${ROLES[r.role]}</span>`:''}${esc(r.city||'')}${r.occupation?' · '+esc(r.occupation):''}</div>${r.budget?`<div class="budget">${budgetText(r.budget)}</div>`:''}${personBadge(r)}${wealthBadge(r)}${availHtml(r)?`<div class="avls">${availHtml(r)}</div>`:''}</div></div>`).join('');
     $('#grid').querySelectorAll('.pcard').forEach(c=>c.onclick=()=>openProfile(c.dataset.id));
     lazyPh($('#grid').querySelectorAll('.ph'));
@@ -2480,8 +2491,8 @@ async function openProfile(id){
   const blurN = pubPhotos.filter(x=>x.blurred).length;
   const body = `
     <div class="pm"><div class="pmL">
-    <div class="photo-big wm" id="bigPh" data-wm="${wmText()}"></div>
-    ${pubPhotos.length?`<div class="thumbs wmg" data-wm="${wmText()}"><div class="g on" data-av="1"></div>${pubPhotos.map(x=>{ const bl = x.blurred && !grant; return `<div class="g${bl?' bl':''}" data-ph="${esc(bl?blurOf(x.path):x.path)}"></div>`; }).join('')}</div>`:''}
+    <div class="photo-big wm${avBlurred(p)&&!grant?' bl':''}" id="bigPh" data-wm="${wmText()}"></div>
+    ${pubPhotos.length?`<div class="thumbs wmg" data-wm="${wmText()}"><div class="g on${avBlurred(p)&&!grant?' bl':''}" data-av="1"></div>${pubPhotos.map(x=>{ const bl = x.blurred && !grant; return `<div class="g${bl?' bl':''}" data-ph="${esc(bl?blurOf(x.path):x.path)}"></div>`; }).join('')}</div>`:''}
     </div><div class="pmR">
     <div class="phead">
       <div class="row" style="justify-content:space-between;align-items:center">${p.role?`<span class="rtag">${ROLES[p.role]}</span>`:'<span></span>'}${theirLike?'<span class="chip ok">♥ 對你心動</span>':''}</div>
@@ -2511,7 +2522,8 @@ async function openProfile(id){
     </div></div>
     `;
   modal(body);
-  signed(pubAv(p)).then(u=>{ if(u && $('#bigPh')) $('#bigPh').style.backgroundImage=`url("${cssu(u)}")`; });
+  const avShow = (avBlurred(p) && grant) ? pubAvRaw(p) : pubAv(p);   // 拿到私密照授權的人看得到清楚的頭像
+  signed(avShow).then(u=>{ if(u && $('#bigPh')) $('#bigPh').style.backgroundImage=`url("${cssu(u)}")`; });
   if(p.id!==me.id) sb.rpc('reply_stats', { ids:[id] }).then(({ data })=>{ const t = replyLabel(Array.isArray(data)?data[0]:null); const h=$('#modal .phead .sub'); if(t && h && tok===profSeq) h.insertAdjacentHTML('afterend', `<p class="rstat">${t}</p>`); });
   sb.from('voice_intros').select('path,duration').eq('user_id', id).eq('status','approved').maybeSingle().then(({ data: vc })=>{ const h=$('#modal .phead'); if(!vc || !h || tok!==profSeq) return;
     h.insertAdjacentHTML('beforeend', `<button type="button" class="vbtn" id="vPlay"><span class="vi">▶</span>聽聽 ${esc(p.nickname)} 的聲音${vc.duration?`<span class="tiny dim">0:${String(vc.duration).padStart(2,'0')}</span>`:''}</button>`);
@@ -2532,7 +2544,7 @@ async function openProfile(id){
         <button class="btn mt2" id="wBack">返回檔案</button>`); $('#wBack').onclick=()=>openProfile(id); });
   });
   const showBig = el => { const b=$('#bigPh'); if(!b || !el.style.backgroundImage) return; b.style.backgroundImage=el.style.backgroundImage; b.classList.toggle('bl', el.classList.contains('bl')); document.querySelectorAll('#modal .thumbs .g, #modal .gallery .g').forEach(x=>x.classList.toggle('on', x===el)); if(el.closest('.gallery')) b.scrollIntoView({behavior:'smooth',block:'center'}); };
-  const avEl = $('#modal .thumbs .g[data-av]'); if(avEl){ avEl.onclick=()=>showBig(avEl); signed(pubAv(p)).then(u=>{ if(u && avEl.isConnected) avEl.style.backgroundImage=`url("${cssu(u)}")`; }); }
+  const avEl = $('#modal .thumbs .g[data-av]'); if(avEl){ avEl.onclick=()=>showBig(avEl); signed(avShow).then(u=>{ if(u && avEl.isConnected) avEl.style.backgroundImage=`url("${cssu(u)}")`; }); }
   $('#modal').querySelectorAll('.gallery .g, .thumbs .g[data-ph]').forEach(async el=>{ const u=await signed(el.dataset.ph); if(u){ el.style.backgroundImage=`url("${cssu(u)}")`; el.onclick=()=>showBig(el); } });
   $('#msgBtn').onclick = ()=>{
     if(conv){ closeModal(); location.hash='#/chat/'+conv.id; return; }
@@ -2593,14 +2605,14 @@ async function viewLikes(){
   localStorage.setItem('yy_likes_seen_'+me.id, new Date().toISOString()); unread.l = 0; document.querySelectorAll('a[href="#/likes"] .badge').forEach(b=>b.remove());
   const vSeen = localStorage.getItem('yy_views_seen_'+me.id) || '1970-01-01T00:00:00Z';
   const [{ data: toMe, error: le1 }, { data: fromMe, error: le2 }, { data: vraw }] = await Promise.all([
-    sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('to_id', me.id).order('created_at',{ascending:false}),
-    sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('from_id', me.id).order('created_at',{ascending:false}),
+    sb.from('likes').select('from_id, created_at, p:profiles!likes_from_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,avatar_blurred,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('to_id', me.id).order('created_at',{ascending:false}),
+    sb.from('likes').select('to_id, created_at, p:profiles!likes_to_id_fkey(id,nickname,role,birth_year,city,occupation,avatar_path,avatar_blurred,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at)').eq('from_id', me.id).order('created_at',{ascending:false}),
     sb.rpc('my_viewers'),
   ]);
   if(le1||le2) throw (le1||le2);
   let views = [];   // 誰看過我：通過審核的顯示檔案，審核中的只顯示「審核中的會員」
   { const vr = Array.isArray(vraw) ? vraw : [], ids = vr.filter(v=>v.approved).map(v=>v.viewer_id);
-    const { data: vp } = ids.length ? await sb.from('profiles').select('id,nickname,role,birth_year,city,occupation,avatar_path,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at').in('id', ids) : { data: [] };
+    const { data: vp } = ids.length ? await sb.from('profiles').select('id,nickname,role,birth_year,city,occupation,avatar_path,avatar_blurred,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at').in('id', ids) : { data: [] };
     const pm = Object.fromEntries((vp||[]).map(x=>[x.id,x]));
     views = vr.map(v=>({ ...v, p: v.approved ? pm[v.viewer_id] : { status:'approved', pending:true } })).filter(v=>v.p); }
   const ok = rows => (rows||[]).filter(r=>r.p&&r.p.status==='approved');
@@ -2627,7 +2639,7 @@ async function viewMatches(){
   if(!ms || !ms.length){ if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>訊息</h1></header><div class="empty"><p class="serif">還沒有對話</p><p class="muted small">到「探索」看看，遇到想認識的人，就直接傳一則訊息。</p><a class="btn mt2" href="#/browse">去探索</a></div>`; return; }
   const ids = ms.map(m=> m.user_a===me.id ? m.user_b : m.user_a);
   const [{ data: ps }, { data: nm }, { data: unread }] = await Promise.all([
-    sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,status,role,birth_year,city,last_active_at').in('id', ids),
+    sb.from('profiles').select('id,nickname,avatar_path,avatar_blurred,approved_avatar_path,status,role,birth_year,city,last_active_at').in('id', ids),
     sb.rpc('related_names', { ids }),
     sb.from('messages').select('match_id').is('read_at', null).is('recalled_at', null).neq('sender_id', me.id).in('match_id', ms.map(m=>m.id)),
   ]);
@@ -2665,7 +2677,7 @@ async function viewChat(matchId){
   if(cErr && cErr.code!=='PGRST116') throw cErr;
   if(!m){ $('#app').innerHTML='<div class="center" style="padding:60px 0"><p class="muted">這段對話已經關閉。</p><a class="btn mt2" href="#/matches">回到訊息</a></div>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
-  const [{ data: o0 }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,approved_avatar_path,approved_occupation,approved_tags,status,tags,occupation,city,last_active_at').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
+  const [{ data: o0 }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,avatar_blurred,approved_avatar_path,approved_occupation,approved_tags,status,tags,occupation,city,last_active_at').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
   const o = pubView(o0);
   const oname = o?.nickname || (Array.isArray(nm)&&nm[0]?.nickname) || '對方';
   const closed = !!m.closed_at;
@@ -2967,7 +2979,8 @@ async function viewMe(){
   if(!TABS.some(t=>t[0]===meTab)) meTab='profile';
   if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="narrow">${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}
     <header class="mehd">
-      <label class="meav" title="更換頭像"><span class="avatar" id="meAv"></span><input type="file" accept="image/*" id="meAvFile" class="vh"><em>更換</em></label>
+      <div><label class="meav" title="更換頭像"><span class="avatar" id="meAv"></span><input type="file" accept="image/*" id="meAvFile" class="vh"><em>更換</em></label>
+      ${me.avatar_path?`<button type="button" class="chip" id="meAvBlur" style="display:block;margin:6px auto 0;cursor:pointer;border-color:var(--ink)">${me.avatar_blurred?'頭像：模糊 ▾':'頭像：清楚 ▾'}</button>`:''}</div>
       <button type="button" class="meout" data-logout aria-label="登出">登出</button>
       <div class="grow"><h1>${esc(me.nickname||'（未命名）')}</h1>
         <p class="sub"><span class="chip ${st}">${STATUS_TXT[me.status]}</span>${personBadge(me)}${wealthBadge(me)}</p>
@@ -2981,8 +2994,8 @@ async function viewMe(){
     <div class="card" id="voiceCard"><h3 style="font-size:17px;margin-bottom:6px">語音自我介紹</h3><p class="tiny dim">錄一段 15 秒內的聲音，說說你是怎樣的人。審核通過後，方向吻合的會員打開你的檔案就能聽。</p><div id="vcBody" class="mt"><div class="spinner"></div></div></div>
     <div class="card"><h3 style="font-size:17px;margin-bottom:6px">相簿</h3><p class="tiny dim">公開照所有會員可見；模糊照大家只看得到模糊版；私密照需你授權。每張照片都需審核。</p>
       <div class="gallery" id="meGal">${(photos||[]).map(x=>`<div class="g${x.blurred?' isblur':''}" data-ph="${esc(x.path)}"><span class="st chip ${x.status==='approved'?'ok':x.status==='rejected'?'bad':'warn'}">${x.is_private?'🔒 ':''}${x.blurred?'模糊・':''}${({pending:'審核中',approved:'已通過',rejected:'未通過'})[x.status]}</span><button class="del" data-id="${x.id}" data-path="${esc(x.path)}" aria-label="刪除照片">✕</button>${x.is_private?'':`<button class="blurT" data-id="${x.id}" data-path="${esc(x.path)}" data-on="${x.blurred?1:0}">${x.blurred?'改清晰':'設模糊'}</button>`}</div>`).join('')}</div>
-      <div class="row mt flexwrap"><label class="btn sm ghost" style="margin:0">＋ 公開照<input type="file" accept="image/*" data-priv="0" class="vh mePh"></label><label class="btn sm ghost" style="margin:0">＋ 模糊照<input type="file" accept="image/*" data-priv="blur" class="vh mePh"></label><label class="btn sm ghost" style="margin:0">＋ 私密照<input type="file" accept="image/*" data-priv="1" class="vh mePh"></label></div>
-      <p class="tiny dim mt">模糊照：其他會員只看得到模糊的樣子，你同意他索取之後才看得清楚（和私密照用同一份授權）。改成模糊需要重新審核。</p>
+      <div class="row mt flexwrap"><button type="button" class="btn sm ghost" id="mePhAdd" style="margin:0">＋ 新增照片</button><input type="file" accept="image/*" data-priv="0" class="vh mePh"></div>
+      <p class="tiny dim mt">新增時會問你要<b>公開</b>、<b>模糊</b>（別人只看得到模糊版，你同意後才看得清楚）還是<b>私密</b>（只給你同意的人看）。已上傳的照片點縮圖也能改。</p>
     </div>
     ${(reqs||[]).length?`<div class="card mt"><h3 style="font-size:17px">私密照索取（${reqs.length}）</h3><div class="list">${reqs.map(r=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(r.requester_id)}</div><button class="btn sm primary grantBtn" data-id="${r.requester_id}">同意</button><button class="btn sm ghost denyBtn" data-id="${r.requester_id}">拒絕</button></div>`).join('')}</div></div>`:''}
     ${(grants||[]).length?`<div class="card mt"><h3 style="font-size:17px">已授權查看私密照</h3><div class="list">${grants.map(g=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(g.viewer_id)}</div><button class="btn sm ghost revokeBtn" data-id="${g.viewer_id}">收回</button></div>`).join('')}</div></div>`:''}
@@ -3014,7 +3027,7 @@ async function viewMe(){
     </section>
   </div>`;
   const showMeTab = t => { meTab=t; sessionStorage.setItem('meTab', t); document.querySelectorAll('.metabs button').forEach(x=>{ x.classList.toggle('on', x.dataset.mt===t); x.setAttribute('aria-selected', x.dataset.mt===t); }); document.querySelectorAll('.mt-pane').forEach(x=>x.classList.toggle('hidden', x.dataset.mt!==t)); };
-  if(me.status==='suspended') document.querySelectorAll('#meForm button[type=submit], .mePh, #meAvFile, #pvStart, #wFile').forEach(el=>(el.closest('label')||el).remove());
+  if(me.status==='suspended') document.querySelectorAll('#meForm button[type=submit], .mePh, #mePhAdd, #meAvFile, #meAvBlur, #pvStart, #wFile').forEach(el=>(el.closest('label')||el).remove());
   showMeTab(meTab);
   document.querySelectorAll('.metabs button').forEach(b=>b.onclick=()=>showMeTab(b.dataset.mt));
   document.querySelectorAll('.todo .td').forEach(b=>b.onclick=()=>{ showMeTab(b.dataset.go); $('.metabs').scrollIntoView({behavior:'smooth',block:'start'}); });
@@ -3022,12 +3035,20 @@ async function viewMe(){
   signedThumb(me.avatar_path).then(u=>{ if(u && $('#meAv')) $('#meAv').style.backgroundImage=`url("${cssu(u)}")`; });
   $('#meGal').querySelectorAll('.g').forEach(async el=>{ const u=await signedThumb(el.dataset.ph); if(u) el.style.backgroundImage=`url("${cssu(u)}")`; });
   $('#meAvFile') && ($('#meAvFile').onchange = async e=>{ const f=e.target.files[0]; if(!f) return;
-    if(me.person_verified_at && !confirm('換頭像後，「✓ 真人認證」需要重新申請。確定要換嗎？')){ e.target.value=''; return; } toast('上傳中…', 60000);
+    if(me.person_verified_at && !confirm('換頭像後，「✓ 真人認證」需要重新申請。確定要換嗎？')){ e.target.value=''; return; }
     const oldAv = me.avatar_path; let path;
-    try{ path=await uploadPhoto(f); const { error } = await sb.from('profiles').update({ avatar_path:path }).eq('id',me.id); if(error) throw error;
+    const blur = await new Promise(res => { modal(`<h3 style="font-size:17px">新頭像要怎麼顯示？</h3><div class="row mt2" style="flex-direction:column;gap:10px;align-items:stretch"><button class="btn primary" data-m="pub">清楚顯示（推薦）</button><button class="btn" data-m="blur">模糊：別人只看得到模糊版，你同意後才看得清楚</button></div>`); $('#modal').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ closeModal(); res(b.dataset.m==='blur'); }); $('#mx').onclick=()=>{ closeModal(); res(false); }; });
+    toast('上傳中…', 60000);
+    try{ path=await uploadPhoto(f); if(blur) await uploadBlur(f, path); const { error } = await sb.from('profiles').update({ avatar_path:path, avatar_blurred: blur }).eq('id',me.id); if(error) throw error;
       if(oldAv && !(photos||[]).some(x=>x.path===oldAv)) rmPhotos([oldAv]).catch(()=>{});
       toast(me.person_verified_at ? '頭像已更新，重新送審。換了頭像，真人認證需要重新申請' : '頭像已更新，重新送審', 5000); viewMe(); }
     catch(err){ if(path) rmPhotos([path]).catch(()=>{}); toast(zh(err.message)); e.target.value=''; } });
+  $('#meAvBlur') && ($('#meAvBlur').onclick = async ()=>{ const on = !me.avatar_blurred;
+    if(on && !confirm('把頭像改成模糊？其他會員在探索、訊息裡只會看到模糊的樣子，你同意他索取私密照後才看得清楚。')) return;
+    toast(on?'處理中…':'更新中…', 30000);
+    try{ if(on){ const u = await signed(me.avatar_path); if(!u) throw new Error('讀不到頭像，請重新整理再試'); const blob = await (await fetch(u)).blob(); await uploadBlur(blob, me.avatar_path); if(me.approved_avatar_path && me.approved_avatar_path!==me.avatar_path){ const u2 = await signed(me.approved_avatar_path); if(u2){ const b2 = await (await fetch(u2)).blob(); await uploadBlur(b2, me.approved_avatar_path); } } }
+      const { error } = await sb.from('profiles').update({ avatar_blurred: on }).eq('id', me.id); if(error) throw error; toast(on?'頭像已改成模糊':'頭像已改成清楚'); await loadMe(); viewMe(); }
+    catch(err){ toast(zh(err.message)); } });
   const drawVoice = async () => { const box = $('#vcBody'); if(!box) return;
     const { data: vc } = await sb.from('voice_intros').select('*').eq('user_id', me.id).maybeSingle(); if(!$('#vcBody')) return;
     const ST = { pending:['warn','審核中'], approved:['ok','已通過'], rejected:['bad','未通過，請重錄'] };
@@ -3107,6 +3128,8 @@ async function viewMe(){
     box.innerHTML = `<div class="card mb oitems"><h3 style="font-size:16px">約會待辦</h3>${data.map(x=>`<div class="oi"><div class="grow"><div class="small">${x.kind==='checkin'?'還沒報平安':'見面後私下評價'}・${esc(x.partner||'（已刪除）')}</div><div class="tiny dim">${fmtDate(x.date_at)}</div></div>${x.kind==='checkin'?`<button class="btn sm primary" data-ck="${x.invite_id}">✓ 我平安</button>`:`<button class="btn sm ghost" data-rv="${x.invite_id}" data-d="${x.date_at}" data-p="${esc(x.partner||'')}">評價</button>`}</div>`).join('')}</div>`;
     box.querySelectorAll('[data-ck]').forEach(b=>b.onclick=async()=>{ b.disabled=true; const { error } = await sb.rpc('safety_checkin', { iid:b.dataset.ck }); if(error){ b.disabled=false; return toast(zh(error.message)); } b.outerHTML='<span class="tiny ok">已報平安</span>'; toast('已報平安'); });
     box.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>openMeetReview({ id:b.dataset.rv, date_at:b.dataset.d }, b.dataset.p, ()=>{ const c=b.closest('.oitems'); b.closest('.oi').remove(); if(c && !c.querySelector('.oi')) c.remove(); })); });
+  $('#mePhAdd') && ($('#mePhAdd').onclick = ()=>{ modal(`<h3 style="font-size:17px">這張照片要怎麼顯示？</h3><div class="row mt2" style="flex-direction:column;gap:10px;align-items:stretch"><button class="btn primary" data-m="0">公開：所有會員看得到</button><button class="btn" data-m="blur">模糊：別人只看得到模糊版，你同意後才看得清楚</button><button class="btn" data-m="1">🔒 私密：只給你同意的人看</button></div>`);
+    $('#modal').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const inp=$('.mePh'); inp.dataset.priv=b.dataset.m; closeModal(); inp.click(); }); });
   document.querySelectorAll('.mePh').forEach(inp=>inp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if((photos||[]).length>=20) return toast('相簿最多 20 張'); toast('上傳中…', 60000); document.querySelectorAll('.mePh').forEach(x=>x.disabled=true);
     let path;
     try{ path=await uploadPhoto(f); const blur = inp.dataset.priv==='blur'; if(blur) await uploadBlur(f, path); const { error } = await sb.from('photos').insert({ user_id:me.id, path, is_private: inp.dataset.priv==='1', blurred: blur }); if(error) throw error; toast('已上傳，等待審核'); viewMe(); }

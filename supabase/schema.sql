@@ -3541,3 +3541,51 @@ create policy "voice_storage_select" on storage.objects for select to authentica
 -- 5. 只有 SECURITY DEFINER 函式內部會用到的輔助函式，不開放給會員
 revoke execute on function private.wealth_doc_path(uuid) from authenticated;
 revoke execute on function private.cfg_int(text, int) from authenticated;
+
+-- ============ v0.62 模糊頭像 ============
+-- 頭像也可以設成模糊：其他會員只看得到模糊版，拿到私密照授權（photo_grants）後才看得清楚
+alter table public.profiles add column if not exists avatar_blurred boolean not null default false;
+grant select (avatar_blurred) on public.profiles to authenticated;
+
+-- 原圖：模糊頭像只有本人、管理員、拿到授權的人看得到（縮圖 t.jpg 走同一條規則，所以縮圖也看不到）
+create or replace function private.can_see_photo(p_name text)
+returns boolean language sql stable set search_path = public as $$
+  select ((storage.foldername(p_name))[1] = auth.uid()::text
+      or public.is_admin()
+      or exists (select 1 from public.profiles p
+                 where ((p.avatar_path = p_name and p.status = 'approved')
+                        or (p.approved_avatar_path = p_name and p.status = 'pending'))
+                   and (storage.foldername(p_name))[1] = p.id::text
+                   and private.profile_visible(p.id)
+                   and (not p.avatar_blurred or exists (select 1 from public.photo_grants g where g.owner_id = p.id and g.viewer_id = auth.uid())))
+      or exists (select 1 from public.photos ph
+                 where ph.path = p_name and ph.status = 'approved'
+                   and (storage.foldername(p_name))[1] = ph.user_id::text
+                   and private.profile_visible(ph.user_id)
+                   and ((not ph.is_private and not ph.blurred) or exists (select 1 from public.photo_grants g
+                                                     where g.owner_id = ph.user_id and g.viewer_id = auth.uid())))
+  );
+$$;
+-- 模糊版：看得到這個人的，都看得到模糊頭像
+create or replace function private.can_see_blur(p_name text)
+returns boolean language sql stable set search_path = public as $$
+  select (storage.foldername(p_name))[1] = auth.uid()::text
+      or public.is_admin()
+      or exists (select 1 from public.photos ph
+                 where ph.path = regexp_replace(p_name, 'b\.jpg$', '.jpg') and ph.blurred and ph.status = 'approved'
+                   and (storage.foldername(p_name))[1] = ph.user_id::text
+                   and private.profile_visible(ph.user_id)
+                   and (not ph.is_private or exists (select 1 from public.photo_grants g where g.owner_id = ph.user_id and g.viewer_id = auth.uid())))
+      or exists (select 1 from public.profiles p
+                 where p.avatar_blurred
+                   and ((p.avatar_path = regexp_replace(p_name, 'b\.jpg$', '.jpg') and p.status = 'approved')
+                        or (p.approved_avatar_path = regexp_replace(p_name, 'b\.jpg$', '.jpg') and p.status = 'pending'))
+                   and (storage.foldername(p_name))[1] = p.id::text
+                   and private.profile_visible(p.id));
+$$;
+-- 模糊頭像使用中的模糊版不能刪、不能換
+create or replace function private.photo_is_blurred(p text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.photos where path = p and blurred)
+      or exists (select 1 from public.profiles where avatar_blurred and (avatar_path = p or approved_avatar_path = p));
+$$;
