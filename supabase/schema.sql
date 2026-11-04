@@ -3608,3 +3608,16 @@ end $$;
 drop trigger if exists profiles_a_role_lock_trg on public.profiles;
 create trigger profiles_a_role_lock_trg before update on public.profiles
   for each row execute function public.profiles_role_lock();
+
+-- ============ v0.65：管理員看會員最後上線時間（用 private.member_notify.last_seen，關閉「顯示上線狀態」的人也看得到；只有管理員能查）
+create or replace function public.admin_last_seen(ids uuid[])
+returns table(id uuid, last_seen timestamptz) language plpgsql stable security definer set search_path = public, private as $$
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  return query
+    select p.id, greatest(mn.last_seen, p.last_active_at)
+      from public.profiles p left join private.member_notify mn on mn.user_id = p.id
+     where p.id = any(ids);
+end $$;
+revoke execute on function public.admin_last_seen(uuid[]) from public, anon;
+grant execute on function public.admin_last_seen(uuid[]) to authenticated;
