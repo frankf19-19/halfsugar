@@ -3589,3 +3589,9 @@ returns boolean language sql stable security definer set search_path = public as
   select exists (select 1 from public.photos where path = p and blurred)
       or exists (select 1 from public.profiles where avatar_blurred and (avatar_path = p or approved_avatar_path = p));
 $$;
+
+-- ============ v0.63 管理員可以重做模糊版 ============
+-- 模糊強度調整後，舊照片的模糊版可以由管理員在後台一鍵重做（只限 b.jpg）
+drop policy if exists "photos_blur_admin_insert" on storage.objects;
+create policy "photos_blur_admin_insert" on storage.objects for insert to authenticated
+  with check (bucket_id = 'photos' and public.is_admin() and name ~ '/[0-9]+b\.jpg$');

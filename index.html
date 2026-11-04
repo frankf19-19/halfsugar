@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-ziDopdrFeny5U0X76ULmCcXL2iHLBuk+fiP9sfdu2J0=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-EkIRjkA5FtLt8/xArMG7W/CxIqJSHKnV+l1psy/eMgQ=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -148,6 +148,7 @@ body.home.scrolled .topbar .logo,body.home.scrolled .topbar .nav a,body.home.scr
 .aphb .pok{background:rgba(26,26,26,.82)}.aphb .pno{background:rgba(176,74,98,.88)}
 .aphs .g .admth{bottom:46px}
 .admth.blv{width:56%;max-width:130px;border-color:#A63F58;font-weight:700}
+.reblur{position:absolute;right:4px;top:4px;z-index:2;background:#A63F58;color:#fff;border:0;padding:6px 10px;font-size:12px;cursor:pointer}
 .lockwarn{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:4px;background:#A63F58;color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;vertical-align:2px;white-space:nowrap}
 .lockbox{border-left:4px solid #A63F58;background:rgba(166,63,88,.08);padding:10px 14px;font-size:14px;line-height:1.6;color:var(--ink)}
 .lockbox b{color:#A63F58}
@@ -1201,7 +1202,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.91.5';
+const BUILD = 'v1.91.6';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2050,7 +2051,14 @@ async function sweepOrphans(){
 const rmPhotos = paths => { const ps = paths.filter(Boolean); return ps.length ? sb.storage.from('photos').remove([...ps, ...ps.map(thumbOf), ...ps.map(blurOf)]) : Promise.resolve({}); };
 // 後台審核：把別人在卡片上會看到的小圖一起顯示，確認跟原圖是同一張
 async function admThumb(el){ const p = el.dataset.ph; if(!p) return; const bl = el.dataset.bl==='1'; const t = await signed(bl ? blurOf(p) : thumbOf(p)); if(!t || !el.isConnected) return;
-  el.style.position = el.style.position || 'relative'; el.insertAdjacentHTML('beforeend', `<span class="admth${bl?' blv':''}" title="${bl?'其他會員看到的模糊版，請確認認不出臉':'卡片上的小圖，請確認和原圖是同一張'}" style="background-image:url('${cssu(t)}')">${bl?'會員看到的':'小圖'}</span>`); }
+  el.style.position = el.style.position || 'relative'; el.insertAdjacentHTML('beforeend', `<span class="admth${bl?' blv':''}" title="${bl?'其他會員看到的模糊版，請確認認不出臉':'卡片上的小圖，請確認和原圖是同一張'}" style="background-image:url('${cssu(t)}')">${bl?'會員看到的':'小圖'}</span>`);
+  if(bl){ el.insertAdjacentHTML('beforeend', '<button type="button" class="reblur">重做模糊</button>'); const rb = el.querySelector('.reblur');
+    rb.onclick = async ev => { ev.stopPropagation(); rb.disabled = true; rb.textContent = '處理中…';
+      try{ const u = await signed(p); if(!u) throw new Error('讀不到原圖'); const blob = await (await fetch(u)).blob();
+        await sb.storage.from('photos').remove([blurOf(p)]); const bb = await makeBlurBlob(blob);
+        const { error } = await sb.storage.from('photos').upload(blurOf(p), bb, { contentType:'image/jpeg', upsert:false }); if(error) throw error;
+        urlCache.delete(blurOf(p)); const nu = await signed(blurOf(p)); const th = el.querySelector('.admth'); if(th && nu) th.style.backgroundImage = `url('${cssu(nu)}?v=${Date.now()}')`; toast('已用新的模糊強度重做'); rb.remove(); }
+      catch(err){ rb.disabled = false; rb.textContent = '重做模糊'; toast(zh(err.message)); } }; } }
 
 // 必填基本資料（缺任何一項就不能使用網站，要先補齊）
 function missingBasics(p){ if(!p) return [];
