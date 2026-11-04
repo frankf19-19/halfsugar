@@ -3621,3 +3621,69 @@ begin
 end $$;
 revoke execute on function public.admin_last_seen(uuid[]) from public, anon;
 grant execute on function public.admin_last_seen(uuid[]) to authenticated;
+
+-- ============ v0.66：後台總覽（訪客人數、今天新增、上線中…）
+-- 訪客：瀏覽器第一次打開網站時產生一組隨機代號（存在 localStorage），每天每個代號只記一筆；不記 IP、不記個資
+create table if not exists private.site_visits (
+  day      date not null,
+  vid      text not null,
+  user_id  uuid,
+  src      text,
+  first_at timestamptz not null default now(),
+  last_at  timestamptz not null default now(),
+  hits     int not null default 1,
+  primary key (day, vid)
+);
+create index if not exists site_visits_day_idx on private.site_visits(day);
+revoke all on private.site_visits from public, anon, authenticated;
+
+create or replace function public.log_visit(p_vid text, p_src text default null)
+returns void language plpgsql security definer set search_path = public, private as $$
+declare d date := (now() at time zone 'Asia/Taipei')::date;
+begin
+  if p_vid is null or p_vid !~ '^[A-Za-z0-9_-]{8,40}$' then return; end if;
+  -- 防灌：一天最多記 20 萬個訪客代號
+  if (select count(*) from private.site_visits where day = d) > 200000 then return; end if;
+  insert into private.site_visits (day, vid, user_id, src)
+  values (d, p_vid, auth.uid(), nullif(left(lower(btrim(coalesce(p_src,''))), 60), ''))
+  on conflict (day, vid) do update
+    set last_at = now(), hits = private.site_visits.hits + 1,
+        user_id = coalesce(private.site_visits.user_id, excluded.user_id),
+        src = coalesce(private.site_visits.src, excluded.src);
+end $$;
+revoke execute on function public.log_visit(text, text) from public;
+grant execute on function public.log_visit(text, text) to anon, authenticated;
+
+create or replace function public.admin_overview()
+returns jsonb language plpgsql stable security definer set search_path = public, private as $$
+declare d date := (now() at time zone 'Asia/Taipei')::date; r jsonb;
+begin
+  if not public.is_admin() then raise exception '只有管理員可以使用'; end if;
+  select jsonb_build_object(
+    'visitors_today',  (select count(*) from private.site_visits where day = d),
+    'visitors_yday',   (select count(*) from private.site_visits where day = d - 1),
+    'members_visit_today', (select count(distinct user_id) from private.site_visits where day = d and user_id is not null),
+    'visitors_7d',     (select count(distinct vid) from private.site_visits where day > d - 7),
+    'online_now',      (select count(*) from private.member_notify where last_seen > now() - interval '5 minutes'),
+    'active_today',    (select count(*) from private.member_notify where last_seen >= (d::timestamp at time zone 'Asia/Taipei')),
+    'signups_today',   (select count(*) from public.profiles where created_at >= (d::timestamp at time zone 'Asia/Taipei')),
+    'signups_yday',    (select count(*) from public.profiles where created_at >= ((d-1)::timestamp at time zone 'Asia/Taipei') and created_at < (d::timestamp at time zone 'Asia/Taipei')),
+    'signups_7d',      (select count(*) from public.profiles where created_at >= ((d-6)::timestamp at time zone 'Asia/Taipei')),
+    'total',           (select count(*) from public.profiles),
+    'by_status',       (select coalesce(jsonb_object_agg(status, n), '{}') from (select status, count(*) n from public.profiles group by status) s),
+    'by_role',         (select coalesce(jsonb_object_agg(coalesce(role,'none'), n), '{}') from (select role, count(*) n from public.profiles where status = 'approved' group by role) s),
+    'by_gender',       (select coalesce(jsonb_object_agg(coalesce(gender,'none'), n), '{}') from (select gender, count(*) n from public.profiles where status = 'approved' group by gender) s),
+    'msgs_today',      (select count(*) from public.messages where created_at >= (d::timestamp at time zone 'Asia/Taipei')),
+    'likes_today',     (select count(*) from public.likes where created_at >= (d::timestamp at time zone 'Asia/Taipei')),
+    'matches_today',   (select count(*) from public.matches where created_at >= (d::timestamp at time zone 'Asia/Taipei')),
+    'days', (select jsonb_agg(jsonb_build_object('day', g::date,
+               'v', (select count(*) from private.site_visits v where v.day = g::date),
+               's', (select count(*) from public.profiles p where p.created_at >= (g::timestamp at time zone 'Asia/Taipei') and p.created_at < ((g + interval '1 day')::timestamp at time zone 'Asia/Taipei')))
+             order by g) from generate_series(d - 13, d, interval '1 day') g),
+    'sources', (select coalesce(jsonb_agg(jsonb_build_object('src', src, 'n', n) order by n desc), '[]') from
+               (select coalesce(src,'直接開啟') src, count(*) n from private.site_visits where day > d - 7 group by 1 order by 2 desc limit 8) s)
+  ) into r;
+  return r;
+end $$;
+revoke execute on function public.admin_overview() from public, anon;
+grant execute on function public.admin_overview() to authenticated;
