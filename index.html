@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-Nv8F6ulJUzB2EGLW8wNQPMYn9zKt9xA3UO0fIQUM0KY=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-9EV1G+XIu2yOzTjoYllIVUK+LUAzyG7oqsHcSiiLkHg=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1201,7 +1201,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.91.2';
+const BUILD = 'v1.91.3';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2011,17 +2011,17 @@ async function uploadPhoto(file){
 // 縮圖：探索卡片、列表、小頭像用（約原圖的 1/5 大小）；沒有縮圖的舊照片自動改用原圖
 const thumbOf = p => /b\.jpg$/.test(String(p)) ? String(p) : String(p).replace(/\.jpg$/, 't.jpg');   // 模糊版本身就小，不另做縮圖
 const blurOf = p => String(p).replace(/\.jpg$/, 'b.jpg');
-/* 模糊版：先縮小再放大（輕度模糊：看得出輪廓和氛圍，認不出臉；每個瀏覽器都能做，而且還原不回來） */
+/* 模糊版：先縮小再放大（重度模糊：只看得出輪廓和顏色，認不出臉；每個瀏覽器都能做，而且還原不回來） */
 async function makeBlurBlob(src){
   const url = src instanceof Blob ? URL.createObjectURL(src) : src;
   const img = await new Promise((res,rej)=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>res(i); i.onerror=()=>rej(new Error('無法讀取這張照片')); i.src=url; }).finally(()=>{ if(src instanceof Blob) setTimeout(()=>URL.revokeObjectURL(url),0); });
   const W = 480, H = Math.round(W * img.height / img.width);
-  const tiny = document.createElement('canvas'); tiny.width = 52; tiny.height = Math.max(1, Math.round(52 * img.height / img.width));
-  tiny.getContext('2d').drawImage(img, 0, 0, tiny.width, tiny.height);
-  const mid = document.createElement('canvas'); mid.width = 150; mid.height = Math.max(1, Math.round(150 * img.height / img.width));
-  const mc = mid.getContext('2d'); mc.imageSmoothingEnabled = true; mc.imageSmoothingQuality = 'high'; mc.drawImage(tiny, 0, 0, mid.width, mid.height);
+  // 重度模糊：縮到 14 像素寬再分段放大，只剩輪廓和顏色，五官完全認不出來
+  let cur = img;
+  for(const sw of [14, 40, 120]){ const k = document.createElement('canvas'); k.width = sw; k.height = Math.max(1, Math.round(sw * img.height / img.width));
+    const kx = k.getContext('2d'); kx.imageSmoothingEnabled = true; kx.imageSmoothingQuality = 'high'; kx.drawImage(cur, 0, 0, k.width, k.height); cur = k; }
   const c = document.createElement('canvas'); c.width = W; c.height = H;
-  const cx = c.getContext('2d'); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high'; cx.drawImage(mid, 0, 0, W, H);
+  const cx = c.getContext('2d'); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high'; cx.drawImage(cur, 0, 0, W, H);
   return new Promise(res => c.toBlob(res, 'image/jpeg', .8));
 }
 async function uploadBlur(src, path){
@@ -3051,7 +3051,7 @@ async function viewMe(){
   $('#meAvBlur') && ($('#meAvBlur').onclick = async ()=>{ const on = !me.avatar_blurred;
     if(on && !confirm('把頭像改成模糊？其他會員在探索、訊息裡只會看到模糊的樣子，你同意他索取私密照後才看得清楚。')) return;
     toast(on?'處理中…':'更新中…', 30000);
-    try{ if(on){ const u = await signed(me.avatar_path); if(!u) throw new Error('讀不到頭像，請重新整理再試'); const blob = await (await fetch(u)).blob(); await uploadBlur(blob, me.avatar_path); if(me.approved_avatar_path && me.approved_avatar_path!==me.avatar_path){ const u2 = await signed(me.approved_avatar_path); if(u2){ const b2 = await (await fetch(u2)).blob(); await uploadBlur(b2, me.approved_avatar_path); } } }
+    try{ if(on){ const u = await signed(me.avatar_path); if(!u) throw new Error('讀不到頭像，請重新整理再試'); const blob = await (await fetch(u)).blob(); await rmPhotos([blurOf(me.avatar_path)]).catch(()=>{}); await uploadBlur(blob, me.avatar_path); if(me.approved_avatar_path && me.approved_avatar_path!==me.avatar_path){ const u2 = await signed(me.approved_avatar_path); if(u2){ const b2 = await (await fetch(u2)).blob(); await uploadBlur(b2, me.approved_avatar_path); } } }
       const { error } = await sb.from('profiles').update({ avatar_blurred: on }).eq('id', me.id); if(error) throw error; toast(on?'頭像已改成模糊':'頭像已改成清楚'); await loadMe(); viewMe(); }
     catch(err){ toast(zh(err.message)); } });
   const drawVoice = async () => { const box = $('#vcBody'); if(!box) return;
@@ -3143,7 +3143,7 @@ async function viewMe(){
   document.querySelectorAll('.blurT').forEach(b=>b.onclick=async ev=>{ ev.stopPropagation(); const on = b.dataset.on!=='1';
     if(on && !confirm('改成模糊照？其他會員只會看到模糊的樣子，你同意他索取私密照後才看得清楚。改完需要重新審核。')) return;
     b.disabled=true; toast(on?'處理中…':'更新中…', 30000);
-    try{ if(on){ const u = await signed(b.dataset.path); if(!u) throw new Error('讀不到這張照片，請重新整理再試'); const blob = await (await fetch(u)).blob(); await uploadBlur(blob, b.dataset.path); }
+    try{ if(on){ const u = await signed(b.dataset.path); if(!u) throw new Error('讀不到這張照片，請重新整理再試'); const blob = await (await fetch(u)).blob(); await rmPhotos([blurOf(b.dataset.path)]).catch(()=>{}); await uploadBlur(blob, b.dataset.path); }
       const { error } = await sb.from('photos').update({ blurred: on }).eq('id', b.dataset.id); if(error) throw error;
       toast(on?'已改成模糊照，等待審核':'已改成清晰照'); viewMe(); }
     catch(err){ b.disabled=false; toast(zh(err.message)); } });
