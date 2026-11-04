@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-JFd4yI6E+hIVTsaBiUfJ2liAOPyW/gm8snHzDMF0DMA=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-6JU4oa/sGm+yl6/5XS0LO48fnua3YdwVCoTL+EwPnis=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1155,6 +1155,61 @@ html[data-theme=dark] .stickycta{background:rgba(18,17,17,.96);border-top-color:
 .cta .ctalinks{margin:22px 0 0;font-size:12px;letter-spacing:.1em;opacity:.8}
 @media(min-width:720px){.three{padding:96px 24px}.three .hd h2{font-size:36px}.three .pts{grid-template-columns:repeat(3,1fr);gap:40px}}
 html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
+
+/* =====================================================================
+   v2 配色「夜莓」：茄紫墨色＋酒紅點綴＋霧粉底（只改淺色模式；深色模式維持原樣）
+   ===================================================================== */
+html:not([data-theme=dark]){
+  --ink:#2B2229; --black:#3B2635; --grey:#5E5359; --grey2:#776B71;
+  --rule:#E9DEDB; --hair:#EFE6E3; --paper:#F6EFED; --wine:#A9445E; --page:#FBF8F7; --navy3:#EFE6E3}
+html:not([data-theme=dark]) body{background:var(--page)}
+html:not([data-theme=dark]) ::selection{background:#EED3DA}
+html:not([data-theme=dark]) .pcard .ph,html:not([data-theme=dark]) .photo-big{background-color:#EFE5E2}
+html:not([data-theme=dark]) .btn.primary{background:var(--black);border-color:var(--black)}
+html:not([data-theme=dark]) .btn.primary:hover{background:#4B3043;border-color:#4B3043}
+html:not([data-theme=dark]) .card{border-color:var(--hair);box-shadow:0 1px 2px rgba(59,38,53,.03),0 8px 24px -16px rgba(59,38,53,.12)}
+html:not([data-theme=dark]) .filters select,html:not([data-theme=dark]) .sortbar select{background-color:#fff}
+html:not([data-theme=dark]) .msg.me{background:var(--black)}
+html:not([data-theme=dark]) .chat form .btn{background:var(--black);border-color:var(--black)}
+/* 手機頂列原本是純黑，改成同色系的茄紫 */
+@media(max-width:719px){
+  html:not([data-theme=dark]) body:not(.home) .topbar,html:not([data-theme=dark]) body.home.scrolled .topbar{background:var(--black)!important;border-bottom-color:var(--black)!important}}
+/* ---------- 電腦版（≥1100px） ---------- */
+@media(min-width:1100px){
+  /* 頂列：logo 靠左、選單靠右，半透明霧粉底 */
+  .topbar .in{grid-template-columns:auto 1fr;padding:0 48px}
+  .topbar .logo{grid-column:1;justify-self:start}
+  .topbar .nav{grid-column:2;justify-self:end}
+  html:not([data-theme=dark]) body:not(.home) .topbar,html:not([data-theme=dark]) body.home.scrolled .topbar{background:rgba(251,248,247,.88);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
+  .wrap{padding:48px 48px 96px}
+  .phd{margin-bottom:34px}
+  .phd h1{font-size:34px}
+  /* 我的：左邊固定的個人卡＋分頁，右邊內容 */
+  .mepage{max-width:1160px}
+  .megrid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:0 48px;align-items:start}
+  .meside{position:sticky;top:calc(var(--hdr,66px) + 24px);background:var(--white);border:1px solid var(--hair);border-radius:18px;padding:30px 26px 18px}
+  html:not([data-theme=dark]) .meside{box-shadow:0 1px 2px rgba(59,38,53,.03),0 12px 32px -20px rgba(59,38,53,.18)}
+  .meside .mehd{flex-direction:column;text-align:center;gap:14px;border:0;padding:0;margin:0 0 18px}
+  .meside .mehd h1{padding-right:0;font-size:26px}
+  .meside .mehd .sub{justify-content:center}
+  .meside .mehd .grow{width:100%}
+  .meside .mehd .avatar{width:112px;height:112px}
+  .meside .meout{top:-12px;right:-8px}
+  .meside .prog{margin:0 0 6px;padding-top:16px;border-top:1px solid var(--hair)}
+  .meside .todo{flex-direction:column;align-items:stretch}
+  .meside .todo .td{justify-content:flex-start;text-align:left}
+  .meside .tabs.metabs:not(.admtabs){position:static;flex-direction:column;gap:2px!important;margin:14px 0 0;padding-top:14px!important;border:0!important;border-top:1px solid var(--hair)!important;background:none!important;overflow:visible}
+  .meside .tabs.metabs:not(.admtabs) button{flex:none;text-align:left;padding:11px 16px!important;border-radius:10px!important;letter-spacing:.2em;font-size:13px}
+  .meside .tabs.metabs:not(.admtabs) button:hover{background:var(--paper)!important;color:var(--ink)!important}
+  .meside .tabs.metabs:not(.admtabs) button.on{background:var(--paper)!important;color:var(--ink)!important;box-shadow:inset 3px 0 0 var(--wine)!important;font-weight:500!important}
+  .memain{min-width:0}
+  /* 探索：篩選與卡片的圓角跟其他元件一致 */
+  .pcard .ph{border-radius:6px}
+  .pcard .info{padding-left:4px;padding-right:4px}
+  html:not([data-theme=dark]) .phd{border-bottom-color:var(--hair)}
+  .memain .mt-pane > .card:first-child{margin-top:0}
+}
+@media(max-width:1099px){.meside,.memain,.megrid{display:contents}}
 </style>
 </head>
 <body>
@@ -1203,7 +1258,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.92.2';
+const BUILD = 'v1.93.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -3014,7 +3069,8 @@ async function viewMe(){
   const miss = me.is_admin ? [] : missingBasics(me);
   let meTab = miss.length ? 'profile' : (sessionStorage.getItem('meTab') || (nAlbum?'album':nVerify?'verify':'profile'));
   if(!TABS.some(t=>t[0]===meTab)) meTab='profile';
-  if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="narrow">${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}
+  if(rs!==routeSeq) return; $('#app').innerHTML = `<div class="narrow mepage">${statusBanner()}${miss.length?`<div class="banner warn">請先完成基本資料才能使用網站。還缺：<b>${miss.join('、')}</b></div>`:''}
+    <div class="megrid"><aside class="meside">
     <header class="mehd">
       <div><label class="meav" title="更換頭像"><span class="avatar" id="meAv"></span><input type="file" accept="image/*" id="meAvFile" class="vh"><em>更換</em></label>
       ${me.avatar_path?`<button type="button" class="chip" id="meAvBlur" style="display:block;margin:6px auto 0;cursor:pointer;border-color:var(--ink)">${me.avatar_blurred?'頭像：模糊 ▾':'頭像：清楚 ▾'}</button>`:''}</div>
@@ -3026,6 +3082,7 @@ async function viewMe(){
     ${todo.some(t=>!t[1])?`<div class="prog"><div class="pl"><span>完成你的檔案</span><span>${todo.filter(t=>t[1]).length} ／ ${todo.length}</span></div><div class="bar"><i style="width:${Math.round(todo.filter(t=>t[1]).length/todo.length*100)}%"></i></div>
       <div class="todo">${todo.map(([tab,done,txt])=>`<button type="button" class="td ${done?'done':''}" data-go="${tab==='相簿'?'album':'verify'}"><span>${done?'✓':'→'}</span>${txt}</button>`).join('')}</div></div>`:''}
     <div class="tabs metabs" role="tablist">${TABS.map(([k,v,n])=>`<button type="button" role="tab" aria-selected="${k===meTab}" class="${k===meTab?'on':''}" data-mt="${k}">${v}${n?`<i class="dot">${n}</i>`:''}</button>`).join('')}</div>
+    </aside><div class="memain">
     <div id="openItems"></div>
     <section class="mt-pane" data-mt="album">
     <div class="card" id="voiceCard"><h3 style="font-size:17px;margin-bottom:6px">語音自我介紹</h3><p class="tiny dim">錄一段 15 秒內的聲音，說說你是怎樣的人。審核通過後，方向吻合的會員打開你的檔案就能聽。</p><div id="vcBody" class="mt"><div class="spinner"></div></div></div>
@@ -3062,7 +3119,7 @@ async function viewMe(){
     ${(blocks||[]).length?`<div class="card mt"><h3 style="font-size:17px">封鎖名單</h3><div class="list">${blocks.map(b=>`<div class="item" style="cursor:default"><div class="grow t">${nameOf(b.blocked_id)}</div><button class="btn sm ghost unblockBtn" data-id="${b.blocked_id}">解除</button></div>`).join('')}</div></div>`:''}
     ${accountCard}
     </section>
-  </div>`;
+  </div></div></div>`;
   const showMeTab = t => { meTab=t; sessionStorage.setItem('meTab', t); document.querySelectorAll('.metabs button').forEach(x=>{ x.classList.toggle('on', x.dataset.mt===t); x.setAttribute('aria-selected', x.dataset.mt===t); }); document.querySelectorAll('.mt-pane').forEach(x=>x.classList.toggle('hidden', x.dataset.mt!==t)); };
   if(me.status==='suspended') document.querySelectorAll('#meForm button[type=submit], .mePh, #mePhAdd, #meAvFile, #meAvBlur, #pvStart, #wFile').forEach(el=>(el.closest('label')||el).remove());
   showMeTab(meTab);
