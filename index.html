@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-12y6XQTJ0lx6Pw6X0cs3PuBsg0w9v1F+gnO7H8UbKi8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-mahXvRKCwMt2N6ALq61VnVTLzWLoVTk8RZVCMSS1l4Q=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1135,6 +1135,18 @@ details.extra>.tags{margin-bottom:16px}
 .stickycta .btn{min-height:44px;padding:0 26px}
 @media(min-width:720px){.stickycta{display:none}}
 html[data-theme=dark] .stickycta{background:rgba(18,17,17,.96);border-top-color:#3A3335}
+.three{padding:72px 20px;max-width:980px;margin:0 auto}
+.three .hd h2{font-family:var(--serif);font-weight:300;font-size:30px;letter-spacing:.06em;text-align:center;margin:0 0 40px}
+.three .pts{display:grid;grid-template-columns:1fr;gap:28px}
+.three .pts>div{border-top:1px solid var(--rule);padding-top:22px}
+.three .no{font-family:var(--serif);font-size:13px;letter-spacing:.2em;color:var(--wine)}
+.three h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:10px 0 8px;letter-spacing:.04em}
+.three p{margin:0;font-size:15px;line-height:1.9;color:var(--grey)}
+.three .morelinks{margin:36px 0 0;display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:center;font-size:13px;letter-spacing:.08em}
+.three .morelinks a{color:var(--ink);text-underline-offset:5px}
+.cta .ctalinks{margin:22px 0 0;font-size:12px;letter-spacing:.1em;opacity:.8}
+@media(min-width:720px){.three{padding:96px 24px}.three .hd h2{font-size:36px}.three .pts{grid-template-columns:repeat(3,1fr);gap:40px}}
+html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 </style>
 </head>
 <body>
@@ -1183,7 +1195,7 @@ html[data-theme=dark] .stickycta{background:rgba(18,17,17,.96);border-top-color:
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.87.0';
+const BUILD = 'v1.88.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1748,32 +1760,14 @@ async function viewLanding(){
     <div class="img" data-bg="${IMG.c1}"></div>
     <div class="txt"><div class="no">第一章</div><h3>每一位會員，<br>都經過真人審核。</h3><p>Sugar Daddy、Sugar Mommy 與甜心的照片和自我介紹，都由真人看過才公開。假照片、網路圖片、留下聯絡方式的檔案，以及各種業者，不會出現在這裡。</p></div>
   </section>
-  <section class="chapter rev">
-    <div class="img" data-bg="${IMG.c2}"></div>
-    <div class="txt"><div class="no">第二章</div><h3>先把期待說清楚，<br>再決定要不要見面。</h3><p>遇到想認識的人，直接傳一則訊息，說說你為什麼想認識對方。對方回覆，對話才會繼續。見面頻率、相處方式、彼此的界線，都可以在見面前先聊清楚；不合適，就不必勉強。</p></div>
-  </section>
-  <section class="chapter">
-    <div class="img" data-bg="${IMG.c3}"></div>
-    <div class="txt"><div class="no">第三章</div><h3>私密的部分，<br>由你決定給誰看。</h3><p>私密相簿只對你親自授權的會員開放，任何時候都可以收回。封鎖之後，對方再也看不到你。</p></div>
-  </section>
-
-  <section class="pledge">
-    <blockquote>真誠交往，互相尊重。<br>平台不經手會員之間的任何金錢，<br class="d">業者、詐騙與違規行為，<br>一律停權。</blockquote>
-    <div class="who">違反者將直接停權，並保留法律追訴權。<br><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a></div>
-  </section>
-
-  <section class="safe">
-    <div class="in">
-      <h2>你的隱私，<br>我們這樣保護。</h2>
-      <div class="pts">
-        <div><h3>沒有登入，什麼都看不到</h3><p>會員的照片與檔案只對已登入、且通過審核的會員開放。搜尋引擎與路人都看不到。</p></div>
-        <div><h3>照片不公開存放</h3><p>照片存放在私有空間，只有登入、通過審核、而且方向吻合的會員才讀得到；查看時會疊上看的人的代號浮水印，截圖外流也查得到是誰。</p></div>
-        <div><h3>一支手機，一個帳號</h3><p>每位會員都要用台灣手機收簡訊驗證，一支手機只能有一個帳號，一支號碼也只收得到 3 次驗證碼。被停權的號碼不能再註冊，刪掉帳號重開也洗不掉過去的評價。手機號碼和 Email 不會顯示給任何會員。</p></div>
-        <div><h3>想隱身就隱身</h3><p>可以不出現在探索，只讓你心動過的人、或正在聊天的人看到你；也可以隱藏上線狀態。</p></div>
-        <div><h3>私密照，親自授權</h3><p>私密相簿只給你點頭的人看，隨時收回；封鎖之後，對方再也找不到你。</p></div>
-        <div><h3>說刪就刪</h3><p>在「我的」頁面就能自己刪除帳號，檔案、照片、對話與手機號碼立即永久刪除。我們不販售、不分享任何會員資料。</p></div>
-      </div>
+  <section class="three">
+    <div class="hd"><h2>微糖不一樣的三件事</h2></div>
+    <div class="pts">
+      <div><span class="no">01</span><h3>先把期待說清楚</h3><p>見面頻率、相處方式、彼此的界線，認識之初就說；不合適，就不必勉強。</p></div>
+      <div><span class="no">02</span><h3>私密的部分，由你決定給誰看</h3><p>私密相簿與模糊照只給你點頭的人看，隨時收回；可以隱身，手機與 Email 不會顯示給任何人。</p></div>
+      <div><span class="no">03</span><h3>一支手機，一個帳號</h3><p>台灣手機驗證、真人審核、可申請真人認證；業者、假照片、詐騙帳號一律停權，那支手機也不能再註冊。</p></div>
     </div>
+    <p class="morelinks"><a href="/privacy-tips/">隱私怎麼保護</a><a href="/avoid-scams/">怎麼分辨詐騙</a><a href="/guide/">甜心交友指南</a></p>
   </section>
 
   <section class="howto">
@@ -1810,21 +1804,6 @@ async function viewLanding(){
       <li><b>財力認證</b>自願上傳文件、真人確認後顯示，甜心可以申請查看。</li>
       <li><b>私密照</b>只給你同意的人看，看的時候會疊上對方的代號浮水印。</li>
     </ul>
-  </section>
-
-  <section class="lex">
-    <div class="hd"><h2>微糖小辭典</h2><p>在這裡，有幾個詞你會常常看到。</p></div>
-    <dl>
-      <div class="e"><dt>甜心</dt><dd class="pos">名詞　亦作 Sugar Baby</dd><dd>有自己的生活與追求，希望認識成熟、穩定、懂得照顧人的對象。不分性別。</dd></div>
-      <div class="e"><dt>Sugar Daddy<br>Sugar Mommy</dt><dd class="pos">名詞</dd><dd>事業與生活都已穩定，願意把時間和心力，放在一段讓彼此都舒服的關係裡。</dd></div>
-      <div class="e"><dt>坦誠</dt><dd class="pos">形容詞</dd><dd>微糖最重要的一個詞。見面之前，先把彼此期待的相處方式、見面節奏說清楚；不合適，就不必勉強。</dd></div>
-      <div class="e"><dt>界線</dt><dd class="pos">名詞</dd><dd>每個人都有，也都該被尊重。對方說不，就是不。封鎖一次，對方就再也看不到你。</dd></div>
-      <div class="e"><dt>真人認證</dt><dd class="pos">名詞</dd><dd>依系統隨機指定的動作，拍一張自拍和一段短影片，由真人和頭像比對。通過後檔案會出現<span style="white-space:nowrap">「✓ 真人認證」</span>，自拍和影片審核完立即刪除。</dd></div>
-      <div class="e"><dt>財力認證</dt><dd class="pos">名詞</dd><dd>Sugar Daddy／Mommy 可以上傳一份財力文件（姓名可以遮住），由真人看過後，檔案上會出現<span style="white-space:nowrap">「✓ 財力認證」</span>。不是必要的，是加分；甜心想看文件可以申請，對方按允許才看得到。</dd></div>
-      <div class="e"><dt>審核</dt><dd class="pos">動詞</dd><dd>每一張照片、每一段自介，都由真人看過才公開。業者、假照片、留聯絡方式的，到不了這裡。</dd></div>
-          </dl>
-    <p class="swipehint">← 左右滑動看更多 →</p>
-    <div class="ft"><a href="#/guidelines">社群守則</a>　<a href="#/safety">安全須知</a>　<a href="#/terms">使用條款</a></div>
   </section>
 
   <section class="cta" data-bg="${IMG.cta}">
