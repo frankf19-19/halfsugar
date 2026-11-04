@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-0ttHnCBdxPHfrtCthWYGKOdvr/R5eoxsL6Ei31TEInA=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-ru/i+8Qgu+AvClrna+GZ7iE2A0/FFYGF4BmRkg+Q1gk=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1196,7 +1196,7 @@ html[data-theme=dark] .three .pts>div{border-top-color:#3A3335}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.89.1';
+const BUILD = 'v1.90.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2261,6 +2261,7 @@ async function viewOnboarding(){
       <label>頭像照片 *</label>
       <div class="row"><label class="avatar lg avpick" id="avPrev" style="margin:0;cursor:pointer" aria-label="選擇頭像照片">＋<input type="file" accept="image/*" id="avFile" class="vh"></label><div class="grow small muted">請用清楚、正面、近期的照片。不接受明星照、網路圖片、過度裸露或含聯絡方式的圖片。<br><label class="btn sm ghost" style="margin:10px 0 0;color:var(--ink)">選擇頭像<input type="file" accept="image/*" class="vh avFile2"></label></div></div>
       <label>更多照片（選填，可一次選多張，最多 20 張）</label>
+      <p class="tiny dim" style="margin-top:-4px">選好後點照片左下角的標籤，可以把那張改成<b>模糊照</b>（別人只看得到模糊版，你同意後才看得清楚）或<b>私密照</b>（只給你同意的人看）。</p>
       <div class="gallery" id="obGal"></div>
       <label class="btn sm ghost" style="margin-top:8px">＋ 選擇照片<input type="file" accept="image/*" multiple id="obFiles" class="vh"></label>
       <p class="tiny dim">每一張照片都會由真人審核，通過後才會出現在你的檔案上。頭像和檔案通過審核後，就能開始使用網站。</p>
@@ -2270,9 +2271,12 @@ async function viewOnboarding(){
   document.querySelectorAll('.obOut').forEach(a=>a.onclick=async()=>{ await sb.auth.signOut(); location.hash='#/'; });
   bindTagPick();
   let avatarFile=null, extra=[];
-  const drawExtra = () => { $('#obGal').innerHTML = extra.map((f,i)=>`<div class="g" style="background-image:url(${URL.createObjectURL(f)})"><button type="button" class="del" data-i="${i}" aria-label="移除">✕</button></div>`).join('');
-    $('#obGal').querySelectorAll('.del').forEach(b=>b.onclick=()=>{ extra.splice(+b.dataset.i,1); drawExtra(); }); };
-  $('#obFiles').onchange = e => { extra = extra.concat([...e.target.files]).slice(0,19); e.target.value=''; drawExtra(); };
+  // 每張照片可以點左下角的標籤切換：公開 → 模糊 → 私密（和「我的」相簿一樣的三種）
+  const MODES = [['pub','公開',''],['blur','模糊','warn'],['priv','🔒 私密','warn']];
+  const drawExtra = () => { $('#obGal').innerHTML = extra.map((x,i)=>{ const m = MODES.find(z=>z[0]===x.mode); return `<div class="g${x.mode==='blur'?' isblur':''}" style="background-image:url(${URL.createObjectURL(x.f)})"><button type="button" class="st chip ${m[2]} obMode" data-i="${i}" title="點一下切換公開／模糊／私密" style="cursor:pointer;border:0">${m[1]} ▾</button><button type="button" class="del" data-i="${i}" aria-label="移除">✕</button></div>`; }).join('');
+    $('#obGal').querySelectorAll('.del').forEach(b=>b.onclick=()=>{ extra.splice(+b.dataset.i,1); drawExtra(); });
+    $('#obGal').querySelectorAll('.obMode').forEach(b=>b.onclick=()=>{ const x=extra[+b.dataset.i]; const k=MODES.findIndex(z=>z[0]===x.mode); x.mode=MODES[(k+1)%MODES.length][0]; drawExtra(); }); };
+  $('#obFiles').onchange = e => { extra = extra.concat([...e.target.files].map(f=>({ f, mode:'pub' }))).slice(0,19); e.target.value=''; drawExtra(); };
   const pickAv = e => { avatarFile = e.target.files[0]; if(avatarFile){ $('#avPrev').style.backgroundImage=`url(${URL.createObjectURL(avatarFile)})`; $('#avPrev').childNodes[0].textContent=''; } };
   $('#avFile').onchange = pickAv; document.querySelector('.avFile2').onchange = pickAv;
   // 用 Google／LINE 登入的人：可以一鍵帶入原本的大頭貼（仍需審核）
@@ -2308,7 +2312,8 @@ async function viewOnboarding(){
       if(upd && upd.status==='incomplete'){ await loadMe(); throw new Error(phoneOk()?'資料還不完整，請檢查每個必填欄位':'請先完成手機驗證'); }
       let failed = 0;
       for(let i=0;i<extra.length;i++){ btn.textContent=`上傳照片 ${i+1}／${extra.length}…`;
-        try{ const ph = await uploadPhoto(extra[i]); const { error: pe } = await sb.from('photos').insert({ user_id:me.id, path:ph, is_private:false }); if(pe){ failed++; rmPhotos([ph]).catch(()=>{}); } }catch(_){ failed++; } }
+        try{ const x = extra[i]; const ph = await uploadPhoto(x.f); if(x.mode==='blur') await uploadBlur(x.f, ph);
+             const { error: pe } = await sb.from('photos').insert({ user_id:me.id, path:ph, is_private: x.mode==='priv', blurred: x.mode==='blur' }); if(pe){ failed++; rmPhotos([ph]).catch(()=>{}); } }catch(_){ failed++; } }
       await loadMe(); toast(failed?`已送出審核（有 ${failed} 張照片沒上傳成功，可以之後在「我的」補上）`:'已送出審核', 5000); location.hash='#/me';
     }catch(err){ toast('沒有送出：'+zh(err.message)); btn.disabled=false; btn.textContent='送出審核'; }
   };
