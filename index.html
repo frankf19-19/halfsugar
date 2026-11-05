@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-Iaa0Mgps9wAqXNXkfjSHQLggMc+hAr+apZTlIG+P7nA=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iCD3V6xNAlVrjVbLZn8HyRZfx03SBVu9ULkt7Bf3nbI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-jzxAHcNn/dvuHGeGYa2GcRXaxsR0nsnREe8nn8RjjTQ=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1219,6 +1219,43 @@ html:not([data-theme=dark]) .btn.primary:hover{background:#262626;border-color:#
 .ovsrc{display:grid;grid-template-columns:140px 1fr 56px;gap:10px;align-items:center;padding:6px 0;font-size:13px}
 @media(max-width:719px){.ovch{grid-template-columns:repeat(7,minmax(0,1fr))}.ovc:nth-child(-n+7){display:none}.ovsrc{grid-template-columns:110px 1fr 40px}.ovv{font-size:26px}}
 .ovsrc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ovsrc i{display:block;height:8px;border-radius:4px;background:var(--ink)}.ovsrc b{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+
+/* 會員方案：兩種會員 */
+.plpg{max-width:980px;margin:0 auto}
+.plpg .phd h1::after{margin-left:auto;margin-right:auto}
+.plans2{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:20px;align-items:stretch;margin-top:8px}
+@media(max-width:759px){.plans2{grid-template-columns:1fr}.plans2 .vip{order:-1}}
+.pl2{background:var(--white);border:1px solid var(--hair);border-radius:18px;padding:34px 30px 30px;display:flex;flex-direction:column}
+.pl2 .who{font-size:12px;letter-spacing:.2em;color:var(--grey)}
+.pl2 h3{font-size:26px;font-weight:300;margin:8px 0 10px;letter-spacing:.12em}
+.pl2 .price{font-family:"Noto Serif TC",serif;font-size:38px;font-weight:300;line-height:1.2}
+.pl2 .price .was{font-size:16px;color:var(--grey2);margin-right:10px;text-decoration-thickness:1px;font-family:var(--sans);letter-spacing:.04em}
+.pl2 .alt{font-size:13px;color:var(--grey);margin-top:6px}
+.pl2 ul{list-style:none;margin:24px 0 0;padding:0;flex:1}
+.pl2 li{font-size:14px;line-height:1.8;padding:9px 0;border-top:1px solid var(--hair)}
+.pl2.vip{background:#111;color:#F4EFEA;border-color:#111;box-shadow:0 24px 48px -28px rgba(0,0,0,.55)}
+.pl2.vip .who{color:#E3A9B8}
+.pl2.vip .price .was{color:#9C948E}
+.pl2.vip .alt{color:#B9B1AB}
+.pl2.vip li{border-top-color:rgba(255,255,255,.12);padding-left:26px;position:relative}
+.pl2.vip li::before{content:"✓";position:absolute;left:2px;top:9px;color:#E3A9B8;font-weight:600}
+.pl2.vip li b{color:#fff;font-weight:600}
+.vipcta{margin-top:22px}.vipcta .btn{width:100%;background:#fff!important;color:#111!important;border-color:#fff!important}
+html[data-theme=dark] .pl2.vip{background:#ECE7E1;color:#1A1918;border-color:#ECE7E1}
+html[data-theme=dark] .pl2.vip li b{color:#111} html[data-theme=dark] .pl2.vip li{border-top-color:rgba(0,0,0,.1)}
+html[data-theme=dark] .pl2.vip .who,html[data-theme=dark] .pl2.vip li::before{color:#A63F58}
+html[data-theme=dark] .pl2.vip .alt,html[data-theme=dark] .pl2.vip .price .was{color:#6B6560}
+html[data-theme=dark] .vipcta .btn{background:#111!important;color:#fff!important;border-color:#111!important}
+.plcmp{margin-top:40px}
+.plcmp h3{font-size:18px;font-weight:300;letter-spacing:.2em;text-align:center;margin-bottom:14px}
+.plcmp table{width:100%;border-collapse:collapse;font-size:14px;background:var(--white);border:1px solid var(--hair);border-radius:14px;overflow:hidden}
+.plcmp th,.plcmp td{padding:12px 16px;border-top:1px solid var(--hair);text-align:center;vertical-align:middle}
+.plcmp thead th{border-top:0;font-weight:500;letter-spacing:.1em;font-size:13px}
+.plcmp td:first-child{text-align:left}
+.plcmp td.off{color:var(--grey2)}
+.plcmp .v{background:rgba(0,0,0,.035);font-weight:500}
+html[data-theme=dark] .plcmp .v{background:rgba(255,255,255,.05)}
+@media(max-width:559px){.plcmp th,.plcmp td{padding:10px 8px;font-size:13px}}
 </style>
 </head>
 <body>
@@ -1267,7 +1304,7 @@ html:not([data-theme=dark]) .btn.primary:hover{background:#262626;border-color:#
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.93.4';
+const BUILD = 'v1.94.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -3687,21 +3724,33 @@ safety: `<h2>安全須知</h2><p>線上認識的人，請用線下的謹慎對�
 };
 function viewPlans(){
   const join = me ? `<a class="btn primary" href="#/browse">開始探索</a>` : `<a class="btn primary" href="#/auth">免費加入</a>`;
-  const now = '<span class="nowtag">開站期間你享有</span>';
-  $('#app').innerHTML = `<div style="max-width:1120px;margin:0 auto">
-    <header class="phd" style="text-align:center"><h1>會員方案</h1><p>開站期間，所有人都免費升級為微糖會員</p></header>
-    <div class="freeall"><p class="serif big">全部免費</p>
-      <p class="muted">現在加入，甜心、Sugar Daddy、Sugar Mommy 都直接享有下方「微糖會員」的全部功能。<br>不需要綁信用卡，也不會自動扣款。</p>
-      <div class="mt2">${join}</div></div>
-    <div class="plans">
-      <div class="plan"><div class="who">甜心</div><h3>甜心會員</h3><div class="price">免費</div><div class="alt">通過真人審核即開通</div>
-        <ul><li>建立檔案、公開與私密相簿</li><li>探索、心動、回覆所有訊息</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>看誰對我心動</li><li>真人認證</li></ul></div>
-      <div class="plan"><div class="who">Sugar Daddy／Mommy</div><h3>基本會員</h3><div class="price">免費</div><div class="alt">先認識看看</div>
-        <ul><li>建立檔案、公開與私密相簿</li><li>探索與篩選</li><li>真人認證、財力認證</li><li>主動開啟 10 個新對話，之後每天再開 1 個</li><li>回覆所有訊息</li><li>看誰對我心動</li><li class="no">探索結果優先曝光</li><li class="no">不出現在探索、隱藏上線狀態</li></ul></div>
-      <div class="plan hl"><div class="who">所有會員</div><h3>微糖會員 ${now}</h3><div class="price"><s class="was">NT$1,680</s> 免費<small>開站期間</small></div><div class="alt">正式收費後的預計定價：每月 NT$1,680</div>
-        <ul><li>基本會員全部功能</li><li><b>主動開啟新對話不限次數</b></li><li><b>探索結果優先曝光</b></li><li><b>不出現在探索、隱藏上線狀態</b></li><li><b>審核與客服優先處理</b></li></ul></div>
+  // 兩種會員：免費會員／微糖會員。開站期間所有人都是微糖會員，不收費
+  const ROWS = [
+    ['建立檔案、公開／模糊／私密相簿', '✓', '✓'],
+    ['探索、篩選、心動', '✓', '✓'],
+    ['回覆所有訊息', '✓', '✓'],
+    ['真人認證、財力認證', '✓', '✓'],
+    ['主動開啟新對話', '前 10 個，之後每天 1 個', '<b>不限次數</b>'],
+    ['看誰對我心動', '✓', '✓'],
+    ['看誰看過我的檔案', '—', '✓'],
+    ['探索結果優先曝光', '—', '✓'],
+    ['「今晚有空」與旅行模式', '—', '✓'],
+    ['訊息已讀回條', '—', '✓'],
+    ['隱身：不出現在探索、隱藏上線狀態', '—', '✓'],
+    ['審核與客服優先處理', '—', '✓'] ];
+  $('#app').innerHTML = `<div class="plpg">
+    <header class="phd" style="text-align:center"><h1>會員方案</h1><p>開站期間，所有人都免費享有微糖會員</p></header>
+    <div class="plans2">
+      <div class="pl2"><div class="who">先認識看看</div><h3>免費會員</h3><div class="price">免費</div><div class="alt">通過真人審核即開通</div>
+        <ul><li>建立檔案與相簿</li><li>探索、篩選、心動</li><li>回覆所有訊息</li><li>主動開啟 10 個新對話，之後每天 1 個</li><li>看誰對我心動</li><li>真人認證、財力認證</li></ul></div>
+      <div class="pl2 vip"><div class="who">開站期間你已享有</div><h3>微糖會員</h3>
+        <div class="price"><s class="was">每月 NT$1,680</s> 免費</div><div class="alt">不需綁卡，不會自動扣款</div>
+        <ul><li><b>主動開新對話不限次數</b></li><li><b>探索結果優先曝光</b>，更多人先看到你</li><li><b>看誰看過我</b>，掌握誰對你有興趣</li><li><b>今晚有空、旅行模式</b>，約見面更快</li><li><b>已讀回條</b>，不必猜對方看了沒</li><li><b>隱身模式</b>，只讓你想被看到的人看到</li><li><b>審核與客服優先</b></li></ul>
+        <div class="vipcta">${join}</div></div>
     </div>
-    <p class="tiny dim center mt2">開站期間所有會員都是微糖會員。正式收費前會提前公告，不會自動扣款；屆時可自行決定是否續用微糖會員。為了減少騷擾，對方回覆之前，每段新對話只能先傳一則訊息。付費只購買平台功能，平台不經手會員之間的任何款項。</p>
+    <div class="plcmp"><h3>功能比較</h3><div class="tblwrap"><table><thead><tr><th></th><th>免費會員</th><th class="v">微糖會員</th></tr></thead><tbody>
+      ${ROWS.map(([a,b,c])=>`<tr><td>${a}</td><td class="${b==='—'?'off':''}">${b}</td><td class="v">${c}</td></tr>`).join('')}</tbody></table></div></div>
+    <p class="tiny dim center mt2">開站期間所有會員都是微糖會員，不收任何費用。正式收費前會提前公告，不會自動扣款；屆時可自行決定是否續用。為了減少騷擾，對方回覆之前，每段新對話只能先傳一則訊息。付費只購買平台功能，平台不經手會員之間的任何款項。</p>
   </div>`;
 }
 
