@@ -1,0 +1,23 @@
+# 有更新 sitemap 時自動通知 Bing／Yahoo（IndexNow），也可以在 Actions 頁手動執行
+name: IndexNow
+on:
+  push:
+    branches: [main]
+    paths: ['sitemap.xml']
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for GitHub Pages deploy
+        run: sleep 90
+      - name: Submit sitemap URLs to IndexNow
+        run: |
+          KEY=21a56e1f14020691c95e86534a926f4e
+          curl -sf "https://onethirdsugar.com/$KEY.txt" | grep -q "$KEY" || { echo "key file not live yet"; exit 1; }
+          URLS=$(grep -o '<loc>[^<]*</loc>' sitemap.xml | sed 's/<[^>]*>//g' | jq -R . | jq -s .)
+          BODY=$(jq -n --arg k "$KEY" --argjson u "$URLS" '{host:"onethirdsugar.com",key:$k,keyLocation:("https://onethirdsugar.com/"+$k+".txt"),urlList:$u}')
+          echo "$BODY" | jq '.urlList | length'
+          curl -s -o resp.txt -w "%{http_code}\n" -X POST "https://api.indexnow.org/indexnow" -H "Content-Type: application/json; charset=utf-8" -d "$BODY" | tee code.txt
+          cat resp.txt; grep -qE '^(200|202)$' code.txt
