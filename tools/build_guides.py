@@ -64,8 +64,8 @@ PAGES = [
   },
   {
     'slug': 'sugar-mommy',
-    'title': 'Sugar Mommy 是什麼？甜心媽咪交友｜微糖 1/3 Sugar',
-    'desc': 'Sugar Mommy（甜心媽咪）是事業有成、願意照顧對方的女性。微糖支援 Sugar Mommy 認識真人審核的甜心，也歡迎同性甜心交友，重視隱私與安全。',
+    'title': 'Sugar Mommy 是什麼意思？甜心媽咪、Sugar Mom 一次看懂｜微糖 1/3 Sugar',
+    'desc': 'Sugar Mommy（也寫作 Sugar Mom、Sugar Mummy，中文常叫甜心媽咪）是什麼意思？指事業有成、願意照顧對方的女性。微糖支援 Sugar Mommy 認識真人審核的甜心，也歡迎同性甜心交友，重視隱私與安全。',
     'h1': 'Sugar Mommy 是什麼？',
     'lead': 'Sugar Mommy（甜心媽咪）是事業有成、經濟獨立，願意照顧另一半的女性。她們清楚自己想要什麼，也欣賞坦誠、懂得相處的人。',
     'sections': [
