@@ -1,0 +1,33 @@
+:root{--bg:#F4EFE5;--paper:#FCFAF4;--line:#D9CFB8;--ink:#1d1a17;--mute:#8C7B5E;--wine:#A63F58}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-underline-offset:4px}
+header{max-width:680px;margin:0 auto;padding:22px 20px;display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;font-family:"Noto Serif TC",serif;font-size:20px;letter-spacing:.12em}.logo img{width:22px;height:22px}
+.join{font-size:14px;color:var(--mute)}
+main{max-width:680px;margin:0 auto;padding:0 20px 40px}
+.card{background:var(--paper);border:2px solid var(--line);padding:34px 32px 36px}
+.pg{font-family:"Noto Serif TC",serif;letter-spacing:.3em;color:var(--mute);font-size:14px;padding-bottom:14px;border-bottom:2px solid var(--line);margin-bottom:24px}
+h1{font-family:"Noto Serif TC",serif;font-weight:900;font-size:clamp(34px,8vw,52px);line-height:1.25}
+.sub{margin:14px 0 22px;color:#4a443d}
+.types{list-style:none;border-top:2px dashed #DDD3C0;margin-bottom:26px}
+.types li{padding:12px 0;border-bottom:2px dashed #DDD3C0;display:flex;align-items:baseline;gap:14px}
+.types b{font-family:"Noto Serif TC",serif;font-weight:900;font-size:24px}.types i{font-style:normal;color:var(--mute);font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;background:var(--ink);color:#fff;border:2px solid var(--ink);font:inherit;font-size:16px;letter-spacing:.12em;cursor:pointer;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:focus-visible,.opt:focus-visible{outline:3px solid var(--wine);outline-offset:3px}
+.bar{height:4px;background:#E8DFCC;margin:-10px 0 22px}.bar i{display:block;height:100%;width:0;background:var(--wine);transition:width .25s}
+h2{font-family:"Noto Serif TC",serif;font-weight:900;font-size:26px;line-height:1.45;margin-bottom:20px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:#fff;border:2px solid var(--line);padding:14px 18px;font:inherit;font-size:17px;color:var(--ink);cursor:pointer;min-height:54px}
+.opt:hover{border-color:var(--ink)}
+.word{font-size:clamp(46px,12vw,72px);margin:0;line-height:1.2}
+.py{color:var(--mute);font-size:18px;margin-bottom:12px}
+.def{display:flex;gap:12px;align-items:flex-start;font-family:"Noto Serif TC",serif;font-size:22px;margin-bottom:22px}
+.def span:first-child{font-size:15px;color:var(--wine);border:2px solid var(--wine);padding:0 6px;margin-top:4px;flex:none}
+.info dt{font-size:13px;letter-spacing:.2em;color:var(--mute);margin-top:14px}.info dd{font-size:16px}
+.share{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.lnk{background:none;border:0;font:inherit;color:var(--mute);text-decoration:underline;margin-top:16px;cursor:pointer}
+.more{margin-top:26px;font-size:15px;color:#4a443d}.more p+p{margin-top:6px}
+footer{text-align:center;font-size:13px;color:var(--mute);padding:20px}
+@media(max-width:520px){.card{padding:26px 20px 28px}h2{font-size:22px}}

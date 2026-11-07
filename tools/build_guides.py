@@ -631,7 +631,7 @@ def hub():
     d = ROOT / 'guide'; d.mkdir(exist_ok=True); (d / 'index.html').write_text(t, encoding='utf-8')
 hub()
 
-urls = [(f'{SITE}/', '1.0', 'weekly'), (f'{SITE}/guide/', '0.9', 'weekly')] + [(f"{SITE}/{p['slug']}/", '0.8', 'monthly') for p in PAGES]
+urls = [(f'{SITE}/', '1.0', 'weekly'), (f'{SITE}/guide/', '0.9', 'weekly')] + [(f'{SITE}/quiz/', '0.9', 'monthly')] + [(f"{SITE}/{p['slug']}/", '0.8', 'monthly') for p in PAGES]
 import subprocess, shutil
 if shutil.which('node'):
     files=[str(ROOT / p['slug'] / 'index.html') for p in PAGES]+[str(ROOT / 'guide' / 'index.html')]
