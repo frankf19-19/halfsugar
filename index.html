@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ko94xvubhdR7GrCXD9cMG9+H750ZbI/uYNGCpPzfBUE=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-rChKV2Gs12zF9PpkgSebmZUie3L4J9K0D/2bXlwq0xE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ko94xvubhdR7GrCXD9cMG9+H750ZbI/uYNGCpPzfBUE=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-5py/ZRSdAP/badrtx8KDt+BMod5Q6BPZ1GPWy/Oyyfs=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1285,6 +1285,60 @@ html[data-theme=dark] .bnav a.active svg{stroke:#EBA3B4;fill:rgba(235,163,180,.2
 .tbout{font-size:13px!important;letter-spacing:.14em!important;padding:6px 14px!important;border:1px solid currentColor;border-radius:2px;opacity:.85}
 .tbout:active{opacity:.5}
 @media(max-width:719px){.meout{display:none!important}}
+
+/* v1.95 破冰問答、約會暗號、每日精選、悄悄心動、二選一、地點靈感、完成度徽章 */
+.prrow{display:grid;grid-template-columns:1fr;gap:6px;margin:0 0 14px}
+.prrow select{font-size:14px}
+.prompts{display:grid;gap:10px}
+.pq{border:1px solid var(--rule);padding:14px 16px 12px;background:var(--paper,#FAF8F6)}
+.pq .q{font-size:12px;letter-spacing:.12em;color:var(--grey);margin:0 0 6px}
+.pq .a{font-family:"Noto Serif TC",serif;font-size:17px;line-height:1.6;margin:0;color:var(--ink);overflow-wrap:anywhere}
+.pq .pqr{margin-top:8px;background:none;border:0;padding:4px 0;font:inherit;font-size:13px;color:var(--rose,#B04A62);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.dtype{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0}
+.dtype b{font-family:"Noto Serif TC",serif;font-weight:500;font-size:20px;letter-spacing:.12em;border-bottom:1px solid var(--ink);padding-bottom:2px}
+.dtype span{font-size:13px;color:var(--grey)}
+.sbanner{margin:16px 0 0;padding:12px 14px;border:1px solid var(--rose,#B04A62);color:var(--rose,#B04A62);font-size:14px;letter-spacing:.06em;text-align:center}
+.slk{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;background:none;border:0;padding:6px 4px 0;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;line-height:1.4;flex-wrap:wrap}
+.slk small{font-size:11px;color:var(--grey);letter-spacing:.02em}
+.slk.on{color:var(--rose,#B04A62)}
+.slk:disabled{opacity:.45;cursor:not-allowed}
+.picks{margin:0 0 22px}
+.pkhd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 10px}
+.pkhd h2{font-family:"Noto Serif TC",serif;font-weight:400;font-size:19px;letter-spacing:.2em;margin:0}
+.pkrow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(118px,1fr);gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.pk{scroll-snap-align:start;position:relative;display:flex;flex-direction:column;text-align:left;background:none;border:0;padding:0;font:inherit;color:var(--ink);cursor:pointer;min-width:0}
+.pk .ph{display:block;width:100%;aspect-ratio:3/4;background:#ECEAE6 center/cover no-repeat}
+.pk .nm{font-size:14px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk .nm small{color:var(--grey);font-size:12px}
+.pk .ct{font-size:11px;color:var(--grey);letter-spacing:.04em}
+.pk i{position:absolute;top:8px;left:8px;font-style:normal;font-size:11px;background:rgba(255,255,255,.88);color:#121111;padding:2px 8px;border-radius:999px}
+.pk.seen .ph{filter:saturate(.6) brightness(.92)}
+.pickcard{max-width:86%;margin:10px 0;padding:14px 14px 10px;border:1px solid var(--rule);background:var(--paper,#FAF8F6)}
+.pickcard.me{margin-left:auto}
+.pickcard .ph2{display:flex;justify-content:space-between;gap:10px;font-size:13px;letter-spacing:.1em;margin-bottom:10px}
+.pko{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.pko button,.pko span{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;padding:8px;border:1px solid var(--ink);background:none;font:inherit;font-size:15px;color:var(--ink);text-align:center;cursor:pointer}
+.pko button:hover:not(:disabled){background:var(--ink);color:var(--bg,#fff)}
+.pko button:disabled{opacity:.5;cursor:default}
+.pko.done span{border-color:var(--rule);color:var(--grey)}
+.pko.done span.me,.pko.done span.them{border-color:var(--ink);color:var(--ink)}
+.pko.done span.me.them{background:var(--ink);color:var(--bg,#fff)}
+.pko em{font-style:normal;font-size:10px;letter-spacing:.08em;opacity:.75}
+.pkq{display:flex;align-items:center;justify-content:center;gap:14px;margin:24px 0 8px;flex-wrap:wrap;text-align:center}
+.pkq b{font-family:"Noto Serif TC",serif;font-weight:500;font-size:24px;letter-spacing:.08em}
+.pkq span{font-size:13px;color:var(--grey);letter-spacing:.2em}
+.chph.off{opacity:.38}
+.chat form .chph{width:36px}
+@media(max-width:380px){.chat form .chph{width:32px}}
+.spots{margin:8px 0 0}
+.spots .tags{margin:6px 0}
+.spots .tag{font-size:12px;padding:6px 10px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.badges span{font-size:12px;padding:4px 10px;border:1px solid var(--rule);border-radius:999px;background:var(--paper,#FAF8F6);white-space:nowrap}
+html[data-theme=dark] .pq,html[data-theme=dark] .pickcard,html[data-theme=dark] .badges span{background:#1F1D1B;border-color:#3A3633}
+html[data-theme=dark] .pk i{background:rgba(18,17,17,.85);color:#ECE7E1}
+html[data-theme=dark] .pko button:hover:not(:disabled),html[data-theme=dark] .pko.done span.me.them{background:#ECE7E1;color:#121111}
+@media(min-width:720px){.prrow{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start}.pkrow{grid-auto-columns:minmax(0,1fr);overflow:visible}}
 </style>
 </head>
 <body>
@@ -1333,7 +1387,7 @@ html[data-theme=dark] .bnav a.active svg{stroke:#EBA3B4;fill:rgba(235,163,180,.2
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.94.10';
+const BUILD = 'v1.95.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1419,6 +1473,14 @@ const urlCache = new Map();
 const $ = (s, el=document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const age = y => y ? (new Date().getFullYear() - y) : '';
+// 約會邀請的地點靈感（不寫店名，保護雙方隱私；第一次見面以人多、交通方便的公開場所為主）
+const SPOTS = {
+  coffee:['書店裡的咖啡座','美術館的咖啡廳','捷運站附近的咖啡廳','有落地窗的咖啡廳'],
+  tea:['飯店大廳下午茶','百貨公司的甜點店','茶館','公園旁的咖啡廳'],
+  dinner:['巷子裡的義式小館','安靜的日式料理','有夜景的高樓餐廳','訂得到位的小酒館'],
+  drink:['飯店大廳酒吧','安靜的威士忌吧','有爵士樂的酒吧','頂樓景觀酒吧'],
+  activity:['看展覽','河濱散步','逛老街','夜市走走','電影院'],
+  other:['捷運站出口見','百貨公司門口見'] };
 const INV_KIND = { coffee:'喝咖啡', tea:'下午茶', dinner:'吃晚餐', drink:'小酌', activity:'出去走走', other:'其他' };
 const INV_ST = { pending:'等待回覆', accepted:'已接受', declined:'已婉拒', cancelled:'已取消' };
 const fmtDate = t => !t || isNaN(new Date(t)) ? '—' : new Date(t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});
@@ -2087,6 +2149,16 @@ const BUDGET_ORDER = ['lt30k','30to50k','50to80k','80to120k','gt120k'];
 const REGIONS = { '北部':['台北市','新北市','基隆','桃園市','新竹','宜蘭'], '中部':['苗栗','台中市','彰化','南投','雲林'], '南部':['嘉義','台南市','高雄市','屏東'], '東部':['花蓮','台東'], '離島':['澎湖','金門'], '海外':['海外'] };
 const BODY = { slim:'纖細', fit:'勻稱', average:'標準', athletic:'健壯', curvy:'曲線', chubby:'微胖' };
 const CUPS = ['A','B','C','D','E','F+'];
+// 破冰問答題庫：題號存在資料庫，只能往後加，不能改順序
+const PROMPTS = ['理想的第一次約會是…','最近一次被逗笑是因為…','週末的我通常在…','我最拿手的一件事是…','跟我相處，你會發現…','我最想一起去的地方是…','我想問你的第一個問題是…','讓我心動的小細節是…','第一次見面，我的小堅持是…','朋友都說我是…','最近在追的劇／在聽的歌是…','如果有一整天空檔，我會…'];
+// 約會暗號（/quiz/ 約會人格測驗的結果）
+const DTYPE = { A:{ w:'改天約', d:'慢熟、謹慎，答應了就會準時出現' }, B:{ w:'到家說一聲', d:'體貼、細心，會記得你說過的小事' }, C:{ w:'我都可以', d:'隨和好相處，很會配合對方' }, D:{ w:'哈哈哈哈', d:'氣氛製造機，跟他約會不會冷場' } };
+const DT_BEST = { A:'B', B:'A', C:'D', D:'C' };
+const dtMatch = (a, b) => !a || !b ? '' : DT_BEST[a]===b ? '你們的約會暗號很合拍' : a===b ? '你們是同一型，很有默契' : '';
+// 聊天二選一題庫
+const PICKS = [['海邊','山上'],['火鍋','燒肉'],['早起','晚睡'],['貓','狗'],['電影院','在家追劇'],['咖啡','茶'],['甜食','鹹食'],['排好行程的旅行','說走就走'],['夜景','日出'],['傳訊息','講電話'],['夜市','餐廳'],['國內小旅行','出國'],['喜歡的先吃','留到最後吃'],['夏天','冬天'],['安靜的酒吧','熱鬧的居酒屋'],['開車兜風','散步聊天'],['看展','逛街'],['拍照的人','被拍的人'],['主動約','等對方約'],['鹹酥雞','滷味'],['早午餐','宵夜'],['驚喜','先說好'],['下雨天待在家','下雨天也出門'],['全糖','無糖'],['日本','歐洲'],['文字','貼圖'],['提早到','剛好到'],['聽音樂','聽 Podcast'],['山景溫泉','海景飯店'],['看恐怖片','看愛情片']];
+const PICK_RE = /^🎲 二選一｜(.+?) 還是 (.+?)？$/;
+const pickBody = ([a,b]) => `🎲 二選一｜${a} 還是 ${b}？`;
 const ZODIAC = { aries:'牡羊座', taurus:'金牛座', gemini:'雙子座', cancer:'巨蟹座', leo:'獅子座', virgo:'處女座', libra:'天秤座', scorpio:'天蠍座', sagittarius:'射手座', capricorn:'摩羯座', aquarius:'水瓶座', pisces:'雙魚座' };
 const DRINK = { never:'不喝酒', social:'社交場合會喝', often:'經常喝' };
 const SMOKE = { never:'不抽菸', social:'偶爾抽', often:'經常抽' };
@@ -2156,8 +2228,14 @@ function profileFormHtml(p={}){
     <label>興趣（點選，最多 8 個）</label>
     <div class="tags" id="tagPick">${TAGS.map(t=>`<button type="button" class="tag ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
     <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額。">${esc(p.bio||'')}</textarea>
-    <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額或不當字眼，將無法通過審核。</p>`;
+    <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額或不當字眼，將無法通過審核。</p>
+    <div class="fsec"><span>5</span>破冰問答與約會暗號（選填）</div>
+    <p class="tiny dim">挑最多 3 題回答，會顯示在你的檔案上。別人可以針對其中一題直接回覆你，第一句話就不難開口。修改後跟自介一樣需要審核。</p>
+    <div id="prPick">${[0,1,2].map(i=>{ const it=(p.prompts||[])[i]||{}; return `<div class="prrow"><select name="pq${i}" aria-label="第 ${i+1} 題"><option value="">不選這一題</option>${PROMPTS.map((t,k)=>`<option value="${k}" ${it.q===k?'selected':''}>${t}</option>`).join('')}</select><input name="pa${i}" maxlength="80" value="${esc(it.a||'')}" placeholder="你的回答（80 字內）"></div>`; }).join('')}</div>
+    <label>約會暗號</label><select name="date_type"><option value="">還沒測</option>${Object.entries(DTYPE).map(([k,v])=>`<option value="${k}" ${(p.date_type||quizType())===k?'selected':''}>${v.w}　${v.d}</option>`).join('')}</select>
+    <p class="tiny dim">還不知道自己是哪一型？<a href="/quiz/" target="_blank" rel="noopener">做 1 分鐘約會人格測驗</a>，測完回來就會自動帶入。</p>`;
 }
+const quizType = () => { try{ const t = localStorage.getItem('yy_quiz'); return DTYPE[t] ? t : ''; }catch(_){ return ''; } };
 function bindTagPick(){ document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',()=>{ $('#budgetBox')?.classList.toggle('hidden', r.value==='baby'); const eb=$('#ebBox'); if(eb) eb.style.display = r.value==='baby'?'':'none'; }));
   document.querySelectorAll('input[name=orient]').forEach(r=>r.addEventListener('change',()=>{ const os=document.querySelector('.orient-see'); if(os){ os.innerHTML = '<b>你選的是「'+esc(ORIENT[r.value]||'')+'」</b><br>'+esc(orientSee(r.value)); os.classList.remove('hidden'); } const c=$('#cupBox'); if(c) c.style.display = r.value.startsWith('male')?'none':'';
     const male=r.value.startsWith('male'); document.querySelectorAll('#rolePick .rl').forEach(l=>{ const hide=(male&&l.dataset.r==='mommy')||(!male&&l.dataset.r==='daddy'); l.style.display=hide?'none':''; if(hide){ const i=l.querySelector('input'); if(i.checked){ i.checked=false; $('#budgetBox')?.classList.add('hidden'); } } }); }));
@@ -2183,10 +2261,15 @@ function readProfileForm(form){
   const budget = f.get('role')==='baby' ? null : (f.get('budget')||null);
   if(f.get('role')!=='baby' && !budget){ toast('請選擇生活方式預算'); return null; }
   if(!f.get('body_type')){ toast('請選擇身材'); return null; }
+  const prompts = [], usedQ = new Set();
+  for(const i of [0,1,2]){ const q = f.get('pq'+i), a = (f.get('pa'+i)||'').trim(); if(q==='' || q==null || !a) continue;
+    if(usedQ.has(q)){ toast('破冰問答有重複的題目'); return null; } usedQ.add(q); prompts.push({ q:+q, a }); }
+  { const all = prompts.map(x=>x.a).join(' '); const b2 = containsBadWords(all); if(b2.length){ toast(`破冰問答含不允許的字眼：${b2.join('、')}`); return null; }
+    if(/\bline\b|\bline\s*id|\big\b|instagram|telegram|wechat|微信|加賴|加line|09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{8,}/i.test(all)){ toast('破冰問答請勿留下聯絡方式'); return null; } }
   const relation_types = [...document.querySelectorAll('#relPick .on')].map(b=>b.dataset.r);
   const extra = { body_type: f.get('body_type'), cup: gender==='female' ? (f.get('cup')||null) : null, relation_types, meet_freq: f.get('meet_freq')||null,
     zodiac: f.get('zodiac')||null, drink: f.get('drink')||null, smoke: f.get('smoke')||null, languages: [...document.querySelectorAll('#langPick .on')].map(b=>b.dataset.l),
-    expect_budget: f.get('role')==='baby' ? (f.get('expect_budget')||null) : null };
+    expect_budget: f.get('role')==='baby' ? (f.get('expect_budget')||null) : null, prompts, date_type: f.get('date_type')||null };
   return { ...extra, role:f.get('role'), budget, nickname:f.get('nickname').trim(), gender, looking_for, birth_year:+f.get('birth_year'),
     city:f.get('city'), height_cm: f.get('height_cm')? +f.get('height_cm') : null, occupation:f.get('occupation').trim()||null, bio, tags };
 }
@@ -2254,7 +2337,7 @@ function missingBasics(p){ if(!p) return [];
   const m=[]; if(!(p.nickname||'').trim()) m.push('暱稱'); if(!p.gender||!p.looking_for) m.push('想認識的對象'); if(!p.role) m.push('身分');
   if(!p.birth_year) m.push('年齡'); if(!p.city) m.push('所在地'); if(!p.body_type) m.push('身材'); if(!(p.bio||'').trim()) m.push('自我介紹');
   if((p.role==='daddy'||p.role==='mommy') && !p.budget) m.push('生活方式預算'); if(!p.avatar_path) m.push('頭像'); return m; }
-const PUB_COLS = 'avatar_blurred,approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,zodiac,drink,smoke,languages,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
+const PUB_COLS = 'prompts,approved_prompts,date_type,avatar_blurred,approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,zodiac,drink,smoke,languages,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
 let authUser = null;
 const phoneOk = () => !!authUser?.phone_confirmed_at && !!authUser?.phone;
@@ -2536,7 +2619,7 @@ const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'',
 // 別人重新送審中：顯示上一次通過審核的頭像（新頭像審核通過前不給別人看）
 // 別人重新送審中：自介、職業、興趣也顯示上一次通過審核的版本
 const pubView = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_bio != null)
-  ? { ...p, bio: p.approved_bio, occupation: p.approved_occupation, tags: p.approved_tags || [] } : p;
+  ? { ...p, bio: p.approved_bio, occupation: p.approved_occupation, tags: p.approved_tags || [], prompts: p.approved_prompts || [] } : p;
 const pubAvRaw = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_avatar_path) ? p.approved_avatar_path : p?.avatar_path;
 // 模糊頭像：別人預設只看得到模糊版（拿到私密照授權的人在檔案頁會看到原圖，見 openProfile）
 const avBlurred = p => !!(p && p.avatar_blurred && me && p.id !== me.id);   // 管理員在前台也只看模糊版；原圖只在審核頁看
@@ -2574,6 +2657,7 @@ async function viewBrowse(){
   if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}
     ${adminView ? `<header class="phd"><h1>探索</h1><p>管理員瀏覽模式：看得到所有已上架的會員，不限方向；只能瀏覽，不能傳訊息或心動。</p></header>`
     : `<header class="phd"><h1>探索</h1><p>${orientText(me)}，只顯示方向互相吻合的會員</p></header>`}
+    ${!adminView && me.status==='approved' ? '<section class="picks hidden" id="picks"></section>' : ''}
     <div class="filters">
       ${adminView?`<select id="fGender" aria-label="性別"><option value="">男女都看</option><option value="female" ${browseState.agender==='female'?'selected':''}>只看女生</option><option value="male" ${browseState.agender==='male'?'selected':''}>只看男生</option></select>`:''}
       <select id="fRole" aria-label="身分"><option value="">身分不限</option><option value="baby" ${browseState.role==='baby'?'selected':''}>甜心</option><option value="sugar" ${browseState.role==='sugar'?'selected':''}>Sugar Daddy／Mommy</option></select>
@@ -2664,7 +2748,35 @@ async function viewBrowse(){
         body:[...document.querySelectorAll('#xBody .on')].map(t=>t.dataset.v), rel:[...document.querySelectorAll('#xRel .on')].map(t=>t.dataset.v), zx:[...document.querySelectorAll('#xZx .on')].map(t=>t.dataset.v), zm: document.querySelector('#xZm .on')?.dataset.m||'ex' });
       closeModal(); reload(); };
   };
+  loadPicks(rs);
   await reload();
+}
+// 每日精選：每天早上（台灣時間）依你的帳號換一組 5 位方向吻合的會員；不受篩選影響，看完就等明天
+const taipeiDay = () => new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const hash32 = str => { let h = 2166136261; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h>>>0; };
+async function loadPicks(rs){
+  const el = $('#picks'); if(!el) return;
+  const day = taipeiDay();
+  const [{ data: rows }, { data: ms }] = await Promise.all([
+    sb.from('profiles').select('id,nickname,role,birth_year,city,avatar_path,avatar_blurred,approved_avatar_path,person_verified_at,date_type,prompts,last_active_at')
+      .eq('status','approved').eq('hidden',false).neq('id', me.id).eq('gender', me.looking_for).eq('looking_for', me.gender)
+      .order('last_active_at',{ascending:false,nullsFirst:false}).limit(200),
+    sb.from('matches').select('user_a,user_b').or(`user_a.eq.${me.id},user_b.eq.${me.id}`) ]);
+  if(rs!==routeSeq || !$('#picks')) return;
+  const talked = new Set((ms||[]).flatMap(m=>[m.user_a,m.user_b]));
+  // 檔案越完整，被選中的機會越高（照片以外再加分：真人認證、破冰問答、約會暗號）
+  const score = r => hash32(me.id+day+r.id) / 4294967296 * (1 + (r.person_verified_at?.4:0) + ((r.prompts||[]).length?.3:0) + (r.date_type?.2:0));
+  const pick = (rows||[]).filter(r=>!talked.has(r.id) && pubAv(r)).sort((a,b)=>score(b)-score(a)).slice(0,5);
+  if(!pick.length) return;
+  let seenSet; try{ seenSet = new Set(JSON.parse(localStorage.getItem('yy_picks_'+me.id+'_'+day)||'[]')); }catch(_){ seenSet = new Set(); }
+  const now = new Date(Date.now()+8*3600e3), left = 24 - now.getUTCHours();
+  el.innerHTML = `<div class="pkhd"><h2>今日精選</h2><span class="tiny dim">${seenSet.size>=pick.length?`都看完了，${left} 小時後換一組`:`還有 ${pick.length-[...seenSet].filter(id=>pick.some(r=>r.id===id)).length} 位沒看・每天早上更新`}</span></div>
+    <div class="pkrow">${pick.map(r=>`<button type="button" class="pk${seenSet.has(r.id)?' seen':''}" data-id="${r.id}"><span class="ph${avBlurred(r)?' bl':''}" data-ph="${esc(pubAv(r)||'')}"></span>
+      <span class="nm">${esc(r.nickname)} <small>${age(r.birth_year)}</small></span><span class="ct">${esc(r.city||'')}${dtMatch(me.date_type, r.date_type)?'・暗號合拍':''}</span>${seenSet.has(r.id)?'<i>看過了</i>':''}</button>`).join('')}</div>`;
+  el.classList.remove('hidden');
+  el.querySelectorAll('.pk').forEach(b=>b.onclick=()=>{ seenSet.add(b.dataset.id); try{ localStorage.setItem('yy_picks_'+me.id+'_'+day, JSON.stringify([...seenSet])); }catch(_){}
+    b.classList.add('seen'); if(!b.querySelector('i')) b.insertAdjacentHTML('beforeend','<i>看過了</i>'); openProfile(b.dataset.id); });
+  lazyPh(el.querySelectorAll('.ph'));
 }
 
 /* ---------- 會員檔案視窗 ---------- */
@@ -2683,6 +2795,8 @@ async function openProfile(id, opt){
     sb.from('photo_requests').select('status').eq('requester_id', me.id).eq('owner_id', id).maybeSingle(),
     sb.rpc('private_photo_count', { uid: id }),
   ]);
+  const { data: sl } = me.is_admin || id===me.id ? { data: null } : await sb.rpc('my_secret_likes');
+  const mySecret = (Array.isArray(sl)?sl:[]).find(x=>x.to_id===id);
   const p = pubView(p0);
   const { data: conv } = await sb.from('matches').select('id').or(`and(user_a.eq.${me.id},user_b.eq.${id}),and(user_a.eq.${id},user_b.eq.${me.id})`).maybeSingle();
   if(!$('#mbg') || tok!==profSeq) return;   // 使用者在載入時已經關掉視窗或改看別人
@@ -2704,7 +2818,10 @@ async function openProfile(id, opt){
       ${p.person_verified_at||p.wealth_verified_at?`<div class="row" style="gap:6px;margin-top:10px">${personBadge(p,true)}${wealthBadge(p,true)}</div>`:''}
       ${availHtml(p)?`<div class="avls" style="margin-top:12px">${availHtml(p)}</div>`:''}
     </div>
+    ${mySecret?.mutual?'<div class="sbanner">🤫 你們互相悄悄心動了</div>':''}
     ${p.bio?`<section class="psec"><h4>關於我</h4><p class="bio">${esc(p.bio)}</p></section>`:''}
+    ${(p.prompts||[]).filter(x=>PROMPTS[x.q]).length?`<section class="psec"><h4>破冰問答</h4><div class="prompts">${p.prompts.filter(x=>PROMPTS[x.q]).map(x=>`<div class="pq"><p class="q">${PROMPTS[x.q]}</p><p class="a">${esc(x.a)}</p>${canAct&&p.id!==me.id&&!me.is_admin?`<button type="button" class="pqr" data-q="${x.q}">回覆這題</button>`:''}</div>`).join('')}</div></section>`:''}
+    ${DTYPE[p.date_type]?`<section class="psec"><h4>約會暗號</h4><p class="dtype"><b>${DTYPE[p.date_type].w}</b><span>${DTYPE[p.date_type].d}</span></p>${p.id!==me.id&&dtMatch(me.date_type,p.date_type)?`<p class="tiny ok mt">✓ ${dtMatch(me.date_type,p.date_type)}</p>`:p.id!==me.id&&!me.date_type&&!me.is_admin?'<p class="tiny dim mt"><a href="/quiz/" target="_blank" rel="noopener">測測你的約會暗號</a>，看看你們合不合拍</p>':''}</section>`:''}
     <section class="psec"><h4>基本資料</h4><dl class="pdl">
       ${[['所在地',esc(p.city||'')],['年齡',age(p.birth_year)?age(p.birth_year)+' 歲':''],['身高',p.height_cm?p.height_cm+' cm':''],['身材',p.body_type?BODY[p.body_type]:''],['罩杯',p.cup?esc(p.cup):''],['職業',p.occupation?esc(p.occupation):''],['星座',ZODIAC[p.zodiac]||''],['喝酒',DRINK[p.drink]||''],['抽菸',SMOKE[p.smoke]||''],['語言',(p.languages||[]).map(l=>LANGS[l]).filter(Boolean).join('、')]].filter(x=>x[1]).map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
     </dl></section>
@@ -2721,6 +2838,7 @@ async function openProfile(id, opt){
     ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能心動或傳訊息</p>'}
     <div class="pactions">
       ${opt?.admin?`<div class="row" style="gap:10px"><button class="btn primary" style="flex:1" id="admBack">${opt.back?'返回對話紀錄':'關閉'}</button></div>`:''}<div class="row" style="gap:10px;align-items:center;flex-wrap:nowrap${opt?.admin?';display:none':''}"><button class="btn primary" style="flex:1" id="msgBtn" ${canAct||conv?'':'disabled'}>${conv?'繼續聊天':'傳訊息'}</button>${me.is_admin?'':`<button class="btn ${myLike?'ghost':'rose'}" style="flex:1" id="likeBtn" ${canAct&&(p.status==='approved'||myLike)?'':'disabled'} aria-pressed="${!!myLike}">${myLike?'♥ 已心動':'♡ 心動'}</button>`}</div>
+      ${!me.is_admin&&!opt?.admin&&p.id!==me.id?`<button type="button" class="slk${mySecret?' on':''}" id="slkBtn" ${canAct||mySecret?'':'disabled'} aria-pressed="${!!mySecret}">${mySecret?(mySecret.mutual?'🤫 互相悄悄心動':'🤫 已悄悄心動<small>對方也按了才會揭曉</small>'):'🤫 悄悄心動<small>對方不會知道，除非他也悄悄心動你</small>'}</button>`:''}
     </div>
     </div></div>
     `;
@@ -2771,6 +2889,16 @@ async function openProfile(id, opt){
       delete drafts[id]; closeModal(); toast('已送出，等對方回覆'); location.hash='#/chat/'+mid; };
   };
   if($('#admBack')) $('#admBack').onclick = ()=>{ if(opt.back) opt.back(); else closeModal(); };
+  if($('#slkBtn')) $('#slkBtn').onclick = async ()=>{ const b=$('#slkBtn'); b.disabled=true; const on = !mySecret;
+    if(!on && !confirm('取消悄悄心動？')){ b.disabled=false; return; }
+    const { data: mutual, error } = await sb.rpc('secret_like', { target:id, on_:on }); b.disabled=false;
+    if(error) return toast(zh(error.message));
+    toast(on ? (mutual ? '🤫 你們互相悄悄心動了！' : '已悄悄心動，對方也按了才會互相揭曉') : '已取消悄悄心動');
+    if(tok===profSeq) openProfile(id, opt); };
+  document.querySelectorAll('#modal .pqr').forEach(b=>b.onclick=()=>{ const q = PROMPTS[+b.dataset.q]; const it = (p.prompts||[]).find(x=>x.q===+b.dataset.q);
+    const pre = `回覆你的「${q.replace(/…$/,'')}」：${it?`「${it.a.slice(0,30)}${it.a.length>30?'…':''}」`:''}\n`;
+    if(conv){ try{ sessionStorage.setItem('yy_prefill_'+conv.id, pre); }catch(_){} closeModal(); location.hash='#/chat/'+conv.id; return; }
+    drafts[id] = drafts[id] || pre; $('#msgBtn').click(); });
   let liked = !!myLike;
   if($('#likeBtn')) $('#likeBtn').onclick = async ()=>{
     const b = $('#likeBtn'); b.disabled = true;
@@ -2814,6 +2942,13 @@ async function viewLikes(){
     sb.rpc('my_viewers'),
   ]);
   if(le1||le2) throw (le1||le2);
+  // 悄悄心動：自己按過的人；互相按了才揭曉
+  const { data: sraw } = await sb.rpc('my_secret_likes'); const sl = Array.isArray(sraw) ? sraw : [];
+  let secrets = [];
+  if(sl.length){ const { data: sp } = await sb.from('profiles').select('id,nickname,role,birth_year,city,occupation,avatar_path,avatar_blurred,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at').in('id', sl.map(x=>x.to_id));
+    const pm = Object.fromEntries((sp||[]).map(x=>[x.id,x])); secrets = sl.map(x=>({ ...x, p: pm[x.to_id] })).filter(x=>x.p); }
+  const sSeen = localStorage.getItem('yy_secret_seen_'+me.id) || '1970-01-01T00:00:00Z';
+  const sNew = secrets.filter(x=>x.mutual && x.p.status==='approved' && new Date(x.revealed_at) > new Date(sSeen)).length;
   let views = [];   // 誰看過我：通過審核的顯示檔案，審核中的只顯示「審核中的會員」
   { const vr = Array.isArray(vraw) ? vraw : [], ids = vr.filter(v=>v.approved).map(v=>v.viewer_id);
     const { data: vp } = ids.length ? await sb.from('profiles').select('id,nickname,role,birth_year,city,occupation,avatar_path,avatar_blurred,approved_avatar_path,status,last_active_at,person_verified_at,wealth_verified_at').in('id', ids) : { data: [] };
@@ -2822,13 +2957,15 @@ async function viewLikes(){
   const ok = rows => (rows||[]).filter(r=>r.p&&r.p.status==='approved');
   const list = (rows, key) => ok(rows).length ? `<div class="grid lgrid">${ok(rows).map(r=> r.p.pending ? `<div class="pcard pend"><div class="ph"></div><div class="info"><div class="name"><span>審核中的會員</span></div><div class="meta">審核通過後顯示</div><div class="tiny dim" style="margin-top:2px">${fmtTime(r.last_at)} 看過${r.times>1?`・共 ${r.times} 次`:''}</div></div></div>` : `<div class="pcard" data-id="${r.p.id}">
       <div class="ph" data-ph="${esc(pubAv(r.p)||'')}"></div>${seen(r.p.last_active_at)?`<span class="seen ${seen(r.p.last_active_at)==='在線上'?'on':''}">${seen(r.p.last_active_at)}</span>`:''}
-      <div class="info"><div class="name"><span>${esc(r.p.nickname)}</span><span class="muted small">${age(r.p.birth_year)}</span></div><div class="meta">${r.p.role?`<span class="rtag">${ROLES[r.p.role]}</span>`:''}${esc(r.p.city||'')}</div><div class="tiny dim" style="margin-top:2px">${key==='c'?`${fmtTime(r.last_at)} 看過${r.times>1?`・共 ${r.times} 次`:''}`:`${fmtTime(r.created_at)} 心動`}</div></div></div>`).join('')}</div>`
+      <div class="info"><div class="name"><span>${esc(r.p.nickname)}</span><span class="muted small">${age(r.p.birth_year)}</span></div><div class="meta">${r.p.role?`<span class="rtag">${ROLES[r.p.role]}</span>`:''}${esc(r.p.city||'')}</div><div class="tiny dim" style="margin-top:2px">${key==='s'?(r.mutual?'<b class="ok">🤫 互相悄悄心動</b>':'還沒揭曉'):key==='c'?`${fmtTime(r.last_at)} 看過${r.times>1?`・共 ${r.times} 次`:''}`:`${fmtTime(r.created_at)} 心動`}</div></div></div>`).join('')}</div>`
+    : key==='s' ? `<div class="empty"><p class="serif">還沒有悄悄心動的人</p><p class="muted small">在對方的檔案按「🤫 悄悄心動」，對方不會知道；要是他也悄悄心動你，你們會同時在這裡揭曉。</p><a class="btn mt2" href="#/browse">去探索</a></div>`
     : `<div class="empty"><p class="serif">${key==='c'?'還沒有人看過你的檔案':key==='b'?'還沒有心動過的人':'還沒有人對你心動'}</p><p class="muted small">${key==='b'?'在探索看到喜歡的人，按「心動」讓對方知道。':'把檔案和照片準備好，被看見的機會更高。'}</p><a class="btn mt2" href="${key==='b'?'#/browse':'#/me'}">${key==='b'?'去探索':'完善我的檔案'}</a></div>`;
   const vNew = ok(views).filter(v=>new Date(v.last_at) > new Date(vSeen)).length, vTab = location.hash.includes('views');
-  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>心動</h1><p>對你心動的人、你心動過的人，和看過你檔案的人。</p></header><div class="tabs"><button class="${vTab?'':'on'}" data-t="a">對我心動（${ok(toMe).length}）</button><button data-t="b">我心動的（${ok(fromMe).length}）</button><button class="${vTab?'on':''}" data-t="c">誰看過我（${ok(views).length}）${vNew&&!vTab?`<span class="badge">${vNew}</span>`:''}</button></div>
-    <div id="ta" class="${vTab?'hidden':''}">${list(toMe,'a')}</div><div id="tb" class="hidden">${list(fromMe,'b')}</div><div id="tc" class="${vTab?'':'hidden'}">${list(views,'c')}</div>`;
+  if(rs!==routeSeq) return; $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>心動</h1><p>對你心動的人、你心動過的人，和看過你檔案的人。</p></header><div class="tabs"><button class="${vTab?'':'on'}" data-t="a">對我心動（${ok(toMe).length}）</button><button data-t="b">我心動的（${ok(fromMe).length}）</button><button class="${vTab?'on':''}" data-t="c">誰看過我（${ok(views).length}）${vNew&&!vTab?`<span class="badge">${vNew}</span>`:''}</button><button data-t="s">悄悄心動${sNew?`<span class="badge">${sNew}</span>`:''}</button></div>
+    <div id="ta" class="${vTab?'hidden':''}">${list(toMe,'a')}</div><div id="tb" class="hidden">${list(fromMe,'b')}</div><div id="tc" class="${vTab?'':'hidden'}">${list(views,'c')}</div>
+    <div id="ts" class="hidden">${ok(secrets).length?`<p class="tiny dim" style="margin:0 0 14px">只有你看得到這份名單。對方也悄悄心動你，才會顯示「互相悄悄心動」。</p>`:''}${list([...secrets].sort((a,b)=>(b.mutual?1:0)-(a.mutual?1:0)),'s')}</div>`;
   if(vTab) localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString());
-  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); $('#tc').classList.toggle('hidden', b.dataset.t!=='c'); if(b.dataset.t==='c'){ localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString()); b.querySelector('.badge')?.remove(); refreshUnread(true); } });
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); $('#ta').classList.toggle('hidden', b.dataset.t!=='a'); $('#tb').classList.toggle('hidden', b.dataset.t!=='b'); $('#tc').classList.toggle('hidden', b.dataset.t!=='c'); $('#ts').classList.toggle('hidden', b.dataset.t!=='s'); if(b.dataset.t==='s'){ localStorage.setItem('yy_secret_seen_'+me.id, new Date().toISOString()); b.querySelector('.badge')?.remove(); } if(b.dataset.t==='c'){ localStorage.setItem('yy_views_seen_'+me.id, new Date().toISOString()); b.querySelector('.badge')?.remove(); refreshUnread(true); } });
   $('#app').querySelectorAll('.pcard[data-id]').forEach(el=>el.onclick=()=>openProfile(el.dataset.id));
   lazyPh($('#app').querySelectorAll('.ph'));
 }
@@ -2902,11 +3039,12 @@ async function viewChat(matchId){
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
     <div class="banner ${closed?'':'hidden'}" id="chClosed" style="margin:8px 0 0">對方已結束這段對話，無法再傳訊息。如果有不當內容，仍可以從右上角「⋯」檢舉或封鎖。</div>
     <div class="revbar hidden" id="revBar"></div>
-    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><label class="chph" id="chPh" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="vh" aria-label="傳照片"></label><input id="chIn" enterkeyhint="send" aria-label="訊息" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
+    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><button type="button" class="chph" id="chPick" aria-label="二選一小遊戲" title="二選一小遊戲"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/></svg></button><label class="chph" id="chPh" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="vh" aria-label="傳照片"></label><input id="chIn" enterkeyhint="send" aria-label="訊息" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
 </div>`;
   if(o) signedThumb(pubAv(o)).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   if(o) $('#chWho').onclick = ()=>openProfile(oid);   // 點對方的大頭貼或名字就能看檔案
   const box = $('#msgs');
+  try{ const pre = sessionStorage.getItem('yy_prefill_'+matchId); if(pre){ sessionStorage.removeItem('yy_prefill_'+matchId); setTimeout(()=>{ const i=$('#chIn'); if(i && !i.disabled){ i.value = pre.trim()+' '; i.focus(); } }, 0); } }catch(_){}
   let lastDay='', lastAt=null, bulk=false; const seenIds=new Set();
   const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'numeric',minute:'2-digit'});
   const invInner = id => { const v = inv[id]; if(!v) return '<p class="tiny dim">載入中…</p>';
@@ -2931,7 +3069,19 @@ async function viewChat(matchId){
     if(x.invite_id){ if(x.body==='送出了約會邀請') return `<div class="invcard ${mine?'me':'them'}" data-inv="${x.invite_id}" data-mid="${x.id}" data-t="${x.created_at}">${invInner(x.invite_id)}</div>`;
       return `<div class="sysline" data-mid="${x.id}" data-t="${x.created_at}">${mine?'你':esc(oname)} ${esc(x.body)}・${tm(x)}</div>`; }
     if(x.recalled_at) return `<div class="msg ${mine?'me':'them'} recalled" data-mid="${x.id}" data-t="${x.created_at}">${mine?'你收回了一則訊息':'對方收回了一則訊息'}</div>`;
+    const pk = !x.image_path && PICK_RE.exec(x.body||'');
+    if(pk) return `<div class="pickcard ${mine?'me':'them'}" data-mid="${x.id}" data-t="${x.created_at}" data-pick="1" data-body="${esc(x.body)}"><div class="ph2">🎲 二選一<span class="tiny dim">${mine?'你出的題':esc(oname)+' 出的題'}・${tm(x)}</span></div>${pickInner(x.id, pk)}</div>`;
     return `<div class="msg ${mine?'me':'them'}${x.image_path?' hasimg':''}" data-mid="${x.id}" data-t="${x.created_at}">${x.image_path?`<div class="mimg wm" data-wm="${wmText()}" data-p="${esc(x.image_path)}"></div>`:''}${x.body?`<div>${esc(x.body)}</div>`:''}<span class="time">${tm(x)}</span></div>`; };
+  const picks = {};   // message_id → { mine, their_done, theirs }
+  const pickInner = (id, pk) => { const st = picks[id] || {}, opts = [pk[1], pk[2]];
+    if(st.mine==null) return `<div class="pko">${opts.map((o,i)=>`<button type="button" data-pc="${i}" ${closed?'disabled':''}>${esc(o)}</button>`).join('')}</div><p class="tiny dim">${st.their_done?`${esc(oname)} 已經選好了，換你`:'兩個人都選完才會同時揭曉'}</p>`;
+    const same = st.their_done && st.theirs===st.mine;
+    return `<div class="pko done">${opts.map((o,i)=>`<span class="${st.mine===i?'me':''} ${st.their_done&&st.theirs===i?'them':''}">${esc(o)}${st.mine===i?'<em>你</em>':''}${st.their_done&&st.theirs===i?`<em>${esc(oname)}</em>`:''}</span>`).join('')}</div>
+      <p class="tiny ${same?'ok':'dim'}">${!st.their_done?`等 ${esc(oname)} 選…`:same?'🎉 你們選一樣！':'不一樣也很好聊：問問對方為什麼？'}</p>`; };
+  const paintPick = id => { const el = box.querySelector(`.pickcard[data-mid="${id}"]`); if(!el) return; const body = el.dataset.body; const pk = PICK_RE.exec(body||''); if(!pk) return; const ph = el.querySelector('.ph2').outerHTML; el.innerHTML = ph + pickInner(id, pk); };
+  const pickBodies = {};
+  const refreshPicks = async ids => { ids = ids.filter(Boolean); if(!ids.length) return; const { data } = await sb.rpc('chat_pick_state', { mids: ids.map(Number) }); if(my!==routeSeq) return;
+    (Array.isArray(data)?data:[]).forEach(r=>{ picks[r.message_id] = r; paintPick(r.message_id); }); };
   const loadImg = el => { const im=el.querySelector('.mimg'); if(!im) return; sb.storage.from('chat').createSignedUrl(im.dataset.p, 300).then(({ data })=>{ if(data?.signedUrl && im.isConnected){ im.style.backgroundImage=`url("${cssu(data.signedUrl)}")`; im.dataset.u=data.signedUrl; } }); };
   const add = (x) => { if(x.id!=null){ if(seenIds.has(x.id)) return; seenIds.add(x.id); }
     if(x.sender_id===me.id && x.body) for(const e of box.querySelectorAll('.msg.sending')) if(e.firstElementChild?.textContent===x.body){ e.remove(); break; }   /* 即時通知比送出結果先到 */
@@ -2941,11 +3091,21 @@ async function viewChat(matchId){
     if(later){ later.insertAdjacentHTML('beforebegin', msgHtml(x)); loadImg(later.previousElementSibling); }
     else { box.insertAdjacentHTML('beforeend', msgHtml(x)); loadImg(box.lastElementChild); if(!bulk) box.scrollTop = box.scrollHeight; }
     if(x.invite_id && (!inv[x.invite_id] || x.body!=='送出了約會邀請')) refreshInv(x.invite_id);
+    if(!x.recalled_at && !x.image_path && PICK_RE.test(x.body||'') && x.id!=null) queuePick(x.id);
     if(x.sender_id!==me.id && !x.recalled_at && SCAM_RE.test(x.body||'') && !box.querySelector('.scamtip')){
       const el = box.querySelector(`[data-mid="${x.id}"]`); el && el.insertAdjacentHTML('afterend', `<div class="scamtip">提醒：微糖不經手任何金錢。要求匯款、投資、買點數或借錢的，幾乎都是詐騙。請不要轉帳，可以從右上角「⋯」檢舉。</div>`); } };
+  let pq = [], pqT = null; const queuePick = id => { pq.push(id); clearTimeout(pqT); pqT = setTimeout(()=>{ const ids = pq; pq = []; refreshPicks(ids); }, 60); };
+  // 對方還沒選的題目：畫面開著時每 12 秒看一下對方選了沒
+  const pickPoll = setInterval(()=>{ if(my!==routeSeq || !$('#msgs')){ clearInterval(pickPoll); return; } if(document.visibilityState!=='visible') return;
+    const waiting = Object.values(picks).filter(p=>p.mine!=null && !p.their_done).map(p=>p.message_id); if(waiting.length) refreshPicks(waiting); }, 12000);
   const markRecalled = x => { const el = box.querySelector(`[data-mid="${x.id}"]`); if(el && el.nextElementSibling?.id==='readLbl') el.nextElementSibling.remove(); if(el){ el.outerHTML = msgHtml({ ...x, recalled_at: x.recalled_at || new Date().toISOString() }); } };
   // 點自己的訊息：收回；點照片：放大
   box.addEventListener('click', async ev => {
+    const pb = ev.target.closest('.pickcard [data-pc]');
+    if(pb){ const id = pb.closest('.pickcard').dataset.mid; pb.closest('.pko').querySelectorAll('button').forEach(b=>b.disabled=true);
+      const { data, error } = await sb.rpc('chat_pick', { mid: Number(id), c: +pb.dataset.pc });
+      if(error){ pb.closest('.pko').querySelectorAll('button').forEach(b=>b.disabled=false); return toast(zh(error.message)); }
+      const r = Array.isArray(data) ? data[0] : data; if(r){ picks[id] = r; paintPick(id); if(r.their_done) toast(r.theirs===r.mine?'🎉 你們選一樣！':'揭曉了，聊聊為什麼吧'); } return; }
     const ab = ev.target.closest('.invcard [data-act]');
     if(ab){ const id = ab.closest('.invcard').dataset.inv, a = ab.dataset.act; ab.disabled = true;
       let r = { error:null };
@@ -2968,8 +3128,12 @@ async function viewChat(matchId){
       <div style="flex:1"><label>時間</label><input type="time" name="t" required step="900" value="19:00"></div></div>
       <label>見面方式</label><div class="tags" id="invK">${Object.entries(INV_KIND).map(([k,v])=>`<button type="button" class="tag ${k===kind?'on':''}" data-k="${k}">${v}</button>`).join('')}</div>
       <label>大概地點（可不填）</label><input name="a" maxlength="40" placeholder="例如：信義區、東區，不用寫店名">
+      <div class="spots"><span class="tiny dim">沒想法？挑一個：</span><div class="tags" id="invSp"></div><a class="tiny" href="/taipei-date-restaurants/" target="_blank" rel="noopener">台北約會餐廳怎麼挑</a></div>
       <p class="small bad mt" data-err></p><button class="btn primary block mt2" type="submit">送出邀請</button></form>`);
-    document.querySelectorAll('#invK .tag').forEach(b=>b.onclick=()=>{ kind=b.dataset.k; document.querySelectorAll('#invK .tag').forEach(x=>x.classList.toggle('on', x===b)); });
+    const paintSpots = () => { const el=$('#invSp'); if(!el) return; el.innerHTML = (SPOTS[kind]||[]).map(t=>`<button type="button" class="tag">${t}</button>`).join('');
+      el.querySelectorAll('.tag').forEach(b=>b.onclick=()=>{ const i=document.querySelector('#invF [name=a]'); i.value = b.textContent; }); };
+    paintSpots();
+    document.querySelectorAll('#invK .tag').forEach(b=>b.onclick=()=>{ kind=b.dataset.k; document.querySelectorAll('#invK .tag').forEach(x=>x.classList.toggle('on', x===b)); paintSpots(); });
     $('#invF').onsubmit = async e => { e.preventDefault(); const f=new FormData(e.target); const btn=e.target.querySelector('button[type=submit]');
       const when = new Date(`${f.get('d')}T${f.get('t')}`); if(isNaN(when)) return; const errEl=e.target.querySelector('[data-err]');
       if(when < new Date(Date.now()+30*60e3)){ errEl.textContent='這個時間太近或已經過了，請選至少半小時後的時間'; return; } errEl.textContent='';
@@ -3042,7 +3206,7 @@ async function viewChat(matchId){
   let otherReplied = !!m.replied_at || msgs.some(x=>x.sender_id!==me.id), mySent = msgs.some(x=>x.sender_id===me.id);
   const showClosed = () => { $('#chClosed').classList.remove('hidden'); $('#chForm').classList.add('hidden'); $('#chWait').classList.add('hidden'); };
   const gate = () => { const wait = m.initiator===me.id && !otherReplied && mySent; const blocked = !['approved','pending'].includes(me.status); const off = wait || blocked;
-    $('#chIn').disabled = off; $('#chSend').disabled = off; $('#chFile').disabled = off || !otherReplied; $('#chPh').classList.toggle('off', off || !otherReplied); $('#chInv').classList.toggle('off', off || !otherReplied);
+    $('#chIn').disabled = off; $('#chSend').disabled = off; $('#chFile').disabled = off || !otherReplied; $('#chPh').classList.toggle('off', off || !otherReplied); $('#chInv').classList.toggle('off', off || !otherReplied); $('#chPick').classList.toggle('off', off || !otherReplied);
     $('#chPh').title = otherReplied ? '傳照片' : '對方回覆後就能傳照片';
     $('#chWait').textContent = blocked ? (me.status==='suspended' ? '帳號停權中，無法傳訊息。' : '你的檔案需要修改並通過審核後，才能繼續傳訊息。') : '已送出第一則訊息，對方回覆後就能繼續聊。';
     $('#chWait').classList.toggle('hidden', !off); };
@@ -3070,6 +3234,14 @@ async function viewChat(matchId){
     const theirs = nw.filter(x=>x.sender_id!==me.id); nw.forEach(add);
     if(theirs.length){ otherReplied=true; gate(); }
     box.scrollTop = box.scrollHeight; };
+  $('#chPick').onclick = () => { if($('#chPick').classList.contains('off')) return toast(otherReplied?'目前無法出題':'對方回覆後就能玩二選一');
+    const used = new Set([...box.querySelectorAll('.pickcard')].map(e=>e.dataset.body)); let pool = PICKS.filter(q=>!used.has(pickBody(q))); if(!pool.length) pool = PICKS;
+    let cur = pool[Math.floor(Math.random()*pool.length)];
+    const draw = () => { $('#pkQ').innerHTML = `<b>${esc(cur[0])}</b><span>還是</span><b>${esc(cur[1])}</b>`; };
+    modal(`<h2>二選一</h2><p class="tiny dim mt">出一題給 ${esc(oname)}，兩個人都選完才會同時揭曉答案。</p><div class="pkq" id="pkQ"></div>
+      <div class="row mt2" style="gap:10px"><button class="btn" id="pkNext" style="flex:1">換一題</button><button class="btn primary" id="pkSend" style="flex:1">出這題</button></div>`);
+    draw(); $('#pkNext').onclick = ()=>{ const others = pool.filter(q=>q!==cur); cur = (others.length?others:pool)[Math.floor(Math.random()*(others.length||pool.length))]; draw(); };
+    $('#pkSend').onclick = ()=>{ closeModal(); const i=$('#chIn'); if(!i || i.disabled) return; const keep = i.value; i.value = pickBody(cur); $('#chForm').requestSubmit(); setTimeout(()=>{ if(keep && !i.value) i.value = keep; }, 0); }; };
   $('#chInv').onclick = () => { if($('#chInv').classList.contains('off')) return toast(otherReplied?'目前無法送出邀請':'對方回覆後就能送出約會邀請'); openInvite(); };
   $('#chPh').onclick = e => { window.__pickingPhoto = true; if($('#chFile').disabled){ window.__pickingPhoto = false; e.preventDefault(); toast(otherReplied?'目前無法傳照片':'對方回覆後就能傳照片'); } };
   $('#chFile').onchange = async e => { const f=e.target.files[0]; e.target.value=''; if(!f || sending) return;
@@ -3131,6 +3303,7 @@ async function viewMe(){
     sb.from('wealth_requests').select('requester_id,status').eq('owner_id', me.id).in('status',['pending','granted']),
     sb.from('person_verifications').select('status,review_note').eq('user_id', me.id).neq('status','awaiting').order('created_at',{ascending:false}).limit(1),
   ]);
+  const { data: myVoice } = await sb.from('voice_intros').select('status').eq('user_id', me.id).maybeSingle();
   if(!me || me.id!==uid || rs!==routeSeq) return;
   const lastPv = (pvs||[])[0];
   const personCard = `<div class="card mt" id="pCard"><h3 style="font-size:17px">真人認證 ${personBadge(me)}</h3>
@@ -3172,11 +3345,18 @@ async function viewMe(){
     bindAccount(); return;
   }
   const okPh = (photos||[]).some(x=>x.status==='approved' && !x.is_private);
-  const todo = [
-    ['相簿', okPh, '至少一張公開照通過審核'],
-    ['認證', !!me.person_verified_at, '真人認證'],
-    ...(isSugar?[['認證', !!me.wealth_verified_at, '財力認證（加分）']]:[]),
+  const nPub = (photos||[]).filter(x=>x.status==='approved' && !x.is_private).length;
+  const todo = [   // [前往的分頁, 完成了沒, 說明, 徽章名稱]
+    ['album', okPh, '至少一張公開照通過審核', ''],
+    ['album', nPub>=3, '公開照 3 張以上', '📸 照片豐富'],
+    ['verify', !!me.person_verified_at, '真人認證', '✓ 真人認證'],
+    ...(isSugar?[['verify', !!me.wealth_verified_at, '財力認證（加分）', '✓ 財力認證']]:[]),
+    ['album', myVoice?.status==='approved', '錄一段語音自介', '🎙 聲音自介'],
+    ['profile', (me.prompts||[]).length>0, '回答破冰問答', '💬 破冰達人'],
+    ['profile', !!me.date_type, '填上約會暗號', '🔖 約會暗號'],
+    ['profile', (me.tags||[]).length>=3 && (me.bio||'').length>=60, '自介 60 字以上、興趣 3 個以上', '✍️ 認真自介'],
   ];
+  const pct = Math.round(todo.filter(t=>t[1]).length/todo.length*100), earned = todo.filter(t=>t[1]&&t[3]);
   const nAlbum=(reqs||[]).length, nVerify=wPend.length;
   const TABS=[['profile','檔案',0],['album','相簿',nAlbum],['verify','認證',nVerify],['settings','設定',0]];
   const miss = me.is_admin ? [] : missingBasics(me);
@@ -3192,8 +3372,9 @@ async function viewMe(){
         <p class="sub"><span class="chip ${st}">${STATUS_TXT[me.status]}</span>${personBadge(me)}${wealthBadge(me)}</p>
         ${me.role?`<p class="tiny dim" style="letter-spacing:.14em;margin-top:6px"><span style="white-space:nowrap">${ROLES[me.role]}</span>${me.city?'　<span style="white-space:nowrap">'+esc(me.city)+'</span>':''}${age(me.birth_year)?'　<span style="white-space:nowrap">'+age(me.birth_year)+' 歲</span>':''}</p>`:''}</div>
     </header>
-    ${todo.some(t=>!t[1])?`<div class="prog"><div class="pl"><span>完成你的檔案</span><span>${todo.filter(t=>t[1]).length} ／ ${todo.length}</span></div><div class="bar"><i style="width:${Math.round(todo.filter(t=>t[1]).length/todo.length*100)}%"></i></div>
-      <div class="todo">${todo.map(([tab,done,txt])=>`<button type="button" class="td ${done?'done':''}" data-go="${tab==='相簿'?'album':'verify'}"><span>${done?'✓':'→'}</span>${txt}</button>`).join('')}</div></div>`:''}
+    ${me.is_admin?'':`<div class="prog"><div class="pl"><span>檔案完成度</span><span>${pct}%</span></div><div class="bar"><i style="width:${pct}%"></i></div>
+      ${pct<100?`<p class="tiny dim" style="margin:8px 0 0">完整的檔案更容易出現在「今日精選」，也更容易收到回覆。</p><div class="todo">${todo.filter(t=>!t[1]).slice(0,4).map(([tab,,txt])=>`<button type="button" class="td" data-go="${tab}"><span>→</span>${txt}</button>`).join('')}</div>`:'<p class="tiny ok" style="margin:8px 0 0">檔案已經完整，做得好</p>'}
+      ${earned.length?`<div class="badges">${earned.map(t=>`<span>${t[3]}</span>`).join('')}</div>`:''}</div>`}
     <div class="tabs metabs" role="tablist">${TABS.map(([k,v,n])=>`<button type="button" role="tab" aria-selected="${k===meTab}" class="${k===meTab?'on':''}" data-mt="${k}">${v}${n?`<i class="dot">${n}</i>`:''}</button>`).join('')}</div>
     </aside><div class="memain">
     <div id="openItems"></div>
@@ -3550,7 +3731,9 @@ async function viewAdmin(){
             <div class="small muted">${esc(p.occupation||'')} ${p.height_cm?p.height_cm+'cm':''}</div>
             <p class="small mt" style="white-space:pre-wrap">${esc(p.bio)}</p>
             ${containsBadWords(p.bio+' '+p.nickname).length?`<p class="tiny bad">⚠ 含敏感字：${containsBadWords(p.bio+' '+p.nickname).join('、')}</p>`:''}
-            <div class="tags mt">${(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div></div>
+            <div class="tags mt">${(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+            ${(p.prompts||[]).length?`<div class="mt small"><b class="tiny dim">破冰問答</b>${p.prompts.map(x=>`<p style="margin:4px 0"><span class="tiny dim">${PROMPTS[x.q]||'？'}</span><br>${esc(x.a)}</p>`).join('')}${containsBadWords(p.prompts.map(x=>x.a).join(' ')).length?`<p class="tiny bad">⚠ 含敏感字：${containsBadWords(p.prompts.map(x=>x.a).join(' ')).join('、')}</p>`:''}</div>`:''}
+            ${DTYPE[p.date_type]?`<div class="tiny dim mt">約會暗號：${DTYPE[p.date_type].w}</div>`:''}</div></div>
         ${(phBy[p.id]||[]).length?`<div class="tiny dim mt">其他待審照片（${phBy[p.id].length}）　<button class="btn sm ghost phAll" data-u="${p.id}">全部通過</button></div>
           <div class="gallery mt aphs">${phBy[p.id].map(x=>`<div class="g" data-ph="${esc(x.path)}" data-id="${x.id}" data-bl="${x.blurred?1:0}"><span class="st chip warn">${x.is_private?'🔒 私密':x.blurred?'模糊':'公開'}</span><div class="aphb"><button class="pok" data-id="${x.id}" aria-label="通過">✓</button><button class="pno" data-id="${x.id}" aria-label="退件">✕</button></div></div>`).join('')}</div>`:''}
         <div class="row mt flexwrap"><button class="btn sm primary ap" data-id="${p.id}">✓ 通過</button><input class="grow note" placeholder="退件原因（會顯示給會員）" style="padding:8px 12px;font-size:13px"><button class="btn sm ghost rj" data-id="${p.id}">退件</button><button class="btn sm danger sp" data-id="${p.id}">停權</button></div></div>`).join('');

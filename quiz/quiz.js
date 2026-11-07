@@ -17,6 +17,7 @@ function show(id){['intro','quiz','result'].forEach(function(s){$(s).hidden=s!==
 function ask(){var q=Q[i];$('qn').textContent='第 '+(i+1)+' 題';$('prog').style.width=(i/Q.length*100)+'%';$('qt').textContent=q[0];
  var o=$('opts');o.innerHTML='';q[1].forEach(function(t,k){var b=document.createElement('button');b.className='opt';b.textContent=t;b.onclick=function(){sc[K[k]]++;i++;i<Q.length?ask():done()};o.appendChild(b)});o.firstChild.focus()}
 function done(){var best='A';K.split('').forEach(function(k){if(sc[k]>sc[best])best=k});var r=R[best];
+ try{localStorage.setItem('yy_quiz',best)}catch(e){}
  $('rw').textContent=r.w;$('rp').textContent=r.p;$('rd').textContent=r.d;$('rl').textContent=r.l;$('rdate').textContent=r.date;$('rmatch').textContent=r.m;
  var url='https://onethirdsugar.com/quiz/',txt='我的約會暗號是「'+r.w+'」：'+r.d+' 你是哪一句？';
  $('line').href='https://social-plugins.line.me/lineit/share?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(txt);

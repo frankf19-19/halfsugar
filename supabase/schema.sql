@@ -3687,3 +3687,128 @@ begin
 end $$;
 revoke execute on function public.admin_overview() from public, anon;
 grant execute on function public.admin_overview() to authenticated;
+
+-- ============ v0.67：破冰問答、約會暗號、悄悄心動、聊天二選一 ============
+-- 破冰問答：最多 3 題（題號 q 對應前端題庫、回答 a 最多 80 字）。修改後跟自介一樣要重新審核，審核期間別人看到的是上一次通過的版本
+alter table public.profiles add column if not exists prompts jsonb not null default '[]'::jsonb;
+alter table public.profiles add column if not exists approved_prompts jsonb;
+-- 約會暗號（約會人格測驗結果）：A 改天約、B 到家說一聲、C 我都可以、D 哈哈哈哈
+alter table public.profiles add column if not exists date_type text;
+do $$ begin
+  alter table public.profiles add constraint profiles_date_type_chk check (date_type is null or date_type in ('A','B','C','D'));
+exception when duplicate_object then null; end $$;
+grant select (prompts, approved_prompts, date_type) on public.profiles to authenticated;
+update public.profiles set approved_prompts = prompts where status = 'approved' and approved_prompts is null;
+
+create or replace function public.profiles_prompts_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare b text;
+begin
+  if auth.uid() is null or public.is_admin() or current_setting('halfsugar.deleting', true) = '1' then return new; end if;
+  new.approved_prompts := old.approved_prompts;
+  if new.prompts is distinct from old.prompts then
+    new.prompts := coalesce((select jsonb_agg(jsonb_build_object('q', (x->>'q')::int, 'a', left(btrim(x->>'a'), 80)))
+                               from jsonb_array_elements(case when jsonb_typeof(new.prompts) = 'array' then new.prompts else '[]'::jsonb end) x
+                              where (x->>'q') ~ '^\d{1,2}$' and btrim(coalesce(x->>'a','')) <> ''), '[]'::jsonb);
+    if jsonb_array_length(new.prompts) > 3 then raise exception '破冰問答最多 3 題'; end if;
+    b := private.bad_words((select string_agg(x->>'a', ' ') from jsonb_array_elements(new.prompts) x), false);
+    if b is not null then raise exception '破冰問答含不允許的字眼：%', b; end if;
+    if old.status in ('approved','pending') and new.status <> 'suspended' then new.status := 'pending'; end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists profiles_prompts_trg on public.profiles;
+create trigger profiles_prompts_trg before update on public.profiles for each row execute function public.profiles_prompts_guard();
+revoke execute on function public.profiles_prompts_guard() from anon, authenticated, public;
+
+create or replace function public.profiles_prompts_copy()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.status = 'approved' then new.approved_prompts := new.prompts; end if;
+  return new;
+end $$;
+drop trigger if exists profiles_zz_t_prompts_trg on public.profiles;
+create trigger profiles_zz_t_prompts_trg before update on public.profiles for each row execute function public.profiles_prompts_copy();
+revoke execute on function public.profiles_prompts_copy() from anon, authenticated, public;
+
+-- 悄悄心動：對方不會知道，雙方都按了才會互相揭曉
+create table if not exists public.secret_likes (
+  from_id uuid not null references public.profiles(id) on delete cascade,
+  to_id   uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (from_id, to_id),
+  check (from_id <> to_id)
+);
+alter table public.secret_likes enable row level security;
+revoke all on public.secret_likes from anon, authenticated;
+
+create or replace function public.secret_like(target uuid, on_ boolean)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception '請先登入'; end if;
+  if not on_ then delete from public.secret_likes where from_id = auth.uid() and to_id = target; return false; end if;
+  if public.my_status() <> 'approved' then raise exception '檔案審核通過後才能悄悄心動'; end if;
+  if not exists (select 1 from public.profiles p where p.id = target and p.status = 'approved') or not private.profile_visible(target) then
+    raise exception '找不到這位會員';
+  end if;
+  if (select count(*) from public.secret_likes where from_id = auth.uid() and created_at > now() - interval '1 day') >= 30 then
+    raise exception '今天的悄悄心動已經用完，明天再來';
+  end if;
+  insert into public.secret_likes (from_id, to_id) values (auth.uid(), target) on conflict do nothing;
+  return exists (select 1 from public.secret_likes where from_id = target and to_id = auth.uid());
+end $$;
+revoke execute on function public.secret_like(uuid, boolean) from anon, public;
+grant execute on function public.secret_like(uuid, boolean) to authenticated;
+
+-- 我悄悄心動過的人；mutual = 對方也悄悄心動了我（只有這時候才揭曉），revealed_at = 揭曉時間
+create or replace function public.my_secret_likes()
+returns table (to_id uuid, created_at timestamptz, mutual boolean, revealed_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select s.to_id, s.created_at, r.from_id is not null, greatest(s.created_at, r.created_at)
+    from public.secret_likes s left join public.secret_likes r on r.from_id = s.to_id and r.to_id = s.from_id
+   where s.from_id = auth.uid() and private.profile_visible(s.to_id)
+   order by s.created_at desc;
+$$;
+revoke execute on function public.my_secret_likes() from anon, public;
+grant execute on function public.my_secret_likes() to authenticated;
+
+-- 聊天二選一：訊息內容是「🎲 二選一｜A 還是 B？」，兩個人都選了才看得到對方的答案，選了不能改
+create table if not exists public.chat_picks (
+  message_id bigint not null references public.messages(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  choice smallint not null check (choice in (0, 1)),
+  created_at timestamptz not null default now(),
+  primary key (message_id, user_id)
+);
+alter table public.chat_picks enable row level security;
+revoke all on public.chat_picks from anon, authenticated;
+
+create or replace function public.chat_pick_state(mids bigint[])
+returns table (message_id bigint, mine smallint, their_done boolean, theirs smallint)
+language sql stable security definer set search_path = public as $$
+  select ms.id, me_.choice, ot.choice is not null, case when me_.choice is not null then ot.choice end
+    from public.messages ms
+    join public.matches m on m.id = ms.match_id and (m.user_a = auth.uid() or m.user_b = auth.uid())
+    left join public.chat_picks me_ on me_.message_id = ms.id and me_.user_id = auth.uid()
+    left join public.chat_picks ot on ot.message_id = ms.id and ot.user_id <> auth.uid()
+   where ms.id = any(mids);
+$$;
+revoke execute on function public.chat_pick_state(bigint[]) from anon, public;
+grant execute on function public.chat_pick_state(bigint[]) to authenticated;
+
+create or replace function public.chat_pick(mid bigint, c smallint)
+returns table (message_id bigint, mine smallint, their_done boolean, theirs smallint)
+language plpgsql security definer set search_path = public as $$
+#variable_conflict use_column
+begin
+  if c not in (0, 1) then raise exception '選項不正確'; end if;
+  if not exists (select 1 from public.messages ms join public.matches m on m.id = ms.match_id
+                  where ms.id = mid and ms.recalled_at is null and ms.body like '🎲 二選一｜%'
+                    and (m.user_a = auth.uid() or m.user_b = auth.uid()) and m.closed_at is null) then
+    raise exception '這題已經不能作答';
+  end if;
+  insert into public.chat_picks (message_id, user_id, choice) values (mid, auth.uid(), c) on conflict do nothing;
+  return query select * from public.chat_pick_state(array[mid]);
+end $$;
+revoke execute on function public.chat_pick(bigint, smallint) from anon, public;
+grant execute on function public.chat_pick(bigint, smallint) to authenticated;
