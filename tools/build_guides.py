@@ -64,11 +64,20 @@ PAGES = [
   },
   {
     'slug': 'sugar-mommy',
-    'title': 'Sugar Mommy 是什麼意思？甜心媽咪、Sugar Mom 一次看懂｜微糖 1/3 Sugar',
-    'desc': 'Sugar Mommy（也寫作 Sugar Mom、Sugar Mummy，中文常叫甜心媽咪）是什麼意思？指事業有成、願意照顧對方的女性。微糖支援 Sugar Mommy 認識真人審核的甜心，也歡迎同性甜心交友，重視隱私與安全。',
+    'title': 'Sugar Mommy 是什麼意思？甜心媽咪、Sugar Mama、Sugar Mummy 一次看懂｜微糖 1/3 Sugar',
+    'desc': 'Sugar Mommy（甜心媽咪，也寫作 Sugar Mom、Sugar Mama、Sugar Mummy，常被拼成 suger mommy）是什麼意思？指事業有成、經濟獨立、願意照顧另一半的女性。和 Sugar Daddy、富婆有什麼不同？微糖一次說清楚。',
     'h1': 'Sugar Mommy 是什麼？',
-    'lead': 'Sugar Mommy（甜心媽咪）是事業有成、經濟獨立，願意照顧另一半的女性。她們清楚自己想要什麼，也欣賞坦誠、懂得相處的人。',
+    'lead': 'Sugar Mommy（甜心媽咪）是事業有成、經濟獨立，願意照顧另一半的女性。她們清楚自己想要什麼，也欣賞坦誠、懂得相處的人。英文裡也常說 Sugar Mama、Sugar Mom，英式拼法是 Sugar Mummy；很多人搜尋時會打成 suger mommy、sugar momey，指的都是同一件事。',
     'sections': [
+      ('Sugar Mommy、Sugar Mama、甜心媽咪，有什麼不同？', [
+        'Sugar Mommy、Sugar Mom、Sugar Mama、Sugar Mummy 意思幾乎一樣：Mommy 和 Mom 是美式說法，Mummy 是英式拼法，Sugar Mama 則更口語，在歌詞與流行文化裡常見。中文最常見的說法是「甜心媽咪」。',
+        '和「富婆」不同的是：富婆只描述身家，Sugar Mommy 強調的是一種交往方式——她願意照顧對方，也會一開始就把期待說清楚。',
+        '和 Sugar Daddy 相比，只是性別不同。Sugar Mommy 認識的對象可以是年輕男生，也可以是女生。',
+      ]),
+      ('Sugar Mommy 通常想要什麼？', [
+        '多數 Sugar Mommy 工作忙、生活圈固定，想要的是聊得來、懂分寸、能一起吃飯旅行的陪伴，而不是被奉承。',
+        '她們普遍非常重視隱私：不想在一般交友軟體被同事或客戶認出來，所以更偏好有真人審核、模糊照、私密相簿的平台。',
+      ]),
       ('在微糖當 Sugar Mommy', [
         '和 Sugar Daddy 一樣，你可以填寫生活方式預算、申請財力認證，讓對方一開始就清楚你的期待。',
         '微糖支援男生找女生、女生找男生，也支援同性的甜心交友。你選擇的方向決定探索裡會看到誰、誰看得到你，保護每一位會員的隱私。',
@@ -81,7 +90,10 @@ PAGES = [
         '平台不經手會員之間的任何金錢。每一張照片、每一段自介都由真人審核，業者與假帳號很難存在。',
       ]),
     ],
+    'related': ['sugar-mama', 'sugar-mommy-guide', 'find-sugar-mommy', 'sugar-mommy-taiwan', 'mature-women-dating'],
     'faq': [
+      ('Sugar Mama 和 Sugar Mommy 一樣嗎？', '一樣。Sugar Mama 是比較口語的說法，Sugar Mummy 是英式拼法，中文都叫甜心媽咪。'),
+      ('Sugar Mommy 和富婆有什麼不同？', '富婆只描述身家；Sugar Mommy 是一種交往方式，重點是願意照顧對方、把期待說清楚。'),
       ('女生也可以當 Sugar Mommy 嗎？', '可以。建立檔案時選擇「Sugar Mommy」身分即可，並依你的方向認識想認識的對象。'),
       ('會被認識的人看到嗎？', '不會被路人或搜尋引擎看到。只有登入、通過審核、方向吻合的會員才看得到檔案；你也可以選擇隱身。'),
       ('使用微糖要付費嗎？', '開站期間，所有會員都免費使用全部功能。'),
@@ -480,7 +492,7 @@ PAGES = [
                 ('第一次見面', ['約在公開的餐廳或咖啡廳，自己安排交通，並告訴朋友行程。可以在微糖用「約會邀請」約好時間地點，再開啟「見面安全報備」。']),
                 ('保護自己', ['不要在還沒見面前提供私密照、帳戶或證件；任何要你先付錢、買點數或投資的，都是詐騙。', '遇到不舒服的人，直接封鎖、檢舉；你的手機與 Email 永遠不會顯示給其他會員。'])],
    'faq': [('男生可以當甜心嗎？', '可以。甜心的身分跟性別無關；男生也可以選甜心，認識 Sugar Mommy 或 Sugar Daddy。'), ('甜心要付費嗎？', '開站期間，所有會員都免費使用全部功能；正式收費後，甜心的基本功能仍然免費。'), ('可以不露臉嗎？', '頭像需要清楚的本人照片才能通過審核，但其他照片可以設成「私密照」或「模糊照」，只給你同意的人看。')]},
-  {'slug': 'sugar-mommy-guide',
+  {'slug': 'sugar-mommy-guide', 'related': ['sugar-mommy', 'sugar-mama', 'find-sugar-mommy', 'sugar-mommy-taiwan', 'mature-women-dating'],
    'title': 'Sugar Mommy 新手指南：如何在甜心交友中認識對的人｜微糖 1/3 Sugar',
    'desc': '事業有成的女性，想認識相處舒服的年輕男生或女生？微糖整理給 Sugar Mommy 的新手指南：檔案、生活方式預算、財力認證、隱私與安全。',
    'h1': 'Sugar Mommy 新手指南',
@@ -560,7 +572,8 @@ def page(p, hub_items=None, hub_ld=None):
     sections = ''.join(f"<h2>{e(h)}</h2>" + ''.join(f"<p>{e(x)}</p>" for x in ps) for h, ps in p['sections'])
     faq = ''.join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in p['faq'])
     k = [o['slug'] for o in PAGES].index(p['slug']) if p['slug'] in [o['slug'] for o in PAGES] else -1
-    rel = [PAGES[(k + i) % len(PAGES)] for i in range(1, 5)] if k >= 0 else []
+    bys = {o['slug']: o for o in PAGES}
+    rel = [bys[x] for x in p.get('related', []) if x in bys] or ([PAGES[(k + i) % len(PAGES)] for i in range(1, 5)] if k >= 0 else [])
     others = ''.join(f'<a href="/{o["slug"]}/">{e(o["h1"].rstrip("？"))}</a>' for o in rel) + '<a href="/guide/">看全部指南</a>'
     ld = {"@context": "https://schema.org", "@graph": [
         {"@type": "WebPage", "@id": url, "url": url, "name": p['title'], "description": p['desc'], "inLanguage": "zh-TW",
