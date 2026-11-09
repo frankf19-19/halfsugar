@@ -101,7 +101,8 @@ PAGES = [
   },
   {
     'slug': 'sugar-baby',
-    'title': '甜心是什麼？成為甜心（Sugar Baby）前要知道的事｜微糖 1/3 Sugar',
+    'related': ['want-to-be-cared', 'uncle-type', 'women-dating-apps', 'spot-married-men', 'sugar-baby-guide'],
+    'title': '甜心是什麼？女生成為甜心（Sugar Baby）前要知道的事｜微糖 1/3 Sugar',
     'desc': '甜心（Sugar Baby、甜心寶貝）是希望認識成熟、穩定對象的人。微糖是真人審核的甜心交友平台，私密照自己授權、不必交換聯絡方式，安全認識 Sugar Daddy 與 Sugar Mommy。',
     'h1': '甜心是什麼？',
     'lead': '甜心（Sugar Baby，也有人叫甜心寶貝）是希望認識成熟、穩定對象的人。你有自己的生活與追求，也希望遇到懂得照顧、彼此尊重的另一半。',
