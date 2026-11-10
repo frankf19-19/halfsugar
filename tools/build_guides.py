@@ -661,7 +661,11 @@ def hub():
         )
         return f'<h2>{e(heading)}</h2>\n<ul class="hub">\n{items}\n</ul>'
 
-    content = '\n'.join((guide_list('第一次來，從這裡開始', featured), guide_list('更多甜心交友指南', remaining)))
+    content = '\n'.join((
+        guide_list('第一次來，從這裡開始', featured),
+        '<p class="more">想先看看自己的約會節奏？<a href="/quiz/">做 1 分鐘約會人格測驗</a></p>',
+        guide_list('更多甜心交友指南', remaining),
+    ))
     ld = {"@context": "https://schema.org", "@type": "CollectionPage", "url": url, "name": "甜心交友指南｜微糖 1/3 Sugar", "inLanguage": "zh-TW",
           "hasPart": [{"@type": "WebPage", "url": f"{SITE}/{p['slug']}/", "name": p['title']} for p in featured + remaining]}
     t = page({'slug': 'guide', 'title': '甜心交友指南：Sugar Daddy、Sugar Mommy、約會與安全｜微糖 1/3 Sugar',
