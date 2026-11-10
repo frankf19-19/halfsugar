@@ -574,7 +574,7 @@ sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 from guides_extra import EXTRA
 PAGES += EXTRA
 
-def page(p, hub_items=None, hub_ld=None):
+def page(p, hub_content='', hub_ld=None):
     e = html.escape
     url = f"{SITE}/{p['slug']}/"
     def blk(x):
@@ -629,11 +629,11 @@ def page(p, hub_items=None, hub_ld=None):
 <h1>{e(p['h1'])}</h1>
 <p class="lead">{e(p['lead'])}</p>
 {sections}
-{f'<ul class="hub">{hub_items}</ul>' if hub_items else ''}
+{hub_content}
 {f'<section class="faq"><h2>常見問題</h2>{faq}</section>' if faq else ''}
 <section class="cta"><p>真人審核、重視隱私的台灣甜心交友平台。開站期間全部免費。</p>
 <a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>
-{f'<p class="more">延伸閱讀：{others}</p>' if not hub_items else ''}
+{f'<p class="more">延伸閱讀：{others}</p>' if not hub_content else ''}
 </main>
 <footer><div class="in"><a href="/">微糖首頁</a><a href="/sugar-dating/">甜心交友是什麼</a><a href="/guide/">甜心交友指南</a><a href="/#/safety">安全須知</a><a href="/#/guidelines">社群守則</a><a href="/#/privacy">隱私政策</a><a href="/#/terms">使用條款</a>
 <p class="copy">© 2026 微糖 1/3 Sugar・僅限 18 歲以上成年人使用・平台不經手會員之間的任何金錢。</p></div></footer>
@@ -649,12 +649,24 @@ for p in PAGES:
 def hub():
     e = html.escape
     url = f'{SITE}/guide/'
-    items = ''.join(f'<li><a href="/{p["slug"]}/"><b>{e(p["h1"])}</b><span>{e(p["desc"])}</span></a></li>' for p in PAGES)
+    featured_slugs = ('sugar-dating', 'for-women', 'choose-platform', 'avoid-scams', 'baoyang')
+    by_slug = {p['slug']: p for p in PAGES}
+    featured = [by_slug[slug] for slug in featured_slugs]
+    remaining = [p for p in PAGES if p['slug'] not in featured_slugs]
+
+    def guide_list(heading, pages):
+        items = '\n'.join(
+            f'<li><a href="/{p["slug"]}/"><b>{e(p["h1"])}</b><span>{e(p["desc"])}</span></a></li>'
+            for p in pages
+        )
+        return f'<h2>{e(heading)}</h2>\n<ul class="hub">\n{items}\n</ul>'
+
+    content = '\n'.join((guide_list('第一次來，從這裡開始', featured), guide_list('更多甜心交友指南', remaining)))
     ld = {"@context": "https://schema.org", "@type": "CollectionPage", "url": url, "name": "甜心交友指南｜微糖 1/3 Sugar", "inLanguage": "zh-TW",
-          "hasPart": [{"@type": "WebPage", "url": f"{SITE}/{p['slug']}/", "name": p['title']} for p in PAGES]}
+          "hasPart": [{"@type": "WebPage", "url": f"{SITE}/{p['slug']}/", "name": p['title']} for p in featured + remaining]}
     t = page({'slug': 'guide', 'title': '甜心交友指南：Sugar Daddy、Sugar Mommy、約會與安全｜微糖 1/3 Sugar',
               'desc': '微糖整理的甜心交友指南：包養與甜心交友的差別、Sugar Daddy／Sugar Mommy／甜心是什麼、開場白與自介怎麼寫、各地約會與安全守則。',
-              'h1': '甜心交友指南', 'lead': '第一次接觸甜心交友？從這裡開始，認識它是什麼、怎麼開始，以及怎麼保護自己。', 'sections': [], 'faq': []}, hub_items=items, hub_ld=ld)
+              'h1': '甜心交友指南', 'lead': '第一次接觸甜心交友？從這裡開始，認識它是什麼、怎麼開始，以及怎麼保護自己。', 'sections': [], 'faq': []}, hub_content=content, hub_ld=ld)
     d = ROOT / 'guide'; d.mkdir(exist_ok=True); (d / 'index.html').write_text(t, encoding='utf-8')
 hub()
 
