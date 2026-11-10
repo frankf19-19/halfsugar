@@ -541,6 +541,13 @@ h1{font-size:32px;margin:56px 0 18px}
 h2{font-size:21px;margin:44px 0 12px}
 p{margin:0 0 14px;color:#333}
 .lead{font-size:17px;color:var(--ink)}
+.kicker a{color:inherit;text-decoration:none}
+.tw{overflow-x:auto;margin:20px 0}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px;line-height:1.6}
+th,td{border:1px solid #e3ddd2;padding:10px 12px;text-align:left;vertical-align:top}
+thead th{background:#f4efe5;font-weight:500}
+tbody th{font-weight:500;white-space:nowrap;background:#faf7f1}
+tbody td:last-child{background:#fbf3f4}
 .kicker{font-size:12px;letter-spacing:.2em;color:var(--wine);margin-top:48px}
 .faq{margin-top:50px;border-top:1px solid var(--rule)}
 .faq details{border-bottom:1px solid var(--rule);padding:16px 0}
@@ -570,7 +577,13 @@ PAGES += EXTRA
 def page(p, hub_items=None, hub_ld=None):
     e = html.escape
     url = f"{SITE}/{p['slug']}/"
-    sections = ''.join(f"<h2>{e(h)}</h2>" + ''.join(f"<p>{e(x)}</p>" for x in ps) for h, ps in p['sections'])
+    def blk(x):
+        if isinstance(x, dict):
+            return ('<div class="tw"><table><thead><tr>' + ''.join(f'<th>{e(c)}</th>' for c in x['head']) + '</tr></thead><tbody>'
+                    + ''.join('<tr>' + ''.join(f'<th scope="row">{e(c)}</th>' if i == 0 else f'<td>{e(c)}</td>' for i, c in enumerate(r)) + '</tr>' for r in x['rows'])
+                    + '</tbody></table></div>')
+        return f"<p>{e(x)}</p>"
+    sections = ''.join(f"<h2>{e(h)}</h2>" + ''.join(blk(x) for x in ps) for h, ps in p['sections'])
     faq = ''.join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in p['faq'])
     k = [o['slug'] for o in PAGES].index(p['slug']) if p['slug'] in [o['slug'] for o in PAGES] else -1
     bys = {o['slug']: o for o in PAGES}
@@ -612,7 +625,7 @@ def page(p, hub_items=None, hub_ld=None):
 <body>
 <header><div class="in top"><a class="logo" href="/"><img src="/brand/mark-black.svg" alt="">微糖</a><a class="btn primary" href="/#/auth">免費加入</a></div></header>
 <main>
-<p class="kicker">認識甜心交友</p>
+<p class="kicker">{'認識甜心交友' if p['slug'] == 'sugar-dating' else '<a href="/sugar-dating/">認識甜心交友</a>'}</p>
 <h1>{e(p['h1'])}</h1>
 <p class="lead">{e(p['lead'])}</p>
 {sections}
@@ -622,7 +635,7 @@ def page(p, hub_items=None, hub_ld=None):
 <a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>
 {f'<p class="more">延伸閱讀：{others}</p>' if not hub_items else ''}
 </main>
-<footer><div class="in"><a href="/">微糖首頁</a><a href="/guide/">甜心交友指南</a><a href="/#/safety">安全須知</a><a href="/#/guidelines">社群守則</a><a href="/#/privacy">隱私政策</a><a href="/#/terms">使用條款</a>
+<footer><div class="in"><a href="/">微糖首頁</a><a href="/sugar-dating/">甜心交友是什麼</a><a href="/guide/">甜心交友指南</a><a href="/#/safety">安全須知</a><a href="/#/guidelines">社群守則</a><a href="/#/privacy">隱私政策</a><a href="/#/terms">使用條款</a>
 <p class="copy">© 2026 微糖 1/3 Sugar・僅限 18 歲以上成年人使用・平台不經手會員之間的任何金錢。</p></div></footer>
 </body>
 </html>

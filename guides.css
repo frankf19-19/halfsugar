@@ -16,6 +16,13 @@ h1{font-size:32px;margin:56px 0 18px}
 h2{font-size:21px;margin:44px 0 12px}
 p{margin:0 0 14px;color:#333}
 .lead{font-size:17px;color:var(--ink)}
+.kicker a{color:inherit;text-decoration:none}
+.tw{overflow-x:auto;margin:20px 0}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px;line-height:1.6}
+th,td{border:1px solid #e3ddd2;padding:10px 12px;text-align:left;vertical-align:top}
+thead th{background:#f4efe5;font-weight:500}
+tbody th{font-weight:500;white-space:nowrap;background:#faf7f1}
+tbody td:last-child{background:#fbf3f4}
 .kicker{font-size:12px;letter-spacing:.2em;color:var(--wine);margin-top:48px}
 .faq{margin-top:50px;border-top:1px solid var(--rule)}
 .faq details{border-bottom:1px solid var(--rule);padding:16px 0}
