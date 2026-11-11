@@ -541,6 +541,7 @@ h1{font-size:32px;margin:56px 0 18px}
 h2{font-size:21px;margin:44px 0 12px}
 p{margin:0 0 14px;color:#333}
 .lead{font-size:17px;color:var(--ink)}
+.topcta{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 8px}
 .kicker a{color:inherit;text-decoration:none}
 .tw{overflow-x:auto;margin:20px 0}
 table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px;line-height:1.6}
@@ -628,11 +629,11 @@ def page(p, hub_items=None, hub_ld=None):
 <p class="kicker">{'認識甜心交友' if p['slug'] == 'sugar-dating' else '<a href="/sugar-dating/">認識甜心交友</a>'}</p>
 <h1>{e(p['h1'])}</h1>
 <p class="lead">{e(p['lead'])}</p>
+{'<p class="topcta"><a class="btn primary" href="/#/auth">3 分鐘免費加入</a><a class="btn" href="/quiz/match/">先玩測驗：你適合大叔還是小狼狗？</a></p>' if p.get('top_cta') else ''}
 {sections}
 {f'<ul class="hub">{hub_items}</ul>' if hub_items else ''}
 {f'<section class="faq"><h2>常見問題</h2>{faq}</section>' if faq else ''}
-<section class="cta"><p>真人審核、重視隱私的台灣甜心交友平台。開站期間全部免費。</p>
-<a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>
+{'<section class="cta"><p>每位會員真人審核，你決定誰可以傳訊息，照片可以模糊或私密。開站期間完全免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/for-women/">看看我們怎麼保護女生</a></section>' if p.get('women') else '<section class="cta"><p>真人審核、重視隱私的台灣甜心交友平台。開站期間全部免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>'}
 {f'<p class="more">延伸閱讀：{others}</p>' if not hub_items else ''}
 </main>
 <footer><div class="in"><a href="/">微糖首頁</a><a href="/sugar-dating/">甜心交友是什麼</a><a href="/guide/">甜心交友指南</a><a href="/#/safety">安全須知</a><a href="/#/guidelines">社群守則</a><a href="/#/privacy">隱私政策</a><a href="/#/terms">使用條款</a>
