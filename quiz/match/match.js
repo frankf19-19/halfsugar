@@ -28,20 +28,20 @@ function wrap(ctx,text,x,y,maxW,lh){var line='',lines=[];for(var c of text){if(c
 function card(){var r=R[best],c=document.createElement('canvas');c.width=1080;c.height=1920;var x=c.getContext('2d');
  x.fillStyle='#F4EFE5';x.fillRect(0,0,1080,1920);x.fillStyle='#FCFAF4';x.fillRect(70,150,940,1560);x.strokeStyle='#D9CFB8';x.lineWidth=6;x.strokeRect(70,150,940,1560);
  var serif='"Noto Serif TC", "PingFang TC", serif';x.textAlign='center';
- x.fillStyle='#8C7B5E';x.font='500 40px '+serif;x.fillText('你適合大叔，還是小狼狗？',540,290);
+ x.fillStyle='#6B5D45';x.font='500 40px '+serif;x.fillText('你適合大叔，還是小狼狗？',540,290);
  x.fillStyle='#D9CFB8';x.fillRect(170,340,740,4);
- x.fillStyle='#8C7B5E';x.font='400 44px '+serif;x.fillText('最適合我的是',540,470);
+ x.fillStyle='#6B5D45';x.font='400 44px '+serif;x.fillText('最適合我的是',540,470);
  x.fillStyle='#1d1a17';x.font='900 150px '+serif;x.fillText(r.w,540,660);
- x.fillStyle='#8C7B5E';x.font='400 40px '+serif;x.fillText(r.p,540,740);
+ x.fillStyle='#6B5D45';x.font='400 40px '+serif;x.fillText(r.p,540,740);
  x.fillStyle='#A63F58';x.font='900 52px '+serif;var y=wrap(x,r.d,540,880,780,72);
  x.fillStyle='#4a443d';x.font='400 38px "PingFang TC","Noto Sans TC",sans-serif';x.textAlign='left';
- x.fillStyle='#8C7B5E';x.font='500 32px "PingFang TC",sans-serif';x.fillText('理想約會',170,y+70);
+ x.fillStyle='#6B5D45';x.font='500 32px "PingFang TC",sans-serif';x.fillText('理想約會',170,y+70);
  x.fillStyle='#1d1a17';x.font='400 40px "PingFang TC","Noto Sans TC",sans-serif';y=wrap(x,r.date,170,y+130,740,60);
- x.fillStyle='#8C7B5E';x.font='500 32px "PingFang TC",sans-serif';x.fillText('戀愛小提醒',170,y+50);
+ x.fillStyle='#6B5D45';x.font='500 32px "PingFang TC",sans-serif';x.fillText('戀愛小提醒',170,y+50);
  x.fillStyle='#1d1a17';x.font='400 40px "PingFang TC","Noto Sans TC",sans-serif';y=wrap(x,r.tip,170,y+110,740,60);
  x.textAlign='center';x.fillStyle='#A63F58';x.font='500 40px '+serif;x.fillText('你適合哪一型？1 分鐘測測看',540,Math.max(y+120,1600));
  x.textAlign='center';x.fillStyle='#1d1a17';x.font='900 46px '+serif;x.fillText('微糖 1/3 Sugar',540,1810);
- x.fillStyle='#8C7B5E';x.font='400 32px "PingFang TC",sans-serif';x.fillText('onethirdsugar.com/quiz/match',540,1866);
+ x.fillStyle='#6B5D45';x.font='400 32px "PingFang TC",sans-serif';x.fillText('onethirdsugar.com/quiz/match',540,1866);
  return c}
 function saveImg(){var go=function(){var c=card();c.toBlob(function(b){var f=new File([b],'微糖測驗結果.png',{type:'image/png'});
   if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'你適合大叔，還是小狼狗？'}).catch(function(){})}
