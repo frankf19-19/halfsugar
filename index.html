@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-6fjY4csygCj5iuKRmtLxoj05llP8NliaEaz2sfGJ5nI=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-2r0mITHdZdGsKEncGBiu9JtQBlgdDi80WEnBEzANAXU=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1355,6 +1355,40 @@ html[data-theme=dark] .pko button:hover:not(:disabled),html[data-theme=dark] .pk
 @media(min-width:720px){.prrow{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start}.pkrow{grid-auto-columns:minmax(0,1fr);overflow:visible}}
 .landing .forw{display:inline-block;margin-top:16px;font-size:14px;letter-spacing:.06em;color:#fff;opacity:.9;text-decoration:underline;text-underline-offset:4px;text-shadow:0 1px 8px rgba(0,0,0,.45)}
 .landing .forw:hover{opacity:1}
+/* 討論區 */
+.fhd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}.fhd h1{margin:0}
+.ftabs{margin-bottom:12px}
+.fsort{display:flex;gap:18px;margin:0 0 8px;font-size:13px}.fsort button{color:var(--grey);letter-spacing:.12em;padding:6px 0;border-bottom:1px solid transparent}.fsort button.on{color:var(--ink);border-color:var(--ink)}
+.fitem{display:block;padding:20px 0;border-bottom:1px solid var(--rule);color:inherit;text-decoration:none}
+@media(hover:hover){.fitem:hover .ft{color:var(--wine)}}
+.fmeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.chip.bad{color:var(--wine);border-color:var(--wine)}
+.ft{font-size:17px;line-height:1.5;margin-top:8px;font-weight:500;overflow-wrap:anywhere;transition:color .2s}
+.fx{margin:6px 0 0;font-size:14px;line-height:1.7;color:var(--grey);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.fby{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--grey)}
+.fby .fstat{margin-left:auto;display:flex;gap:14px}
+.fwho{font-size:13px;color:var(--ink)} button.fwho{text-decoration:underline;text-underline-offset:3px}
+.fop{font-size:11px;letter-spacing:.08em;color:var(--white);background:var(--wine);padding:1px 7px;margin-left:6px}
+.fby .rtag{margin:0}
+.fback{margin:0 0 18px;font-size:13px;letter-spacing:.1em}.fback a{color:var(--grey);text-decoration:none}
+.fpost{padding-bottom:24px;border-bottom:1px solid var(--rule)}
+.fpost h1{font-size:24px;font-weight:400;line-height:1.45;margin:12px 0 0;overflow-wrap:anywhere}
+.fbody{margin-top:14px;font-size:15px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere}
+.fbar{display:flex;align-items:center;gap:16px;margin-top:20px}
+.facts{display:inline-flex;gap:16px;font-size:12px}.facts .lnk{color:var(--grey)}
+.fadm{margin:8px 0 0;color:var(--wine)}
+.fcs h2{font-size:14px;letter-spacing:.2em;font-weight:400;color:var(--grey);margin:28px 0 4px}
+.fc{padding:16px 0;border-bottom:1px solid var(--hair)}.fc .fby{margin-top:0}.fc .fbody{margin-top:8px;font-size:14px}.fc .facts{margin-top:8px}
+.fc.isop{border-left:2px solid var(--wine);padding-left:12px}
+.fform{display:flex;flex-direction:column;gap:6px}.fform>label{margin-top:12px;font-size:12px;letter-spacing:.16em;color:var(--grey)}
+.fform label.rad{margin:0;font-size:14px;letter-spacing:0;color:var(--ink);display:flex;gap:8px;align-items:center;padding:6px 0}.fform label.rad input{width:auto}
+.fcform{margin-top:24px}
+.fanon{display:grid;gap:8px}
+.fanon label{margin:0!important;display:grid;grid-template-columns:auto 1fr;column-gap:10px;padding:12px 14px;border:1px solid var(--rule);cursor:pointer;font-size:14px;letter-spacing:0;color:var(--ink)}
+.fanon label input{grid-row:span 2;width:auto;margin-top:3px;accent-color:var(--wine)}
+.fanon label span{font-size:12px;color:var(--grey);line-height:1.5}
+.fanon label.on{border-color:var(--ink)}
+.fnote{margin-top:10px;line-height:1.7}
+@media(max-width:719px){.fpost h1{font-size:21px}.fhd{align-items:center}}
 </style>
 </head>
 <body>
@@ -1404,7 +1438,7 @@ html[data-theme=dark] .pko button:hover:not(:disabled),html[data-theme=dark] .pk
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD='v1.96.3';
+const BUILD='v1.97.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1768,15 +1802,16 @@ function renderNav(){
   }
   const admin = (me.is_admin ? link('#/admin','後台') : '') + link('#/plans','方案');
   $('#mnav').innerHTML = '<a href="#" class="tbout" data-logout>登出</a>';   // 手機版：登入後每一頁的右上角都有登出
-  $('#nav').innerHTML = link('#/browse','探索') + link('#/likes','心動') + link('#/matches','訊息') + link('#/me','我的') + admin + '<a href="#" data-logout>登出</a>';
+  $('#nav').innerHTML = link('#/browse','探索') + link('#/likes','心動') + link('#/matches','訊息') + link('#/forum','討論區') + link('#/me','我的') + admin + '<a href="#" data-logout>登出</a>';
   const IC = {
     browse:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5-5 2.2 2.2-5z"/></svg>',
     likes:'<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.4-7 10-7 10z"/></svg>',
     matches:'<svg viewBox="0 0 24 24"><path d="M4 6h16v10H9l-5 4z"/></svg>',
+    forum:'<svg viewBox="0 0 24 24"><path d="M4 5h11v8H8l-4 3z"/><path d="M15 9h5v8l-3-2.5h-6V13"/></svg>',
     me:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>',
     admin:'<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>' };
   const bl = (href, i, txt) => `<a href="${href}" class="${h.startsWith(href)?'active':''}"${h.startsWith(href)?' aria-current="page"':''}><span class="bi">${IC[i]}</span><span class="bt">${txt}</span></a>`;
-  $('#bnav').innerHTML = bl('#/browse','browse','探索') + bl('#/likes','likes','心動') + bl('#/matches','matches','訊息') + bl('#/me','me','我的') + (me.is_admin? bl('#/admin','admin','後台'):'');
+  $('#bnav').innerHTML = bl('#/browse','browse','探索') + bl('#/likes','likes','心動') + bl('#/matches','matches','訊息') + bl('#/forum','forum','討論') + bl('#/me','me','我的') + (me.is_admin? bl('#/admin','admin','後台'):'');
   document.body.classList.toggle('nobnav', h.startsWith('#/chat/'));
   $('#bnav').classList.remove('hidden');
   refreshUnread();
@@ -1907,7 +1942,7 @@ const routes = {
   'browse': viewBrowse, 'likes': viewLikes, 'matches': viewMatches, 'chat': viewChat, 'me': viewMe,
   'admin': viewAdmin, 'terms': ()=>viewDoc('terms'), 'privacy': ()=>viewDoc('privacy'),
   'guidelines': ()=>viewDoc('guidelines'), 'safety': ()=>viewDoc('safety'), 'plans': viewPlans,
-  'safe': viewSafe,
+  'safe': viewSafe, 'forum': viewForum,
   'bye': ()=>{ $('#app').innerHTML = `<div class="narrow center" style="padding:80px 0"><h2>帳號已刪除</h2><p class="muted mt">你的檔案、照片、對話與手機號碼都已永久刪除。<br class="d">謝謝你曾經來過微糖。</p><a class="btn mt2" href="#/">回到首頁</a></div>`; },
 };
 let chatChannel = null, routeSeq = 0, onChatVisible = null;
@@ -1928,9 +1963,9 @@ async function route(){
   // 換頁不先清空：舊畫面淡一點、暫停點擊，新畫面好了直接換上；超過 0.2 秒還沒好才顯示轉圈圈（避免每次換頁都閃白）
   clearTimeout(window.__spinT); app.classList.add('busy');
   const spinSeq = routeSeq; window.__spinT = setTimeout(()=>{ if(spinSeq===routeSeq && app.classList.contains('busy')){ app.innerHTML = '<div class="spinner"></div>'; app.classList.remove('busy'); } }, 200);
-  const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding'];
+  const protectedPages = ['browse','likes','matches','chat','me','admin','onboarding','forum'];
   if(protectedPages.includes(path) && !me){ if(path!=='onboarding') sessionStorage.setItem('yy_next', location.hash); location.hash='#/auth?mode=login'; return; }
-  if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat'].includes(path||'')){ location.hash='#/onboarding'; return; }
+  if(me && me.status==='incomplete' && !me.is_admin && ['','browse','likes','matches','chat','forum'].includes(path||'')){ location.hash='#/onboarding'; return; }
   if(me && !me.is_admin && me.status!=='incomplete' && missingBasics(me).length && ['browse','likes','matches','chat'].includes(path)){ sessionStorage.setItem('meTab','profile'); toast('請先完成基本資料'); location.hash='#/me'; return; }
   if(!localStorage.getItem('yy_age_ok')) $('#gate').classList.toggle('hidden', ['terms','privacy','guidelines','safety','safe'].includes(path));
   if(path && !routes[path]) { try{ history.replaceState(history.state, '', location.pathname + location.search + '#/'); }catch(_){} document.body.classList.add('home'); document.body.dataset.page='home'; renderNav(); }   // 打錯的網址：顯示首頁，網址也改回首頁
@@ -3672,13 +3707,153 @@ function bindAccount(){
 /* =====================================================================
    頁面：管理後台
    ===================================================================== */
+/* =====================================================================
+   頁面：討論區（會員限定；每篇文、每則留言都可以選擇匿名）
+   ===================================================================== */
+const FBOARDS = { date:'約會心得', qa:'兩性問答', safety:'安全提醒', chat:'閒聊' };
+const FANON = [
+  { v:0, t:'顯示暱稱', d:'大家看得到你的暱稱，看得到你檔案的人可以點進去看' },
+  { v:1, t:'匿名・顯示身分', d:'只顯示「匿名・甜心」或「匿名・Sugar Daddy」這類身分' },
+  { v:2, t:'完全匿名', d:'只顯示「匿名」' } ];
+const FREASONS = { money:'要求金錢或交換條件', adult_industry:'色情或性交易招攬', contact:'留聯絡方式或廣告', harass:'騷擾或人身攻擊', privacy:'洩漏別人的隱私', spam:'洗版或跟主題無關', other:'其他' };
+// 跟資料庫同一套：不能留網址、電話、LINE／IG 帳號（送出前先擋，省得白打字）
+function forumContact(t){ const l=(t||'').toLowerCase();
+  if(/(https?:\/\/|www\.|[a-z0-9-]+\.(com|tw|net|org|me|cc|io|co|app|link|ly)\b)/.test(l)) return '討論區不能貼網址';
+  if(/(\+?886|0)9\d{8}/.test(l.replace(/[\s\-.()（）]/g,''))) return '討論區不能留電話號碼';
+  if(/(line|賴|ｌｉｎｅ|ig|instagram|telegram|tg|wechat|微信|微訊)\s*(id)?\s*[:：@＠]\s*[a-z0-9_.\-]{3,}/.test(l) || /加\s*(line|賴|ig|微信)/.test(l) || /(^|\s)[@＠][a-z0-9_.]{3,}/.test(l)) return '討論區不能留聯絡方式，想認識對方請用站內的心動與訊息';
+  const b = containsBadWords(t); if(b.length) return `內容含不允許的字眼：${b.join('、')}`;
+  return null; }
+const fAnonPick = (name, cur) => `<div class="fanon" role="radiogroup" aria-label="發文身分">${FANON.map(o=>`<label class="${o.v===cur?'on':''}"><input type="radio" name="${name}" value="${o.v}"${o.v===cur?' checked':''}><b>${o.t}</b><span>${o.d}</span></label>`).join('')}</div>`;
+const fAnonCur = () => { const r = localStorage.getItem('yy_fanon'); const v = r===null ? 1 : Number(r); return [0,1,2].includes(v) ? v : 1; };
+const fWho = x => `${x.author_id?`<button type="button" class="lnk fwho" data-uid="${esc(x.author_id)}">${esc(x.name)}</button>`:`<span class="fwho">${esc(x.name)}</span>`}${x.op?'<span class="fop">原PO</span>':''}${x.role?`<span class="rtag">${esc(x.role)}</span>`:''}`;
+function fBindWho(root){ root.querySelectorAll('button.fwho[data-uid]').forEach(b=>b.onclick=()=>openProfile(b.dataset.uid)); }
+function fBindAnon(root){ root.querySelectorAll('.fanon input').forEach(i=>i.onchange=()=>{ i.closest('.fanon').querySelectorAll('label').forEach(l=>l.classList.toggle('on', l.contains(i))); }); }
+const fCanPost = () => me && (me.status==='approved' || me.is_admin);
+
+async function viewForum(arg){
+  const rs = routeSeq;
+  if(!me.is_admin && !(me.status==='approved' || (me.status==='pending' && me.approved_at))){
+    $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>討論區</h1></header><div class="empty"><p class="serif">檔案審核通過後就能進來</p><p class="muted small">討論區只開放給通過真人審核的會員，大家才敢說真話。</p></div>`; return; }
+  if(arg && /^\d+$/.test(arg)) return viewForumPost(Number(arg), rs);
+  const st = JSON.parse(sessionStorage.getItem('yy_fst')||'{}');
+  let board = st.board || '', sort = st.sort || 'new', items = [], more = false;
+  const save = () => sessionStorage.setItem('yy_fst', JSON.stringify({ board, sort }));
+  const load = async (append) => {
+    const mine = board==='mine';
+    const last = append && items.length ? items[items.length-1].last_activity_at : null;
+    const { data, error } = await sb.rpc('forum_list', { p_board: (mine||!board)?null:board, p_sort: mine?'new':sort, p_before: sort==='hot'&&!mine?null:last, p_limit: 20, p_mine: mine });
+    if(error) throw error;
+    items = append ? items.concat(data||[]) : (data||[]); more = (data||[]).length===20 && !(sort==='hot'&&!mine);
+  };
+  const row = p => `<a class="fitem" href="#/forum/${p.id}">
+      <div class="fmeta"><span class="chip">${FBOARDS[p.board]||''}</span>${p.hidden?'<span class="chip bad">已隱藏</span>':''}<span class="tiny dim">${fmtTime(p.last_activity_at)}</span></div>
+      <div class="ft">${esc(p.title)}</div>
+      <p class="fx">${esc(p.body)}</p>
+      <div class="fby"><span>${esc(p.name)}${p.role?`・${esc(p.role)}`:''}</span><span class="fstat"><span title="有共鳴">♥ ${p.likes}</span><span title="留言">留言 ${p.comments}</span></span></div></a>`;
+  const draw = () => {
+    if(rs!==routeSeq) return;
+    const tabs = [['','全部'], ...Object.entries(FBOARDS), ['mine','我的發文']];
+    $('#app').innerHTML = `${statusBanner()}<header class="phd fhd"><div><h1>討論區</h1><p>會員限定。每篇文、每則留言都可以選擇匿名。</p></div>${fCanPost()?'<button class="btn sm primary" id="fnew">發文</button>':''}</header>
+      <div class="tabs ftabs">${tabs.map(([k,t])=>`<button class="${board===k?'on':''}" data-b="${k}">${t}</button>`).join('')}</div>
+      ${board==='mine'?'':`<div class="fsort"><button type="button" class="${sort==='new'?'on':''}" data-s="new">最新</button><button type="button" class="${sort==='hot'?'on':''}" data-s="hot">本週熱門</button></div>`}
+      <div class="flist">${items.length ? items.map(row).join('') : `<div class="empty"><p class="serif">${board==='mine'?'你還沒有發過文':'這裡還沒有文章'}</p><p class="muted small">${board==='safety'?'遇過可疑的人或話術？說出來可以幫其他會員避開。':'分享約會心得、問問大家的看法，都可以選擇匿名。'}</p>${fCanPost()?'<button class="btn mt2" id="fnew2">發第一篇</button>':''}</div>`}</div>
+      ${more?'<div class="center mt2"><button class="btn ghost sm" id="fmore">看更多</button></div>':''}`;
+    $('#app').querySelectorAll('.ftabs button').forEach(b=>b.onclick=async()=>{ board=b.dataset.b; save(); await load(); draw(); });
+    $('#app').querySelectorAll('.fsort button').forEach(b=>b.onclick=async()=>{ sort=b.dataset.s; save(); await load(); draw(); });
+    [$('#fnew'), $('#fnew2')].forEach(b=>b && (b.onclick=()=>forumCompose(board && FBOARDS[board] ? board : '')));
+    $('#fmore') && ($('#fmore').onclick=async()=>{ $('#fmore').disabled=true; await load(true); draw(); });
+  };
+  await load(); draw();
+}
+
+function forumCompose(board){
+  const d = JSON.parse(sessionStorage.getItem('yy_fdraft')||'{}');
+  modal(`<h3 style="font-size:18px">發文</h3>
+    <form id="ff" class="fform">
+      <label>分類</label><select name="board" required><option value="">請選擇</option>${Object.entries(FBOARDS).map(([k,t])=>`<option value="${k}"${(d.board||board)===k?' selected':''}>${t}</option>`).join('')}</select>
+      <label>標題</label><input name="title" maxlength="40" required value="${esc(d.title||'')}" placeholder="2 到 40 字">
+      <label>內容</label><textarea name="body" maxlength="2000" required placeholder="寫下你的經驗或問題（5 到 2000 字）">${esc(d.body||'')}</textarea>
+      <label>用什麼身分發文</label>${fAnonPick('anon', fAnonCur())}
+      <p class="tiny dim fnote">匿名只對其他會員：其他人從網站或任何方式都查不到是誰發的；只有管理員在處理檢舉時看得到。不能留 LINE、電話、IG 或網址，想認識對方請用站內的心動與訊息。</p>
+      <button class="btn primary block mt" type="submit">發布</button>
+    </form>`);
+  const f = $('#ff'); fBindAnon(f);
+  const keep = () => sessionStorage.setItem('yy_fdraft', JSON.stringify({ board:f.board.value, title:f.title.value, body:f.body.value }));
+  f.oninput = keep; f.onchange = keep;
+  f.onsubmit = async e => { e.preventDefault();
+    const title=f.title.value.trim(), body=f.body.value.trim(), anon=Number(f.anon.value);
+    if(!f.board.value) return toast('請選擇分類');
+    if(title.length<2) return toast('標題請寫 2 到 40 字'); if(body.length<5) return toast('內容請寫 5 到 2000 字');
+    const bad = forumContact(title+' '+body); if(bad) return toast(bad);
+    const btn = f.querySelector('[type=submit]'); btn.disabled=true; btn.textContent='發布中…';
+    const { data: id, error } = await sb.rpc('forum_post', { p_board:f.board.value, p_title:title, p_body:body, p_anon:anon });
+    if(error){ btn.disabled=false; btn.textContent='發布'; return toast(zh(error.message)); }
+    localStorage.setItem('yy_fanon', anon); sessionStorage.removeItem('yy_fdraft'); closeModal(); toast('已發布');
+    location.hash = '#/forum/' + id; };
+}
+
+function forumReport(target){
+  modal(`<h3 style="font-size:18px">檢舉${target.comment?'留言':'文章'}</h3><p class="tiny dim">檢舉不會讓對方知道是誰。三位會員檢舉後內容會先自動隱藏，由管理員確認。</p>
+    <form id="frf" class="fform">${Object.entries(FREASONS).map(([k,t],i)=>`<label class="rad"><input type="radio" name="r" value="${k}"${i?'':' required'}> ${t}</label>`).join('')}
+    <input name="d" maxlength="200" placeholder="補充說明（選填）">
+    <button class="btn primary block mt" type="submit">送出檢舉</button></form>`);
+  $('#frf').onsubmit = async e => { e.preventDefault(); const f=e.target; if(!f.r.value) return toast('請選擇原因');
+    const { error } = await sb.rpc('forum_report', { p_post: target.post||null, p_comment: target.comment||null, p_reason: f.r.value, p_detail: f.d.value.trim()||null });
+    if(error) return toast(zh(error.message)); closeModal(); toast('已收到檢舉，謝謝你'); };
+}
+
+async function viewForumPost(id, rs){
+  const { data, error } = await sb.rpc('forum_get', { p_id: id });
+  if(rs!==routeSeq) return;
+  if(error){ $('#app').innerHTML = `<p class="fback"><a href="#/forum">‹ 討論區</a></p><div class="empty"><p class="serif">${esc(zh(error.message))}</p><p class="muted small">文章可能被作者刪除，或正在等管理員確認。</p></div>`; return; }
+  const p = data.post, cs = data.comments||[];
+  const adminLine = x => me.is_admin && x.real_name!==undefined ? `<p class="tiny fadm">作者（只有管理員看得到）：${esc(x.real_name||'（已刪除）')}${x.reports?`・未處理檢舉 ${x.reports}`:''}</p>` : '';
+  const acts = (x, kind) => `<span class="facts">${!x.mine?`<button type="button" class="lnk frep" data-k="${kind}" data-id="${x.id}">檢舉</button>`:''}${x.mine||me.is_admin?`<button type="button" class="lnk fdel" data-k="${kind}" data-id="${x.id}">刪除</button>`:''}</span>`;
+  const draft = sessionStorage.getItem('yy_fc_'+id)||'';
+  $('#app').innerHTML = `<p class="fback"><a href="#/forum">‹ 討論區</a></p>
+    <article class="fpost">
+      <div class="fmeta"><span class="chip">${FBOARDS[p.board]||''}</span>${p.hidden?'<span class="chip bad">已隱藏，其他會員看不到</span>':''}</div>
+      <h1>${esc(p.title)}</h1>
+      <div class="fby">${fWho(p)}<span class="tiny dim">${fmtTime(p.created_at)}</span></div>
+      ${adminLine(p)}
+      <div class="fbody">${esc(p.body)}</div>
+      <div class="fbar"><button type="button" class="btn sm ${p.liked?'primary':'ghost'}" id="flike" aria-pressed="${p.liked}">♥ 有共鳴 ${p.likes}</button>${acts(p,'post')}</div>
+    </article>
+    <section class="fcs"><h2>${cs.length} 則留言</h2>
+      ${cs.map(c=>`<div class="fc${c.op?' isop':''}" id="c${c.id}"><div class="fby">${fWho(c)}<span class="tiny dim">${fmtTime(c.created_at)}</span>${c.hidden?'<span class="chip bad">已隱藏</span>':''}</div>${adminLine(c)}<div class="fbody">${esc(c.body)}</div>${acts(c,'comment')}</div>`).join('')}
+    </section>
+    ${fCanPost() ? `<form id="fcf" class="fform fcform"><label>留言</label><textarea name="body" maxlength="500" required placeholder="友善留言，最多 500 字">${esc(draft)}</textarea>
+      ${p.mine ? '<p class="tiny dim">你是原PO，留言會用跟文章一樣的身分顯示。</p>' : `<label>用什麼身分留言</label>${fAnonPick('anon', fAnonCur())}`}
+      <button class="btn primary mt" type="submit">送出留言</button></form>`
+      : '<p class="muted small center mt2">檔案重新審核期間只能看、不能留言。</p>'}`;
+  fBindWho($('#app')); fBindAnon($('#app'));
+  $('#flike').onclick = async () => { const on = $('#flike').getAttribute('aria-pressed')!=='true';
+    const { data: n, error } = await sb.rpc('forum_like', { p_post: id, on_: on }); if(error) return toast(zh(error.message));
+    $('#flike').setAttribute('aria-pressed', on); $('#flike').className = `btn sm ${on?'primary':'ghost'}`; $('#flike').textContent = `♥ 有共鳴 ${n}`; };
+  $('#app').querySelectorAll('.frep').forEach(b=>b.onclick=()=>forumReport(b.dataset.k==='post'?{post:id}:{comment:Number(b.dataset.id)}));
+  $('#app').querySelectorAll('.fdel').forEach(b=>b.onclick=async()=>{ const post=b.dataset.k==='post';
+    if(!confirm(post?'刪除這篇文章？留言會一起刪除，無法復原。':'刪除這則留言？')) return;
+    const { error } = await sb.rpc('forum_delete', post?{ p_post:id }:{ p_comment:Number(b.dataset.id) }); if(error) return toast(zh(error.message));
+    toast('已刪除'); if(post) location.hash='#/forum'; else route(); });
+  const cf = $('#fcf');
+  if(cf){ cf.body.oninput = () => sessionStorage.setItem('yy_fc_'+id, cf.body.value);
+    cf.onsubmit = async e => { e.preventDefault(); const body=cf.body.value.trim(); if(!body) return;
+      const bad = forumContact(body); if(bad) return toast(bad);
+      const anon = cf.anon ? Number(cf.anon.value) : 0;
+      const btn = cf.querySelector('[type=submit]'); btn.disabled=true;
+      const { data: cid, error } = await sb.rpc('forum_comment', { p_post:id, p_body:body, p_anon:anon });
+      btn.disabled=false; if(error) return toast(zh(error.message));
+      if(cf.anon) localStorage.setItem('yy_fanon', anon); sessionStorage.removeItem('yy_fc_'+id);
+      await route(); const el = document.getElementById('c'+cid); if(el) el.scrollIntoView({ block:'center' }); }; }
+}
+
 async function viewAdmin(){
   const rs = routeSeq;
   if(!me.is_admin){ location.hash='#/browse'; return; }
   let tab = 'overview';
   const adm = async q => { const { error } = await q; if(error) toast('沒有完成：'+error.message); return !error; };
   const draw = async ()=>{
-    if(rs!==routeSeq) return; setTimeout(()=>refreshUnread(Date.now()-unread.at > 8000), 0); $('#app').innerHTML = `<div class="tabs admtabs"><button class="${tab==='overview'?'on':''}" data-t="overview">總覽</button><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='person'?'on':''}" data-t="person">真人認證</button><button class="${tab==='wealth'?'on':''}" data-t="wealth">財力認證</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button><button class="${tab==='support'?'on':''}" data-t="support">客服留言</button><button class="${tab==='sms'?'on':''}" data-t="sms">簡訊監控</button><button class="${tab==='convos'?'on':''}" data-t="convos">對話紀錄</button></div><div id="adm"><div class="spinner"></div></div>`;
+    if(rs!==routeSeq) return; setTimeout(()=>refreshUnread(Date.now()-unread.at > 8000), 0); $('#app').innerHTML = `<div class="tabs admtabs"><button class="${tab==='overview'?'on':''}" data-t="overview">總覽</button><button class="${tab==='profiles'?'on':''}" data-t="profiles">待審會員</button><button class="${tab==='photos'?'on':''}" data-t="photos">待審照片</button><button class="${tab==='reports'?'on':''}" data-t="reports">檢舉</button><button class="${tab==='person'?'on':''}" data-t="person">真人認證</button><button class="${tab==='wealth'?'on':''}" data-t="wealth">財力認證</button><button class="${tab==='members'?'on':''}" data-t="members">會員查詢</button><button class="${tab==='support'?'on':''}" data-t="support">客服留言</button><button class="${tab==='sms'?'on':''}" data-t="sms">簡訊監控</button><button class="${tab==='convos'?'on':''}" data-t="convos">對話紀錄</button><button class="${tab==='forum'?'on':''}" data-t="forum">討論區</button></div><div id="adm"><div class="spinner"></div></div>`;
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
     const box = $('#adm');
     if(tab==='overview'){
@@ -3711,6 +3886,23 @@ async function viewAdmin(){
           <div class="ovch">${days.map(d=>{ const dt=new Date(d.day+'T00:00:00'); return `<div class="ovc" title="${d.day}：訪客 ${d.v}、新註冊 ${d.s}"><div class="ovbars"><i class="v" style="height:${Math.round(d.v/mx*100)}%"></i><i class="s" style="height:${Math.round(d.s/ms*100)}%"></i></div><div class="ovn">${d.v}<br><span>${d.s}</span></div><div class="ovd">${dt.getMonth()+1}/${dt.getDate()}</div></div>`; }).join('')}</div></div>
         <div class="card mt"><h3 style="font-size:16px">訪客從哪裡來（近 7 天）</h3><p class="tiny dim">自動判斷：從 IG、Threads、FB、LINE 的 App 裡點進來，或從 Google 等網站連過來，都會分開統計。「直接開啟」是自己輸入網址或用書籤打開的。</p>
           ${(o.sources||[]).length ? (o.sources||[]).map(x=>`<div class="ovsrc"><span>${esc(x.src)}</span><i style="width:${Math.max(2,Math.round(x.n/srcMax*100))}%"></i><b>${n(x.n)}</b></div>`).join('') : '<p class="muted small">還沒有資料</p>'}</div>`;
+      return;
+    }
+    if(tab==='forum'){
+      const { data: rows, error } = await sb.rpc('forum_admin_queue');
+      if(rs!==routeSeq || tab!=='forum') return;
+      if(error){ box.innerHTML = `<p class="muted">${esc(zh(error.message))}</p><p class="tiny dim">如果是剛加的功能，請先在 Supabase 跑 v0.68 的 SQL。</p>`; return; }
+      if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">討論區沒有待處理的檢舉 ✓</p>'; return; }
+      box.innerHTML = `<p class="tiny dim mb">被檢舉或被自動隱藏（三人檢舉）的文章與留言。這裡看得到真實作者；匿名內容的作者只有管理員看得到，請勿外流。</p>` + rows.map(x=>`<div class="card mb">
+        <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><span class="chip">${x.kind==='post'?'文章':'留言'}</span> ${x.hidden?'<span class="chip bad">已隱藏</span>':''} <b>${esc(x.title)}</b></div><span class="tiny dim">${fmtTime(x.created_at)}</span></div>
+        <p class="small mt" style="white-space:pre-wrap">${esc(x.body)}</p>
+        <p class="tiny mt">作者：<b>${esc(x.real_name||'（已刪除）')}</b>（${['顯示暱稱','匿名・顯示身分','完全匿名'][x.anon]||''}）</p>
+        <ul class="tiny dim" style="margin:8px 0 0 18px">${(x.reports||[]).map(r=>`<li>${FREASONS[r.reason]||r.reason}${r.detail?`：${esc(r.detail)}`:''}（${fmtTime(r.at)}）</li>`).join('')}</ul>
+        <div class="row flexwrap mt" style="gap:6px"><a class="btn sm ghost" href="#/forum/${x.post_id}">看原文</a><button class="btn sm ghost frs" data-k="${x.kind}" data-id="${x.id}">沒問題，恢復顯示</button><button class="btn sm danger frm" data-k="${x.kind}" data-id="${x.id}">下架</button>${x.real_author_id?`<button class="btn sm danger fsp" data-id="${x.real_author_id}">停權作者</button>`:''}</div></div>`).join('');
+      const act = async (b, a) => { const post = b.dataset.k==='post'; if(await adm(sb.rpc('forum_admin_set', { p_post: post?Number(b.dataset.id):null, p_comment: post?null:Number(b.dataset.id), p_action: a }))) draw(); };
+      box.querySelectorAll('.frs').forEach(b=>b.onclick=()=>act(b,'restore'));
+      box.querySelectorAll('.frm').forEach(b=>b.onclick=()=>{ if(confirm('下架這則內容？內容會保留當證據，但所有會員都看不到。')) act(b,'remove'); });
+      box.querySelectorAll('.fsp').forEach(b=>b.onclick=async()=>{ if(!confirm('停權這位作者？他在討論區的內容也會一併消失。')) return; if(await adm(sb.from('profiles').update({ status:'suspended' }).eq('id',b.dataset.id))) draw(); });
       return;
     }
     if(tab==='convos'){
@@ -3966,10 +4158,10 @@ terms: `<h2>使用條款</h2><p class="tiny dim">最後更新：2026 年 10 月 
 <h3>第十一條　準據法與管轄</h3><p>本條款以中華民國法律為準據法。因本條款所生之爭議，雙方同意以臺灣臺北地方法院為第一審管轄法院，但不排除法律規定之專屬管轄。</p>
 <h3>第十二條　條款修改</h3><p>本平台得隨時修改本條款，修改後將公告於本頁；你於修改後繼續使用服務即視為同意修改後之條款。</p>`,
 
-privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 11 月 2 日</p>
+privacy: `<h2>隱私政策</h2><p class="tiny dim">最後更新：2026 年 11 月 14 日</p>
 <h3>蒐集之資料</h3><ul><li>真人認證自拍與短影片（僅限自願申請者）：只供管理人員比對，審核完成即刪除。</li><li>財力文件（僅限自願申請財力認證者，姓名等個資可自行遮蔽）：由管理人員審核；未通過者立即刪除；通過者保存於私有空間，僅提供給你親自允許的會員查看，你可隨時刪除。</li><li>帳號資料：Email、密碼（加密儲存）。使用 Google 或 LINE 登入時，另會取得該帳號的名稱與大頭貼；名稱不會公開，大頭貼只有在你選擇使用並通過審核後才會顯示。</li><li>檔案資料：暱稱、性別、出生年、所在地、身高、職業、興趣、自我介紹、照片。</li><li>使用資料：心動、對話、訊息、檢舉、封鎖紀錄，以及登入時間與裝置資訊。</li></ul>
 <h3>使用目的</h3><ul><li>提供交友媒合服務與展示檔案給其他會員。</li><li>審核內容、處理檢舉、維護平台安全。</li><li>依法配合司法或主管機關之調查。</li></ul>
-<h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方。管理人員只在處理檢舉、或發現疑似詐騙與違規時查看相關對話。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
+<h3>誰看得到你的資料</h3><ul><li>公開檔案（暱稱、年齡、地區、公開照片、自介）：已通過審核之登入會員。</li><li>私密照片：僅你授權之會員。</li><li>訊息：僅對話雙方。管理人員只在處理檢舉、或發現疑似詐騙與違規時查看相關對話。</li><li>討論區的文章與留言：已通過審核之登入會員。選擇匿名時，其他會員看不到你是誰；管理人員為處理檢舉與違規，看得到匿名內容的實際作者。</li><li>Email 與密碼：不對任何會員公開。</li></ul>
 <h3>資料儲存與保護</h3><p>資料儲存於 Supabase 雲端服務，傳輸全程加密（HTTPS）。照片以私有儲存空間存放，只透過加密的限時連結讀取，查看時疊加檢視者代號浮水印。資料庫以列級權限控管，會員只能讀取規則允許的資料。</p><h3>我們不做的事</h3><ul><li>不販售、出租或分享任何會員資料給第三方。</li><li>不使用第三方廣告追蹤。</li><li>管理人員只在處理檢舉時查看相關對話。</li></ul>
 <h3>手機號碼</h3><p>註冊時需以簡訊驗證手機，一支手機僅能綁定一個帳號。手機號碼僅用於確認真人與防止重複註冊，不會顯示給任何會員，也不會用於行銷。</p><p>為防止濫用，我們會保留手機號碼經單向加密的編碼（無法還原成號碼），即使帳號刪除後亦同，僅用於：限制驗證簡訊次數、讓被停權的號碼無法再註冊，以及保留其他會員對該帳號的見面評價供審核參考。</p>
 <h3>你的權利</h3><p>你得隨時查詢、更正或下架你的資料，並可在「我的」頁面自行刪除帳號；刪除後檔案、照片、對話、手機號碼與信箱立即永久刪除，無法復原（防止濫用的手機號碼單向編碼除外，見「手機號碼」）。其他問題請以註冊信箱來信 support@onethirdsugar.com。</p>
@@ -3980,6 +4172,7 @@ guidelines: `<h2>社群守則</h2><p>微糖希望成為一個讓成熟成年人�
 <h3>尊重</h3><p>對方沒有回應不代表邀請你再傳十次。任何騷擾、辱罵、威脅或散布他人資訊的行為，一經檢舉查證即停權。</p>
 <h3>真誠交往，互相尊重</h3><p>微糖歡迎成年人坦誠彼此的期待與相處方式，但這裡不是性交易的地方：任何以金錢、禮物或其他利益交換性行為的要求、暗示或約定，一經查證立即停權並永久封鎖該手機號碼。生活方式預算只是對用餐、旅行、禮物等相處方式的描述，不是任何對價。平台不經手、不媒介會員之間的任何款項；見面前要求匯款、借貸、投資、預付「車馬費」或「訂金」的，多半是詐騙，請直接檢舉。任何業者都不得在此招攬。</p>
 <h3>不留站外聯絡方式</h3><p>公開檔案不得出現 LINE、電話、IG 等聯絡方式。請先在站內認識彼此，等雙方都覺得合適再交換。</p>
+<h3>討論區</h3><p>討論區只開放給通過審核的會員，可以選擇匿名，但規則一樣：不得留聯絡方式或網址、不得招攬或談論金錢交換、不得洩漏他人可辨識的個資或對話截圖、不得人身攻擊。匿名只對其他會員，違規內容的作者管理員一樣找得到，並依情節下架或停權。</p>
 <h3>照片規範</h3><p>清楚、正面、近期。不接受裸露、猥褻、暴力、含文字或聯絡方式、明星或網路圖片。私密照同樣需審核，且不得含有裸露內容。</p>
 <h3>檢舉會被認真看待</h3><p>每一件檢舉都會由真人在 24 小時內處理。惡意或不實檢舉同樣會被處理。</p>`,
 
