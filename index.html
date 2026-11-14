@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-2r0mITHdZdGsKEncGBiu9JtQBlgdDi80WEnBEzANAXU=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-Ag7z3dAYqwkRH36ISF+usIk8T5YVizYzDaD4rfIG4jE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1358,6 +1358,9 @@ html[data-theme=dark] .pko button:hover:not(:disabled),html[data-theme=dark] .pk
 /* 討論區 */
 .fhd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}.fhd h1{margin:0}
 .ftabs{margin-bottom:12px}
+.fareas{display:flex;border:1px solid var(--ink);width:max-content;max-width:100%}.fareas button{padding:10px 18px;font-size:13px;letter-spacing:.12em;color:var(--ink);white-space:nowrap}.fareas button+button{border-left:1px solid var(--ink)}.fareas button.on{background:var(--ink);color:var(--white)}
+.fanote{margin:8px 0 18px}.chip.farea{color:var(--wine);border-color:var(--wine)}
+@media(max-width:719px){.fareas{width:100%}.fareas button{flex:1;padding:10px 6px;letter-spacing:.06em}}
 .fsort{display:flex;gap:18px;margin:0 0 8px;font-size:13px}.fsort button{color:var(--grey);letter-spacing:.12em;padding:6px 0;border-bottom:1px solid transparent}.fsort button.on{color:var(--ink);border-color:var(--ink)}
 .fitem{display:block;padding:20px 0;border-bottom:1px solid var(--rule);color:inherit;text-decoration:none}
 @media(hover:hover){.fitem:hover .ft{color:var(--wine)}}
@@ -1438,7 +1441,7 @@ html[data-theme=dark] .pko button:hover:not(:disabled),html[data-theme=dark] .pk
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD='v1.97.0';
+const BUILD='v1.97.1';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -3715,6 +3718,10 @@ const FANON = [
   { v:0, t:'顯示暱稱', d:'大家看得到你的暱稱，看得到你檔案的人可以點進去看' },
   { v:1, t:'匿名・顯示身分', d:'只顯示「匿名・甜心」或「匿名・Sugar Daddy」這類身分' },
   { v:2, t:'完全匿名', d:'只顯示「匿名」' } ];
+const FAREAS = { all:'綜合討論', female:'女生專區', male:'男生專區' };
+const FAREA_NOTE = { all:'所有會員都看得到', female:'只有女生會員看得到、發得了文', male:'只有男生會員看得到、發得了文' };
+const fMyAreas = () => me.is_admin ? ['all','female','male'] : ['all', ...(me.gender==='female'?['female']:me.gender==='male'?['male']:[])];
+const fAreaChip = a => a && a!=='all' ? `<span class="chip farea">${FAREAS[a]}</span>` : '';
 const FREASONS = { money:'要求金錢或交換條件', adult_industry:'色情或性交易招攬', contact:'留聯絡方式或廣告', harass:'騷擾或人身攻擊', privacy:'洩漏別人的隱私', spam:'洗版或跟主題無關', other:'其他' };
 // 跟資料庫同一套：不能留網址、電話、LINE／IG 帳號（送出前先擋，省得白打字）
 function forumContact(t){ const l=(t||'').toLowerCase();
@@ -3736,17 +3743,17 @@ async function viewForum(arg){
     $('#app').innerHTML = `${statusBanner()}<header class="phd"><h1>討論區</h1></header><div class="empty"><p class="serif">檔案審核通過後就能進來</p><p class="muted small">討論區只開放給通過真人審核的會員，大家才敢說真話。</p></div>`; return; }
   if(arg && /^\d+$/.test(arg)) return viewForumPost(Number(arg), rs);
   const st = JSON.parse(sessionStorage.getItem('yy_fst')||'{}');
-  let board = st.board || '', sort = st.sort || 'new', items = [], more = false;
-  const save = () => sessionStorage.setItem('yy_fst', JSON.stringify({ board, sort }));
+  let board = st.board || '', sort = st.sort || 'new', area = fMyAreas().includes(st.area) ? st.area : 'all', items = [], more = false;
+  const save = () => sessionStorage.setItem('yy_fst', JSON.stringify({ board, sort, area }));
   const load = async (append) => {
     const mine = board==='mine';
     const last = append && items.length ? items[items.length-1].last_activity_at : null;
-    const { data, error } = await sb.rpc('forum_list', { p_board: (mine||!board)?null:board, p_sort: mine?'new':sort, p_before: sort==='hot'&&!mine?null:last, p_limit: 20, p_mine: mine });
+    const { data, error } = await sb.rpc('forum_list', { p_board: (mine||!board)?null:board, p_sort: mine?'new':sort, p_before: sort==='hot'&&!mine?null:last, p_limit: 20, p_mine: mine, p_audience: area });
     if(error) throw error;
     items = append ? items.concat(data||[]) : (data||[]); more = (data||[]).length===20 && !(sort==='hot'&&!mine);
   };
   const row = p => `<a class="fitem" href="#/forum/${p.id}">
-      <div class="fmeta"><span class="chip">${FBOARDS[p.board]||''}</span>${p.hidden?'<span class="chip bad">已隱藏</span>':''}<span class="tiny dim">${fmtTime(p.last_activity_at)}</span></div>
+      <div class="fmeta">${board==='mine'?fAreaChip(p.audience):''}<span class="chip">${FBOARDS[p.board]||''}</span>${p.hidden?'<span class="chip bad">已隱藏</span>':''}<span class="tiny dim">${fmtTime(p.last_activity_at)}</span></div>
       <div class="ft">${esc(p.title)}</div>
       <p class="fx">${esc(p.body)}</p>
       <div class="fby"><span>${esc(p.name)}${p.role?`・${esc(p.role)}`:''}</span><span class="fstat"><span title="有共鳴">♥ ${p.likes}</span><span title="留言">留言 ${p.comments}</span></span></div></a>`;
@@ -3754,23 +3761,26 @@ async function viewForum(arg){
     if(rs!==routeSeq) return;
     const tabs = [['','全部'], ...Object.entries(FBOARDS), ['mine','我的發文']];
     $('#app').innerHTML = `${statusBanner()}<header class="phd fhd"><div><h1>討論區</h1><p>會員限定。每篇文、每則留言都可以選擇匿名。</p></div>${fCanPost()?'<button class="btn sm primary" id="fnew">發文</button>':''}</header>
+      ${fMyAreas().length>1?`<div class="fareas" role="tablist" aria-label="討論區分區">${fMyAreas().map(a=>`<button type="button" role="tab" aria-selected="${area===a}" class="${area===a?'on':''}" data-a="${a}">${FAREAS[a]}</button>`).join('')}</div><p class="tiny dim fanote">${board==='mine'?'這裡列出你在所有分區發過的文':FAREAS[area]+'：'+FAREA_NOTE[area]}</p>`:''}
       <div class="tabs ftabs">${tabs.map(([k,t])=>`<button class="${board===k?'on':''}" data-b="${k}">${t}</button>`).join('')}</div>
       ${board==='mine'?'':`<div class="fsort"><button type="button" class="${sort==='new'?'on':''}" data-s="new">最新</button><button type="button" class="${sort==='hot'?'on':''}" data-s="hot">本週熱門</button></div>`}
       <div class="flist">${items.length ? items.map(row).join('') : `<div class="empty"><p class="serif">${board==='mine'?'你還沒有發過文':'這裡還沒有文章'}</p><p class="muted small">${board==='safety'?'遇過可疑的人或話術？說出來可以幫其他會員避開。':'分享約會心得、問問大家的看法，都可以選擇匿名。'}</p>${fCanPost()?'<button class="btn mt2" id="fnew2">發第一篇</button>':''}</div>`}</div>
       ${more?'<div class="center mt2"><button class="btn ghost sm" id="fmore">看更多</button></div>':''}`;
     $('#app').querySelectorAll('.ftabs button').forEach(b=>b.onclick=async()=>{ board=b.dataset.b; save(); await load(); draw(); });
+    $('#app').querySelectorAll('.fareas button').forEach(b=>b.onclick=async()=>{ area=b.dataset.a; if(board==='mine') board=''; save(); await load(); draw(); });
     $('#app').querySelectorAll('.fsort button').forEach(b=>b.onclick=async()=>{ sort=b.dataset.s; save(); await load(); draw(); });
-    [$('#fnew'), $('#fnew2')].forEach(b=>b && (b.onclick=()=>forumCompose(board && FBOARDS[board] ? board : '')));
+    [$('#fnew'), $('#fnew2')].forEach(b=>b && (b.onclick=()=>forumCompose(board && FBOARDS[board] ? board : '', area)));
     $('#fmore') && ($('#fmore').onclick=async()=>{ $('#fmore').disabled=true; await load(true); draw(); });
   };
   await load(); draw();
 }
 
-function forumCompose(board){
+function forumCompose(board, area){
   const d = JSON.parse(sessionStorage.getItem('yy_fdraft')||'{}');
   modal(`<h3 style="font-size:18px">發文</h3>
     <form id="ff" class="fform">
       <label>分類</label><select name="board" required><option value="">請選擇</option>${Object.entries(FBOARDS).map(([k,t])=>`<option value="${k}"${(d.board||board)===k?' selected':''}>${t}</option>`).join('')}</select>
+      ${fMyAreas().length>1?`<label>發在哪裡</label><select name="aud">${fMyAreas().map(a=>`<option value="${a}"${(d.aud||area||'all')===a?' selected':''}>${FAREAS[a]}（${FAREA_NOTE[a]}）</option>`).join('')}</select>`:''}
       <label>標題</label><input name="title" maxlength="40" required value="${esc(d.title||'')}" placeholder="2 到 40 字">
       <label>內容</label><textarea name="body" maxlength="2000" required placeholder="寫下你的經驗或問題（5 到 2000 字）">${esc(d.body||'')}</textarea>
       <label>用什麼身分發文</label>${fAnonPick('anon', fAnonCur())}
@@ -3778,7 +3788,7 @@ function forumCompose(board){
       <button class="btn primary block mt" type="submit">發布</button>
     </form>`);
   const f = $('#ff'); fBindAnon(f);
-  const keep = () => sessionStorage.setItem('yy_fdraft', JSON.stringify({ board:f.board.value, title:f.title.value, body:f.body.value }));
+  const keep = () => sessionStorage.setItem('yy_fdraft', JSON.stringify({ board:f.board.value, aud:f.aud?f.aud.value:'all', title:f.title.value, body:f.body.value }));
   f.oninput = keep; f.onchange = keep;
   f.onsubmit = async e => { e.preventDefault();
     const title=f.title.value.trim(), body=f.body.value.trim(), anon=Number(f.anon.value);
@@ -3786,7 +3796,7 @@ function forumCompose(board){
     if(title.length<2) return toast('標題請寫 2 到 40 字'); if(body.length<5) return toast('內容請寫 5 到 2000 字');
     const bad = forumContact(title+' '+body); if(bad) return toast(bad);
     const btn = f.querySelector('[type=submit]'); btn.disabled=true; btn.textContent='發布中…';
-    const { data: id, error } = await sb.rpc('forum_post', { p_board:f.board.value, p_title:title, p_body:body, p_anon:anon });
+    const { data: id, error } = await sb.rpc('forum_post', { p_board:f.board.value, p_title:title, p_body:body, p_anon:anon, p_audience: f.aud ? f.aud.value : 'all' });
     if(error){ btn.disabled=false; btn.textContent='發布'; return toast(zh(error.message)); }
     localStorage.setItem('yy_fanon', anon); sessionStorage.removeItem('yy_fdraft'); closeModal(); toast('已發布');
     location.hash = '#/forum/' + id; };
@@ -3812,7 +3822,7 @@ async function viewForumPost(id, rs){
   const draft = sessionStorage.getItem('yy_fc_'+id)||'';
   $('#app').innerHTML = `<p class="fback"><a href="#/forum">‹ 討論區</a></p>
     <article class="fpost">
-      <div class="fmeta"><span class="chip">${FBOARDS[p.board]||''}</span>${p.hidden?'<span class="chip bad">已隱藏，其他會員看不到</span>':''}</div>
+      <div class="fmeta">${fAreaChip(p.audience)}<span class="chip">${FBOARDS[p.board]||''}</span>${p.hidden?'<span class="chip bad">已隱藏，其他會員看不到</span>':''}</div>
       <h1>${esc(p.title)}</h1>
       <div class="fby">${fWho(p)}<span class="tiny dim">${fmtTime(p.created_at)}</span></div>
       ${adminLine(p)}
@@ -3894,7 +3904,7 @@ async function viewAdmin(){
       if(error){ box.innerHTML = `<p class="muted">${esc(zh(error.message))}</p><p class="tiny dim">如果是剛加的功能，請先在 Supabase 跑 v0.68 的 SQL。</p>`; return; }
       if(!rows?.length){ box.innerHTML='<p class="muted center" style="padding:40px 0">討論區沒有待處理的檢舉 ✓</p>'; return; }
       box.innerHTML = `<p class="tiny dim mb">被檢舉或被自動隱藏（三人檢舉）的文章與留言。這裡看得到真實作者；匿名內容的作者只有管理員看得到，請勿外流。</p>` + rows.map(x=>`<div class="card mb">
-        <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><span class="chip">${x.kind==='post'?'文章':'留言'}</span> ${x.hidden?'<span class="chip bad">已隱藏</span>':''} <b>${esc(x.title)}</b></div><span class="tiny dim">${fmtTime(x.created_at)}</span></div>
+        <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div>${fAreaChip(x.audience)}<span class="chip">${x.kind==='post'?'文章':'留言'}</span> ${x.hidden?'<span class="chip bad">已隱藏</span>':''} <b>${esc(x.title)}</b></div><span class="tiny dim">${fmtTime(x.created_at)}</span></div>
         <p class="small mt" style="white-space:pre-wrap">${esc(x.body)}</p>
         <p class="tiny mt">作者：<b>${esc(x.real_name||'（已刪除）')}</b>（${['顯示暱稱','匿名・顯示身分','完全匿名'][x.anon]||''}）</p>
         <ul class="tiny dim" style="margin:8px 0 0 18px">${(x.reports||[]).map(r=>`<li>${FREASONS[r.reason]||r.reason}${r.detail?`：${esc(r.detail)}`:''}（${fmtTime(r.at)}）</li>`).join('')}</ul>
