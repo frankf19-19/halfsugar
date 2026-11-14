@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-Ag7z3dAYqwkRH36ISF+usIk8T5YVizYzDaD4rfIG4jE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-YCuyiS5mDq7vdLye3OCbV4TDbwKbIjY0pCZI1XIxfoA=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -859,7 +859,8 @@ html[data-theme=dark] .todo .td.done{background:#1F1D1B}
 .msg.them .time{color:#66615C}
 .msg.me .time{color:rgba(255,255,255,.8)}
 html[data-theme=dark] .msg.them .time{color:#B0A9A2}
-html[data-theme=dark] .msg.me .time{color:#4A4541}
+html[data-theme=dark] .msg.me .time{color:#4A4541;opacity:1}
+html[data-theme=dark] .btn.rose{color:#1A1918!important}
 .msg .mimg{border-radius:12px}
 .msg.hasimg,.msg.recalled{box-shadow:none}
 .chat form{gap:8px}
@@ -1356,6 +1357,7 @@ html[data-theme=dark] .pko button:hover:not(:disabled),html[data-theme=dark] .pk
 .landing .forw{display:inline-block;margin-top:16px;font-size:14px;letter-spacing:.06em;color:#fff;opacity:.9;text-decoration:underline;text-underline-offset:4px;text-shadow:0 1px 8px rgba(0,0,0,.45)}
 .landing .forw:hover{opacity:1}
 /* 討論區 */
+body[data-page=forum] #app{max-width:820px}
 .fhd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}.fhd h1{margin:0}
 .ftabs{margin-bottom:12px}
 .fareas{display:flex;border:1px solid var(--ink);width:max-content;max-width:100%}.fareas button{padding:10px 18px;font-size:13px;letter-spacing:.12em;color:var(--ink);white-space:nowrap}.fareas button+button{border-left:1px solid var(--ink)}.fareas button.on{background:var(--ink);color:var(--white)}
@@ -1441,7 +1443,7 @@ html[data-theme=dark] .pko button:hover:not(:disabled),html[data-theme=dark] .pk
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD='v1.97.1';
+const BUILD='v1.97.2';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -3764,7 +3766,7 @@ async function viewForum(arg){
       ${fMyAreas().length>1?`<div class="fareas" role="tablist" aria-label="討論區分區">${fMyAreas().map(a=>`<button type="button" role="tab" aria-selected="${area===a}" class="${area===a?'on':''}" data-a="${a}">${FAREAS[a]}</button>`).join('')}</div><p class="tiny dim fanote">${board==='mine'?'這裡列出你在所有分區發過的文':FAREAS[area]+'：'+FAREA_NOTE[area]}</p>`:''}
       <div class="tabs ftabs">${tabs.map(([k,t])=>`<button class="${board===k?'on':''}" data-b="${k}">${t}</button>`).join('')}</div>
       ${board==='mine'?'':`<div class="fsort"><button type="button" class="${sort==='new'?'on':''}" data-s="new">最新</button><button type="button" class="${sort==='hot'?'on':''}" data-s="hot">本週熱門</button></div>`}
-      <div class="flist">${items.length ? items.map(row).join('') : `<div class="empty"><p class="serif">${board==='mine'?'你還沒有發過文':'這裡還沒有文章'}</p><p class="muted small">${board==='safety'?'遇過可疑的人或話術？說出來可以幫其他會員避開。':'分享約會心得、問問大家的看法，都可以選擇匿名。'}</p>${fCanPost()?'<button class="btn mt2" id="fnew2">發第一篇</button>':''}</div>`}</div>
+      <div class="flist">${items.length ? items.map(row).join('') : `<div class="empty"><p class="serif">${board==='mine'?'你還沒有發過文':sort==='hot'?'這週還沒有熱門文章':'這裡還沒有文章'}</p><p class="muted small">${board==='safety'?'遇過可疑的人或話術？說出來可以幫其他會員避開。':'分享約會心得、問問大家的看法，都可以選擇匿名。'}</p>${fCanPost()?'<button class="btn mt2" id="fnew2">發第一篇</button>':''}</div>`}</div>
       ${more?'<div class="center mt2"><button class="btn ghost sm" id="fmore">看更多</button></div>':''}`;
     $('#app').querySelectorAll('.ftabs button').forEach(b=>b.onclick=async()=>{ board=b.dataset.b; save(); await load(); draw(); });
     $('#app').querySelectorAll('.fareas button').forEach(b=>b.onclick=async()=>{ area=b.dataset.a; if(board==='mine') board=''; save(); await load(); draw(); });
@@ -3827,7 +3829,7 @@ async function viewForumPost(id, rs){
       <div class="fby">${fWho(p)}<span class="tiny dim">${fmtTime(p.created_at)}</span></div>
       ${adminLine(p)}
       <div class="fbody">${esc(p.body)}</div>
-      <div class="fbar"><button type="button" class="btn sm ${p.liked?'primary':'ghost'}" id="flike" aria-pressed="${p.liked}">♥ 有共鳴 ${p.likes}</button>${acts(p,'post')}</div>
+      <div class="fbar"><button type="button" class="btn sm ${p.liked?'primary':'ghost'}" id="flike" aria-pressed="${p.liked}"${fCanPost()?'':' disabled title="檔案重新審核期間不能按讚"'}>♥ 有共鳴 ${p.likes}</button>${acts(p,'post')}</div>
     </article>
     <section class="fcs"><h2>${cs.length} 則留言</h2>
       ${cs.map(c=>`<div class="fc${c.op?' isop':''}" id="c${c.id}"><div class="fby">${fWho(c)}<span class="tiny dim">${fmtTime(c.created_at)}</span>${c.hidden?'<span class="chip bad">已隱藏</span>':''}</div>${adminLine(c)}<div class="fbody">${esc(c.body)}</div>${acts(c,'comment')}</div>`).join('')}

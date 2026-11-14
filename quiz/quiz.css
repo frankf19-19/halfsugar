@@ -1,4 +1,4 @@
-:root{--bg:#F4EFE5;--paper:#FCFAF4;--line:#D9CFB8;--ink:#1d1a17;--mute:#8C7B5E;--wine:#A63F58}
+:root{--bg:#F4EFE5;--paper:#FCFAF4;--line:#D9CFB8;--ink:#1d1a17;--mute:#6B5D45;--wine:#A63F58}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;line-height:1.8;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-underline-offset:4px}

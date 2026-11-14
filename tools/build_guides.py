@@ -575,12 +575,18 @@ sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 from guides_extra import EXTRA
 PAGES += EXTRA
 
+import unicodedata as _ud
+def short_title(t):
+    """Google 約顯示 66 個半形寬度；太長時把品牌尾巴縮成「｜微糖」，關鍵字留在前面"""
+    w = lambda x: sum(2 if _ud.east_asian_width(c) in 'WF' else 1 for c in x)
+    return t.replace('｜微糖 1/3 Sugar', '｜微糖') if w(t) > 66 else t
+
 def page(p, hub_items=None, hub_ld=None):
     e = html.escape
     url = f"{SITE}/{p['slug']}/"
     def blk(x):
         if isinstance(x, dict):
-            return ('<div class="tw"><table><thead><tr>' + ''.join(f'<th>{e(c)}</th>' for c in x['head']) + '</tr></thead><tbody>'
+            return ('<div class="tw" tabindex="0" role="region" aria-label="比較表，可以左右滑動"><table><thead><tr>' + ''.join(f'<th>{e(c)}</th>' for c in x['head']) + '</tr></thead><tbody>'
                     + ''.join('<tr>' + ''.join(f'<th scope="row">{e(c)}</th>' if i == 0 else f'<td>{e(c)}</td>' for i, c in enumerate(r)) + '</tr>' for r in x['rows'])
                     + '</tbody></table></div>')
         return f"<p>{e(x)}</p>"
@@ -605,13 +611,13 @@ def page(p, hub_items=None, hub_ld=None):
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="{csp}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{e(p['title'])}</title>
+<title>{e(short_title(p['title']))}</title>
 <meta name="description" content="{e(p['desc'])}">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="{url}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="微糖 1/3 Sugar">
-<meta property="og:title" content="{e(p['title'])}">
+<meta property="og:title" content="{e(short_title(p['title']))}">
 <meta property="og:description" content="{e(p['desc'])}">
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{SITE}/brand/og.png">
