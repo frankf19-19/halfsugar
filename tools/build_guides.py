@@ -64,7 +64,7 @@ PAGES = [
   },
   {
     'slug': 'sugar-mommy',
-    'title': 'Sugar Mommy 是什麼意思？甜心媽咪、Sugar Mama、Sugar Mummy 一次看懂｜微糖 1/3 Sugar',
+    'title': 'Sugar Mommy 中文意思？台灣的 Sugar Mommy、Sugar Mama 一次看懂｜微糖 1/3 Sugar',
     'desc': 'Sugar Mommy（甜心媽咪，也寫作 Sugar Mom、Sugar Mama、Sugar Mummy，常被拼成 suger mommy）是什麼意思？指事業有成、經濟獨立、願意照顧另一半的女性。和 Sugar Daddy、富婆有什麼不同？微糖一次說清楚。',
     'h1': 'Sugar Mommy 是什麼？',
     'lead': 'Sugar Mommy（甜心媽咪）是事業有成、經濟獨立，願意照顧另一半的女性。她們清楚自己想要什麼，也欣賞坦誠、懂得相處的人。英文裡也常說 Sugar Mama、Sugar Mom，英式拼法是 Sugar Mummy；很多人搜尋時會打成 suger mommy、sugar momey，指的都是同一件事。',
