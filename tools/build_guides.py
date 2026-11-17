@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 """產生給搜尋引擎的介紹頁（包養、Sugar Daddy、Sugar Mommy、甜心）。
    改內容就改下面的 PAGES，然後執行：python3 tools/build_guides.py
    會寫出 /baoyang/index.html 等頁面，並更新 sitemap.xml。"""
@@ -575,6 +576,8 @@ import sys, os as _os
 sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 from guides_extra import EXTRA
 PAGES += EXTRA
+from guides_boost import apply as _boost
+_boost(PAGES)
 
 import unicodedata as _ud
 def short_title(t):
@@ -590,7 +593,7 @@ def page(p, hub_items=None, hub_ld=None):
             return ('<div class="tw" tabindex="0" role="region" aria-label="比較表，可以左右滑動"><table><thead><tr>' + ''.join(f'<th>{e(c)}</th>' for c in x['head']) + '</tr></thead><tbody>'
                     + ''.join('<tr>' + ''.join(f'<th scope="row">{e(c)}</th>' if i == 0 else f'<td>{e(c)}</td>' for i, c in enumerate(r)) + '</tr>' for r in x['rows'])
                     + '</tbody></table></div>')
-        return f"<p>{e(x)}</p>"
+        return "<p>" + re.sub(r"\[\[(.+?)\|(/[^\]|]*)\]\]", r'<a href="\2">\1</a>', e(x)) + "</p>"
     sections = ''.join(f"<h2>{e(h)}</h2>" + ''.join(blk(x) for x in ps) for h, ps in p['sections'])
     faq = ''.join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in p['faq'])
     k = [o['slug'] for o in PAGES].index(p['slug']) if p['slug'] in [o['slug'] for o in PAGES] else -1
