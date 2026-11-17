@@ -559,6 +559,7 @@ tbody td:last-child{background:#fbf3f4}
 .faq details p{margin:10px 0 0}
 .cta{margin:56px 0 30px;padding:36px 28px;background:var(--paper);text-align:center}
 .cta p{margin-bottom:20px}
+.cta .qz{margin:18px 0 0;font-size:15px}.cta .qz a{text-decoration:underline;text-underline-offset:3px}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 30px;border:1px solid var(--ink);text-decoration:none;font-size:14px;letter-spacing:.2em;margin:4px}
 .btn.primary{background:#111;border-color:#111;color:#fff}
 .more{margin:40px 0 0;font-size:14px;color:var(--grey)}
@@ -639,7 +640,7 @@ def page(p, hub_items=None, hub_ld=None):
 {sections}
 {f'<ul class="hub">{hub_items}</ul>' if hub_items else ''}
 {f'<section class="faq"><h2>常見問題</h2>{faq}</section>' if faq else ''}
-{'<section class="cta"><p>每位會員真人審核，你決定誰可以傳訊息，照片可以模糊或私密。開站期間完全免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/for-women/">看看我們怎麼保護女生</a></section>' if p.get('women') else '<section class="cta"><p>真人審核、重視隱私的台灣甜心交友平台。開站期間全部免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>'}
+{'<section class="cta"><p>每位會員真人審核，你決定誰可以傳訊息，照片可以模糊或私密。開站期間完全免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/for-women/">看看我們怎麼保護女生</a><p class="qz">先玩個測驗：<a href="/quiz/care/">你最需要哪一種被照顧？</a>・<a href="/quiz/animal/">你是貓系、狗系還是狐系戀人？</a></p></section>' if p.get('women') else '<section class="cta"><p>真人審核、重視隱私的台灣甜心交友平台。開站期間全部免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>'}
 {f'<p class="more">延伸閱讀：{others}</p>' if not hub_items else ''}
 </main>
 <footer><div class="in"><a href="/">微糖首頁</a><a href="/sugar-dating/">甜心交友是什麼</a><a href="/guide/">甜心交友指南</a><a href="/#/safety">安全須知</a><a href="/#/guidelines">社群守則</a><a href="/#/privacy">隱私政策</a><a href="/#/terms">使用條款</a>
@@ -665,7 +666,7 @@ def hub():
     d = ROOT / 'guide'; d.mkdir(exist_ok=True); (d / 'index.html').write_text(t, encoding='utf-8')
 hub()
 
-urls = [(f'{SITE}/', '1.0', 'weekly'), (f'{SITE}/guide/', '0.9', 'weekly')] + [(f'{SITE}/quiz/', '0.9', 'monthly'), (f'{SITE}/quiz/match/', '0.9', 'monthly')] + [(f"{SITE}/{p['slug']}/", '0.8', 'monthly') for p in PAGES]
+urls = [(f'{SITE}/', '1.0', 'weekly'), (f'{SITE}/guide/', '0.9', 'weekly')] + [(f'{SITE}/quiz/', '0.9', 'monthly'), (f'{SITE}/quiz/match/', '0.9', 'monthly'), (f'{SITE}/quiz/care/', '0.9', 'monthly'), (f'{SITE}/quiz/animal/', '0.9', 'monthly')] + [(f"{SITE}/{p['slug']}/", '0.8', 'monthly') for p in PAGES]
 import subprocess, shutil
 if shutil.which('node'):
     files=[str(ROOT / p['slug'] / 'index.html') for p in PAGES]+[str(ROOT / 'guide' / 'index.html')]
