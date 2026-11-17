@@ -34,6 +34,7 @@ tbody td:last-child{background:#fbf3f4}
 .faq details p{margin:10px 0 0}
 .cta{margin:56px 0 30px;padding:36px 28px;background:var(--paper);text-align:center}
 .cta p{margin-bottom:20px}
+.cta .qz{margin:18px 0 0;font-size:15px}.cta .qz a{text-decoration:underline;text-underline-offset:3px}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 30px;border:1px solid var(--ink);text-decoration:none;font-size:14px;letter-spacing:.2em;margin:4px}
 .btn.primary{background:#111;border-color:#111;color:#fff}
 .more{margin:40px 0 0;font-size:14px;color:var(--grey)}
