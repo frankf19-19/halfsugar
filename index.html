@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-9kBrYCxAOZLpVcIyn1XlwpsmtW0a2NsEjOW28ooGROE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QXc3XTRPSJGvtqorPcPR+/QfGTOMwPBA9qxOHX7YTWI=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-0vRPnULI+Ufk7ei2Pqk3PvmZLBIZXxaJ3DheyTkqQtM=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1443,7 +1443,7 @@ body[data-page=forum] #app{max-width:820px}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.97.5';
+const BUILD = 'v1.98.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2273,7 +2273,7 @@ function profileFormHtml(p={}){
       <div class="grow"><label>職業</label><input name="occupation" maxlength="30" autocomplete="organization-title" value="${esc(p.occupation||'')}" placeholder="例如：外商主管、設計師"></div>
     </div>
     <div class="row">
-      <div class="grow"><label>身材 *</label><select name="body_type" required><option value="">請選擇</option>${Object.entries(BODY).map(([k,v])=>`<option value="${k}" ${p.body_type===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="grow"><label>身材</label><select name="body_type"><option value="">請選擇</option>${Object.entries(BODY).map(([k,v])=>`<option value="${k}" ${p.body_type===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="grow" id="cupBox" ${p.gender==='male'?'style="display:none"':''}><label>罩杯（選填）</label><select name="cup"><option value="">不填</option>${CUPS.map(c=>`<option ${p.cup===c?'selected':''}>${c}</option>`).join('')}</select></div>
     </div>
     <details class="extra" ${p.zodiac||p.drink||p.smoke||(p.languages||[]).length?'open':''}><summary>更多關於你（選填）<small>星座・喝酒・抽菸・語言</small></summary>
@@ -2298,7 +2298,7 @@ function profileFormHtml(p={}){
     <div class="fsec"><span>4</span>介紹你自己</div>
     <label>興趣（點選，最多 8 個）</label>
     <div class="tags" id="tagPick">${TAGS.map(t=>`<button type="button" class="tag ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
-    <label>自我介紹 *</label><textarea name="bio" required maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額。">${esc(p.bio||'')}</textarea>
+    <label>自我介紹 <small class="dim">（選填，可以上架後再寫；有寫的人比較容易收到回覆）</small></label><textarea name="bio" maxlength="600" placeholder="說說你是誰、生活的樣子、想認識怎樣的人。可以寫你期待的相處方式與見面節奏；請勿留聯絡方式，也不要寫任何金額。">${esc(p.bio||'')}</textarea>
     <p class="tiny dim">自介中若出現聯絡方式（LINE、電話、IG）、金額或不當字眼，將無法通過審核。</p>
     <div class="fsec"><span>5</span>破冰問答與約會暗號（選填）</div>
     <p class="tiny dim">挑最多 3 題回答，會顯示在你的檔案上。別人可以針對其中一題直接回覆你，第一句話就不難開口。修改後跟自介一樣需要審核。</p>
@@ -2331,7 +2331,6 @@ function readProfileForm(form){
   if(f.get('role')==='mommy' && gender!=='female') { toast('Sugar Mommy 限女性，男性請選 Sugar Daddy'); return null; }
   const budget = f.get('role')==='baby' ? null : (f.get('budget')||null);
   if(f.get('role')!=='baby' && !budget){ toast('請選擇生活方式預算'); return null; }
-  if(!f.get('body_type')){ toast('請選擇身材'); return null; }
   const prompts = [], usedQ = new Set();
   for(const i of [0,1,2]){ const q = f.get('pq'+i), a = (f.get('pa'+i)||'').trim(); if(q==='' || q==null || !a) continue;
     if(usedQ.has(q)){ toast('破冰問答有重複的題目'); return null; } usedQ.add(q); prompts.push({ q:+q, a }); }
@@ -2406,7 +2405,7 @@ async function admThumb(el){ const p = el.dataset.ph; if(!p) return; const bl = 
 // 必填基本資料（缺任何一項就不能使用網站，要先補齊）
 function missingBasics(p){ if(!p) return [];
   const m=[]; if(!(p.nickname||'').trim()) m.push('暱稱'); if(!p.gender||!p.looking_for) m.push('想認識的對象'); if(!p.role) m.push('身分');
-  if(!p.birth_year) m.push('年齡'); if(!p.city) m.push('所在地'); if(!p.body_type) m.push('身材'); if(!(p.bio||'').trim()) m.push('自我介紹');
+  if(!p.birth_year) m.push('年齡'); if(!p.city) m.push('所在地'); 
   if((p.role==='daddy'||p.role==='mommy') && !p.budget) m.push('生活方式預算'); if(!p.avatar_path) m.push('頭像'); return m; }
 const PUB_COLS = 'prompts,approved_prompts,date_type,avatar_blurred,approved_avatar_path,approved_bio,approved_occupation,approved_tags,free_until,travel_city,travel_from,travel_to,id,nickname,gender,looking_for,role,budget,wealth_verified_at,person_verified_at,body_type,cup,relation_types,meet_freq,zodiac,drink,smoke,languages,expect_budget,birth_year,city,height_cm,occupation,bio,tags,avatar_path,status,last_active_at';
 /* ---------- 手機驗證 ---------- */
@@ -2610,7 +2609,7 @@ async function viewOnboarding(){
     <div class="obsteps"><span class="done">1　手機驗證 ✓</span><span class="on">2　建立檔案</span></div>
     <h2 style="font-size:24px;color:var(--gold2)">建立你的檔案</h2>
     <p class="muted small mb">完成後送審，通過即上架。審核通常在 24 小時內完成。</p>
-    <div class="banner">有 * 的都要填。標著 <span class="lockwarn">⚠ 送出後不能改</span> 的欄位請特別確認，其他都可以之後再改。</div>
+    <div class="banner">只有標 * 的要填，大約 2 分鐘；自我介紹、更多照片都可以上架後再補。標著 <span class="lockwarn">⚠ 送出後不能改</span> 的欄位請特別確認。填到一半離開也沒關係，文字內容會自動保存在這台裝置上。</div>
     <form id="obForm" class="card">
       ${profileFormHtml(me)}
       <div class="fsec"><span>5</span>照片</div>
@@ -2626,6 +2625,22 @@ async function viewOnboarding(){
     </form><p class="tiny dim center mt2">不是你的帳號？<button type="button" class="lnk obOut" style="font-size:inherit">登出</button>　·　<a href="#/me">帳號與刪除</a></p></div>`;
   document.querySelectorAll('.obOut').forEach(a=>a.onclick=async()=>{ await sb.auth.signOut(); location.hash='#/'; });
   bindTagPick();
+  // 填到一半離開也沒關係：文字、選項、標籤自動存在這台裝置（照片要重新選），送出成功後清掉
+  const DK='yy_obdraft_'+me.id, ob=$('#obForm'), PICKS=['#relPick','#langPick','#tagPick'];
+  const tagKey = b => b.dataset.v || b.textContent.trim();
+  const saveDraft = () => { try{ const d={ f:{}, t:{} };
+      ob.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{ if(el.type==='file'||el.type==='hidden') return;
+        if(el.type==='radio'||el.type==='checkbox'){ if(el.checked) (d.f[el.name]=d.f[el.name]||[]).push(el.value); } else if(el.value) d.f[el.name]=[el.value]; });
+      PICKS.forEach(k=>{ const c=$(k); if(c) d.t[k]=[...c.querySelectorAll('.tag.on')].map(tagKey); });
+      localStorage.setItem(DK, JSON.stringify(d)); }catch(_){} };
+  try{ const d=JSON.parse(localStorage.getItem(DK)||'null'); let n=0;
+    if(d){ Object.entries(d.f||{}).forEach(([nm,vals])=>ob.querySelectorAll(`[name="${nm}"]`).forEach(el=>{
+        if(el.type==='radio'||el.type==='checkbox'){ const on=vals.includes(el.value); if(on!==el.checked){ el.checked=on; if(on){ n++; el.dispatchEvent(new Event('change',{bubbles:true})); } } }
+        else if(!el.value && vals[0]!=null){ el.value=vals[0]; n++; el.dispatchEvent(new Event('change',{bubbles:true})); } }));
+      Object.entries(d.t||{}).forEach(([k,vals])=>{ const c=$(k); if(c) c.querySelectorAll('.tag').forEach(b=>{ if(vals.includes(tagKey(b))){ b.classList.add('on'); n++; } }); });
+      if(n) toast('已帶回你上次填到一半的內容，照片需要重新選擇', 4500); } }catch(_){}
+  let dT=null; const queueSave = () => { clearTimeout(dT); dT=setTimeout(saveDraft, 400); };
+  ob.addEventListener('input', queueSave); ob.addEventListener('change', queueSave); ob.addEventListener('click', e=>{ if(e.target.closest('.tag')) queueSave(); });
   let avatarFile=null, avatarBlur=false, extra=[];
   // 選完照片先問要怎麼顯示（公開／模糊／私密）
   const askMode = (title, withPriv) => new Promise(res => { modal(`<h3 style="font-size:17px">${title}</h3>
@@ -2678,6 +2693,7 @@ async function viewOnboarding(){
       for(let i=0;i<extra.length;i++){ btn.textContent=`上傳照片 ${i+1}／${extra.length}…`;
         try{ const x = extra[i]; const ph = await uploadPhoto(x.f); if(x.mode==='blur') await uploadBlur(x.f, ph);
              const { error: pe } = await sb.from('photos').insert({ user_id:me.id, path:ph, is_private: x.mode==='priv', blurred: x.mode==='blur' }); if(pe){ failed++; rmPhotos([ph]).catch(()=>{}); } }catch(_){ failed++; } }
+      try{ localStorage.removeItem(DK); }catch(_){}
       await loadMe(); toast(failed?`已送出審核（有 ${failed} 張照片沒上傳成功，可以之後在「我的」補上）`:'已送出審核', 5000); location.hash='#/me';
     }catch(err){ toast('沒有送出：'+zh(err.message)); btn.disabled=false; btn.textContent='送出審核'; }
   };
@@ -3419,6 +3435,8 @@ async function viewMe(){
   const okPh = (photos||[]).some(x=>x.status==='approved' && !x.is_private);
   const nPub = (photos||[]).filter(x=>x.status==='approved' && !x.is_private).length;
   const todo = [   // [前往的分頁, 完成了沒, 說明, 徽章名稱]
+    ['profile', !!(me.bio||'').trim(), '寫一段自我介紹', ''],
+    ['profile', !!me.body_type, '填寫身材', ''],
     ['album', okPh, '至少一張公開照通過審核', ''],
     ['album', nPub>=3, '公開照 3 張以上', '📸 照片豐富'],
     ['verify', !!me.person_verified_at, '真人認證', '✓ 真人認證'],
