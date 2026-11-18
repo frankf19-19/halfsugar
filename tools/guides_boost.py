@@ -244,3 +244,25 @@ def apply(pages):
             ('不想露臉可以嗎？', '可以。微糖的照片可以設成模糊或私密，只給你同意的人看。'),
         ],
     })
+
+    # 2026-11-19 Search Console：英文查詢「sugar mommy meaning / means」「sugar daddy meaning」有曝光但排在 40～80 名，
+    # 「糖寶意思」60 次曝光 0 點擊。這裡在三個「意思」主頁加一段簡短英文說明與英文 FAQ，並讓說明文字開頭就對上搜尋字。
+    EN = {
+        'sugar-mommy': ('What does "Sugar Mommy" mean? (English)', [
+            'A sugar mommy (also spelled sugar mummy, sugar mama or sugar mom) is a financially independent, established woman who enjoys caring for and spending time with a partner, often someone younger. In Chinese it is usually translated as 甜心媽咪. The partner on the other side is called a sugar baby (甜心、糖寶), who can be a man or a woman.',
+            'On 1/3 Sugar (微糖), a Taiwan dating platform for adults 18+, sugar mommies, sugar daddies and sugar babies are all verified by phone and reviewed by real people. The platform never handles money between members.'],
+            ('What is the meaning of sugar mommy?', 'A sugar mommy is an established, financially independent woman who likes to care for a partner, often someone younger. In Chinese it is called 甜心媽咪.')),
+        'what-is-sugar-daddy': ('What does "Sugar Daddy" mean? (English)', [
+            'A sugar daddy is an established, financially stable man who enjoys caring for a partner and is clear about expectations from the start. In Taiwan it is usually translated as 甜心爹地 or 糖爹, and shortened to SD. His partner is called a sugar baby (SB, 甜心 or 糖寶).',
+            'The term is often confused with other slang. On 1/3 Sugar (微糖), members are verified adults who meet as equals, and the platform never handles money between members.'],
+            ('What is the meaning of sugar daddy in Chinese?', 'Sugar daddy is usually translated as 甜心爹地 or 糖爹 in Taiwan, and shortened to SD.')),
+        'sugar-baby-meaning': ('What does "Sugar Baby" mean? (English)', [
+            'A sugar baby is the person in a sugar relationship who is cared for by a more established partner (a sugar daddy or sugar mommy). In Chinese it is called 甜心 or 糖寶, shortened to SB. A sugar baby can be any gender.'],
+            ('What does 糖寶 mean in English?', '糖寶 means "sugar baby": the person who is cared for by a more established partner in a sugar relationship.')),
+    }
+    for sl, (h, paras, fq) in EN.items():
+        if sl in by:
+            by[sl]['sections'] = list(by[sl]['sections']) + [(h, paras)]
+            by[sl]['faq'] = list(by[sl]['faq']) + [fq]
+    if 'sugar-baby-meaning' in by:
+        by['sugar-baby-meaning']['desc'] = '糖寶意思是什麼？糖寶就是 Sugar Baby，中文也叫甜心、SB，指在甜心交友裡被照顧的一方，男女都可以。一定和錢有關嗎？微糖整理糖寶的意思、由來與常見迷思。'
