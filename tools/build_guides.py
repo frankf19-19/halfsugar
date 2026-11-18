@@ -649,10 +649,10 @@ def page(p, hub_items=None, hub_ld=None):
 {sections}
 {f'<ul class="hub">{hub_items}</ul>' if hub_items else ''}
 {f'<section class="faq"><h2>常見問題</h2>{faq}</section>' if faq else ''}
-{'<section class="cta"><p>每位會員真人審核，你決定誰可以傳訊息，照片可以模糊或私密。開站期間完全免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/for-women/">看看我們怎麼保護女生</a><p class="qz">先玩個測驗：<a href="/quiz/care/">你最需要哪一種被照顧？</a>・<a href="/quiz/animal/">你是貓系、狗系還是狐系戀人？</a></p></section>' if p.get('women') else '<section class="cta"><p>真人審核、重視隱私的台灣甜心交友平台。開站期間全部免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>'}
+{'<section class="cta"><p><a href="/">微糖甜心交友</a>每位會員真人審核，你決定誰可以傳訊息，照片可以模糊或私密。開站期間完全免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/for-women/">看看我們怎麼保護女生</a><p class="qz">先玩個測驗：<a href="/quiz/care/">你最需要哪一種被照顧？</a>・<a href="/quiz/animal/">你是貓系、狗系還是狐系戀人？</a></p></section>' if p.get('women') else '<section class="cta"><p>微糖是真人審核、重視隱私的<a href="/">台灣甜心交友平台</a>。開站期間全部免費。</p><a class="btn primary" href="/#/auth">免費加入微糖</a><a class="btn" href="/">看看微糖</a></section>'}
 {f'<p class="more">延伸閱讀：{others}</p>' if not hub_items else ''}
 </main>
-<footer><div class="in"><a href="/">微糖首頁</a><a href="/about/">關於微糖</a><a href="/sugar-dating/">甜心交友是什麼</a><a href="/guide/">甜心交友指南</a><a href="/#/safety">安全須知</a><a href="/#/guidelines">社群守則</a><a href="/#/privacy">隱私政策</a><a href="/#/terms">使用條款</a>
+<footer><div class="in"><a href="/">微糖・台灣甜心交友</a><a href="/about/">關於微糖</a><a href="/sugar-dating/">甜心交友是什麼</a><a href="/guide/">甜心交友指南</a><a href="/#/safety">安全須知</a><a href="/#/guidelines">社群守則</a><a href="/#/privacy">隱私政策</a><a href="/#/terms">使用條款</a>
 <p class="copy">© 2026 微糖 1/3 Sugar・僅限 18 歲以上成年人使用・平台不經手會員之間的任何金錢。</p></div></footer>
 </body>
 </html>
