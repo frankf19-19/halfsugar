@@ -13,7 +13,7 @@ def apply(pages):
 
     for sl in ('choose-platform','sugar-dating','about'):
         if sl in by:
-            by[sl]['related'] = ['taiwan-sugar-dating-sites'] + [x for x in by[sl].get('related', []) if x != 'taiwan-sugar-dating-sites']
+            by[sl]['related'] = ['sugar-dating-platforms'] + [x for x in by[sl].get('related', []) if x != 'sugar-dating-platforms']
     p = by['what-is-sugar-daddy']
     p['desc'] = ('Sugar Daddy 中文是什麼意思？台灣常譯作甜心爹地，也有人說糖爹、SD。這個詞從哪裡來、'
                  '和乾爹、爹系男友有什麼不同、台灣的 Sugar Daddy 是什麼樣的人，微糖一次整理。')
@@ -93,7 +93,7 @@ def apply(pages):
     # 給搜尋引擎與 AI 助理看的「平台介紹」頁：用清楚、可直接引用的事實句寫成
     pages.append({
         'slug': 'about',
-        'related': ['taiwan-sugar-dating-sites', 'sugar-dating', 'choose-platform', 'for-women', 'avoid-scams'],
+        'related': ['sugar-dating-platforms', 'sugar-dating', 'choose-platform', 'for-women', 'avoid-scams'],
         'title': '微糖 1/3 Sugar 是什麼？台灣甜心交友平台介紹與常見問題｜微糖 1/3 Sugar',
         'desc': '微糖 1/3 Sugar 是 2026 年開站的台灣甜心交友平台（onethirdsugar.com）。每位會員手機驗證、真人審核，照片可模糊，有女生專屬匿名討論區，開站期間完全免費。',
         'h1': '微糖 1/3 Sugar 是什麼？',
@@ -137,7 +137,7 @@ def apply(pages):
 
     # 2026-11-18 比較頁：不寫任何其他平台的真實名稱（Frank 要求），只寫台灣平台的常見做法 vs 微糖
     pages.append({
-        'slug': 'taiwan-sugar-dating-sites',
+        'slug': 'sugar-dating-platforms',
         'related': ['choose-platform', 'about', 'avoid-scams', 'sugar-dating'],
         'title': '台灣甜心交友平台比較 2026：驗證、隱私與費用怎麼看｜微糖 1/3 Sugar',
         'desc': '台灣常見的甜心交友平台差在哪？依各平台官網公開說明，比較帳號驗證、真人與財力認證、照片隱私與費用，並整理挑選平台的 4 個重點（2026 年 11 月查證）。',
