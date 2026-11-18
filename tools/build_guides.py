@@ -645,7 +645,7 @@ def page(p, hub_items=None, hub_ld=None):
 <h1>{e(p['h1'])}</h1>
 <p class="lead">{e(p['lead'])}</p>
 <p class="upd">微糖編輯部・{TODAY[:4]} 年 {int(TODAY[5:7])} 月更新</p>
-{'<p class="topcta"><a class="btn primary" href="/#/auth">3 分鐘免費加入</a><a class="btn" href="/quiz/match/">先玩測驗：你適合大叔還是小狼狗？</a></p>' if p.get('top_cta') else ''}
+{p['top_cta_html'] if p.get('top_cta_html') else ('<p class="topcta"><a class="btn primary" href="/#/auth">3 分鐘免費加入</a><a class="btn" href="/quiz/match/">先玩測驗：你適合大叔還是小狼狗？</a></p>' if p.get('top_cta') else '')}
 {sections}
 {f'<ul class="hub">{hub_items}</ul>' if hub_items else ''}
 {f'<section class="faq"><h2>常見問題</h2>{faq}</section>' if faq else ''}
