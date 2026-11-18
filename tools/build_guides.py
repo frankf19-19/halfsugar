@@ -553,6 +553,7 @@ tbody td:last-child{background:#fbf3f4}
 .kicker{font-size:12px;letter-spacing:.2em;color:var(--wine);margin-top:48px}
 .faq{margin-top:50px;border-top:1px solid var(--rule)}
 .faq details{border-bottom:1px solid var(--rule);padding:16px 0}
+.upd{color:var(--grey);font-size:13px;margin:-6px 0 22px}
 .faq summary{cursor:pointer;font-weight:500;list-style:none}
 .faq summary::-webkit-details-marker{display:none}
 .faq summary::after{content:"＋";float:right;color:var(--grey)}
@@ -602,7 +603,11 @@ def page(p, hub_items=None, hub_ld=None):
     others = ''.join(f'<a href="/{o["slug"]}/">{e(o["h1"].rstrip("？"))}</a>' for o in rel) + '<a href="/guide/">看全部指南</a>'
     ld = {"@context": "https://schema.org", "@graph": [
         {"@type": "WebPage", "@id": url, "url": url, "name": p['title'], "description": p['desc'], "inLanguage": "zh-TW",
-         "isPartOf": {"@id": f"{SITE}/#site"}},
+         "isPartOf": {"@id": f"{SITE}/#site"}, "dateModified": TODAY,
+         "author": {"@id": f"{SITE}/#org"}, "publisher": {"@id": f"{SITE}/#org"}},
+        {"@type": "Organization", "@id": f"{SITE}/#org", "name": "微糖 1/3 Sugar", "url": f"{SITE}/",
+         "logo": f"{SITE}/brand/apple-touch-icon.png", "email": "support@onethirdsugar.com",
+         "sameAs": ["https://www.instagram.com/onethirdsugar.tw/", "https://www.threads.com/@onethirdsugar.tw"]},
         {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in p['faq']]},
         {"@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "微糖", "item": f"{SITE}/"},
@@ -639,6 +644,7 @@ def page(p, hub_items=None, hub_ld=None):
 <p class="kicker">{'認識甜心交友' if p['slug'] == 'sugar-dating' else '<a href="/sugar-dating/">認識甜心交友</a>'}</p>
 <h1>{e(p['h1'])}</h1>
 <p class="lead">{e(p['lead'])}</p>
+<p class="upd">微糖編輯部・{TODAY[:4]} 年 {int(TODAY[5:7])} 月更新</p>
 {'<p class="topcta"><a class="btn primary" href="/#/auth">3 分鐘免費加入</a><a class="btn" href="/quiz/match/">先玩測驗：你適合大叔還是小狼狗？</a></p>' if p.get('top_cta') else ''}
 {sections}
 {f'<ul class="hub">{hub_items}</ul>' if hub_items else ''}
@@ -679,4 +685,16 @@ else:
 (ROOT / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + ''.join(f'  <url><loc>{u}</loc><lastmod>{TODAY}</lastmod><changefreq>{c}</changefreq><priority>{pr}</priority></url>\n' for u, pr, c in urls)
     + '</urlset>\n', encoding='utf-8')
+def _plain(x):
+    if isinstance(x, dict):
+        return '\n'.join('｜'.join(r) for r in [x['head']] + x['rows'])
+    return re.sub(r"\[\[(.+?)\|(/[^\]|]*)\]\]", lambda m: f"{m.group(1)}（{SITE}{m.group(2)}）", x)
+full = ['# 微糖 1/3 Sugar：甜心交友指南全文', '', f'> 來源 {SITE}/ ・{TODAY} 更新。微糖 1/3 Sugar 是台灣的甜心交友平台，僅限 18 歲以上成年人，平台不經手會員之間的任何金錢。', '']
+for p in PAGES:
+    full += [f"## {p['h1']}", f"網址：{SITE}/{p['slug']}/", '', p['lead'], '']
+    for h, ps in p['sections']:
+        full += [f"### {h}"] + [_plain(x) for x in ps] + ['']
+    if p['faq']:
+        full += ['### 常見問題'] + [f"問：{q}\n答：{a}" for q, a in p['faq']] + ['']
+(ROOT / 'llms-full.txt').write_text('\n'.join(full), encoding='utf-8')
 print('寫出', len(PAGES), '頁介紹頁與 sitemap.xml')
