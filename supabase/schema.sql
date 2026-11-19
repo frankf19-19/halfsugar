@@ -2981,7 +2981,7 @@ alter table public.profiles add column if not exists notify_email_like boolean n
 
 create table if not exists private.mail_config (
   id         int primary key default 1 check (id = 1),
-  from_email text not null default '微糖 1/3 Sugar <noreply@onethirdsugar.com>',
+  from_email text not null default '微糖 1/3 Sugar <support@onethirdsugar.com>',
   enabled    boolean not null default true
 );
 insert into private.mail_config (id) values (1) on conflict (id) do nothing;
