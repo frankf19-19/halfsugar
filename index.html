@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nBintkcz9TO6TLnzE+h1zvlasaU5gaRtwaCWNrzbCSs=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-amBZuof9tPfomX+861+ZXWx6W2Ja7oFAXBBc1lKojA0=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nBintkcz9TO6TLnzE+h1zvlasaU5gaRtwaCWNrzbCSs=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-Sc0qQnc/YTCJHGqjz6N8ROx2L3CqHX9OFImw49GM/zI=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -392,6 +392,8 @@ button.tag.on{background:var(--ink);color:var(--white)}
 .gallery .g .st{position:absolute;left:6px;bottom:6px;background:#fff}
 .gallery .g .atag{position:absolute;left:6px;bottom:6px;background:rgba(255,255,255,.92);color:#222;font-size:11px;padding:2px 7px;border-radius:999px}
 .admph .gallery .g{cursor:zoom-in}
+.admph .gallery .g.bl::before{content:"";position:absolute;inset:0;backdrop-filter:blur(10px) saturate(1.25) brightness(1.04);-webkit-backdrop-filter:blur(10px) saturate(1.25) brightness(1.04);pointer-events:none}
+.admph .gallery .g .atag{z-index:1}
 .gallery .g .del{position:absolute;top:4px;right:4px;width:34px;height:34px;line-height:34px;text-align:center;font-size:13px;background:rgba(0,0,0,.6);color:#fff}
 .photo-big{width:100%;aspect-ratio:3/4;background:#ECEAE6 center/cover}
 
@@ -1451,7 +1453,7 @@ body[data-page=forum] #app{max-width:820px}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.98.9';
+const BUILD = 'v1.98.10';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2725,9 +2727,9 @@ const browseState = { tonight:'', sort:'rec', agender:'', role: null, region:'',
 // 別人重新送審中：自介、職業、興趣也顯示上一次通過審核的版本
 const pubView = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_bio != null)
   ? { ...p, bio: p.approved_bio, occupation: p.approved_occupation, tags: p.approved_tags || [], prompts: p.approved_prompts || [] } : p;
-const pubAvRaw = p => (p && me && !me.is_admin && p.id !== me.id && p.status === 'pending' && p.approved_avatar_path) ? p.approved_avatar_path : p?.avatar_path;
+const pubAvRaw = p => (p && me && p.id !== me.id && p.status === 'pending' && p.approved_avatar_path) ? p.approved_avatar_path : p?.avatar_path;
 // 模糊頭像：別人預設只看得到模糊版（拿到私密照授權的人在檔案頁會看到原圖，見 openProfile）
-const avBlurred = p => !!(p && p.avatar_blurred && me && p.id !== me.id && !me.is_admin);   // 管理員到哪裡都看原圖（2026-11-19 Frank 要求）
+const avBlurred = p => !!(p && p.avatar_blurred && me && p.id !== me.id);   // 前台卡片：管理員也看到會員看到的樣子（模糊）；原圖在檔案頁「全部照片」
 const pubAv = p => { const a = pubAvRaw(p); return (a && avBlurred(p)) ? blurOf(a) : a; };
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const isFree = r => !!(r && r.free_until && new Date(r.free_until) > new Date());
@@ -2941,7 +2943,7 @@ async function openProfile(id, opt){
     ${(p.tags||[]).length?`<section class="psec"><h4>興趣</h4><p class="ptags">${p.tags.map(t=>`<span>${esc(t)}</span>`).join('')}</p></section>`:''}
     ${privCount||blurN?`<section class="psec"><h4>${privCount?'私密相簿':'模糊照'}</h4><div class="small muted">${[privCount?`🔒 ${privCount} 張私密照`:'', blurN?`${blurN} 張模糊照`:''].filter(Boolean).join('、')}　${grant?'<span class="ok">你已獲授權</span>':(req?.status==='pending'?'已送出索取，等待對方同意':(req?.status==='denied'?`對方這次沒有同意 <button class="btn sm ghost" id="reqPriv" data-again="1" ${canAct?'':'disabled'}>再問一次</button>`:`<button class="btn sm ghost" id="reqPriv" ${canAct?'':'disabled'}>索取查看</button>`))}</div>
       ${grant?`<div class="gallery wmg" data-wm="${wmText()}">${(photos||[]).filter(x=>x.is_private).map(x=>`<div class="g" data-ph="${esc(x.path)}"></div>`).join('')}</div>`:''}</section>`:''}
-    ${me.is_admin&&p.id!==me.id?`<section class="psec admph"><h4>全部照片・只有管理員看得到（${allPh.length + (p0.avatar_path?1:0)} 張）</h4>${allPh.length||p0.avatar_path?`<div class="gallery">${p0.avatar_path?`<div class="g" data-ph="${esc(p0.avatar_path)}"><span class="atag">頭像${p0.avatar_blurred?'・模糊':''}</span></div>`:''}${allPh.map(x=>`<div class="g" data-ph="${esc(x.path)}"><span class="atag">${[x.is_private?'私密':'公開', x.blurred?'模糊':'', {pending:'待審',rejected:'未通過'}[x.status]||''].filter(Boolean).join('・')}</span></div>`).join('')}</div>`:'<p class="small muted">還沒有上傳照片</p>'}</section>`:''}
+    ${me.is_admin&&p.id!==me.id?`<section class="psec admph"><h4>全部照片・只有管理員看得到（${allPh.length + (p0.avatar_path?1:0)} 張）</h4>${allPh.length||p0.avatar_path?`<div class="gallery">${p0.avatar_path?`<div class="g" data-ph="${esc(p0.avatar_path)}"><span class="atag">頭像・原圖</span></div>${p0.avatar_blurred?`<div class="g bl" data-ph="${esc(blurOf(p0.avatar_path))}"><span class="atag">頭像・會員看到的</span></div>`:''}`:''}${allPh.map(x=>{ const t=[x.is_private?'私密':'公開', {pending:'待審',rejected:'未通過'}[x.status]||''].filter(Boolean).join('・'); return `<div class="g" data-ph="${esc(x.path)}"><span class="atag">${t}${x.blurred?'・原圖':''}</span></div>${x.blurred?`<div class="g bl" data-ph="${esc(blurOf(x.path))}"><span class="atag">${t}・會員看到的</span></div>`:''}`; }).join('')}</div>`:'<p class="small muted">還沒有上傳照片</p>'}</section>`:''}
     <div class="plinks"><button type="button" id="blockBtn">封鎖</button><i></i><button type="button" id="reportBtn">檢舉</button></div>
     ${canAct?'':'<p class="tiny dim mt">檔案審核通過後才能心動或傳訊息</p>'}
     <div class="pactions">
