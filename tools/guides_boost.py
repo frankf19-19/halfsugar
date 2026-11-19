@@ -419,3 +419,32 @@ def apply(pages):
         '如果你想找的是成熟、穩定、能坦誠說清楚期待的對象，可以考慮甜心交友平台。微糖 1/3 Sugar 每位會員手機驗證、真人審核，照片可模糊或私密，女生有專屬匿名討論區，開站期間完全免費。',
         '平台不經手會員之間的任何金錢，自介含金額或招攬一律無法上架。差別可以看[[包養和甜心交友有什麼不一樣|/baoyang/]]。'])]
     p['faq'] = [('包養網推薦哪個比較安全？', '與其找標榜包養的網站，更安全的做法是選有真人審核、不經手金錢、能檢舉封鎖的甜心交友平台，例如微糖 1/3 Sugar：手機驗證一人一帳號、照片可模糊、開站期間免費。')] + list(p['faq'])
+
+    # 2026-11-19 Search Console：「sugar mommy」系列是帶最多人進站的字，常見拼法與中文說法
+    # （糖媽、糖媽媽、sugar mom、sugar mami、sugar mum、sugar momma）頁面上都沒出現。把三個「意思」主頁補完整。
+    p = by['sugar-mommy']
+    _sec(p, 'Sugar Mommy 的各種說法：糖媽、Sugar Mom、Sugar Mami 都一樣', [
+        {'head': ['說法', '意思'],
+         'rows': [['Sugar Mommy', '最常見的英文寫法，中文多譯作甜心媽咪'],
+                  ['Sugar Mama／Sugar Momma', '同樣意思，美式口語、歌詞裡常聽到'],
+                  ['Sugar Mummy／Sugar Mum', '英式拼法，意思相同'],
+                  ['Sugar Mom／Sugar Mami', '口語簡稱，意思相同'],
+                  ['糖媽、糖媽媽', '中文直譯，對應「糖爹」的說法'],
+                  ['甜心媽咪', '台灣比較常用、比較好聽的說法']]},
+        '常被拼錯成 suger mommy、sugar mammy、sugermummy，指的都是同一件事：經濟獨立、生活穩定、願意照顧另一半的成熟女性。想看 Sugar Mama 的用法，可以看[[Sugar Mama 是什麼意思|/sugar-mama/]]。'], at=1)
+    _sec(p, 'Sugar Mommy 通常是什麼樣的人', [
+        '多半是三十五歲以上、事業或經濟獨立的女性：可能是企業主、主管、專業人士。她們不缺生活上的安全感，想要的是相處輕鬆、會聊天、願意陪伴的對象。',
+        '另一方叫甜心（Sugar Baby），男生、女生都可以；和 Sugar Daddy 一樣，重點是一開始就把期待說清楚。'])
+    _sec(p, '想認識 Sugar Mommy，在哪裡比較安全', [
+        '台灣不少平台會依性別直接決定身分，男生只能當 Sugar Daddy。微糖讓你自己選：可以選甜心身分、想認識的對象設成女生，就會看到方向吻合的 Sugar Mommy。',
+        '做法和注意事項可以看[[男生怎麼認識 Sugar Mommy|/find-sugar-mommy/]]、[[台灣 Sugar Mommy 多嗎|/sugar-mommy-taiwan/]]。任何人說要先付保證金、手續費才能認識 Sugar Mommy，一律是詐騙。'])
+    p['faq'] = list(p['faq']) + [
+        ('糖媽是什麼意思？', '糖媽、糖媽媽就是 Sugar Mommy 的中文直譯，台灣比較常說甜心媽咪，指經濟獨立、願意照顧另一半的成熟女性。'),
+        ('Sugar Mom、Sugar Mami、Sugar Mummy 和 Sugar Mommy 一樣嗎？', '一樣。只是拼法或口語簡稱不同，都指甜心媽咪。'),
+        ('男生可以找 Sugar Mommy 嗎？', '可以。在微糖選甜心身分、想認識女生，就會看到方向吻合的 Sugar Mommy。')]
+    p = by['what-is-sugar-daddy']
+    p['faq'] = list(p['faq']) + [
+        ('Sugardaddy、Suger Daddy、Sugar Dad 是一樣的意思嗎？', '是。都是 Sugar Daddy 的不同拼法或簡稱，中文叫甜心爹地、糖爹。')]
+    p = by['sugar-baby-meaning']
+    p['faq'] = list(p['faq']) + [
+        ('糖寶貝、甜心寶貝、Sugar Babe 是什麼意思？', '都是 Sugar Baby 的說法，和糖寶、甜心、SB 意思相同。')]
