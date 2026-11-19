@@ -485,7 +485,7 @@ PAGES = [
            ('為什麼要手機驗證？', '一支手機只能註冊一個帳號，可以大幅減少假帳號；被停權的手機也不能再註冊。你的號碼不會顯示給任何會員。'),
            ('平台會幫忙處理金錢糾紛嗎？', '微糖不經手會員之間的任何金錢，也不允許任何違法的要求。遇到要錢的人，請直接檢舉。')]},
   {'slug': 'sugar-baby-guide',
-   'title': '甜心新手指南：檔案、聊天到第一次見面｜微糖 1/3 Sugar',
+   'title': 'Sugar Baby 新手指南：糖寶、甜心怎麼開始？檔案到第一次見面｜微糖 1/3 Sugar',
    'desc': '第一次當甜心？從建立檔案、挑選照片、寫自介、和 Sugar Daddy／Sugar Mommy 聊天，到第一次見面與保護自己，微糖整理給甜心的新手指南。',
    'h1': '甜心新手指南',
    'lead': '甜心可以是女生，也可以是男生。不管你是誰，好的開始都一樣：誠實的檔案、清楚的期待，以及保護好自己。',
@@ -680,7 +680,7 @@ def hub():
     items = ''.join(f'<li><a href="/{p["slug"]}/"><b>{e(p["h1"])}</b><span>{e(p["desc"])}</span></a></li>' for p in PAGES)
     ld = {"@context": "https://schema.org", "@type": "CollectionPage", "url": url, "name": "甜心交友指南｜微糖 1/3 Sugar", "inLanguage": "zh-TW",
           "hasPart": [{"@type": "WebPage", "url": f"{SITE}/{p['slug']}/", "name": p['title']} for p in PAGES]}
-    t = page({'slug': 'guide', 'title': '甜心交友指南：Sugar Daddy、Sugar Mommy、約會與安全｜微糖 1/3 Sugar',
+    t = page({'slug': 'guide', 'title': '甜心交友指南：Sugar Daddy、Sugar Mommy、糖寶是什麼？新手到安全一次看懂｜微糖 1/3 Sugar',
               'desc': '微糖整理的甜心交友指南：包養與甜心交友的差別、Sugar Daddy／Sugar Mommy／甜心是什麼、開場白與自介怎麼寫、各地約會與安全守則。',
               'h1': '甜心交友指南', 'lead': '第一次接觸甜心交友？從這裡開始，認識它是什麼、怎麼開始，以及怎麼保護自己。', 'sections': [], 'faq': []}, hub_items=items, hub_ld=ld)
     d = ROOT / 'guide'; d.mkdir(exist_ok=True); (d / 'index.html').write_text(t, encoding='utf-8')
