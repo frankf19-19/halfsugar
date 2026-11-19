@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nBintkcz9TO6TLnzE+h1zvlasaU5gaRtwaCWNrzbCSs=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-Sc0qQnc/YTCJHGqjz6N8ROx2L3CqHX9OFImw49GM/zI=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nBintkcz9TO6TLnzE+h1zvlasaU5gaRtwaCWNrzbCSs=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-GsV9X9yZOyEW+mEday5Tzve6AcvlPsBk5tPqjDgJk/g=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1404,6 +1404,30 @@ body[data-page=forum] #app{max-width:820px}
 .fanon label.on{border-color:var(--ink)}
 .fnote{margin-top:10px;line-height:1.7}
 @media(max-width:719px){.fpost h1{font-size:21px}.fhd{align-items:center}}
+
+/* v1.99 探索、心動卡片：照片圓角陰影，名字疊在照片下緣 */
+:is(#grid,.lgrid) .pcard{border-radius:16px;overflow:hidden;background:#EEEAE5;isolation:isolate;box-shadow:0 1px 2px rgba(40,20,25,.05),0 12px 26px -14px rgba(40,20,25,.35)}
+:is(#grid,.lgrid) .pcard .ph{border-radius:0!important;outline:0}
+:is(#grid,.lgrid) .pcard::after{content:"";position:absolute;left:0;right:0;bottom:0;height:48%;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(24,14,17,0) 0%,rgba(24,14,17,.22) 38%,rgba(24,14,17,.74) 100%)}
+:is(#grid,.lgrid) .pcard .info{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 13px 12px;pointer-events:none}
+:is(#grid,.lgrid) .pcard .name{color:#fff;font-size:19px;letter-spacing:.06em;text-shadow:0 1px 10px rgba(0,0,0,.28);align-items:baseline}
+:is(#grid,.lgrid) .pcard .name .muted{color:rgba(255,255,255,.88);font-size:15px}
+:is(#grid,.lgrid) .pcard .meta{color:rgba(255,255,255,.86);font-size:12px;letter-spacing:.06em;margin-top:5px;display:flex;align-items:center;gap:7px}
+:is(#grid,.lgrid) .pcard .rtag{flex-shrink:0;margin:0;color:#fff;font-size:10.5px;letter-spacing:.14em;line-height:1;padding:4px 8px 4px 9px;border-radius:999px;background:rgba(166,63,88,.88)}
+:is(#grid,.lgrid) .pcard .tiny{color:rgba(255,255,255,.75)!important}
+:is(#grid,.lgrid) .pcard .tiny .ok{color:#fff}
+:is(#grid,.lgrid) .pcard .budget{color:#F6D7DE}
+:is(#grid,.lgrid) .pcard :is(.seen,.liked){z-index:3;top:10px;font-size:10.5px;letter-spacing:.1em;line-height:1;padding:6px 10px;border-radius:999px!important;background:rgba(255,255,255,.78);color:#1d1a17;-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);box-shadow:0 2px 10px rgba(0,0,0,.08)}
+:is(#grid,.lgrid) .pcard .seen{left:10px}
+:is(#grid,.lgrid) .pcard .liked{right:10px;color:var(--wine)}
+:is(#grid,.lgrid) .pcard .seen::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#C9B9A6;margin-right:6px;vertical-align:1px}
+:is(#grid,.lgrid) .pcard .seen.on::before{background:#3E9A61;box-shadow:0 0 0 3px rgba(62,154,97,.18)}
+:is(#grid,.lgrid) .pcard .ph.bl::after{top:42%;font-size:11px;letter-spacing:.2em;padding:7px 12px 7px 29px;background-position:10px center;background-size:13px;background-color:rgba(255,255,255,.72);box-shadow:0 4px 14px rgba(40,20,25,.12)}
+:is(#grid,.lgrid) .pcard.pend .info .name,:is(#grid,.lgrid) .pcard.pend .info .meta{color:#fff}
+@media(hover:hover){:is(#grid,.lgrid) .pcard{transition:transform .35s ease,box-shadow .35s ease}:is(#grid,.lgrid) .pcard:hover{transform:translateY(-3px);box-shadow:0 1px 2px rgba(40,20,25,.05),0 18px 34px -16px rgba(40,20,25,.45)}:is(#grid,.lgrid) .pcard:hover .name>span:first-child{text-decoration:none}}
+html[data-theme=dark] :is(#grid,.lgrid) .pcard{background:#24211F;box-shadow:0 12px 26px -14px rgba(0,0,0,.6)}
+html[data-theme=dark] :is(#grid,.lgrid) .pcard :is(.seen,.liked){background:rgba(24,22,22,.72);color:#F2EDE7}
+@media(min-width:760px){#grid,.lgrid{gap:26px 20px!important}}
 </style>
 </head>
 <body>
@@ -1453,7 +1477,7 @@ body[data-page=forum] #app{max-width:820px}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v1.98.10';
+const BUILD = 'v1.99.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
