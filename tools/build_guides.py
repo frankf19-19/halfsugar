@@ -603,7 +603,7 @@ def page(p, hub_items=None, hub_ld=None):
     others = ''.join(f'<a href="/{o["slug"]}/">{e(o["h1"].rstrip("？"))}</a>' for o in rel) + '<a href="/guide/">看全部指南</a>'
     ld = {"@context": "https://schema.org", "@graph": [
         {"@type": "WebPage", "@id": url, "url": url, "name": p['title'], "description": p['desc'], "inLanguage": "zh-TW",
-         "isPartOf": {"@id": f"{SITE}/#site"}, "dateModified": TODAY,
+         "isPartOf": {"@id": f"{SITE}/#site"}, "dateModified": LASTMOD.get(p['slug'], TODAY),
          "author": {"@id": f"{SITE}/#org"}, "publisher": {"@id": f"{SITE}/#org"}},
         {"@type": "Organization", "@id": f"{SITE}/#org", "name": "微糖 1/3 Sugar", "url": f"{SITE}/",
          "logo": f"{SITE}/brand/apple-touch-icon.png", "email": "support@onethirdsugar.com",
@@ -644,7 +644,7 @@ def page(p, hub_items=None, hub_ld=None):
 <p class="kicker">{'認識甜心交友' if p['slug'] == 'sugar-dating' else '<a href="/sugar-dating/">認識甜心交友</a>'}</p>
 <h1>{e(p['h1'])}</h1>
 <p class="lead">{e(p['lead'])}</p>
-<p class="upd">微糖編輯部・{TODAY[:4]} 年 {int(TODAY[5:7])} 月更新</p>
+<p class="upd">微糖編輯部・{LASTMOD.get(p['slug'], TODAY)[:4]} 年 {int(LASTMOD.get(p['slug'], TODAY)[5:7])} 月更新</p>
 {p['top_cta_html'] if p.get('top_cta_html') else ('<p class="topcta"><a class="btn primary" href="/#/auth">3 分鐘免費加入</a><a class="btn" href="/quiz/match/">先玩測驗：你適合大叔還是小狼狗？</a></p>' if p.get('top_cta') else '')}
 {sections}
 {f'<ul class="hub">{hub_items}</ul>' if hub_items else ''}
@@ -659,6 +659,17 @@ def page(p, hub_items=None, hub_ld=None):
 '''
 
 (ROOT / 'guides.css').write_text(CSS.strip() + '\n', encoding='utf-8')
+import hashlib
+_LM_FILE = ROOT / 'tools' / 'lastmod.json'
+try: _LM = json.loads(_LM_FILE.read_text(encoding='utf-8'))
+except Exception: _LM = {}
+def _lm(key, obj):
+    h = hashlib.sha1(json.dumps(obj, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()[:12]
+    old = _LM.get(key)
+    if not old or old.get('h') != h:
+        _LM[key] = {'h': h, 'd': TODAY}
+    return _LM[key]['d']
+LASTMOD = {p['slug']: _lm(p['slug'], {k: v for k, v in p.items() if k != 'related'}) for p in PAGES}
 for p in PAGES:
     d = ROOT / p['slug']; d.mkdir(exist_ok=True)
     (d / 'index.html').write_text(page(p), encoding='utf-8')
@@ -683,7 +694,7 @@ if shutil.which('node'):
 else:
     print('注意：找不到 node，介紹頁沒有加上斷行點')
 (ROOT / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    + ''.join(f'  <url><loc>{u}</loc><lastmod>{TODAY}</lastmod><changefreq>{c}</changefreq><priority>{pr}</priority></url>\n' for u, pr, c in urls)
+    + ''.join(f'  <url><loc>{u}</loc><lastmod>{LASTMOD.get(u.rstrip("/").rsplit("/",1)[-1], TODAY) if u.count("/")==4 else TODAY}</lastmod><changefreq>{c}</changefreq><priority>{pr}</priority></url>\n' for u, pr, c in urls)
     + '</urlset>\n', encoding='utf-8')
 def _plain(x):
     if isinstance(x, dict):
@@ -697,4 +708,5 @@ for p in PAGES:
     if p['faq']:
         full += ['### 常見問題'] + [f"問：{q}\n答：{a}" for q, a in p['faq']] + ['']
 (ROOT / 'llms-full.txt').write_text('\n'.join(full), encoding='utf-8')
+_LM_FILE.write_text(json.dumps(_LM, ensure_ascii=False, indent=0, sort_keys=True), encoding='utf-8')
 print('寫出', len(PAGES), '頁介紹頁與 sitemap.xml')
