@@ -448,3 +448,36 @@ def apply(pages):
     p = by['sugar-baby-meaning']
     p['faq'] = list(p['faq']) + [
         ('糖寶貝、甜心寶貝、Sugar Babe 是什麼意思？', '都是 Sugar Baby 的說法，和糖寶、甜心、SB 意思相同。')]
+
+    # 2026-11-19 Frank：要加強的是 Sugar Daddy 與糖寶兩頁（sugar mommy 頁不要再動）。
+    p = by['what-is-sugar-daddy']
+    _sec(p, 'Sugar Daddy 的各種說法：糖爹、SD、Sugar Dad 都一樣', [
+        {'head': ['說法', '意思'],
+         'rows': [['Sugar Daddy', '最常見的英文寫法，中文多譯作甜心爹地'],
+                  ['Sugardaddy／Suger Daddy', '常見的連寫與拼錯，意思相同'],
+                  ['Sugar Dad', '口語簡稱，意思相同'],
+                  ['SD', 'Sugar Daddy 的縮寫，網路上最常這樣寫'],
+                  ['糖爹', '中文直譯，對應「糖寶」的說法'],
+                  ['甜心爹地', '台灣比較常用、比較好聽的說法']]},
+        '另一方叫 Sugar Baby（甜心、糖寶、SB）；女性版本叫 Sugar Mommy（甜心媽咪、SM）。這些縮寫的完整整理可以看[[糖爹、糖寶、SD、SB 是什麼意思|/tangdie-meaning/]]。'], at=1)
+    _sec(p, '想認識 Sugar Daddy 或成為 Sugar Daddy，在哪裡比較安全', [
+        '選有手機驗證、照片審核、能檢舉封鎖的平台；見面前就談錢、要你先付保證金或手續費的，一律是詐騙。',
+        '在微糖，會員檔案搜尋引擎看不到，每位會員手機驗證、真人審核，照片可模糊或私密，開站期間完全免費。給成熟男性的說明在[[給 Sugar Daddy|/for-sugar-daddy/]]，給甜心的說明在[[給糖寶、甜心|/for-sugar-baby/]]。'])
+    p['faq'] = list(p['faq']) + [
+        ('Sugar Daddy 中文意思是什麼？', 'Sugar Daddy 中文常說甜心爹地、糖爹，縮寫 SD，指生活穩定、願意在關係裡照顧另一半的成熟男性。'),
+        ('糖爹是什麼意思？', '糖爹就是 Sugar Daddy 的中文直譯，台灣比較常說甜心爹地。對應的另一方叫糖寶（Sugar Baby）。'),
+        ('Sugar Daddy 是不好的詞嗎？', '這個詞常被誤用，所以有人有負面印象。它本身指的是願意照顧另一半的成熟男性，重點在雙方成年、自願、把期待說清楚。')]
+    p = by['sugar-baby-meaning']
+    _sec(p, '糖寶的各種說法：甜心、糖寶貝、SB 都一樣', [
+        {'head': ['說法', '意思'],
+         'rows': [['Sugar Baby', '最常見的英文寫法'],
+                  ['Sugar Babe', '口語說法，意思相同'],
+                  ['SB', 'Sugar Baby 的縮寫'],
+                  ['糖寶、糖寶貝', '中文直譯，對應「糖爹」的說法'],
+                  ['甜心、甜心寶貝', '台灣比較常用、比較好聽的說法'],
+                  ['Sugar Boy', '有時用來指男生甜心，意思一樣是被照顧的一方']]},
+        '對應的另一方是 Sugar Daddy（甜心爹地、糖爹、SD）或 Sugar Mommy（甜心媽咪）。完整整理可以看[[糖爹、糖寶、SD、SB 是什麼意思|/tangdie-meaning/]]。'], at=1)
+    p['faq'] = list(p['faq']) + [
+        ('糖寶意思是什麼？', '糖寶就是 Sugar Baby，中文也叫甜心、SB，指在甜心交友裡被成熟、穩定的一方照顧的人，男生女生都可以。'),
+        ('甜心和糖寶一樣嗎？', '一樣。都是 Sugar Baby 的中文說法，台灣比較常說甜心。'),
+        ('Sugar Boy 是什麼意思？', 'Sugar Boy 有時用來指男生甜心，也就是被 Sugar Mommy 或 Sugar Daddy 照顧的男生。')]
