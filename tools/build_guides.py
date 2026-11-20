@@ -606,7 +606,7 @@ def page(p, hub_items=None, hub_ld=None):
          "isPartOf": {"@id": f"{SITE}/#site"}, "dateModified": LASTMOD.get(p['slug'], TODAY),
          "author": {"@id": f"{SITE}/#org"}, "publisher": {"@id": f"{SITE}/#org"}},
         {"@type": "Organization", "@id": f"{SITE}/#org", "name": "微糖 1/3 Sugar", "url": f"{SITE}/",
-         "logo": f"{SITE}/brand/apple-touch-icon.png", "email": "support@onethirdsugar.com",
+         "logo": f"{SITE}/brand/apple-touch-icon.png", "email": "support@onethirdsugar.com", "alternateName": ["微糖", "微糖交友", "1/3 Sugar"], "description": "台灣的甜心交友網站，2026 年開站，台灣團隊經營。", "foundingDate": "2026", "areaServed": {"@type": "Country", "name": "台灣"}, "address": {"@type": "PostalAddress", "addressCountry": "TW"},
          "sameAs": ["https://www.instagram.com/onethirdsugar.tw/", "https://www.threads.com/@onethirdsugar.tw"]},
         {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in p['faq']]},
         {"@type": "BreadcrumbList", "itemListElement": [
