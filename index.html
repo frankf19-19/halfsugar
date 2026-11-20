@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1UJ6MyXt6mVCYcicuhZkRyvLCBKoPMSmWqOmlAWu+1M=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-tFL5fP7SVRVGFQlkpH/k8DlZ1cZQDi8X9H5Kb+1RSVI=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1UJ6MyXt6mVCYcicuhZkRyvLCBKoPMSmWqOmlAWu+1M=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-iTj69SpUdZivzsKpsNu9KrrqswCqT+8PiOt9b4TjqVc=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1491,6 +1491,8 @@ html[data-theme=dark] .bnav{background:rgba(18,17,17,.84)!important}
 .tabs:not(.admtabs){overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .tabs:not(.admtabs)::-webkit-scrollbar{display:none}
 .tabs:not(.admtabs) button{flex:1 0 auto!important;white-space:nowrap;padding-left:12px!important;padding-right:12px!important}
+.spamtip{margin-top:14px;padding:12px 14px;border-radius:12px;background:#FBF1F3;border:1px solid #F0D5DC;font-size:13px;line-height:1.75;color:#5A3540;text-align:left}.spamtip b{color:#8E3049}
+html[data-theme=dark] .spamtip{background:#2A1E21;border-color:#4A2E36;color:#E9D3D9}html[data-theme=dark] .spamtip b{color:#F0A9BA}
 @media(prefers-reduced-motion:reduce){.btn.primary:hover{transform:none}}
 </style>
 </head>
@@ -1541,7 +1543,7 @@ html[data-theme=dark] .bnav{background:rgba(18,17,17,.84)!important}
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v2.0.4';
+const BUILD = 'v2.0.5';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -2282,7 +2284,7 @@ async function viewAuth(){
         if(!err){
           if(r.data.session){ toast('註冊成功！'); }
           else { $('#app').innerHTML = `<div class="narrow card center"><h3 style="color:var(--gold2)">請到信箱收驗證信</h3><p class="muted mt">我們已寄一封驗證信到 <b>${esc(email)}</b>。點擊信中連結後即可登入，接著驗證手機、建立檔案。</p>
-            ${codeBox('suCode')}<p class="tiny dim mt">沒收到？請看看垃圾郵件匣，或稍等一分鐘再重寄。</p><button class="btn ghost mt2" id="resend">重寄驗證信</button> <a class="btn ghost mt2" href="#/auth?mode=login">我已驗證，去登入</a></div>`;
+            ${codeBox('suCode')}<div class="spamtip"><b>找不到信？</b>先到「垃圾郵件」或「促銷內容」找找看，寄件人是 <b>support@onethirdsugar.com</b>。找到後請按<b>「不是垃圾郵件」</b>，並把這個地址加入聯絡人，之後的通知才會準時進收件匣。</div><p class="tiny dim mt">還是沒有？稍等一分鐘再按重寄。</p><button class="btn ghost mt2" id="resend">重寄驗證信</button> <a class="btn ghost mt2" href="#/auth?mode=login">我已驗證，去登入</a></div>`;
             $('#suCode').onsubmit = async ev=>{ ev.preventDefault(); const b=ev.target.querySelector('button'); b.disabled=true;
               const { error } = await verifyEmailOtp({ email, token: new FormData(ev.target).get('code').trim(), type:'email' }); b.disabled=false;
               if(error){ ev.target.querySelector('[data-err]').textContent='驗證碼不正確或已過期，請重寄一封再試。'; return; } toast('Email 驗證成功'); };
@@ -2303,7 +2305,7 @@ async function viewAuth(){
     const fa = $('#findAcc'); if(fa) fa.onclick = openFindAccount;
     const fg = $('#forgot'); if(fg) fg.onclick = async ()=>{ const email = $('input[name=email]').value.trim(); if(!email){ $('input[name=email]').focus(); $('#authErr').textContent='請先在上面輸入你的 Email，再按「忘記密碼」。'; return; }
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); if(error) return toast(zh(error.message));
-      modal(`<h2>重設密碼</h2><p class="muted small mt">如果 <b>${esc(email)}</b> 有註冊微糖，我們已寄出一封重設密碼信。按信中的按鈕，或在這裡輸入信中的驗證碼。</p>${codeBox('rpCode')}<p class="tiny dim mt">沒收到？請看看垃圾郵件匣。</p>`);
+      modal(`<h2>重設密碼</h2><p class="muted small mt">如果 <b>${esc(email)}</b> 有註冊微糖，我們已寄出一封重設密碼信。按信中的按鈕，或在這裡輸入信中的驗證碼。</p>${codeBox('rpCode')}<div class="spamtip"><b>找不到信？</b>先到「垃圾郵件」或「促銷內容」找找看，寄件人是 <b>support@onethirdsugar.com</b>。找到後請按<b>「不是垃圾郵件」</b>，並把這個地址加入聯絡人，之後的通知才會準時進收件匣。</div>`);
       $('#rpCode').onsubmit = async ev=>{ ev.preventDefault(); const b=ev.target.querySelector('button'); b.disabled=true;
         const { error } = await sb.auth.verifyOtp({ email, token: new FormData(ev.target).get('code').trim(), type:'recovery' }); b.disabled=false;
         if(error) ev.target.querySelector('[data-err]').textContent='驗證碼不正確或已過期，請重新申請。'; }; };
@@ -2578,7 +2580,7 @@ function askRecover(email){
     if(r.error){ closeModal(); return toast(r.error==='recover_expired'?'等太久了，請重新驗證一次手機。':smsErr2(r.error)); }
     await sb.auth.signOut(); closeModal(); location.hash='#/auth?mode=login';
     setTimeout(()=>modal(mode==='reset'
-      ? `<h2>已寄出重設密碼信</h2><p class="muted small mt">我們已寄一封重設密碼信到 <b>${esc(r.email||'原本帳號的 Email')}</b>。按信中的按鈕設定新密碼，就能回到原本的帳號。</p><p class="tiny dim mt">沒收到？請看看垃圾郵件匣。如果那個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>`
+      ? `<h2>已寄出重設密碼信</h2><p class="muted small mt">我們已寄一封重設密碼信到 <b>${esc(r.email||'原本帳號的 Email')}</b>。按信中的按鈕設定新密碼，就能回到原本的帳號。</p><div class="spamtip"><b>找不到信？</b>先到「垃圾郵件」或「促銷內容」找找看，寄件人是 <b>support@onethirdsugar.com</b>。找到後請按<b>「不是垃圾郵件」</b>，並把這個地址加入聯絡人，之後的通知才會準時進收件匣。</div><p class="tiny dim mt">如果那個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>`
       : `<h2>請登入原本的帳號</h2><p class="muted small mt">請用 <b>${esc(r.email||'原本帳號的 Email')}</b> 和密碼登入。忘記密碼的話，在登入頁按「忘記密碼」。</p>`), 400); };
   $('#rcReset').onclick = ()=>go('reset'); $('#rcLogin').onclick = ()=>go('login');
 }
@@ -2614,7 +2616,7 @@ function openFindAccount(){
     if(r.error){ b.disabled=false; return $('#fdErr2').textContent=smsErr2(r.error); }
     modal(`<h2>找到你的帳號了</h2><p class="mt">你的帳號是 <b>${esc(r.email||'')}</b>。</p>
       <p class="muted small mt">${r.mailed?'我們已寄一封重設密碼信到這個信箱，按信中的按鈕設定新密碼，就能登入。':'重設密碼信這次沒有寄出，請在登入頁輸入這個 Email，按「忘記密碼」。'}</p>
-      <p class="tiny dim mt">沒收到？請看看垃圾郵件匣。如果這個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>
+      <div class="spamtip"><b>找不到信？</b>先到「垃圾郵件」或「促銷內容」找找看，寄件人是 <b>support@onethirdsugar.com</b>。找到後請按<b>「不是垃圾郵件」</b>，並把這個地址加入聯絡人，之後的通知才會準時進收件匣。</div><p class="tiny dim mt">如果這個信箱已經不能用了，請從網頁最下方「聯絡客服」。</p>
       <button class="btn primary block mt2" id="fdOk">回到登入</button>`);
     $('#fdOk').onclick = ()=>{ closeModal(); location.hash='#/auth?mode=login'; }; };
 }
