@@ -1,0 +1,66 @@
+# 每天自動備份資料庫（會員、訊息、設定）。備份檔先用密碼加密，再存成 Actions 附件保留 30 天
+# 需要在 GitHub → Settings → Secrets and variables → Actions 設定兩個 secret：
+#   SUPABASE_DB_URL     Supabase → Connect → Session pooler 的連線字串（含資料庫密碼）
+#   BACKUP_PASSPHRASE   自己訂的加密密碼（還原時要用，請另外保管）
+# 還原：下載附件 → gpg -d backup.dump.gpg > backup.dump → pg_restore
+name: DB Backup
+on:
+  schedule:
+    - cron: '17 19 * * *'   # 台灣時間每天 03:17
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check secrets
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PW: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          [ -n "$DB" ] || { echo "::error::還沒設定 SUPABASE_DB_URL"; exit 1; }
+          [ -n "$PW" ] || { echo "::error::還沒設定 BACKUP_PASSPHRASE"; exit 1; }
+      - name: Install pg_dump 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
+      - name: Dump and encrypt
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PW: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -o pipefail
+          D=$(TZ=Asia/Taipei date +%Y%m%d-%H%M)
+          /usr/lib/postgresql/17/bin/pg_dump "$DB" -Fc --no-owner --no-privileges \
+            -n public -n private -n auth -n storage -f backup.dump
+          ls -la backup.dump
+          [ $(stat -c%s backup.dump) -gt 50000 ] || { echo "::error::備份檔太小，可能沒有備到資料"; exit 1; }
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PW" --symmetric --cipher-algo AES256 -o "onethirdsugar-$D.dump.gpg" backup.dump
+          rm -f backup.dump
+          echo "NAME=onethirdsugar-$D" >> $GITHUB_ENV
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: '*.dump.gpg'
+          retention-days: 30
+          if-no-files-found: error
+      - name: Report failure as issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          T="⚠️ 資料庫備份失敗"
+          gh issue list -R "$GITHUB_REPOSITORY" --state open --search "$T in:title" --json number -q '.[0].number' | grep -q . && exit 0
+          gh issue create -R "$GITHUB_REPOSITORY" --title "$T" --body "今天的自動備份沒有成功：$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID 。把這個連結給 Claude 看就好。"
+      - name: Close failure issue when OK
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "資料庫備份失敗 in:title" --json number -q '.[].number'); do
+            gh issue close "$n" -R "$GITHUB_REPOSITORY" -c "備份已恢復正常 ✓"; done

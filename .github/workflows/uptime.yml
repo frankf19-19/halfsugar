@@ -1,0 +1,46 @@
+# 每 30 分鐘檢查網站和資料庫有沒有正常；連續失敗會開一則 Issue（GitHub 會寄信通知你），恢復後自動關掉
+name: Uptime
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check site and database
+        id: chk
+        run: |
+          KEY=sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye
+          API=https://xuecvkwqgvicrttlezzy.supabase.co
+          bad=""
+          try(){ for i in 1 2 3; do eval "$1" && return 0; sleep 20; done; return 1; }
+          try 'curl -sf -m 20 https://onethirdsugar.com/ | grep -q "微糖"' || bad="$bad 網站首頁打不開;"
+          try 'curl -sf -m 20 https://onethirdsugar.com/about/ | grep -q "微糖"' || bad="$bad 介紹頁打不開;"
+          try 'curl -sf -m 20 "$API/auth/v1/health" -H "apikey: $KEY" >/dev/null' || bad="$bad 會員登入服務沒有回應;"
+          try 'curl -s -o /dev/null -w "%{http_code}" -m 20 "$API/rest/v1/rpc/log_visit" -H "apikey: $KEY" -H "Content-Type: application/json" -d "{\"p_vid\":null}" | grep -qE "^20[04]$"' || bad="$bad 資料庫沒有回應;"
+          echo "bad=$bad" >> $GITHUB_OUTPUT
+          [ -z "$bad" ] && echo "全部正常 ✓" || { echo "::error::$bad"; exit 1; }
+      - name: Open issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BAD: ${{ steps.chk.outputs.bad }}
+        run: |
+          T="🔴 網站異常"
+          n=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "$T in:title" --json number -q '.[0].number')
+          if [ -n "$n" ]; then exit 0; fi
+          gh issue create -R "$GITHUB_REPOSITORY" --title "$T" --body "$(TZ=Asia/Taipei date '+%m/%d %H:%M') 檢查發現：$BAD
+          詳細紀錄：$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          恢復正常後這則會自動關閉。"
+      - name: Close issue when back up
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "網站異常 in:title" --json number -q '.[].number'); do
+            gh issue close "$n" -R "$GITHUB_REPOSITORY" -c "$(TZ=Asia/Taipei date '+%m/%d %H:%M') 已恢復正常 ✓"; done
