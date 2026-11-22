@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-x9KXG4KfYI3ijWetdIWOcmHZyb311psv+VDUDVQOYFg=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-60p7nMQWqWaH/ndIMfeSIPiN8dgYLxGWG/LwQT6rx8w=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-x9KXG4KfYI3ijWetdIWOcmHZyb311psv+VDUDVQOYFg=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-IFBInHRIdramVVXaE/yDJHsym/iMKdO/3HQWcPLmr/I=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1493,6 +1493,10 @@ html[data-theme=dark] .bnav{background:rgba(18,17,17,.84)!important}
 .tabs:not(.admtabs) button{flex:1 0 auto!important;white-space:nowrap;padding-left:12px!important;padding-right:12px!important}
 .spamtip{margin-top:14px;padding:12px 14px;border-radius:12px;background:#FBF1F3;border:1px solid #F0D5DC;font-size:13px;line-height:1.75;color:#5A3540;text-align:left}.spamtip b{color:#8E3049}
 html[data-theme=dark] .spamtip{background:#2A1E21;border-color:#4A2E36;color:#E9D3D9}html[data-theme=dark] .spamtip b{color:#F0A9BA}
+.fnl{display:grid;grid-template-columns:96px 1fr 44px 70px;align-items:center;gap:8px;margin:7px 0;font-size:13px}
+.fnl .fnk{color:var(--ink,#222)}.fnl .fnb{height:12px;background:#F1EEEA;border-radius:6px;overflow:hidden}.fnl .fnb i{display:block;height:100%;background:#8E2C48;border-radius:6px}
+.fnl b{text-align:right}.fnl .fnp{color:#888;font-size:12px}.fnl .fnp em{font-style:normal;color:#B0333F;margin-left:4px}
+@media(max-width:420px){.fnl{grid-template-columns:78px 1fr 34px 62px;gap:6px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){.btn.primary:hover{transform:none}}
 </style>
 </head>
@@ -1543,7 +1547,7 @@ html[data-theme=dark] .spamtip{background:#2A1E21;border-color:#4A2E36;color:#E9
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v2.0.6';
+const BUILD = 'v2.0.7';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -4028,7 +4032,36 @@ async function viewAdmin(){
         <div class="card mt2"><h3 style="font-size:16px">近 14 天</h3><p class="tiny dim">深色是訪客，酒紅是新註冊</p>
           <div class="ovch">${days.map(d=>{ const dt=new Date(d.day+'T00:00:00'); return `<div class="ovc" title="${d.day}：訪客 ${d.v}、新註冊 ${d.s}"><div class="ovbars"><i class="v" style="height:${Math.round(d.v/mx*100)}%"></i><i class="s" style="height:${Math.round(d.s/ms*100)}%"></i></div><div class="ovn">${d.v}<br><span>${d.s}</span></div><div class="ovd">${dt.getMonth()+1}/${dt.getDate()}</div></div>`; }).join('')}</div></div>
         <div class="card mt"><h3 style="font-size:16px">訪客從哪裡來（近 7 天）</h3><p class="tiny dim">自動判斷：從 IG、Threads、FB、LINE 的 App 裡點進來，或從 Google 等網站連過來，都會分開統計。「直接開啟」是自己輸入網址或用書籤打開的。</p>
-          ${(o.sources||[]).length ? (o.sources||[]).map(x=>`<div class="ovsrc"><span>${esc(x.src)}</span><i style="width:${Math.max(2,Math.round(x.n/srcMax*100))}%"></i><b>${n(x.n)}</b></div>`).join('') : '<p class="muted small">還沒有資料</p>'}</div>`;
+          ${(o.sources||[]).length ? (o.sources||[]).map(x=>`<div class="ovsrc"><span>${esc(x.src)}</span><i style="width:${Math.max(2,Math.round(x.n/srcMax*100))}%"></i><b>${n(x.n)}</b></div>`).join('') : '<p class="muted small">還沒有資料</p>'}</div>
+        <div class="card mt" id="funnel"><div class="spinner"></div></div>`;
+      // 註冊流程追蹤：最近 N 天註冊的人走到哪一步、還沒上架的人卡在哪
+      const FSTEP = { signup:'註冊帳號', email:'Email 驗證', phone:'手機驗證', basic:'填好基本資料', avatar:'上傳頭像', submit:'送出審核', approved:'審核通過', like:'按過心動', msg:'傳過訊息' };
+      const FSTUCK = { email:'還沒驗證 Email', phone:'還沒驗證手機', basic:'還沒填基本資料', avatar:'還沒上傳頭像', review:'等你審核', rejected:'被退件、還沒重送', other:'其他' };
+      const RNAME = { daddy:'Sugar Daddy', mommy:'Sugar Mommy', baby:'甜心', none:'還沒選身分' };
+      const loadFunnel = async days => {
+        const fb = $('#funnel'); if(!fb) return;
+        const { data: f, error: fe } = await sb.rpc('admin_funnel', { p_days: days });
+        if(!$('#funnel') || tab!=='overview') return;
+        const sel = `<div class="row" style="gap:6px;flex-wrap:wrap">${[[7,'近 7 天'],[30,'近 30 天'],[0,'全部']].map(([d,l])=>`<button class="btn sm ${d===days?'primary':'ghost'} fday" data-d="${d}">${l}</button>`).join('')}</div>`;
+        if(fe){ fb.innerHTML = `<h3 style="font-size:16px">註冊流程追蹤</h3><p class="muted small mt">讀不到資料：${esc(zh(fe.message))}</p><p class="tiny dim">如果是剛加的功能，請先在 Supabase 跑 v0.75 的 SQL。</p>`; return; }
+        const st = f.steps||[]; const top = Math.max(1, st[0]?.n||0);
+        const rows = st.map((x,i)=>{ const prev = i ? st[i-1].n : null; const lost = prev!=null ? Math.max(0, prev - x.n) : 0;
+          return `<div class="fnl"><span class="fnk">${FSTEP[x.k]||x.k}</span><span class="fnb"><i style="width:${Math.max(x.n?3:0, Math.round(x.n/top*100))}%"></i></span><b>${n(x.n)}</b><span class="fnp">${Math.round(x.n/top*100)}%${lost?`<em>－${n(lost)}</em>`:''}</span></div>`; }).join('');
+        const worst = st.slice(1,7).map((x,i)=>({ k:x.k, lost:(st[i].n - x.n) })).sort((a,b)=>b.lost-a.lost)[0];
+        const br = Object.entries(f.by_role||{}).map(([k,v])=>`${RNAME[k]||k} ${n(v.signup)} 人註冊、${n(v.approved)} 人上架`).join('・');
+        const stuck = f.stuck||[];
+        fb.innerHTML = `<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><h3 style="font-size:16px">註冊流程追蹤</h3>${sel}</div>
+          <p class="tiny dim mt">這段期間註冊的人（不含管理員），各走到了哪一步。右邊紅字是比上一步少了幾個人。同期間訪客 ${n(f.visitors)} 個瀏覽器。</p>
+          <div class="mt">${rows}</div>
+          ${worst && worst.lost>0 ? `<p class="small mt2">流失最多的一步：<b>${FSTEP[worst.k]}</b>（少了 ${n(worst.lost)} 人）</p>` : ''}
+          ${f.hours_to_approve!=null ? `<p class="small mt">從註冊到上架，中間值約 <b>${f.hours_to_approve}</b> 小時</p>` : ''}
+          ${br ? `<p class="tiny dim mt">${esc(br)}</p>` : ''}
+          <h4 class="mt2" style="font-size:15px">還沒上架的人卡在哪（最新 40 位）</h4>
+          ${stuck.length ? `<div class="list mt">${stuck.map(x=>`<button type="button" class="item fvp" data-id="${x.id}" style="width:100%;text-align:left"><div class="grow"><div class="t">${esc(x.name||'（還沒取暱稱）')}　<span class="chip${x.step==='review'?' bad':''}">${FSTUCK[x.step]||x.step}</span></div><div class="tiny dim">${RNAME[x.role||'none']}・${fmtTime(x.at)} 註冊</div></div></button>`).join('')}</div>` : '<p class="muted small mt">沒有卡住的人 ✓</p>'}`;
+        fb.querySelectorAll('.fday').forEach(b=>b.onclick=()=>loadFunnel(Number(b.dataset.d)));
+        fb.querySelectorAll('.fvp').forEach(b=>b.onclick=()=>openProfile(b.dataset.id));
+      };
+      loadFunnel(30);
       return;
     }
     if(tab==='forum'){
