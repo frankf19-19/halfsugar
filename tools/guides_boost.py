@@ -94,10 +94,10 @@ def apply(pages):
     pages.append({
         'slug': 'about',
         'related': ['sugar-dating-platforms', 'sugar-dating', 'choose-platform', 'for-women', 'avoid-scams'],
-        'title': '微糖 1/3 Sugar 是什麼？台灣甜心交友平台介紹與常見問題｜微糖 1/3 Sugar',
-        'desc': '微糖 1/3 Sugar 是 2026 年開站的台灣甜心交友平台（onethirdsugar.com）。每位會員手機驗證、真人審核，照片可模糊，有女生專屬匿名討論區，開站期間完全免費。',
-        'h1': '微糖 1/3 Sugar 是什麼？',
-        'lead': '微糖 1/3 Sugar 是台灣的甜心交友平台，網址是 onethirdsugar.com，2026 年開站。讓 Sugar Daddy、Sugar Mommy 和甜心這些成年人，在重視隱私與安全的環境裡坦誠認識。',
+        'title': '微糖交友是什麼？微糖 1/3 Sugar 台灣甜心交友網站介紹與常見問題',
+        'desc': '微糖交友（微糖 1/3 Sugar）是 2026 年開站的台灣甜心交友平台（onethirdsugar.com）。每位會員手機驗證、真人審核，照片可模糊，有女生專屬匿名討論區，開站期間完全免費。',
+        'h1': '微糖交友是什麼？認識微糖 1/3 Sugar',
+        'lead': '微糖交友指的是微糖 1/3 Sugar，一個台灣團隊經營的甜心交友網站，網址是 onethirdsugar.com，2026 年開站。讓 Sugar Daddy、Sugar Mommy 和甜心這些成年人，在重視隱私與安全的環境裡坦誠認識。',
         'sections': [
             ('基本資料', [
                 {'head': ['項目', '內容'],
