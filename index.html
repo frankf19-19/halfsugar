@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-x9KXG4KfYI3ijWetdIWOcmHZyb311psv+VDUDVQOYFg=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-IFBInHRIdramVVXaE/yDJHsym/iMKdO/3HQWcPLmr/I=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-x9KXG4KfYI3ijWetdIWOcmHZyb311psv+VDUDVQOYFg=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-8ZEstxJV1VCAT+61aB/uKZKdNxIMhE4nRPgTc33m1G8=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1547,7 +1547,7 @@ html[data-theme=dark] .spamtip{background:#2A1E21;border-color:#4A2E36;color:#E9
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v2.0.7';
+const BUILD = 'v2.0.8';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -1599,13 +1599,60 @@ const OAUTH_ICON = {
 
 /* ---------- 常數 ---------- */
 const CITIES = ['台北市','新北市','桃園市','新竹','台中市','彰化','雲林','嘉義','台南市','高雄市','屏東','基隆','宜蘭','花蓮','台東','南投','苗栗','澎湖','金門','海外'];
-const OPENERS = {'美食':'最近有吃到印象很深的餐廳嗎？','旅行':'最近一次旅行去了哪裡？下一站想去哪？','咖啡':'平常喜歡喝哪種咖啡？有私藏的咖啡店嗎？','紅酒':'最近有喝到喜歡的酒嗎？','健身':'你平常都練些什麼？','電影':'最近看過最喜歡的一部電影是什麼？','音樂':'最近都在聽什麼音樂？','閱讀':'最近在讀什麼書？','藝術':'最近有看什麼展覽嗎？','攝影':'你平常都拍些什麼？有喜歡的拍照地點嗎？','高爾夫':'打高爾夫多久了？常去哪個球場？','登山':'最近爬了哪座山？有推薦的步道嗎？','游泳':'你平常都在哪裡游泳？','烹飪':'你最拿手的一道菜是什麼？','寵物':'你有養毛孩嗎？是什麼樣的個性？','時尚':'最近有喜歡的品牌或穿搭嗎？','品茶':'喜歡哪一種茶？有推薦的茶館嗎？','露營':'最近有去露營嗎？推薦哪個營地？','瑜伽':'練瑜伽多久了？是去教室還是在家練？','投資理財':'平常都怎麼安排投資？最近有在關注什麼嗎？'};
-function openersFor(o){ if(!o) return []; const mine = new Set(me?.tags||[]); const tags = (o.tags||[]).filter(t=>OPENERS[t]);
-  tags.sort((a,b)=>(mine.has(b)?1:0)-(mine.has(a)?1:0));   // 共同興趣優先
-  const out = tags.slice(0,2).map(t=> mine.has(t) ? `我也喜歡${t}！`+OPENERS[t] : OPENERS[t]);
-  if(o.occupation && out.length<3) out.push(`看到你是${o.occupation}，平常的一天大概怎麼過？`);
-  if(o.city && out.length<3) out.push(`在${o.city}有沒有你很常去、很推薦的地方？`);
-  return out.slice(0,3); }
+// 開場白題庫：同一個興趣有好幾種問法，再加上一般題庫；每次隨機挑，送出過的句子會記下來，之後先不再推薦
+const OPENERS = {
+ '美食':['最近有吃到印象很深的餐廳嗎？','如果只能推薦我一家店，你會選哪一家？','你是會為了一家店特地跑很遠的人嗎？','比起高級餐廳，你更喜歡巷子裡的小店，還是剛好相反？'],
+ '旅行':['最近一次旅行去了哪裡？下一站想去哪？','旅行的時候，你是排滿行程派，還是走到哪算到哪？','有沒有一個地方，你去過還想再去一次？','如果明天就能出發，你第一個想去哪裡？'],
+ '咖啡':['平常喜歡喝哪種咖啡？有私藏的咖啡店嗎？','你是每天一定要一杯咖啡的人嗎？','手沖、拿鐵還是美式？我猜你是……','有沒有一家咖啡店，是你想一個人安靜待著時會去的？'],
+ '紅酒':['最近有喝到喜歡的酒嗎？','你喜歡紅酒、白酒，還是氣泡酒？','有沒有一支酒，是你會想跟特別的人一起開的？','你是會研究產區的人，還是好喝就好派？'],
+ '健身':['你平常都練些什麼？','是什麼讓你開始運動的？','早上練還是下班後練？','練完之後最想吃的是什麼？'],
+ '電影':['最近看過最喜歡的一部電影是什麼？','有沒有一部電影，你看過不只一次？','你喜歡在電影院看，還是在家窩著看？','如果要推薦我一部片當作認識你，你會選哪一部？'],
+ '音樂':['最近都在聽什麼音樂？','開車或通勤的時候，你都聽什麼？','有沒有一首歌，一聽就會想到某個時期的自己？','你會去聽演唱會或現場表演嗎？'],
+ '閱讀':['最近在讀什麼書？','有沒有一本書，改變過你的想法？','你是紙本派還是電子書派？','如果要送朋友一本書，你最常送哪一本？'],
+ '藝術':['最近有看什麼展覽嗎？','你最喜歡哪一種展覽？畫、攝影還是裝置？','有沒有一件作品，讓你站在前面看很久？','你會一個人去看展嗎？'],
+ '攝影':['你平常都拍些什麼？有喜歡的拍照地點嗎？','你是用手機拍，還是會帶相機出門？','你最喜歡自己拍的哪一張照片？','拍照的時候，你比較喜歡拍人還是拍風景？'],
+ '高爾夫':['打高爾夫多久了？常去哪個球場？','你還記得第一次下場的感覺嗎？','打球的時候，你是認真算桿數，還是享受風景派？','有沒有一個球場，是你很想去打的？'],
+ '登山':['最近爬了哪座山？有推薦的步道嗎？','你是喜歡輕鬆步道，還是挑戰百岳？','爬山的時候最享受的是哪個瞬間？','有沒有一條路線，是你會想帶人一起去走的？'],
+ '游泳':['你平常都在哪裡游泳？','游泳池還是海邊，你比較喜歡哪個？','是從小就會游，還是長大才學的？','游完泳那種放空的感覺，你也喜歡嗎？'],
+ '烹飪':['你最拿手的一道菜是什麼？','下廚是你放鬆的方式嗎？','有沒有一道菜，是你會想做給喜歡的人吃的？','你做菜會照食譜，還是憑感覺？'],
+ '寵物':['你有養毛孩嗎？是什麼樣的個性？','你是貓派還是狗派？','毛孩做過最讓你哭笑不得的事是什麼？','如果下班回家有毛孩等你，會是什麼感覺？'],
+ '時尚':['最近有喜歡的品牌或穿搭嗎？','你覺得自己的穿衣風格是什麼？','有沒有一件衣服，是你每次穿都覺得特別有自信的？','你會為了見面特別挑衣服嗎？'],
+ '品茶':['喜歡哪一種茶？有推薦的茶館嗎？','你是喝茶比喝咖啡多的人嗎？','高山茶、紅茶還是花茶，你最常喝哪一種？','有沒有一個喝茶的地方，是你很喜歡的？'],
+ '露營':['最近有去露營嗎？推薦哪個營地？','你是豪華露營派，還是自己搭帳篷派？','露營的晚上，你最喜歡做什麼？','有沒有一個營地，看到的星空讓你很難忘？'],
+ '瑜伽':['練瑜伽多久了？是去教室還是在家練？','瑜伽帶給你最大的改變是什麼？','你最喜歡哪一個動作？','你會在旅行的時候也找地方練嗎？'],
+ '投資理財':['平常都怎麼安排投資？最近有在關注什麼嗎？','你是什麼時候開始對理財有興趣的？','你比較喜歡穩穩的，還是願意冒一點險？','有沒有一本理財的書，是你很推薦的？']
+};
+const OPENERS_ANY = [
+ '看完你的檔案，覺得你應該是很有自己想法的人，可以先跟你打聲招呼嗎？','你的照片看起來很自在，平常也是這種感覺的人嗎？','先說聲嗨！你今天過得還好嗎？',
+ '最近有什麼事，是讓你很期待的？','你平常下班後，最喜歡用什麼方式放鬆？','如果有一整天完全空下來，你會怎麼過？','你是早起型還是夜貓子？',
+ '最近一次讓你開心很久的小事是什麼？','你覺得朋友會用哪三個詞形容你？','你是慢熟的人，還是很快就能聊開的人？','你最近有沒有想學、想開始的新東西？',
+ '週末的你，比較常待在家還是往外跑？','你喜歡的約會，是安靜聊天型，還是有活動一起做？','有沒有一個地方，你很想找人一起去？','你覺得一段舒服的相處，最重要的是什麼？',
+ '如果要用一首歌形容你最近的心情，會是哪一首？','你是會記得對方小細節的人嗎？','今天有沒有發生什麼好笑的事？','最近最常吃的一道菜是什麼？',
+ '你覺得自己最大的優點是什麼？可以自誇一下沒關係','你喜歡的天氣是哪一種？晴天、陰天還是下雨天？','如果可以馬上學會一項技能，你想學什麼？','你是行程規劃派，還是喜歡臨時起意？',
+ '最近有沒有看到什麼讓你覺得很療癒的東西？','你最常去的一個地方是哪裡？','有沒有一件事，是你最近很想慶祝的？','第一次見面的話，你會想約在咖啡廳、餐廳，還是邊走邊聊？',
+ '你是傳訊息比較自在，還是講電話比較自在的人？','你最近一次出遠門是去哪裡？','你覺得什麼樣的人，會讓你想多認識一點？'
+];
+const PROMPT_OPENERS = ['你說「{a}」，這個我好好奇，可以多說一點嗎？','看到你寫「{a}」，覺得很有畫面！','「{a}」這個回答好有你的風格，是怎麼來的？','我也想聽聽「{a}」背後的故事'];
+const opUsed = () => { try { return JSON.parse(localStorage.getItem('opUsed')||'[]'); } catch(e){ return []; } };
+const opMarkUsed = t => { try { const u = opUsed().filter(x=>x!==t); u.push(t); localStorage.setItem('opUsed', JSON.stringify(u.slice(-80))); } catch(e){} };
+const opShuffle = arr => { const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+// 挑一句：沒用過的優先；全部都用過就從最久以前用過的開始
+const opPick = (arr, used, taken) => { const c = arr.filter(t=>!taken.has(t)); if(!c.length) return null; const fresh = c.filter(t=>!used.includes(t));
+  return fresh.length ? opShuffle(fresh)[0] : c.sort((x,y)=>used.indexOf(x)-used.indexOf(y))[0]; };
+function openersFor(o, skip){ if(!o) return []; const mine = new Set(me?.tags||[]); const used = opUsed(); const taken = new Set(skip||[]); const out = [];
+  const add = t => { if(t && !taken.has(t)){ taken.add(t); out.push(t); } };
+  const tags = opShuffle((o.tags||[]).filter(t=>OPENERS[t])).sort((a,b)=>(mine.has(b)?1:0)-(mine.has(a)?1:0));   // 共同興趣優先
+  const pr = opShuffle((o.approved_prompts||o.prompts||[]).filter(x=>x && x.a && String(x.a).trim().length>=2));
+  // 從對方檔案想到的：最多 2 句，來源輪流（破冰問答、興趣、職業、城市）
+  const fromProfile = [];
+  if(pr.length){ const a = String(pr[0].a).trim(); fromProfile.push(opPick(PROMPT_OPENERS, used, taken).replace('{a}', a.length>18 ? a.slice(0,18)+'…' : a)); }
+  tags.slice(0,2).forEach(t=>{ const q = opPick(OPENERS[t], used, taken); if(q) fromProfile.push(mine.has(t) ? `我也喜歡${t}！${q}` : q); });
+  if(o.occupation) fromProfile.push(opShuffle([`看到你是${o.occupation}，平常的一天大概怎麼過？`,`做${o.occupation}最有成就感的是什麼時候？`,`${o.occupation}的工作，是你一開始就想做的嗎？`])[0]);
+  if(o.city) fromProfile.push(opShuffle([`在${o.city}有沒有你很常去、很推薦的地方？`,`如果有人第一次去${o.city}，你會帶他去哪裡？`,`你在${o.city}住多久了？最喜歡那裡的什麼？`])[0]);
+  opShuffle(fromProfile).filter(t=>!used.includes(t)).concat(fromProfile).forEach(t=>{ if(out.length<2) add(t); });
+  // 再補一般題庫，湊滿 4 句
+  while(out.length<4){ const q = opPick(OPENERS_ANY, used, taken); if(!q) break; add(q); }
+  return out; }
 const TAGS = ['美食','旅行','咖啡','紅酒','健身','電影','音樂','閱讀','藝術','攝影','高爾夫','登山','游泳','烹飪','寵物','時尚','品茶','露營','瑜伽','投資理財'];
 const ORIENT = { 'male-female':'我是男生，想認識女生', 'female-male':'我是女生，想認識男生', 'male-male':'我是男生，想認識男生', 'female-female':'我是女生，想認識女生' };
 const orientText = p => ORIENT[`${p.gender}-${p.looking_for}`] || '';
@@ -3223,7 +3270,7 @@ async function viewChat(matchId){
   if(cErr && cErr.code!=='PGRST116') throw cErr;
   if(!m){ $('#app').innerHTML='<div class="center" style="padding:60px 0"><p class="muted">這段對話已經關閉。</p><a class="btn mt2" href="#/matches">回到訊息</a></div>'; return; }
   const oid = m.user_a===me.id ? m.user_b : m.user_a;
-  const [{ data: o0 }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,avatar_blurred,approved_avatar_path,approved_occupation,approved_tags,status,tags,occupation,city,last_active_at').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
+  const [{ data: o0 }, { data: nm }] = await Promise.all([ sb.from('profiles').select('id,nickname,avatar_path,avatar_blurred,approved_avatar_path,approved_occupation,approved_tags,status,tags,occupation,city,last_active_at,approved_prompts').eq('id', oid).maybeSingle(), sb.rpc('related_names', { ids:[oid] }) ]);
   const o = pubView(o0);
   const oname = o?.nickname || (Array.isArray(nm)&&nm[0]?.nickname) || '對方';
   const closed = !!m.closed_at;
@@ -3402,10 +3449,15 @@ async function viewChat(matchId){
   if(!msgs.length){ const ops = closed ? [] : openersFor(o), mineOps = closed ? [] : (me.openers||[]).map(t=>t.replace(/\{對方\}/g, ()=>oname));
     box.insertAdjacentHTML('beforeend', `<div class="chempty"><p class="serif">還沒有訊息</p><p class="tiny dim">說說你為什麼想認識 ${esc(oname)}，好的開場白比較容易得到回覆。點一下開場白，可以修改後再送出。</p>
       ${mineOps.length?`<p class="tiny dim oph">我的開場白</p><div class="openers">${mineOps.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}
-      ${ops.length?`<p class="tiny dim oph">從對方的檔案想到的</p><div class="openers">${ops.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div>`:''}
+      ${ops.length?`<p class="tiny dim oph">可以這樣開場</p><div class="openers" id="opBox">${ops.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join('')}</div><p class="tiny" style="margin-top:8px"><a href="javascript:void 0" id="opMore">↻ 換一批</a></p>`:''}
       ${closed?'':`<p class="tiny" style="margin-top:14px"><a href="#/me" id="opEdit">${mineOps.length?'編輯我的開場白':'＋ 設定我自己的開場白'}</a></p>`}</div>`);
     $('#opEdit') && ($('#opEdit').onclick = ()=>sessionStorage.setItem('meTab','settings'));
-    box.querySelectorAll('.opener').forEach(b=>b.onclick=()=>{ const i=$('#chIn'); if(!i) return; i.value=b.textContent; i.focus(); i.setSelectionRange(i.value.length, i.value.length); }); }
+    const opBind = () => box.querySelectorAll('.opener').forEach(b=>b.onclick=()=>{ const i=$('#chIn'); if(!i) return; i.value=b.textContent; i.focus(); i.setSelectionRange(i.value.length, i.value.length); });
+    opBind();
+    // 換一批：目前這幾句先記成看過，下一批就會換新的
+    $('#opMore') && ($('#opMore').onclick = () => { const bx = $('#opBox'); if(!bx) return; const cur = [...bx.querySelectorAll('.opener')].map(x=>x.textContent);
+      const skip = cur.map(t=>t.replace(/^我也喜歡.+?！/,'')); let nx = openersFor(o, skip); if(nx.length<2) nx = opShuffle(OPENERS_ANY.filter(t=>!cur.includes(t))).slice(0,4);
+      bx.innerHTML = nx.map(t=>`<button type="button" class="opener">${esc(t)}</button>`).join(''); bx.dataset.seen = cur.join('\n'); opBind(); }); }
   const lastMine = [...msgs].reverse().find(x=>x.sender_id===me.id);
   if(lastMine && lastMine.read_at && msgs[msgs.length-1]===lastMine) box.insertAdjacentHTML('beforeend', `<div class="tiny dim" id="readLbl" style="text-align:right;margin:-4px 2px 8px">已讀 ${fmtTime(lastMine.read_at)}</div>`), box.scrollTop=box.scrollHeight;
   let otherReplied = !!m.replied_at || msgs.some(x=>x.sender_id!==me.id), mySent = msgs.some(x=>x.sender_id===me.id);
@@ -3465,6 +3517,7 @@ async function viewChat(matchId){
     finally{ sending=false; $('#chPh')?.classList.remove('busy'); } };
   let sending = false;
   $('#chForm').onsubmit = async e => { e.preventDefault(); if(sending) return; const body=$('#chIn').value.trim(); if(!body) return;
+    document.querySelectorAll('#chBox .opener, .chempty .opener').forEach(b=>{ const t=b.textContent; if(body.includes(t.slice(0,12))) opMarkUsed(t.replace(/^我也喜歡.+?！/,'')); });
     const bad = containsBadWords(body, true); if(bad.length) return toast(`訊息含不允許的字眼：${bad.join('、')}`);
     sending = true; $('#chSend').disabled = true; $('#chIn').value=''; $('#chIn').focus();   // 鍵盤不收起來
     // 先把訊息放上畫面（傳送中），不用等網路
