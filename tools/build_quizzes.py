@@ -121,7 +121,9 @@ def page(z):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;900&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="/fonts.js" data-w="400;900" defer></script>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;900&display=optional"></noscript>
 <link rel="stylesheet" href="/quiz/quiz.css">
 <script type="application/ld+json">{ld}</script>
 </head>

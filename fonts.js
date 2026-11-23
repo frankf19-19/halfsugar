@@ -1,0 +1,1 @@
+(function(){var s=document.currentScript,w=(s&&s.getAttribute('data-w'))||'300;400',l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@'+w+'&display=optional';document.head.appendChild(l)})();

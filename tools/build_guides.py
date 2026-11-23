@@ -613,7 +613,7 @@ def page(p, hub_items=None, hub_ld=None):
             {"@type": "ListItem", "position": 1, "name": "微糖", "item": f"{SITE}/"},
             {"@type": "ListItem", "position": 2, "name": p['h1'].rstrip('？'), "item": url}]}]}
     csp = ("default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; "
-           "img-src 'self' data:; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'")
+           "img-src 'self' data:; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'")
     return f'''<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
@@ -634,8 +634,10 @@ def page(p, hub_items=None, hub_ld=None):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/guides.css">
+<script src="/fonts.js" defer></script>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400&display=optional"></noscript>
 <script type="application/ld+json">{json.dumps(hub_ld or ld, ensure_ascii=False)}</script>
 </head>
 <body>
