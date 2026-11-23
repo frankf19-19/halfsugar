@@ -26,7 +26,7 @@ jobs:
           for(const f of fs.readdirSync("out")){const j=JSON.parse(fs.readFileSync("out/"+f));const c=j.categories,a=j.audits;
             md+="\n## "+j.finalDisplayedUrl+"\n"+Object.entries(c).map(([k,v])=>k+"="+Math.round(v.score*100)).join(" ")+
             " | LCP "+a["largest-contentful-paint"].displayValue+" FCP "+a["first-contentful-paint"].displayValue+" TBT "+a["total-blocking-time"].displayValue+" CLS "+a["cumulative-layout-shift"].displayValue+"\n";
-            for(const x of Object.values(a)) if(x.score!==null&&x.score<0.9&&!["informative","notApplicable","manual"].includes(x.scoreDisplayMode)) md+="- "+x.id+" ("+x.score+") "+(x.displayValue||"")+"\n";}
+            for(const x of Object.values(a)) if(x.score!==null&&x.score<0.9&&!["informative","notApplicable","manual"].includes(x.scoreDisplayMode)) {md+="- "+x.id+" ("+x.score+") "+(x.displayValue||"")+"\n";const it=(x.details&&x.details.items)||[];for(const i of it.slice(0,3)){const n=i.node||(i.items&&i.items[0]&&i.items[0].node);const u=i.url||"";if(n&&n.snippet)md+="    - "+n.snippet.slice(0,160)+"\n";else if(u)md+="    - "+u.slice(0,120)+"\n";}}}
           fs.writeFileSync("report.md",md);'
           cat report.md
       - name: Save report to reports branch
