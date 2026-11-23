@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-x9KXG4KfYI3ijWetdIWOcmHZyb311psv+VDUDVQOYFg=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-UofB4YVVCUUfgfFL/Cl7t4TIF5snkjW/ONlFdBuO5eY=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-x9KXG4KfYI3ijWetdIWOcmHZyb311psv+VDUDVQOYFg=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-VrSwokt00wrPmBzbKlZhMB7ewZAemfX+Ab5P/0lX67U=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -1610,6 +1610,35 @@ html[data-theme=dark] .cvlist .item.cvo{background:#1F1D1B;border-color:rgba(255
 .admtabs button::after{display:none!important}
 .admtabs button .badge{position:absolute;top:-5px;right:-3px}
 html[data-theme=dark] .admtabs button{background:#24211F!important;color:#bbb!important} html[data-theme=dark] .admtabs button.on{background:#ECE7E1!important;color:#121111!important}
+/* v2.6 會員聊天室：精美又好用 */
+.chat{position:relative}
+.chat .hd{position:sticky;top:0;z-index:3;background:rgba(250,248,245,.86);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);margin:0 -4px;padding:6px 4px 10px!important;border-bottom:1px solid rgba(20,16,18,.06)!important}
+.chat .hd .name{font-family:var(--sans)!important;font-size:16px!important;font-weight:600;letter-spacing:.02em!important}
+.chat .hd .name .oseen{font-weight:400;color:#8A8580}
+.chat .hd .name .oseen.on{color:#2F7A55}.chat .hd .name .oseen.on::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#3BAA6E;margin-right:5px;vertical-align:1px;box-shadow:0 0 0 2px rgba(59,170,110,.18)}
+.chat .hd .ib{border-radius:50%;color:#141012}
+.chat .msgs{gap:6px!important;padding:14px 2px 18px!important;scroll-behavior:auto}
+.msg{max-width:78%!important;font-size:15px!important;line-height:1.6!important;padding:9px 14px 7px!important}
+.msg.me:not(.hasimg):not(.recalled){border-radius:20px 20px 6px 20px!important}
+.msg.them:not(.hasimg):not(.recalled){border-radius:20px 20px 20px 6px!important}
+.msg.me + .msg.me:not(.hasimg):not(.recalled){border-top-right-radius:6px!important;margin-top:-3px}
+.msg.them + .msg.them:not(.hasimg):not(.recalled){border-top-left-radius:6px!important;margin-top:-3px}
+.msg .time{display:block;font-size:10.5px!important;margin-top:2px!important;letter-spacing:.02em}
+.msg .mimg{border-radius:16px;overflow:hidden}
+.chat form{position:relative;gap:2px!important;padding:8px 0 calc(6px + env(safe-area-inset-bottom))!important;border-top:1px solid rgba(20,16,18,.06)!important;background:var(--bg,#FAF8F5)}
+.chat form .chph{width:36px!important;height:40px!important;color:#8A8580!important}
+.chat form .chph svg{width:22px!important;height:22px!important}
+.chat form #chIn{flex:1;min-width:0;margin:0 4px}
+.chat form #chSend{flex:none;width:44px;height:44px;min-height:44px!important;padding:0!important;border-radius:50%!important;display:flex;align-items:center;justify-content:center;background:#B04A62!important;border-color:#B04A62!important;transition:background-color .2s,transform .12s,opacity .2s}
+.chat form #chSend svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;margin-left:-2px}
+.chat form.empty #chSend{background:#D9D3CF!important;border-color:#D9D3CF!important}
+.chat form #chSend:active{transform:scale(.92)}
+.tobot{position:absolute;right:10px;bottom:84px;z-index:4;width:40px;height:40px;border-radius:50%;border:1px solid rgba(20,16,18,.08);background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(20,16,18,.14);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.tobot svg{width:20px;height:20px;fill:none;stroke:#141012;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chempty .openers .opener{border-radius:14px!important;border:1px solid rgba(20,16,18,.1)!important;background:#fff!important;box-shadow:0 1px 2px rgba(20,16,18,.04)}
+.chempty .openers .opener:active{transform:scale(.98)}
+#readLbl{font-size:11px!important;color:#8A8580}
+html[data-theme=dark] .chat .hd{background:rgba(24,22,21,.86)} html[data-theme=dark] .chat form{background:#181615} html[data-theme=dark] .tobot{background:rgba(40,37,35,.92)} html[data-theme=dark] .tobot svg{stroke:#eee}
 @media(prefers-reduced-motion:reduce){.btn.primary:hover{transform:none}}
 </style>
 </head>
@@ -1660,7 +1689,7 @@ html[data-theme=dark] .admtabs button{background:#24211F!important;color:#bbb!im
 /* =====================================================================
    微糖 1/3 SUGAR  前端  build v1.24.0
    ===================================================================== */
-const BUILD = 'v2.5.3';
+const BUILD = 'v2.6.0';
 const CONFIG = {
   SUPABASE_URL:  'https://xuecvkwqgvicrttlezzy.supabase.co',   // ← 換成你的 Supabase Project URL
   SUPABASE_ANON: 'sb_publishable_SZmeg7D8NWh9-kmRe_3-dQ_Tb5ibWye',
@@ -3443,11 +3472,15 @@ async function viewChat(matchId){
     <p class="tiny dim center hidden" id="chWait" style="margin:6px 0 0">已送出第一則訊息，對方回覆後就能繼續聊。</p>
     <div class="banner ${closed?'':'hidden'}" id="chClosed" style="margin:8px 0 0">對方已結束這段對話，無法再傳訊息。如果有不當內容，仍可以從右上角「⋯」檢舉或封鎖。</div>
     <div class="revbar hidden" id="revBar"></div>
-    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><button type="button" class="chph" id="chPick" aria-label="二選一小遊戲" title="二選一小遊戲"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/></svg></button><label class="chph" id="chPh" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="vh" aria-label="傳照片"></label><input id="chIn" enterkeyhint="send" aria-label="訊息" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend">送出</button></form>
+    <form id="chForm" class="${closed?'hidden':''}"><button type="button" class="chph" id="chInv" aria-label="約會邀請" title="約會邀請"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg></button><button type="button" class="chph" id="chPick" aria-label="二選一小遊戲" title="二選一小遊戲"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/></svg></button><label class="chph" id="chPh" title="傳照片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><input type="file" accept="image/*" id="chFile" class="vh" aria-label="傳照片"></label><input id="chIn" enterkeyhint="send" aria-label="訊息" maxlength="2000" placeholder="寫點什麼…" autocomplete="off"><button class="btn primary" id="chSend" aria-label="送出"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l15-7-5.5 15-2.6-6.2z"/><path d="M10.9 13.8L19 5"/></svg><span class="vh">送出</span></button></form><button type="button" class="tobot hidden" id="toBot" aria-label="捲到最新訊息"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10l6 6 6-6"/></svg></button>
 </div>`;
   if(o) signedThumb(pubAv(o)).then(u=>{ if(u && $('#chAv')) $('#chAv').style.backgroundImage=`url("${cssu(u)}")`; });
   if(o) $('#chWho').onclick = ()=>openProfile(oid);   // 點對方的大頭貼或名字就能看檔案
   const box = $('#msgs');
+  // 往上看舊訊息時，右下角出現「捲到最新」的按鈕；輸入框沒字時送出鈕變淡
+  { const tb = $('#toBot'); const upd = () => { if(!tb) return; tb.classList.toggle('hidden', box.scrollHeight - box.scrollTop - box.clientHeight < 240); };
+    box.addEventListener('scroll', upd, { passive:true }); if(tb) tb.onclick = () => box.scrollTo({ top: box.scrollHeight, behavior:'smooth' });
+    const inp = $('#chIn'); const sb2 = () => $('#chForm')?.classList.toggle('empty', !inp.value.trim()); if(inp){ inp.addEventListener('input', sb2); setTimeout(sb2, 0); new MutationObserver(sb2).observe(inp, { attributes:true }); } }
   try{ const pre = sessionStorage.getItem('yy_prefill_'+matchId); if(pre){ sessionStorage.removeItem('yy_prefill_'+matchId); setTimeout(()=>{ const i=$('#chIn'); if(i && !i.disabled){ i.value = pre.trim()+' '; i.focus(); } }, 0); } }catch(_){}
   let lastDay='', lastAt=null, bulk=false; const seenIds=new Set();
   const tm = x => new Date(x.created_at).toLocaleTimeString('zh-TW',{hour:'numeric',minute:'2-digit'});
