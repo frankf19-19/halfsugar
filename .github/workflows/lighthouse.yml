@@ -1,0 +1,38 @@
+name: Lighthouse
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 20 * * 0"
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Run Lighthouse (mobile)
+        run: |
+          npm i -g lighthouse@12 >/dev/null 2>&1
+          mkdir -p out
+          for p in "" about/ sugar-dating/ for-sugar-daddy/ for-women/ choose-platform/; do
+            n=$(echo "home$p" | tr '/' '_')
+            lighthouse "https://onethirdsugar.com/$p" --quiet --chrome-flags="--headless=new --no-sandbox" \
+              --only-categories=performance,accessibility,best-practices,seo \
+              --output=json --output-path="out/$n.json" || true
+          done
+          node -e '
+          const fs=require("fs");let md="# Lighthouse "+new Date().toISOString()+"\n";
+          for(const f of fs.readdirSync("out")){const j=JSON.parse(fs.readFileSync("out/"+f));const c=j.categories,a=j.audits;
+            md+="\n## "+j.finalDisplayedUrl+"\n"+Object.entries(c).map(([k,v])=>k+"="+Math.round(v.score*100)).join(" ")+
+            " | LCP "+a["largest-contentful-paint"].displayValue+" FCP "+a["first-contentful-paint"].displayValue+" TBT "+a["total-blocking-time"].displayValue+" CLS "+a["cumulative-layout-shift"].displayValue+"\n";
+            for(const x of Object.values(a)) if(x.score!==null&&x.score<0.9&&!["informative","notApplicable","manual"].includes(x.scoreDisplayMode)) md+="- "+x.id+" ("+x.score+") "+(x.displayValue||"")+"\n";}
+          fs.writeFileSync("report.md",md);'
+          cat report.md
+      - name: Save report to reports branch
+        run: |
+          git init -q r && cd r
+          git config user.name "lighthouse-bot"; git config user.email "bot@onethirdsugar.com"
+          cp ../report.md lighthouse.md
+          git add lighthouse.md && git commit -qm "Lighthouse report"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:reports
