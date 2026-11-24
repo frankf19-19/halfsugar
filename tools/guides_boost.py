@@ -373,7 +373,7 @@ def apply(pages):
                 '微糖給甜心的安全設計，可以看[[給糖寶、甜心：在微糖安心被照顧|/for-sugar-baby/]]。'])
     pages.append({
         'slug': 'for-sugar-baby',
-        'related': ['sugar-baby-meaning', 'sugar-baby-guide', 'avoid-scams', 'first-date', 'for-women'],
+        'related': ['sugar-baby-meaning', 'verify-sd', 'sugar-baby-guide', 'avoid-scams', 'first-date', 'for-women'],
         'top_cta_html': '<p class="topcta"><a class="btn primary" href="/#/auth">3 分鐘免費加入</a><a class="btn" href="/sugar-baby-meaning/">先看糖寶是什麼意思</a></p>',
         'title': '給糖寶、甜心：想認識 Sugar Daddy，在微糖安心被照顧｜微糖 1/3 Sugar',
         'desc': '想當糖寶、認識成熟穩定的 Sugar Daddy 或 Sugar Mommy，又怕遇到假帳號和詐騙？微糖每位會員手機驗證、真人審核，照片可模糊，只讓你心動過的人傳訊息，開站期間完全免費。',
