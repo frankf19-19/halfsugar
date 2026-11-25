@@ -558,3 +558,12 @@ def apply(pages):
         ('熟女交友網站推薦哪個？', '選有真人審核、手機驗證、照片可模糊的平台，熟女會比較願意露面；微糖就是這樣的台灣甜心交友平台。'),
         ('姐弟戀年齡差多少比較常見？', '沒有標準答案；重要的是彼此生活節奏合不合、對關係的期待是否一致。'),
     ]
+
+    # 2026-11-25 年輕族群：讓相關頁面連到 20 幾歲交友、剛出社會
+    for sl, add in (('want-to-be-cared', 'twenties-dating'), ('meet-mature-men', 'twenties-dating'), ('sugar-baby-guide', 'twenties-dating'),
+                    ('for-sugar-baby', 'twenties-dating'), ('women-dating-apps', 'twenties-dating'), ('older-boyfriend', 'twenties-dating'),
+                    ('sugar-baby-meaning', 'twenties-dating'), ('dating-scam-recruit', 'new-grad-dating'), ('online-parttime-scams', 'new-grad-dating'),
+                    ('need-money', 'new-grad-dating')):
+        p = by.get(sl)
+        if p is not None and add not in p.get('related', []):
+            p['related'] = [add] + list(p.get('related', []))[:4]
