@@ -460,7 +460,7 @@ def apply(pages):
                   ['SD', 'Sugar Daddy 的縮寫，網路上最常這樣寫'],
                   ['糖爹', '中文直譯，對應「糖寶」的說法'],
                   ['甜心爹地', '台灣比較常用、比較好聽的說法']]},
-        '另一方叫 Sugar Baby（甜心、糖寶、SB）；女性版本叫 Sugar Mommy（甜心媽咪、SM）。這些縮寫的完整整理可以看[[糖爹、糖寶、SD、SB 是什麼意思|/tangdie-meaning/]]。'], at=1)
+        '另一方叫 Sugar Baby（甜心、糖寶、SB）；女性版本叫 Sugar Mommy（甜心媽咪、SM）。想深入了解可以看[[糖寶是什麼意思|/sugar-baby-meaning/]]，以及[[糖爹、SD 是什麼意思|/tangdie-meaning/]]。'], at=1)
     _sec(p, '想認識 Sugar Daddy 或成為 Sugar Daddy，在哪裡比較安全', [
         '選有手機驗證、照片審核、能檢舉封鎖的平台；見面前就談錢、要你先付保證金或手續費的，一律是詐騙。',
         '在微糖，會員檔案搜尋引擎看不到，每位會員手機驗證、真人審核，照片可模糊或私密，開站期間完全免費。給成熟男性的說明在[[給 Sugar Daddy|/for-sugar-daddy/]]，給甜心的說明在[[給糖寶、甜心|/for-sugar-baby/]]。'])
@@ -477,7 +477,7 @@ def apply(pages):
                   ['糖寶、糖寶貝', '中文直譯，對應「糖爹」的說法'],
                   ['甜心、甜心寶貝', '台灣比較常用、比較好聽的說法'],
                   ['Sugar Boy', '有時用來指男生甜心，意思一樣是被照顧的一方']]},
-        '對應的另一方是 Sugar Daddy（甜心爹地、糖爹、SD）或 Sugar Mommy（甜心媽咪）。完整整理可以看[[糖爹、糖寶、SD、SB 是什麼意思|/tangdie-meaning/]]。'], at=1)
+        '對應的另一方是 Sugar Daddy（甜心爹地、糖爹、SD）或 Sugar Mommy（甜心媽咪）。完整整理可以看[[糖爹、SD 是什麼意思|/tangdie-meaning/]]。'], at=1)
     p['faq'] = list(p['faq']) + [
         ('糖寶意思是什麼？', '糖寶就是 Sugar Baby，中文也叫甜心、SB，指在甜心交友裡被成熟、穩定的一方照顧的人，男生女生都可以。'),
         ('甜心和糖寶一樣嗎？', '一樣。都是 Sugar Baby 的中文說法，台灣比較常說甜心。'),
@@ -502,3 +502,13 @@ def apply(pages):
                   ['平台經不經手金錢', '要你先付錢的多半是詐騙', '微糖不經手會員之間任何金錢，見面前要錢的人請直接檢舉'],
                   ['有沒有女生可以討論的地方', '有人可以問，比較不會吃虧', '有只限女生會員的匿名討論區'],
                   ['見面安不安全', '第一次見面最需要保護自己', '有約會邀請卡與見面安全報備，可以讓朋友知道你在哪']]}], at=1)
+
+    # 2026-11-25 內部連結：讓「查證 SD」「SD 意思」有更多頁面指向它
+    by = {p['slug']: p for p in pages}
+    for sl, add in (('avoid-scams', 'verify-sd'), ('dating-safety', 'verify-sd'), ('online-parttime-scams', 'verify-sd'),
+                    ('dating-scam-recruit', 'verify-sd'), ('sugar-baby-guide', 'verify-sd'), ('sugar-baby', 'verify-sd'),
+                    ('what-is-sugar-daddy', 'sd-meaning'), ('tangdie-meaning', 'sd-meaning'), ('sugar-daddy-guide', 'sd-meaning'),
+                    ('sugar-baby-meaning', 'sd-meaning')):
+        p = by.get(sl)
+        if p is not None and add not in p.get('related', []):
+            p['related'] = [add] + list(p.get('related', []))[:4]
