@@ -665,3 +665,9 @@ def apply(pages):
     ] + list(p['faq'])
     if 'twenties-dating' not in p['related']:
         p['related'] = ['twenties-dating', 'sugar-baby-meaning', 'verify-sd'] + [r for r in p['related'] if r not in ('sugar-baby-meaning', 'verify-sd')][:2]
+
+    # 2026-11-27 「想找經濟穩定的男朋友」：從女生、甜心相關頁連過去
+    for sl in ('want-to-be-cared', 'twenties-dating', 'older-boyfriend', 'sugar-baby', 'for-sugar-baby', 'meet-mature-men'):
+        p = by.get(sl)
+        if p is not None and 'stable-boyfriend' not in p.get('related', []):
+            p['related'] = ['stable-boyfriend'] + list(p.get('related', []))[:4]
