@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!--security:start-->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-oZjQlKJaPcZXpTpd9gMSoELJiauzmYEGOhPSQPZa0r0=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-Eo0gHKsvmn+mj5iRAfxaIrIow43yPlM1mgdIXvEpVcE=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-oZjQlKJaPcZXpTpd9gMSoELJiauzmYEGOhPSQPZa0r0=' 'sha256-8se4FYiL7nYAKR6AGDg1agCrCXDTn4No992CZ45+vMw=' 'sha256-MLGKYoELrp97M98RCRy4qYcpOBLUfh+GAfn/MDGqoVA=' 'sha256-MgkE8QMauuE27M1bpeJsBZoIoNNn4ZF3/Vdxc4VQf+0=' 'sha256-7o2XGGPyXj80QMtIRW9XaI8rX1OC+1tHLkhLSz20bY8=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://xuecvkwqgvicrttlezzy.supabase.co; media-src 'self' blob: https://xuecvkwqgvicrttlezzy.supabase.co; connect-src 'self' https://xuecvkwqgvicrttlezzy.supabase.co wss://xuecvkwqgvicrttlezzy.supabase.co https://*.googleusercontent.com https://profile.line-scdn.net https://obs.line-scdn.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="fb">html{display:none!important}</style>
 <script>if(self===top){var f=document.getElementById('fb');f.parentNode.removeChild(f)}else{top.location.replace(self.location.href)}</script>
@@ -4002,6 +4002,7 @@ async function viewMe(){
       const stray = (files||[]).filter(f=>f.id).map(f=>`${me.id}/${f.name}`).filter(x=>!keepSet.has(x)); if(stray.length) await sb.storage.from('person').remove(stray); }catch(_){}
     const { data: task, error } = await sb.rpc('start_person_verification'); if(error) return toast(error.message);
     const t = Array.isArray(task) ? task[0] : task;
+    if(!$('#pCard')) return;
     $('#pCard').innerHTML = `<h3 style="font-size:17px">真人認證</h3>
       <div class="pvstep mt"><b>1　自拍照片</b><p>請用前鏡頭拍一張：<span class="pvtask">${esc(t.photo_task)}</span></p>
         <label class="btn sm ghost">拍照或選擇照片<input type="file" accept="image/*" capture="user" id="pvPhoto" class="vh"></label><span class="tiny dim" id="pvPhotoOk"></span></div>
@@ -4223,6 +4224,7 @@ async function viewForumPost(id, rs){
   fBindWho($('#app')); fBindAnon($('#app'));
   $('#flike').onclick = async () => { const on = $('#flike').getAttribute('aria-pressed')!=='true';
     const { data: n, error } = await sb.rpc('forum_like', { p_post: id, on_: on }); if(error) return toast(zh(error.message));
+    if(!$('#flike')) return;
     $('#flike').setAttribute('aria-pressed', on); $('#flike').className = `btn sm ${on?'primary':'ghost'}`; $('#flike').textContent = `♥ 有共鳴 ${n}`; };
   $('#app').querySelectorAll('.frep').forEach(b=>b.onclick=()=>forumReport(b.dataset.k==='post'?{post:id}:{comment:Number(b.dataset.id)}));
   $('#app').querySelectorAll('.fdel').forEach(b=>b.onclick=async()=>{ const post=b.dataset.k==='post';
